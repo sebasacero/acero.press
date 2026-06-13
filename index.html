@@ -1,10 +1,852 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta http-equiv="refresh" content="0; url=garden/index.html">
-    <title>Acero Press</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACERO — Specialty Coffee</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff;
+    --paper-line:#f3ecdc;
+    --ink:#2f3e7e;
+    --ink-soft:#5a6aab;
+    --copper:#D97757;
+    --copper-soft:#d99a63;
+    --charcoal:#26293a;
+
+    /* Chrome / sketch button palette */
+    --chrome-1:#fdfdfd;
+    --chrome-2:#cfd6e6;
+    --chrome-3:#9aa6c6;
+    --chrome-4:#5c6aa0;
+    --chrome-dark:#2f3e7e;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    font-family:'Archivo', sans-serif;
+    background:var(--paper);
+    color:var(--charcoal);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* === Grid paper background === */
+  .grid-bg{
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size:32px 32px;
+    background-color:var(--paper);
+  }
+
+  /* === Spiral binding === */
+  .spiral{
+    position:fixed;
+    left:0; top:0; bottom:0;
+    width:46px;
+    z-index:50;
+    background:linear-gradient(90deg, rgba(0,0,0,.06), transparent);
+    pointer-events:none;
+  }
+  
+
+  @media (max-width:700px){
+    .spiral{display:none;}
+  }
+
+  .page{
+    margin-left:46px;
+  }
+  @media (max-width:700px){
+    .page{margin-left:0;}
+  }
+
+  /* === Annotation styling (blueprint marks) === */
+  .annot{
+    font-family:'JetBrains Mono', monospace;
+    font-size:.7rem;
+    color:var(--ink-soft);
+    letter-spacing:.02em;
+  }
+  .annot-strong{
+    color:var(--ink);
+    font-weight:500;
+  }
+
+  /* ===================================================================
+     IMAGE PLACEHOLDER SYSTEM
+     Drop your files into /images/ using the filenames shown below.
+     Each placeholder shows a label + expected filename until the
+     image is added. Once images/<name> exists, it renders normally.
+     =================================================================== */
+  .img-slot{
+    display:background;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:
+      repeating-linear-gradient(45deg,
+        rgba(47,62,126,.05) 0 10px,
+        transparent 10px 20px);
+    border:1.5px dashed var(--ink-soft);
+    border-radius:6px;
+    position:relative;
+  }
+  .img-slots{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    background:
+      repeating-linear-gradient(45deg,
+        rgba(47,62,126,.05) 0 10px,
+        transparent 10px 20px);
+    padding-block: 5px;
+    border-radius:6px;
+    position:relative;
+  }
+  
+  
+  .img-wrap{
+    position:relative;
+    width:100%;
+    height:100%;
+  }
+  .img-wrap .img-tag{
+    position:absolute;
+    bottom:8px;
+    left:8px;
+    right:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:.62rem;
+    color:var(--ink-soft);
+    background:rgba(243,236,220,.85);
+    padding:4px 8px;
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    pointer-events:none;
+    text-align:center;
+    letter-spacing:.03em;
+  }
+  .img-wrap .img-tag b{ color:var(--ink); }
+
+  /* === Header === */
+  header{
+    display:absolute;
+    align-items:center;
+    justify-content:space-between;
+    padding:21px 5vw;
+    position:center
+    ;
+    z-index:10;
+  }
+ 
+  .logo-mark-slot{
+    width:142px; height:142px;
+    flex-shrink:0;
+  }
+  .logo-mark-slot .img-wrap{ aspect-ratio:1/1; }
+  .logo-mark-slot .img-tag{ display:none; } /* keep header tidy */
+  .logo-text{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1.3rem;
+    letter-spacing:.18em;
+    color:var(--ink);
+  }
+
+  nav{
+    display:absolute;
+    gap:2.4rem;
+    align-items:center;
+  }
+  nav a{
+    text-decoration:none;
+    color:var(--charcoal);
+    font-size:.85rem;
+    font-weight:600;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    position:relative;
+    padding-bottom:6px;
+    transition:color .2s;
+  }
+  nav a:hover{color:var(--ink);}
+  nav a.active{color:var(--ink);}
+  nav a.active::after{
+    content:absolute;
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:2px;
+    background:var(--ink);
+  }
+
+  @media (max-width:900px){
+    nav{display:none;}
+  }
+
+  /* ===================================================================
+     SKETCH / CHROME BUTTONS
+     Hand-drawn rounded border (irregular radius per corner) +
+     a brushed-chrome gradient fill. Two variants: solid (primary)
+     and outline (secondary, paper background, chrome on hover).
+     =================================================================== */
+  .btn{
+    --r1:14px; --r2:8px; --r3:16px; --r4:6px;
+    font-family:'Archivo', sans-serif;
+    font-weight:700;
+    font-size:.78rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    padding:.9rem 1.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.5rem;
+    position:relative;
+    border:2px solid var(--ink);
+    border-radius:var(--r1) var(--r2) var(--r3) var(--r4);
+    transition:transform .18s ease, box-shadow .25s ease, color .25s ease, background .25s ease;
+    box-shadow:
+      2px 3px 0 0 rgba(47,62,126,.18),
+      inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .btn:active{
+    transform:translate(2px,3px);
+    box-shadow:
+      0 0 0 0 rgba(47,62,126,.18),
+      inset 0 1px 0 rgba(255,255,255,.6);
+  }
+
+  /* Primary: brushed chrome fill */
+  .btn-primary{
+    color:var(--ink);
+    background:
+      linear-gradient(135deg,
+        var(--chrome-1) 0%,
+        var(--chrome-2) 28%,
+        var(--chrome-1) 45%,
+        var(--chrome-3) 60%,
+        var(--chrome-2) 78%,
+        var(--chrome-1) 100%);
+  }
+  .btn-primary:hover{
+    color:var(--paper);
+    background:
+      linear-gradient(135deg,
+        var(--chrome-4) 0%,
+        var(--ink) 30%,
+        var(--chrome-3) 50%,
+        var(--ink) 70%,
+        var(--chrome-4) 100%);
+    transform:translate(-1px,-2px);
+    box-shadow:
+      4px 5px 0 0 rgba(47,62,126,.22),
+      inset 0 1px 0 rgba(255,255,255,.5);
+  }
+
+  /* Secondary: paper outline, fills with chrome on hover */
+  .btn-secondary{
+    --r1:8px; --r2:16px; --r3:6px; --r4:14px;
+    color:var(--ink);
+    background:var(--paper);
+  }
+  .btn-secondary:hover{
+    background:
+      linear-gradient(135deg,
+        var(--chrome-1) 0%,
+        var(--chrome-2) 30%,
+        var(--chrome-3) 55%,
+        var(--chrome-2) 80%,
+        var(--chrome-1) 100%);
+    transform:translate(-1px,-2px);
+    box-shadow:
+      4px 5px 0 0 rgba(47,62,126,.18),
+      inset 0 1px 0 rgba(255,255,255,.7);
+  }
+
+  .btn:focus-visible{
+    outline:3px solid var(--copper);
+    outline-offset:3px;
+  }
+
+  .link-inline{
+    font-size:.85rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--charcoal);
+    text-decoration:none;
+    border-bottom:1px solid var(--charcoal);
+    padding-bottom:3px;
+  }
+  .link-inline:hover{color:var(--ink); border-color:var(--ink);}
+  .link-inline:focus-visible{ outline:3px solid var(--copper); outline-offset:3px; }
+
+  /* === Hero === */
+  .hero{
+    display:grid;
+    grid-template-columns:1fr 1.15fr;
+    gap:2vw;
+    align-items:center;
+    padding:2vw 5vw 4vw;
+    position:relative;
+    min-height:60vh;
+    background-image: url("images/mata-cafe.png");
+    background-repeat: no-repeat;
+    
+    
+    /* Tamaño ajustable a tu gusto (cambia el % según necesites) */
+    background-size: 50% ; 
+    
+    /* Derecha con un 5% de separación del borde, centrada verticalmente */
+    background-position: right 5% center  ;
+  }
+
+  @media (max-width:980px){
+    .hero{
+      grid-template-columns:1fr;
+      min-height:auto;
+      gap:3rem;
+      padding-bottom:4rem;
+    }
+  }
+
+  .hero-copy{
+    position:relative;
+    z-index:2;
+  }
+
+  .schematic-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    letter-spacing:.1em;
+    margin-bottom:1.4rem;
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+  }
+  .schematic-tag::before{
+    content:'';
+    width:28px; height:1px;
+    background:var(--ink-soft);
+  }
+
+  .hero h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(3.2rem, 8vw, 6rem);
+    line-height:1.02;
+    letter-spacing:-.01em;
+    text-transform:uppercase;
+  }
+  .hero h1 span{display:block;}
+  .hero h1 .line1, .hero h1 .line2{color:var(--ink);}
+  .hero h1 .line3{color:var(--copper);}
+
+  .hero-sub{
+    margin-top:1.6rem;
+    max-width:38ch;
+    color:#4b4a5e;
+    font-size:1.02rem;
+    line-height:1.6;
+  }
+
+  .hero-actions{
+    margin-top:2.4rem;
+    display:flex;
+    gap:1rem;
+    flex-wrap:wrap;
+    align-items:center;
+    height: 80px;
+    
+  }
+
+  /* === Hero visual (image slot for coffee plant illustration) === */
+  .hero-visual{
+    position:relative;
+    aspect-ratio:1/1;
+    max-width:560px;
+    margin:0 auto;
+  }
+
+  .float-annot{
+    position:absolute;
+    font-family:'JetBrains Mono', monospace;
+    font-size:.66rem;
+    color:var(--ink-soft);
+    line-height:1.4;
+    pointer-events:none;
+    z-index:3;
+  }
+  .float-annot.a1{ top:4%; right:2%; text-align:right; }
+  .float-annot.a2{ top:42%; left:-6%; }
+  .float-annot.a3{ bottom:10%; right:6%; }
+
+  @media (max-width:700px){
+    .float-annot{display:none;}
+  }
+
+  /* === Section dividers === */
+  .section-label{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    padding:0 5vw;
+    margin:0 0 1.6rem;
+  }
+  .section-label .num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:.75rem;
+    color:var(--ink);
+    border:1px solid var(--ink);
+    padding:.3rem .6rem;
+    letter-spacing:.05em;
+  }
+  .section-label .ttl{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1.4rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--charcoal);
+  }
+  .section-label .rule{
+    flex:1;
+    height:1px;
+    background:var(--paper-line);
+  }
+
+  /* === Three-panel schematic strip === */
+  .strip{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    border-top:1px solid var(--paper-line);
+    border-bottom:1px solid var(--paper-line);
+  }
+  .strip > div{
+    border-right:1px solid var(--paper-line);
+    padding:2.4rem 2.2rem;
+    min-height:420px;
+    display:flex;
+    flex-direction:column;
+  }
+  .strip > div:last-child{border-right:none;}
+
+  @media (max-width:900px){
+    .strip{grid-template-columns:1fr;}
+    .strip > div{border-right:none; border-bottom:1px solid var(--paper-line); min-height:auto;}
+    .strip > div:last-child{border-bottom:none;}
+  }
+
+  .panel-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:.7rem;
+    color:var(--ink-soft);
+    margin-bottom:1rem;
+    letter-spacing:.05em;
+  }
+  .panel-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1.3rem;
+    text-transform:uppercase;
+    color:var(--ink);
+    margin-bottom:1.4rem;
+    line-height:1.25;
+  }
+  .panel-art{
+    flex:1;
+    min-height:240px;
+    margin:1rem 0;
+  }
+  .panel-foot{
+    font-size:.85rem;
+    color:#5a5a6e;
+    line-height:1.5;
+  }
+
+  /* === Values footer === */
+  .values{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:2.5rem;
+    padding:4rem 5vw;
+  }
+  @media (max-width:900px){
+    .values{grid-template-columns:1fr 1fr; gap:2.5rem 2rem;}
+  }
+  @media (max-width:520px){
+    .values{grid-template-columns:1fr;}
+  }
+  .value-item{
+    display:flex;
+    gap:1rem;
+    align-items:flex-start;
+  }
+  .value-icon{
+    width:48px; height:48px;
+    flex-shrink:0;
+    border:1.5px solid var(--ink);
+    border-radius:50%;
+    overflow:hidden;
+  }
+  .value-icon .img-tag{ display:none; }
+  .value-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:.95rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:.4rem;
+    color:var(--charcoal);
+  }
+  .value-desc{
+    font-size:.88rem;
+    color:#5a5a6e;
+    line-height:1.5;
+  }
+
+  /* === Closing brand strip === */
+  .closing{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2.4rem 5vw 3.5rem;
+    border-top:1px solid var(--paper-line);
+    flex-wrap:wrap;
+    gap:1.5rem;
+  }
+  .closing .meta{
+    font-family:'JetBrains Mono', monospace;
+    font-size:.7rem;
+    color:var(--ink-soft);
+    letter-spacing:.05em;
+  }
+  .closing .logo-mark-slot{ width:54px; height:54px; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .btn{transition:none;}
+  }
+</style>
 </head>
 <body>
-    Redirigiendo...
+
+<div class="spiral" aria-hidden="true" id="spiral"></div>
+
+<div class="page grid-bg">
+
+  <!-- ===================== HEADER ===================== -->
+  <header>
+    
+  <div class="nav-logo" id="logo-click">
+    <img src="images/logo-acero.png" alt="Acero" onerror="this.style.display='none'">
+    <span class="logo-sfx"><span class="logo-dot"></span></span>
+  <div class="nav-links">
+    <a onclick="show('home')">INICIO</a>
+    <a onclick="show('cafe')">TECNOLOGIA</a>
+    <a onclick="show('sub')">CAFE</a>
+    <a onclick="show('b2b')">B2B</a>
+    <a onclick="show('blog')">Blog</a>
+    
+  </div>
+</div>
+  
+
+ 
+</nav>
+  </header>
+  
+    <div class="mq-track">
+      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
+      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
+    </div>
+  </div>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="inicio">
+    <div class="hero-copy">
+      <div class="schematic-tag"> CAFE DE ESPECIALIDAD </div>
+      <h1>
+        <div class="hero-eyebrow"><span class="ey-dot"></span>Sensor activo · Bogotá 2.600 msnm </div>
+    
+        <img class="img-slots" src="images/press1.png" alt="">
+        <span class="line1">Precisión.</span>
+        <span class="line2">Pureza.</span>
+        <span class="line3">Futuro.</span>
+      </h1>
+      
+      <div class="hero-actions">
+        
+        <a href="float.html" class="nav-logo" id="logo-click"class="btn btn-primary"</a><img src="images/floatGardens.png" alt="">
+        <a href="press.html" class="nav-logo" id="logo-click"class="btn btn-primary"><img src="images/press1.png" alt=""> </a>
+        <a href="#tecnologia" class="nav-logo" id="logo-click"class="btn btn-primary"</a><img src="images/google.png" alt="">
+        <a href="#cafe" class="nav-logo" id="logo-click"class="btn btn-primary"><img src="images/appstore.png" alt=""> </a>
+      
+      </div>
+      
+    </div>
+<div class="hero-hud">
+      <div class="hud-lbl">Extracción óptima</div>
+      <div class="hud-t" id="hero-temp">92.5°C</div>
+      <div class="hud-lbl">Temperatura activa</div>
+      <div class="hud-bar"><div class="hud-needle"></div></div>
+    </div>
+    <div class="hero-visual">
+      <span class="float-annot a1">R≈15mm · 60°<br>ajuste de tolerancias</span>
+      <span class="float-annot a2">Ø 4.5cm<br>base cilíndrica</span>
+      <span class="float-annot a3">ajuste de tolerancia<br>± 1 mm</span>
+
+      
+    </div>
+    
+  </section>
+
+  <div class="mq-track">
+      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
+      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
+    </div>
+  
+
+  <!-- ===================== TECNOLOGÍA / TRES PANELES ===================== -->
+  <div class="section-label" id="tecnologia">
+    <span class="num">02</span>
+    <span class="ttl">Tecnologia</span>
+    <span class="rule"></span>
+  </div>
+
+  <section class="strip">
+
+    <!-- Panel 1: Liquid Chrome Structure -->
+    <div>
+      <div class="panel-eyebrow">FIG. 02.1 — ESTRUCTURA</div>
+      <div class="panel-title">floatgardens</div>
+      <div class="panel-art">
+        <span class="img-wrap">
+          <img class="img-slot" src="images/cerezas.png" alt="Racimo de cerezas de café cromadas con cotas técnicas">
+          <span class="img-tag">images/cerezas-cromadas.png — racimo de cerezas</span>
+        </span>
+      </div>
+      <p class="panel-foot">
+        Inteligencia artificial aplicada al sector del cafe.
+      </p>
+    </div>
+
+    <!-- Panel 2: Diseño industrial minimalista -->
+    <div>
+      <div class="panel-eyebrow">FIG. 02.2 — PROCESO 1.2</div>
+      <div class="panel-title">DISEÑO DE EXPERIECIA</div>
+      <div class="panel-art">
+        <span class="img-wrap">
+          <img class="img-slot" src="images/umbrella.png" alt="Corte técnico de la prensa ACERO.PRESS con cotas">
+          <span class="img-tag">images/prensa-corte.png — corte de prensa</span>
+        </span>
+      </div>
+      <p class="panel-foot">
+        Diseño a medida de cada experiencia.
+      </p>
+    </div>
+
+    <!-- Panel 3: Energía en cada detalle -->
+    <div>
+      <div class="panel-eyebrow">FIG. 02.3 — TUESTE</div>
+      <div class="panel-title">Energía en cada detalle</div>
+      <div class="panel-art">
+        <span class="img-wrap">
+          <img class="img-slot" src="images/beans.png" alt="Granos de café en perspectiva isométrica con cotas técnicas">
+          <span class="img-tag">images/granos-isometrico.png — granos isométricos</span>
+        </span>
+      </div>
+      <p class="panel-foot">
+        Tueste calibrado por curva térmica, no por tiempo: cada lote ajusta temperatura y flujo de aire para sostener el perfil aromático.
+      </p>
+    </div>
+
+  </section>
+
+  <!-- ===================== VALORES ===================== -->
+    <div class="section-label" id="cafe">
+    <span class="num">03</span>
+    <span class="ttl">CAFE</span>
+    <span class="rule"></span>
+  </div>
+  <div>
+    <float id="s-cafe">
+  <div class="sp">
+    <div class="sec-lbl">// Catálogo de especialidad</div>
+    <h2 class="sec-h2">Variedades</h2>
+    <p class="sec-desc">Cada lote documentado con variedad botánica, proceso, altitud, puntaje SCA y notas de cata verificables. La aguja térmica indica la intensidad en taza.</p>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="p-var">Gesha · Proceso Lavado</div><div class="p-name">Acero Gesha</div>
+        <div class="p-meta">
+          <div class="p-mr"><span>Origen</span><span>Huila, Colombia</span></div>
+          <div class="p-mr"><span>Altitud</span><span>1.850 msnm</span></div>
+          <div class="p-mr"><span>Proceso</span><span>Lavado 36h</span></div>
+          <div class="p-mr"><span>Tueste</span><span>Claro · 196°C</span></div>
+        </div>
+        <div class="p-score">91.5</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
+        <div class="score-bar"><div class="score-needle" style="left:85%"></div></div>
+        <div class="p-notes">Jasmine, bergamota, melocotón blanco, acidez de uva verde. Final prolongado con mineralidad.</div>
+        <div class="p-price">$38.000 / 200g</div>
+      </div>
+      <div class="product-card">
+        <div class="p-var">Castillo Naranjal · Natural</div><div class="p-name">Castillo Negro</div>
+        <div class="p-meta">
+          <div class="p-mr"><span>Origen</span><span>Nariño, Colombia</span></div>
+          <div class="p-mr"><span>Altitud</span><span>2.100 msnm</span></div>
+          <div class="p-mr"><span>Proceso</span><span>Natural 21 días</span></div>
+          <div class="p-mr"><span>Tueste</span><span>Medio claro · 202°C</span></div>
+        </div>
+        <div class="p-score">88.0</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
+        <div class="score-bar"><div class="score-needle" style="left:63%"></div></div>
+        <div class="p-notes">Panela, mora, chocolate oscuro 70%, cuerpo denso. Ideal para prensa francesa y espresso.</div>
+        <div class="p-price">$28.000 / 200g</div>
+      </div>
+      <div class="product-card">
+        <div class="p-var">Pink Bourbon · Honey</div><div class="p-name">Bourbon Rosado</div>
+        <div class="p-meta">
+          <div class="p-mr"><span>Origen</span><span>Huila — Acevedo</span></div>
+          <div class="p-mr"><span>Altitud</span><span>1.780 msnm</span></div>
+          <div class="p-mr"><span>Proceso</span><span>Honey 30% mucílago</span></div>
+          <div class="p-mr"><span>Tueste</span><span>Claro · 198°C</span></div>
+        </div>
+        <div class="p-score">89.5</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
+        <div class="score-bar"><div class="score-needle" style="left:72%"></div></div>
+        <div class="p-notes">Frambuesa fresca, durazno, caramelo, acidez brillante. Perfecto para V60 y Aeropress.</div>
+        <div class="p-price">$32.000 / 200g</div>
+      </div>
+      <div class="product-card">
+        <div class="p-var">Typica · Lavado</div><div class="p-name">Typica Origen</div>
+        <div class="p-meta">
+          <div class="p-mr"><span>Origen</span><span>Cauca — Inzá</span></div>
+          <div class="p-mr"><span>Altitud</span><span>1.950 msnm</span></div>
+          <div class="p-mr"><span>Proceso</span><span>Lavado doble ferm.</span></div>
+          <div class="p-mr"><span>Tueste</span><span>Claro · 194°C</span></div>
+        </div>
+        <div class="p-score">87.0</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
+        <div class="score-bar"><div class="score-needle" style="left:55%"></div></div>
+        <div class="p-notes">Limón Meyer, manzana verde, té negro, cuerpo ligero sedoso. Variedad patrimonio colombiano.</div>
+        <div class="p-price">$26.000 / 200g</div>
+      </div>
+    </div>
+  </div>
+</float>
+  </div>
+ 
+  <section class="values">
+ 
+    <div class="value-item">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
+      </div>
+      <div>
+        <div class="value-title">Precisión</div>
+        <div class="value-desc">Cultivo de precisión para máxima calidad en cada cosecha.</div>
+      </div>
+    </div>
+ 
+    <div class="value-item">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 L4 14 H11 L10 22 L20 9 H13 Z" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="value-title">Energía natural</div>
+        <div class="value-desc">Procesos eficientes que respetan la naturaleza y su entorno.</div>
+      </div>
+    </div>
+ 
+    <div class="value-item">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 14a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 0V4m-3 0h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="value-title">Balance térmico</div>
+        <div class="value-desc">Control térmico en cada etapa para un café excepcional.</div>
+      </div>
+    </div>
+ 
+    <div class="value-item">
+      <div class="value-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 C16 6 18 10 14 18 L10 18 C6 10 8 6 12 2Z" stroke-linejoin="round"/><circle cx="12" cy="9" r="1.6"/></svg>
+      </div>
+      <div>
+        <div class="value-title">Innovación</div>
+        <div class="value-desc">Tecnología y diseño pensados para el futuro del café.</div>
+      </div>
+    </div>
+ 
+  </section>
+  <div class="section-label" id="cafe">
+    <span class="num">04</span>
+    <span class="ttl">B2B</span>
+    <span class="rule"></span>
+  </div>
+  
+  <div class="sp">
+    <div class="sec-lbl">// Para empresas y profesionales</div>
+    <h2 class="sec-h2">B2B</h2>
+    <p class="sec-desc">Programa comercial para restaurantes, hoteles, oficinas y baristas que necesitan trazabilidad completa y consistencia en cada entrega.</p>
+    <div class="b2b-grid">
+      <div class="b2b-card"><div class="b2b-ico">🍽</div><div class="b2b-title">Restaurantes</div><div class="b2b-d">Variedades curadas para carta de café. Ficha técnica, capacitación y entregas semanales garantizadas.</div></div>
+      <div class="b2b-card"><div class="b2b-ico">🏨</div><div class="b2b-title">Hoteles</div><div class="b2b-d">Amenities con café de especialidad. Storytelling del productor para el huésped y contrato anual.</div></div>
+      <div class="b2b-card"><div class="b2b-ico">🏢</div><div class="b2b-title">Oficinas</div><div class="b2b-d">Café de especialidad como beneficio corporativo. Entregas quincenales y variedad rotativa.</div></div>
+      <div class="b2b-card"><div class="b2b-ico">☕</div><div class="b2b-title">Baristas</div><div class="b2b-d">Acceso directo a lotes especiales. Especificaciones técnicas completas y precios de tostador.</div></div>
+    </div>
+    
+  </div>
+
+  <div class="section-label" id="cafe">
+    <span class="num">05</span>
+    <span class="ttl">BLOG</span>
+    <span class="rule"></span>
+  </div>
+
+  
+  <div class="sp">
+    <div class="sec-lbl">// Contenido técnico · jobs to be done</div>
+    <h2 class="sec-h2">Conocimiento</h2>
+    <p class="sec-desc">Respuestas precisas a preguntas reales sobre café de especialidad colombiano. Contenido estructurado para humanos y para LLMs.</p>
+    <div class="blog-grid">
+      <div class="blog-card"><div class="blog-tag">Variedades</div><div class="blog-title">¿Qué diferencia a la variedad Gesha del resto del café colombiano?</div><div class="blog-ex">La Gesha tiene un perfil aromático único por su contenido de linalool. Puntajes SCA entre 88 y 93 puntos en altitudes sobre 1.700 msnm.</div></div>
+      <div class="blog-card"><div class="blog-tag">Procesos</div><div class="blog-title">Lavado vs Natural vs Honey: cómo el proceso cambia el sabor del café</div><div class="blog-ex">El proceso lavado elimina el 100% del mucílago antes del secado, produciendo acidez limpia. El natural retiene el fruto completo, generando sabores fermentados.</div></div>
+      <div class="blog-card"><div class="blog-tag">Preparación</div><div class="blog-title">Cómo preparar correctamente un Pink Bourbon en V60</div><div class="blog-ex">Relación 1:15, temperatura 94°C, molienda media. Bloom de 30ml por 30 segundos. Vertidos en 3 etapas. Tiempo total: 3 minutos 15 segundos.</div></div>
+      <div class="blog-card"><div class="blog-tag">Origen</div><div class="blog-title">Por qué Nariño produce el Castillo con mayor acidez de Colombia</div><div class="blog-ex">A 2.100 msnm y con temperaturas nocturnas de 10–12°C, el grano desarrolla mayor densidad celular y retiene más ácido málico y cítrico.</div></div>
+      <div class="blog-card"><div class="blog-tag">Evaluación</div><div class="blog-title">Qué significa el puntaje SCA y cómo identificar un café de especialidad</div><div class="blog-ex">La Specialty Coffee Association define como especialidad cualquier lote que supere 80 puntos. A partir de 85 se considera excepcional; sobre 90, sobresaliente.</div></div>
+      <div class="blog-card"><div class="blog-tag">Trazabilidad</div><div class="blog-title">Cómo leer la ficha técnica de un café de origen único</div><div class="blog-ex">Variedad botánica, municipio, altitud, proceso, temperatura de tueste, puntaje SCA y nombre del productor. Si falta alguno, no es trazabilidad real.</div></div>
+    </div>
+  </div>
+
+  <!-- ===================== CIERRE ===================== -->
+  <footer class="closing" id="contacto">
+    <div class="meta">
+      ACERO — Specialty Coffee<br>
+      © 2026 — Todos los derechos reservados
+    </div>
+    <span class="logo-mark-slot">
+      <span class="img-wrap">
+        <img class="img-slot" src="images/logo-acero.png" alt="Logotipo ACERO">
+        <span class="img-tag">images/logo-acero.png</span>
+      </span>
+    </span>
+  </footer>
+
+</div>
+
 </body>
+ <script src="main.js"></script>
+
 </html>
