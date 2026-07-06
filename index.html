@@ -2,851 +2,837 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ACERO — Specialty Coffee</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>acero.studio — Rediseña tu cafetería</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --paper:#ffffff;
-    --paper-line:#f3ecdc;
-    --ink:#2f3e7e;
-    --ink-soft:#5a6aab;
-    --copper:#D97757;
-    --copper-soft:#d99a63;
-    --charcoal:#26293a;
+:root{
+  --bg:#0a0c0f;
+  --panel:#11151b;
+  --panel-soft:#161b22;
+  --line: rgba(140,182,255,.14);
+  --line-strong: rgba(140,182,255,.28);
+  --ink:#eef1f4;
+  --ink-soft:#8b96a5;
+  --ink-faint:#57616f;
+  --accent:#ff6a39;
+  --accent-dim: rgba(255,106,57,.14);
+  --cyan:#4fd1ff;
+  --cyan-dim: rgba(79,209,255,.12);
+  --mono:'JetBrains Mono', monospace;
+  --disp:'Space Grotesk', sans-serif;
+  --body:'Archivo', sans-serif;
+  --radius:14px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:auto; min-height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--body);
+}
+@media (prefers-reduced-motion: reduce){
+  * {animation-duration:.001ms !important; transition-duration:.001ms !important;}
+}
 
-    /* Chrome / sketch button palette */
-    --chrome-1:#fdfdfd;
-    --chrome-2:#cfd6e6;
-    --chrome-3:#9aa6c6;
-    --chrome-4:#5c6aa0;
-    --chrome-dark:#2f3e7e;
+.only-desktop{display:none;}
+.only-mobile{display:inline;}
+
+/* ===== Layout — mobile: apilado / desktop: pantalla dividida ===== */
+.layout{
+  display:flex; flex-direction:column;
+  min-height:100dvh;
+}
+
+.chat-panel{
+  display:flex; justify-content:center;
+  width:100%; height:100dvh;
+}
+
+/* ===== App shell (chat) ===== */
+.app{
+  width:100%; max-width:480px; height:100%;
+  display:flex; flex-direction:column;
+  background:var(--bg);
+  position:relative;
+  border-left:1px solid var(--line);
+  border-right:1px solid var(--line);
+}
+
+.grid-bg{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity:.35;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
+}
+
+/* ===== Header ===== */
+header{
+  position:relative; z-index:2;
+  padding:14px 16px 12px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,12,15,.98), rgba(10,12,15,.92));
+  backdrop-filter:blur(6px);
+}
+.h-top{display:flex; align-items:center; justify-content:space-between;}
+.brand{display:flex; align-items:baseline; gap:2px;}
+.brand b{font-family:var(--disp); font-weight:700; font-size:1.05rem; letter-spacing:-.02em;}
+.brand span{font-family:var(--mono); color:var(--accent); font-size:1.05rem;}
+.status{
+  display:flex; align-items:center; gap:6px;
+  font-family:var(--mono); font-size:.62rem; color:var(--ink-soft);
+  letter-spacing:.04em; text-transform:uppercase;
+}
+.dot{width:6px;height:6px;border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan); animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1} 50%{opacity:.35}}
+.h-fig{
+  margin-top:8px; font-family:var(--mono); font-size:.62rem; color:var(--ink-faint);
+  letter-spacing:.03em; display:flex; justify-content:space-between;
+}
+
+/* ===== Chat area ===== */
+.chat{
+  flex:1; overflow-y:auto; position:relative; z-index:1;
+  padding:18px 14px 12px;
+  display:flex; flex-direction:column; gap:14px;
+  scroll-behavior:smooth;
+}
+.chat::-webkit-scrollbar{width:4px;}
+.chat::-webkit-scrollbar-thumb{background:var(--line-strong); border-radius:4px;}
+
+.row{display:flex; gap:8px; max-width:100%;}
+.row.bot{justify-content:flex-start;}
+.row.user{justify-content:flex-end;}
+
+.bubble{
+  max-width:82%;
+  padding:11px 13px;
+  border-radius:var(--radius);
+  font-size:.87rem; line-height:1.45;
+  position:relative;
+  animation:rise .28s ease both;
+}
+@keyframes rise{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+.bubble.bot{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-top-left-radius:4px;
+}
+.bubble.user{
+  background:var(--accent-dim);
+  border:1px solid rgba(255,106,57,.35);
+  border-top-right-radius:4px;
+}
+
+.fig-tag{
+  font-family:var(--mono); font-size:.58rem; color:var(--cyan);
+  letter-spacing:.04em; text-transform:uppercase;
+  display:block; margin-bottom:5px; opacity:.75;
+}
+
+.bubble img{
+  display:block; width:100%; max-width:230px; border-radius:8px;
+  border:1px solid var(--line-strong); margin-top:6px;
+}
+
+.bubble.bot::before, .bubble.bot::after{
+  content:''; position:absolute; width:7px; height:7px;
+  border-color:var(--cyan); opacity:.5;
+}
+.bubble.bot::before{ top:-1px; left:-1px; border-top:1px solid; border-left:1px solid; }
+.bubble.bot::after{ bottom:-1px; right:-1px; border-bottom:1px solid; border-right:1px solid; }
+
+.chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
+.chip{
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.02em;
+  padding:7px 11px; border-radius:20px;
+  border:1px solid var(--line-strong); background:var(--panel-soft);
+  color:var(--ink); cursor:pointer; transition:.15s;
+}
+.chip:hover{border-color:var(--cyan); color:var(--cyan);}
+.chip:active{transform:scale(.96);}
+
+.typing{display:flex; gap:4px; padding:4px 2px;}
+.typing span{width:5px; height:5px; border-radius:50%; background:var(--ink-soft); animation:blink 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.25} 40%{opacity:1}}
+
+.scan-wrap{position:relative; width:100%; max-width:230px; border-radius:8px; overflow:hidden; margin-top:6px; border:1px solid var(--line-strong);}
+.scan-wrap img{margin:0; border:none; border-radius:0; display:block; width:100%;}
+.scan-line{
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  box-shadow:0 0 10px var(--cyan);
+  animation:scan 1.6s linear infinite;
+}
+@keyframes scan{0%{top:0%} 100%{top:100%}}
+.scan-label{
+  position:absolute; bottom:6px; left:6px; right:6px;
+  font-family:var(--mono); font-size:.6rem; color:#fff;
+  background:rgba(0,0,0,.55); padding:3px 6px; border-radius:4px;
+  letter-spacing:.03em;
+}
+
+.result-tag{
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:var(--mono); font-size:.6rem; color:var(--accent);
+  letter-spacing:.03em; margin-top:8px; text-transform:uppercase;
+}
+.result-tag::before{content:'◆'; font-size:.55rem;}
+
+.cta-btn{
+  display:inline-flex; align-items:center; gap:7px;
+  margin-top:10px; padding:9px 14px;
+  background:var(--accent); color:#100701; border:none; border-radius:9px;
+  font-family:var(--disp); font-weight:600; font-size:.8rem; letter-spacing:-.01em;
+  cursor:pointer; transition:.15s;
+}
+.cta-btn:hover{filter:brightness(1.08);}
+.cta-btn:active{transform:scale(.97);}
+.cta-btn.ghost{
+  background:transparent; border:1px solid var(--line-strong); color:var(--ink);
+}
+
+/* ===== Composer ===== */
+.composer{
+  position:relative; z-index:2;
+  border-top:1px solid var(--line);
+  background:rgba(10,12,15,.98);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+}
+.composer-row{
+  display:flex; align-items:center; gap:8px;
+}
+.icon-btn{
+  width:38px; height:38px; flex-shrink:0;
+  border-radius:10px; border:1px solid var(--line-strong);
+  background:var(--panel-soft); color:var(--ink-soft);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:.15s; font-size:1rem;
+}
+.icon-btn:hover{border-color:var(--cyan); color:var(--cyan);}
+.icon-btn:active{transform:scale(.92);}
+
+.text-input{
+  flex:1; height:38px; border-radius:19px;
+  border:1px solid var(--line-strong); background:var(--panel-soft);
+  color:var(--ink); padding:0 14px; font-family:var(--body); font-size:.85rem;
+  outline:none;
+}
+.text-input:focus{border-color:var(--cyan);}
+.text-input::placeholder{color:var(--ink-faint);}
+
+.send-btn{
+  width:38px; height:38px; flex-shrink:0; border-radius:10px; border:none;
+  background:var(--accent); color:#100701; font-size:1rem;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.send-btn:active{transform:scale(.92);}
+
+.composer-hint{
+  font-family:var(--mono); font-size:.58rem; color:var(--ink-faint);
+  text-align:center; margin-top:7px; letter-spacing:.03em;
+}
+
+input[type="file"]{display:none;}
+
+/* ============================================================
+   SCROLLYTELLING — "story" 
+============================================================ */
+.story{
+  position:relative;
+  padding:44px 22px 60px;
+  border-bottom:1px solid var(--line);
+}
+.story-grid-bg{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity:.3;
+  mask-image: radial-gradient(ellipse at 30% 20%, black 0%, transparent 70%);
+}
+
+.story-intro{position:relative; z-index:1; max-width:480px;}
+.story-scroll-cue{
+  margin-top:22px; font-family:var(--mono); font-size:.66rem; color:var(--cyan);
+  letter-spacing:.04em; display:flex; align-items:center; gap:6px;
+  animation:cueMove 2s ease-in-out infinite;
+}
+@keyframes cueMove{0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);}}
+
+.story-steps{
+  position:relative; z-index:1;
+  margin-top:40px;
+  display:flex; flex-direction:column; gap:36px;
+}
+
+.story-step{
+  max-width:460px;
+  padding-top:20px; border-top:1px solid var(--line);
+  opacity:.45; transform:translateY(10px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.story-step.in-view{ opacity:1; transform:translateY(0); }
+
+.story-num{
+  font-family:var(--disp); font-weight:700; font-size:2.4rem;
+  color:transparent; -webkit-text-stroke:1px var(--line-strong);
+  display:block; line-height:1; margin:2px 0 4px;
+  transition:color .4s ease, -webkit-text-stroke .4s ease;
+}
+.story-step.in-view .story-num{
+  -webkit-text-stroke:1px var(--accent);
+  color:var(--accent-dim);
+}
+
+.story-step h2{
+  font-family:var(--disp); font-weight:600; font-size:1.2rem;
+  letter-spacing:-.01em; margin:0 0 6px;
+}
+.story-step p{
+  font-size:.84rem; line-height:1.5; color:var(--ink-soft); margin:0 0 12px; max-width:42ch;
+}
+
+.story-visual{margin-top:10px;}
+
+.sv-frame{
+  position:relative; width:100%; max-width:200px; aspect-ratio:16/10;
+  border:1px solid var(--line-strong); border-radius:10px;
+  background:var(--panel);
+  display:flex; align-items:center; justify-content:center;
+}
+.sv-icon{font-size:1.4rem; opacity:.6;}
+.sv-corner{position:absolute; width:9px; height:9px; border-color:var(--cyan); opacity:.6;}
+.sv-corner.tl{top:-1px; left:-1px; border-top:1px solid; border-left:1px solid;}
+.sv-corner.tr{top:-1px; right:-1px; border-top:1px solid; border-right:1px solid;}
+.sv-corner.bl{bottom:-1px; left:-1px; border-bottom:1px solid; border-left:1px solid;}
+.sv-corner.br{bottom:-1px; right:-1px; border-bottom:1px solid; border-right:1px solid;}
+
+.sv-chips{display:flex; flex-wrap:wrap; gap:6px; max-width:260px;}
+.sv-chips span{
+  font-family:var(--mono); font-size:.62rem; padding:5px 9px; border-radius:16px;
+  border:1px solid var(--line-strong); background:var(--panel); color:var(--ink-soft);
+}
+
+.sv-scan{
+  position:relative; width:100%; max-width:200px; height:80px;
+  border:1px solid var(--line-strong); border-radius:10px; overflow:hidden;
+  background:repeating-linear-gradient(135deg, var(--panel) 0 10px, var(--panel-soft) 10px 20px);
+}
+.sv-scan-line{
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  box-shadow:0 0 10px var(--cyan);
+  animation:scan 1.8s linear infinite;
+}
+
+.sv-wa{
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:var(--mono); font-size:.68rem; color:var(--accent);
+  padding:8px 12px; border:1px solid rgba(255,106,57,.35); border-radius:9px;
+  background:var(--accent-dim);
+}
+
+.story-outro{
+  position:relative; z-index:1; margin-top:34px;
+  font-family:var(--mono); font-size:.68rem; color:var(--ink-soft); letter-spacing:.02em;
+}
+
+/* ============================================================
+   INTEGRACIÓN SCROLLYTELLING INLINE (MOBILE) & WAITING SCREEN
+============================================================ */
+.story-inline {
+  display: block;
+  width: 100%;
+  animation: fadeIn 0.4s ease both;
+}
+.story-inline .about-h1 {
+  font-family: var(--disp); font-weight: 700; font-size: 1.6rem;
+  letter-spacing: -.02em; line-height: 1.1; margin: 0 0 12px;
+}
+.story-inline .about-h1 em { font-style: normal; color: var(--accent); }
+.story-inline .about-lead { font-size: .88rem; line-height: 1.5; color: var(--ink-soft); margin: 0 0 24px; }
+
+.waiting-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 10px;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  animation: fadeIn 0.3s ease both;
+}
+.waiting-screen .sv-scan {
+  width: 100%; max-width: 260px; height: 150px; margin: 0 auto;
+}
+.waiting-screen img {
+  width: 100%; height: 100%; object-fit: cover; opacity: 0.4; display: block;
+}
+
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+.story-progress{display:none;}
+
+/* ============================================================
+   DESKTOP — Pantalla Dividida Tradicional
+============================================================ */
+@media (min-width:980px){
+  .only-desktop{display:inline;}
+  .only-mobile{display:none;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: 1fr auto 480px;
+    align-items:start;
+    min-height:100dvh;
   }
 
-  *{margin:0;padding:0;box-sizing:border-box;}
-
-  html{scroll-behavior:smooth;}
-
-  body{
-    font-family:'Archivo', sans-serif;
-    background:var(--paper);
-    color:var(--charcoal);
-    -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
-  }
-
-  /* === Grid paper background === */
-  .grid-bg{
-    background-image:
-      linear-gradient(var(--paper-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
-    background-size:32px 32px;
-    background-color:var(--paper);
-  }
-
-  /* === Spiral binding === */
-  .spiral{
-    position:fixed;
-    left:0; top:0; bottom:0;
-    width:46px;
-    z-index:50;
-    background:linear-gradient(90deg, rgba(0,0,0,.06), transparent);
-    pointer-events:none;
-  }
-  
-
-  @media (max-width:700px){
-    .spiral{display:none;}
-  }
-
-  .page{
-    margin-left:46px;
-  }
-  @media (max-width:700px){
-    .page{margin-left:0;}
-  }
-
-  /* === Annotation styling (blueprint marks) === */
-  .annot{
-    font-family:'JetBrains Mono', monospace;
-    font-size:.7rem;
-    color:var(--ink-soft);
-    letter-spacing:.02em;
-  }
-  .annot-strong{
-    color:var(--ink);
-    font-weight:500;
-  }
-
-  /* ===================================================================
-     IMAGE PLACEHOLDER SYSTEM
-     Drop your files into /images/ using the filenames shown below.
-     Each placeholder shows a label + expected filename until the
-     image is added. Once images/<name> exists, it renders normally.
-     =================================================================== */
-  .img-slot{
-    display:background;
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    background:
-      repeating-linear-gradient(45deg,
-        rgba(47,62,126,.05) 0 10px,
-        transparent 10px 20px);
-    border:1.5px dashed var(--ink-soft);
-    border-radius:6px;
-    position:relative;
-  }
-  .img-slots{
+  .story{
     display:block;
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    background:
-      repeating-linear-gradient(45deg,
-        rgba(47,62,126,.05) 0 10px,
-        transparent 10px 20px);
-    padding-block: 5px;
-    border-radius:6px;
-    position:relative;
+    padding:64px 56px 120px 64px;
+    border-bottom:none;
+    border-right:1px solid var(--line);
+    min-height:100dvh;
   }
-  
-  
-  .img-wrap{
-    position:relative;
-    width:100%;
-    height:100%;
-  }
-  .img-wrap .img-tag{
-    position:absolute;
-    bottom:8px;
-    left:8px;
-    right:8px;
-    font-family:'JetBrains Mono', monospace;
-    font-size:.62rem;
-    color:var(--ink-soft);
-    background:rgba(243,236,220,.85);
-    padding:4px 8px;
-    border:1px solid var(--paper-line);
-    border-radius:4px;
-    pointer-events:none;
-    text-align:center;
-    letter-spacing:.03em;
-  }
-  .img-wrap .img-tag b{ color:var(--ink); }
+  .story-intro{max-width:520px;}
+  .story-steps{max-width:520px; margin-top: 56px; gap: 44px;}
+  .story-step{max-width:480px; min-height:65vh; display:flex; flex-direction:column; justify-content:center;}
+  .story-step h2{ font-size: 1.3rem; }
+  .story-step p{ font-size: .85rem; }
 
-  /* === Header === */
-  header{
-    display:absolute;
-    align-items:center;
-    justify-content:space-between;
-    padding:21px 5vw;
-    position:center
-    ;
-    z-index:10;
-  }
- 
-  .logo-mark-slot{
-    width:142px; height:142px;
-    flex-shrink:0;
-  }
-  .logo-mark-slot .img-wrap{ aspect-ratio:1/1; }
-  .logo-mark-slot .img-tag{ display:none; } /* keep header tidy */
-  .logo-text{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:1.3rem;
-    letter-spacing:.18em;
-    color:var(--ink);
-  }
+  .story-inline { display: none; }
 
-  nav{
-    display:absolute;
-    gap:2.4rem;
-    align-items:center;
+  .story-progress{
+    display:flex; flex-direction:column; gap:14px;
+    position:sticky; top:50%; transform:translateY(-50%);
+    padding:0 18px; height:fit-content;
   }
-  nav a{
-    text-decoration:none;
-    color:var(--charcoal);
-    font-size:.85rem;
-    font-weight:600;
-    letter-spacing:.12em;
-    text-transform:uppercase;
-    position:relative;
-    padding-bottom:6px;
-    transition:color .2s;
+  .p-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--line-strong); transition:.3s;
   }
-  nav a:hover{color:var(--ink);}
-  nav a.active{color:var(--ink);}
-  nav a.active::after{
-    content:absolute;
-    position:absolute;
-    left:0; right:0; bottom:0;
-    height:2px;
-    background:var(--ink);
-  }
+  .p-dot.active{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
 
-  @media (max-width:900px){
-    nav{display:none;}
+  .chat-panel{
+    position:sticky; top:0; height:100dvh;
   }
-
-  /* ===================================================================
-     SKETCH / CHROME BUTTONS
-     Hand-drawn rounded border (irregular radius per corner) +
-     a brushed-chrome gradient fill. Two variants: solid (primary)
-     and outline (secondary, paper background, chrome on hover).
-     =================================================================== */
-  .btn{
-    --r1:14px; --r2:8px; --r3:16px; --r4:6px;
-    font-family:'Archivo', sans-serif;
-    font-weight:700;
-    font-size:.78rem;
-    letter-spacing:.16em;
-    text-transform:uppercase;
-    padding:.9rem 1.9rem;
-    cursor:pointer;
-    text-decoration:none;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:.5rem;
-    position:relative;
-    border:2px solid var(--ink);
-    border-radius:var(--r1) var(--r2) var(--r3) var(--r4);
-    transition:transform .18s ease, box-shadow .25s ease, color .25s ease, background .25s ease;
-    box-shadow:
-      2px 3px 0 0 rgba(47,62,126,.18),
-      inset 0 1px 0 rgba(255,255,255,.6);
-  }
-  .btn:active{
-    transform:translate(2px,3px);
-    box-shadow:
-      0 0 0 0 rgba(47,62,126,.18),
-      inset 0 1px 0 rgba(255,255,255,.6);
-  }
-
-  /* Primary: brushed chrome fill */
-  .btn-primary{
-    color:var(--ink);
-    background:
-      linear-gradient(135deg,
-        var(--chrome-1) 0%,
-        var(--chrome-2) 28%,
-        var(--chrome-1) 45%,
-        var(--chrome-3) 60%,
-        var(--chrome-2) 78%,
-        var(--chrome-1) 100%);
-  }
-  .btn-primary:hover{
-    color:var(--paper);
-    background:
-      linear-gradient(135deg,
-        var(--chrome-4) 0%,
-        var(--ink) 30%,
-        var(--chrome-3) 50%,
-        var(--ink) 70%,
-        var(--chrome-4) 100%);
-    transform:translate(-1px,-2px);
-    box-shadow:
-      4px 5px 0 0 rgba(47,62,126,.22),
-      inset 0 1px 0 rgba(255,255,255,.5);
-  }
-
-  /* Secondary: paper outline, fills with chrome on hover */
-  .btn-secondary{
-    --r1:8px; --r2:16px; --r3:6px; --r4:14px;
-    color:var(--ink);
-    background:var(--paper);
-  }
-  .btn-secondary:hover{
-    background:
-      linear-gradient(135deg,
-        var(--chrome-1) 0%,
-        var(--chrome-2) 30%,
-        var(--chrome-3) 55%,
-        var(--chrome-2) 80%,
-        var(--chrome-1) 100%);
-    transform:translate(-1px,-2px);
-    box-shadow:
-      4px 5px 0 0 rgba(47,62,126,.18),
-      inset 0 1px 0 rgba(255,255,255,.7);
-  }
-
-  .btn:focus-visible{
-    outline:3px solid var(--copper);
-    outline-offset:3px;
-  }
-
-  .link-inline{
-    font-size:.85rem;
-    font-weight:600;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    color:var(--charcoal);
-    text-decoration:none;
-    border-bottom:1px solid var(--charcoal);
-    padding-bottom:3px;
-  }
-  .link-inline:hover{color:var(--ink); border-color:var(--ink);}
-  .link-inline:focus-visible{ outline:3px solid var(--copper); outline-offset:3px; }
-
-  /* === Hero === */
-  .hero{
-    display:grid;
-    grid-template-columns:1fr 1.15fr;
-    gap:2vw;
-    align-items:center;
-    padding:2vw 5vw 4vw;
-    position:relative;
-    min-height:60vh;
-    background-image: url("images/mata-cafe.png");
-    background-repeat: no-repeat;
-    
-    
-    /* Tamaño ajustable a tu gusto (cambia el % según necesites) */
-    background-size: 50% ; 
-    
-    /* Derecha con un 5% de separación del borde, centrada verticalmente */
-    background-position: right 5% center  ;
-  }
-
-  @media (max-width:980px){
-    .hero{
-      grid-template-columns:1fr;
-      min-height:auto;
-      gap:3rem;
-      padding-bottom:4rem;
-    }
-  }
-
-  .hero-copy{
-    position:relative;
-    z-index:2;
-  }
-
-  .schematic-tag{
-    font-family:'JetBrains Mono', monospace;
-    font-size:.72rem;
-    color:var(--ink-soft);
-    letter-spacing:.1em;
-    margin-bottom:1.4rem;
-    display:flex;
-    align-items:center;
-    gap:.6rem;
-  }
-  .schematic-tag::before{
-    content:'';
-    width:28px; height:1px;
-    background:var(--ink-soft);
-  }
-
-  .hero h1{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:clamp(3.2rem, 8vw, 6rem);
-    line-height:1.02;
-    letter-spacing:-.01em;
-    text-transform:uppercase;
-  }
-  .hero h1 span{display:block;}
-  .hero h1 .line1, .hero h1 .line2{color:var(--ink);}
-  .hero h1 .line3{color:var(--copper);}
-
-  .hero-sub{
-    margin-top:1.6rem;
-    max-width:38ch;
-    color:#4b4a5e;
-    font-size:1.02rem;
-    line-height:1.6;
-  }
-
-  .hero-actions{
-    margin-top:2.4rem;
-    display:flex;
-    gap:1rem;
-    flex-wrap:wrap;
-    align-items:center;
-    height: 80px;
-    
-  }
-
-  /* === Hero visual (image slot for coffee plant illustration) === */
-  .hero-visual{
-    position:relative;
-    aspect-ratio:1/1;
-    max-width:560px;
-    margin:0 auto;
-  }
-
-  .float-annot{
-    position:absolute;
-    font-family:'JetBrains Mono', monospace;
-    font-size:.66rem;
-    color:var(--ink-soft);
-    line-height:1.4;
-    pointer-events:none;
-    z-index:3;
-  }
-  .float-annot.a1{ top:4%; right:2%; text-align:right; }
-  .float-annot.a2{ top:42%; left:-6%; }
-  .float-annot.a3{ bottom:10%; right:6%; }
-
-  @media (max-width:700px){
-    .float-annot{display:none;}
-  }
-
-  /* === Section dividers === */
-  .section-label{
-    display:flex;
-    align-items:center;
-    gap:1rem;
-    padding:0 5vw;
-    margin:0 0 1.6rem;
-  }
-  .section-label .num{
-    font-family:'JetBrains Mono', monospace;
-    font-size:.75rem;
-    color:var(--ink);
-    border:1px solid var(--ink);
-    padding:.3rem .6rem;
-    letter-spacing:.05em;
-  }
-  .section-label .ttl{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:1.4rem;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--charcoal);
-  }
-  .section-label .rule{
-    flex:1;
-    height:1px;
-    background:var(--paper-line);
-  }
-
-  /* === Three-panel schematic strip === */
-  .strip{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    border-top:1px solid var(--paper-line);
-    border-bottom:1px solid var(--paper-line);
-  }
-  .strip > div{
-    border-right:1px solid var(--paper-line);
-    padding:2.4rem 2.2rem;
-    min-height:420px;
-    display:flex;
-    flex-direction:column;
-  }
-  .strip > div:last-child{border-right:none;}
-
-  @media (max-width:900px){
-    .strip{grid-template-columns:1fr;}
-    .strip > div{border-right:none; border-bottom:1px solid var(--paper-line); min-height:auto;}
-    .strip > div:last-child{border-bottom:none;}
-  }
-
-  .panel-eyebrow{
-    font-family:'JetBrains Mono', monospace;
-    font-size:.7rem;
-    color:var(--ink-soft);
-    margin-bottom:1rem;
-    letter-spacing:.05em;
-  }
-  .panel-title{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:1.3rem;
-    text-transform:uppercase;
-    color:var(--ink);
-    margin-bottom:1.4rem;
-    line-height:1.25;
-  }
-  .panel-art{
-    flex:1;
-    min-height:240px;
-    margin:1rem 0;
-  }
-  .panel-foot{
-    font-size:.85rem;
-    color:#5a5a6e;
-    line-height:1.5;
-  }
-
-  /* === Values footer === */
-  .values{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:2.5rem;
-    padding:4rem 5vw;
-  }
-  @media (max-width:900px){
-    .values{grid-template-columns:1fr 1fr; gap:2.5rem 2rem;}
-  }
-  @media (max-width:520px){
-    .values{grid-template-columns:1fr;}
-  }
-  .value-item{
-    display:flex;
-    gap:1rem;
-    align-items:flex-start;
-  }
-  .value-icon{
-    width:48px; height:48px;
-    flex-shrink:0;
-    border:1.5px solid var(--ink);
-    border-radius:50%;
-    overflow:hidden;
-  }
-  .value-icon .img-tag{ display:none; }
-  .value-title{
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:700;
-    font-size:.95rem;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    margin-bottom:.4rem;
-    color:var(--charcoal);
-  }
-  .value-desc{
-    font-size:.88rem;
-    color:#5a5a6e;
-    line-height:1.5;
-  }
-
-  /* === Closing brand strip === */
-  .closing{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:2.4rem 5vw 3.5rem;
-    border-top:1px solid var(--paper-line);
-    flex-wrap:wrap;
-    gap:1.5rem;
-  }
-  .closing .meta{
-    font-family:'JetBrains Mono', monospace;
-    font-size:.7rem;
-    color:var(--ink-soft);
-    letter-spacing:.05em;
-  }
-  .closing .logo-mark-slot{ width:54px; height:54px; }
-
-  /* Reduced motion */
-  @media (prefers-reduced-motion: reduce){
-    html{scroll-behavior:auto;}
-    .btn{transition:none;}
-  }
+}
 </style>
 </head>
 <body>
 
-<div class="spiral" aria-hidden="true" id="spiral"></div>
+<div class="layout">
 
-<div class="page grid-bg">
-
-  <!-- ===================== HEADER ===================== -->
-  <header>
-    
-  <div class="nav-logo" id="logo-click">
-    <img src="images/logo-acero.png" alt="Acero" onerror="this.style.display='none'">
-    <span class="logo-sfx"><span class="logo-dot"></span></span>
-  <div class="nav-links">
-    <a onclick="show('home')">INICIO</a>
-    <a onclick="show('cafe')">TECNOLOGIA</a>
-    <a onclick="show('sub')">CAFE</a>
-    <a onclick="show('b2b')">B2B</a>
-    <a onclick="show('blog')">Blog</a>
-    
-  </div>
-</div>
-  
-
- 
-</nav>
-  </header>
-  
-    <div class="mq-track">
-      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
-      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
+  <!-- ============ DESKTOP: COLUMNA IZQUIERDA (SCROLLYTELLING) ============ -->
+  <section class="story" id="desktopStory">
+    <div class="story-grid-bg"></div>
+    <div class="story-intro">
+      <div class="about-eyebrow"><span class="dot"></span> FIG. 00 — CÓMO FUNCIONA</div>
+      <h1 class="about-h1" style="font-family:var(--disp); font-weight:700; font-size:2.2rem; line-height:1.1; margin-bottom:16px;">Tu cafetería,<br><em>reinventada</em><br>antes de mover un ladrillo.</h1>
+      <p class="about-lead" style="font-size:.95rem; color:var(--ink-soft); line-height:1.65;">acero.studio convierte una foto real de tu espacio en una propuesta de rediseño en minutos, y te conecta directo con un asesor para llevarla a obra.</p>
+      <div class="story-scroll-cue">explora los pasos →</div>
     </div>
+
+    <div class="story-steps" id="desktopSteps">
+      <!-- Los pasos se replican dinámicamente o mediante clases compartidas -->
+    </div>
+
+    <div class="story-outro">
+      <p>Pruébalo ahora en el panel de la derecha →</p>
+    </div>
+  </section>
+
+  <!-- Puntos de progreso (Solo Desktop) -->
+  <div class="story-progress" id="storyProgress">
+    <span class="p-dot" data-p="1"></span>
+    <span class="p-dot" data-p="2"></span>
+    <span class="p-dot" data-p="3"></span>
+    <span class="p-dot" data-p="4"></span>
   </div>
 
-  <!-- ===================== HERO ===================== -->
-  <section class="hero" id="inicio">
-    <div class="hero-copy">
-      <div class="schematic-tag"> CAFE DE ESPECIALIDAD </div>
-      <h1>
-        <div class="hero-eyebrow"><span class="ey-dot"></span>Sensor activo · Bogotá 2.600 msnm </div>
-    
-        <img class="img-slots" src="images/press1.png" alt="">
-        <span class="line1">Precisión.</span>
-        <span class="line2">Pureza.</span>
-        <span class="line3">Futuro.</span>
-      </h1>
-      
-      <div class="hero-actions">
+  <!-- ============ PANEL CENTRAL / UNIFICADO (CHAT APP) ============ -->
+  <section class="chat-panel">
+    <div class="app">
+      <div class="grid-bg"></div>
+
+      <header>
+        <div class="h-top">
+          <div class="brand"><b>acero</b><span>.studio</span></div>
+          <div class="status"><span class="dot"></span> Asistente activo</div>
+        </div>
+        <div class="h-fig">
+          <span>FIG. 05 — ASISTENTE</span>
+          <span id="stateTag">estado: bienvenida</span>
+        </div>
+      </header>
+
+      <div class="chat" id="chat">
         
-        <a href="float.html" class="nav-logo" id="logo-click"class="btn btn-primary"</a><img src="images/floatGardens.png" alt="">
-        <a href="press.html" class="nav-logo" id="logo-click"class="btn btn-primary"><img src="images/press1.png" alt=""> </a>
-        <a href="#tecnologia" class="nav-logo" id="logo-click"class="btn btn-primary"</a><img src="images/google.png" alt="">
-        <a href="#cafe" class="nav-logo" id="logo-click"class="btn btn-primary"><img src="images/appstore.png" alt=""> </a>
-      
-      </div>
-      
-    </div>
-<div class="hero-hud">
-      <div class="hud-lbl">Extracción óptima</div>
-      <div class="hud-t" id="hero-temp">92.5°C</div>
-      <div class="hud-lbl">Temperatura activa</div>
-      <div class="hud-bar"><div class="hud-needle"></div></div>
-    </div>
-    <div class="hero-visual">
-      <span class="float-annot a1">R≈15mm · 60°<br>ajuste de tolerancias</span>
-      <span class="float-annot a2">Ø 4.5cm<br>base cilíndrica</span>
-      <span class="float-annot a3">ajuste de tolerancia<br>± 1 mm</span>
+        <!-- INLINE SCROLLYTELLING (Visible por defecto sólo en Mobile) -->
+        <div class="story-inline" id="storyInline">
+          <div class="story-intro">
+            <div class="about-eyebrow"><span class="dot"></span> FIG. 00 — INTERFAZ INTEGRADA</div>
+            <h1 class="about-h1">Tu cafetería,<br><em>reinventada</em> al instante.</h1>
+            <p class="about-lead">Sube una foto de tu local. La IA procesará el espacio conservando la estructura y aplicando un diseño arquitectónico completamente nuevo.</p>
+            <div class="story-scroll-cue">desliza para ver el proceso ↓</div>
+          </div>
+          
+          <div class="story-steps" id="mobileSteps">
+            <!-- Pasos del Scrollytelling inyectados por JavaScript para consistencia masiva -->
+          </div>
+          
+          <div class="story-outro" style="margin-bottom: 20px;">
+            <p class="only-mobile">✨ Captura una foto desde el botón inferior para comenzar.</p>
+          </div>
+        </div>
 
-      
+        <!-- PANTALLA DE ESPERA (Oculta por defecto, se activa en la misma sección) -->
+        <div id="waitingScreen" class="waiting-screen">
+          <span class="fig-tag" style="color:var(--accent);">FIG. 03 — RENDERING ENGINE</span>
+          <div class="sv-scan">
+            <img id="waitingScanImg" src="" alt="Procesando espacio">
+            <div class="sv-scan-line"></div>
+          </div>
+          <div style="font-family:var(--mono); font-size:.75rem; color:var(--cyan); letter-spacing: 0.02em;">
+            Estableciendo ControlNet e inyectando pesos visuales...
+          </div>
+          <div class="typing" style="justify-content:center;"><span></span><span></span><span></span></div>
+        </div>
+
+        <!-- CONTENEDOR FINAL DE MENSAJES (Burbujas de conversación y resultados) -->
+        <div id="chatMessages" style="width:100%; display:flex; flex-direction:column; gap:14px;"></div>
+
+      </div>
+
+      <!-- COMPOSER FIJO INFERIOR -->
+      <div class="composer">
+        <div class="composer-row">
+          <button class="icon-btn" id="btnCamera" title="Tomar foto">📷</button>
+          <button class="icon-btn" id="btnGallery" title="Subir de galería">🖼️</button>
+          <input type="text" class="text-input" id="textInput" placeholder="Escribe un mensaje…">
+          <button class="send-btn" id="btnSend">➤</button>
+        </div>
+        <div class="composer-hint">Enfocado en rediseño de interior y fachada de cafeterías</div>
+      </div>
+
+      <!-- Inputs nativos ocultos -->
+      <input type="file" id="fileCamera" accept="image/*" capture="environment">
+      <input type="file" id="fileGallery" accept="image/*">
     </div>
-    
   </section>
-
-  <div class="mq-track">
-      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
-      <span class="mh">· Gesha · </span><span>Castillo Naranjal</span><span class="mc"> · SCA 87+ · </span><span>Huila · Nariño · Cauca</span><span class="mh"> · Bourbon Rosado · </span><span>Proceso Lavado</span><span class="mc"> · Typica · </span><span>Trazabilidad Completa</span><span class="mh"> · Pink Bourbon · </span><span>Origen Único · </span>
-    </div>
-  
-
-  <!-- ===================== TECNOLOGÍA / TRES PANELES ===================== -->
-  <div class="section-label" id="tecnologia">
-    <span class="num">02</span>
-    <span class="ttl">Tecnologia</span>
-    <span class="rule"></span>
-  </div>
-
-  <section class="strip">
-
-    <!-- Panel 1: Liquid Chrome Structure -->
-    <div>
-      <div class="panel-eyebrow">FIG. 02.1 — ESTRUCTURA</div>
-      <div class="panel-title">floatgardens</div>
-      <div class="panel-art">
-        <span class="img-wrap">
-          <img class="img-slot" src="images/cerezas.png" alt="Racimo de cerezas de café cromadas con cotas técnicas">
-          <span class="img-tag">images/cerezas-cromadas.png — racimo de cerezas</span>
-        </span>
-      </div>
-      <p class="panel-foot">
-        Inteligencia artificial aplicada al sector del cafe.
-      </p>
-    </div>
-
-    <!-- Panel 2: Diseño industrial minimalista -->
-    <div>
-      <div class="panel-eyebrow">FIG. 02.2 — PROCESO 1.2</div>
-      <div class="panel-title">DISEÑO DE EXPERIECIA</div>
-      <div class="panel-art">
-        <span class="img-wrap">
-          <img class="img-slot" src="images/umbrella.png" alt="Corte técnico de la prensa ACERO.PRESS con cotas">
-          <span class="img-tag">images/prensa-corte.png — corte de prensa</span>
-        </span>
-      </div>
-      <p class="panel-foot">
-        Diseño a medida de cada experiencia.
-      </p>
-    </div>
-
-    <!-- Panel 3: Energía en cada detalle -->
-    <div>
-      <div class="panel-eyebrow">FIG. 02.3 — TUESTE</div>
-      <div class="panel-title">Energía en cada detalle</div>
-      <div class="panel-art">
-        <span class="img-wrap">
-          <img class="img-slot" src="images/beans.png" alt="Granos de café en perspectiva isométrica con cotas técnicas">
-          <span class="img-tag">images/granos-isometrico.png — granos isométricos</span>
-        </span>
-      </div>
-      <p class="panel-foot">
-        Tueste calibrado por curva térmica, no por tiempo: cada lote ajusta temperatura y flujo de aire para sostener el perfil aromático.
-      </p>
-    </div>
-
-  </section>
-
-  <!-- ===================== VALORES ===================== -->
-    <div class="section-label" id="cafe">
-    <span class="num">03</span>
-    <span class="ttl">CAFE</span>
-    <span class="rule"></span>
-  </div>
-  <div>
-    <float id="s-cafe">
-  <div class="sp">
-    <div class="sec-lbl">// Catálogo de especialidad</div>
-    <h2 class="sec-h2">Variedades</h2>
-    <p class="sec-desc">Cada lote documentado con variedad botánica, proceso, altitud, puntaje SCA y notas de cata verificables. La aguja térmica indica la intensidad en taza.</p>
-    <div class="products-grid">
-      <div class="product-card">
-        <div class="p-var">Gesha · Proceso Lavado</div><div class="p-name">Acero Gesha</div>
-        <div class="p-meta">
-          <div class="p-mr"><span>Origen</span><span>Huila, Colombia</span></div>
-          <div class="p-mr"><span>Altitud</span><span>1.850 msnm</span></div>
-          <div class="p-mr"><span>Proceso</span><span>Lavado 36h</span></div>
-          <div class="p-mr"><span>Tueste</span><span>Claro · 196°C</span></div>
-        </div>
-        <div class="p-score">91.5</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
-        <div class="score-bar"><div class="score-needle" style="left:85%"></div></div>
-        <div class="p-notes">Jasmine, bergamota, melocotón blanco, acidez de uva verde. Final prolongado con mineralidad.</div>
-        <div class="p-price">$38.000 / 200g</div>
-      </div>
-      <div class="product-card">
-        <div class="p-var">Castillo Naranjal · Natural</div><div class="p-name">Castillo Negro</div>
-        <div class="p-meta">
-          <div class="p-mr"><span>Origen</span><span>Nariño, Colombia</span></div>
-          <div class="p-mr"><span>Altitud</span><span>2.100 msnm</span></div>
-          <div class="p-mr"><span>Proceso</span><span>Natural 21 días</span></div>
-          <div class="p-mr"><span>Tueste</span><span>Medio claro · 202°C</span></div>
-        </div>
-        <div class="p-score">88.0</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
-        <div class="score-bar"><div class="score-needle" style="left:63%"></div></div>
-        <div class="p-notes">Panela, mora, chocolate oscuro 70%, cuerpo denso. Ideal para prensa francesa y espresso.</div>
-        <div class="p-price">$28.000 / 200g</div>
-      </div>
-      <div class="product-card">
-        <div class="p-var">Pink Bourbon · Honey</div><div class="p-name">Bourbon Rosado</div>
-        <div class="p-meta">
-          <div class="p-mr"><span>Origen</span><span>Huila — Acevedo</span></div>
-          <div class="p-mr"><span>Altitud</span><span>1.780 msnm</span></div>
-          <div class="p-mr"><span>Proceso</span><span>Honey 30% mucílago</span></div>
-          <div class="p-mr"><span>Tueste</span><span>Claro · 198°C</span></div>
-        </div>
-        <div class="p-score">89.5</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
-        <div class="score-bar"><div class="score-needle" style="left:72%"></div></div>
-        <div class="p-notes">Frambuesa fresca, durazno, caramelo, acidez brillante. Perfecto para V60 y Aeropress.</div>
-        <div class="p-price">$32.000 / 200g</div>
-      </div>
-      <div class="product-card">
-        <div class="p-var">Typica · Lavado</div><div class="p-name">Typica Origen</div>
-        <div class="p-meta">
-          <div class="p-mr"><span>Origen</span><span>Cauca — Inzá</span></div>
-          <div class="p-mr"><span>Altitud</span><span>1.950 msnm</span></div>
-          <div class="p-mr"><span>Proceso</span><span>Lavado doble ferm.</span></div>
-          <div class="p-mr"><span>Tueste</span><span>Claro · 194°C</span></div>
-        </div>
-        <div class="p-score">87.0</div><div class="p-sl">Puntos SCA · Q-Grader certificado</div>
-        <div class="score-bar"><div class="score-needle" style="left:55%"></div></div>
-        <div class="p-notes">Limón Meyer, manzana verde, té negro, cuerpo ligero sedoso. Variedad patrimonio colombiano.</div>
-        <div class="p-price">$26.000 / 200g</div>
-      </div>
-    </div>
-  </div>
-</float>
-  </div>
- 
-  <section class="values">
- 
-    <div class="value-item">
-      <div class="value-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
-      </div>
-      <div>
-        <div class="value-title">Precisión</div>
-        <div class="value-desc">Cultivo de precisión para máxima calidad en cada cosecha.</div>
-      </div>
-    </div>
- 
-    <div class="value-item">
-      <div class="value-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 L4 14 H11 L10 22 L20 9 H13 Z" stroke-linejoin="round"/></svg>
-      </div>
-      <div>
-        <div class="value-title">Energía natural</div>
-        <div class="value-desc">Procesos eficientes que respetan la naturaleza y su entorno.</div>
-      </div>
-    </div>
- 
-    <div class="value-item">
-      <div class="value-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 14a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 0V4m-3 0h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div>
-        <div class="value-title">Balance térmico</div>
-        <div class="value-desc">Control térmico en cada etapa para un café excepcional.</div>
-      </div>
-    </div>
- 
-    <div class="value-item">
-      <div class="value-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 C16 6 18 10 14 18 L10 18 C6 10 8 6 12 2Z" stroke-linejoin="round"/><circle cx="12" cy="9" r="1.6"/></svg>
-      </div>
-      <div>
-        <div class="value-title">Innovación</div>
-        <div class="value-desc">Tecnología y diseño pensados para el futuro del café.</div>
-      </div>
-    </div>
- 
-  </section>
-  <div class="section-label" id="cafe">
-    <span class="num">04</span>
-    <span class="ttl">B2B</span>
-    <span class="rule"></span>
-  </div>
-  
-  <div class="sp">
-    <div class="sec-lbl">// Para empresas y profesionales</div>
-    <h2 class="sec-h2">B2B</h2>
-    <p class="sec-desc">Programa comercial para restaurantes, hoteles, oficinas y baristas que necesitan trazabilidad completa y consistencia en cada entrega.</p>
-    <div class="b2b-grid">
-      <div class="b2b-card"><div class="b2b-ico">🍽</div><div class="b2b-title">Restaurantes</div><div class="b2b-d">Variedades curadas para carta de café. Ficha técnica, capacitación y entregas semanales garantizadas.</div></div>
-      <div class="b2b-card"><div class="b2b-ico">🏨</div><div class="b2b-title">Hoteles</div><div class="b2b-d">Amenities con café de especialidad. Storytelling del productor para el huésped y contrato anual.</div></div>
-      <div class="b2b-card"><div class="b2b-ico">🏢</div><div class="b2b-title">Oficinas</div><div class="b2b-d">Café de especialidad como beneficio corporativo. Entregas quincenales y variedad rotativa.</div></div>
-      <div class="b2b-card"><div class="b2b-ico">☕</div><div class="b2b-title">Baristas</div><div class="b2b-d">Acceso directo a lotes especiales. Especificaciones técnicas completas y precios de tostador.</div></div>
-    </div>
-    
-  </div>
-
-  <div class="section-label" id="cafe">
-    <span class="num">05</span>
-    <span class="ttl">BLOG</span>
-    <span class="rule"></span>
-  </div>
-
-  
-  <div class="sp">
-    <div class="sec-lbl">// Contenido técnico · jobs to be done</div>
-    <h2 class="sec-h2">Conocimiento</h2>
-    <p class="sec-desc">Respuestas precisas a preguntas reales sobre café de especialidad colombiano. Contenido estructurado para humanos y para LLMs.</p>
-    <div class="blog-grid">
-      <div class="blog-card"><div class="blog-tag">Variedades</div><div class="blog-title">¿Qué diferencia a la variedad Gesha del resto del café colombiano?</div><div class="blog-ex">La Gesha tiene un perfil aromático único por su contenido de linalool. Puntajes SCA entre 88 y 93 puntos en altitudes sobre 1.700 msnm.</div></div>
-      <div class="blog-card"><div class="blog-tag">Procesos</div><div class="blog-title">Lavado vs Natural vs Honey: cómo el proceso cambia el sabor del café</div><div class="blog-ex">El proceso lavado elimina el 100% del mucílago antes del secado, produciendo acidez limpia. El natural retiene el fruto completo, generando sabores fermentados.</div></div>
-      <div class="blog-card"><div class="blog-tag">Preparación</div><div class="blog-title">Cómo preparar correctamente un Pink Bourbon en V60</div><div class="blog-ex">Relación 1:15, temperatura 94°C, molienda media. Bloom de 30ml por 30 segundos. Vertidos en 3 etapas. Tiempo total: 3 minutos 15 segundos.</div></div>
-      <div class="blog-card"><div class="blog-tag">Origen</div><div class="blog-title">Por qué Nariño produce el Castillo con mayor acidez de Colombia</div><div class="blog-ex">A 2.100 msnm y con temperaturas nocturnas de 10–12°C, el grano desarrolla mayor densidad celular y retiene más ácido málico y cítrico.</div></div>
-      <div class="blog-card"><div class="blog-tag">Evaluación</div><div class="blog-title">Qué significa el puntaje SCA y cómo identificar un café de especialidad</div><div class="blog-ex">La Specialty Coffee Association define como especialidad cualquier lote que supere 80 puntos. A partir de 85 se considera excepcional; sobre 90, sobresaliente.</div></div>
-      <div class="blog-card"><div class="blog-tag">Trazabilidad</div><div class="blog-title">Cómo leer la ficha técnica de un café de origen único</div><div class="blog-ex">Variedad botánica, municipio, altitud, proceso, temperatura de tueste, puntaje SCA y nombre del productor. Si falta alguno, no es trazabilidad real.</div></div>
-    </div>
-  </div>
-
-  <!-- ===================== CIERRE ===================== -->
-  <footer class="closing" id="contacto">
-    <div class="meta">
-      ACERO — Specialty Coffee<br>
-      © 2026 — Todos los derechos reservados
-    </div>
-    <span class="logo-mark-slot">
-      <span class="img-wrap">
-        <img class="img-slot" src="images/logo-acero.png" alt="Logotipo ACERO">
-        <span class="img-tag">images/logo-acero.png</span>
-      </span>
-    </span>
-  </footer>
 
 </div>
 
-</body>
- <script src="main.js"></script>
+<script>
+const WHATSAPP_NUMBER = "573001234567";
+const STYLES = ["Minimalista", "Industrial", "Cálido / madera", "Escandinavo", "Tropical"];
+// Imagen simulada de alta gama para la cafetería reinventada
+const REINVENTED_CAFE_IMG = "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80";
 
+let state = "welcome";
+let uploadedImageURL = null;
+let uploadedFile = null;
+let chosenStyle = "Industrial";
+
+const chat = document.getElementById('chat');
+const chatMessages = document.getElementById('chatMessages');
+const stateTag = document.getElementById('stateTag');
+const storyInline = document.getElementById('storyInline');
+const waitingScreen = document.getElementById('waitingScreen');
+const waitingScanImg = document.getElementById('waitingScanImg');
+
+// Estructura de los pasos compartidos de Scrollytelling
+const stepsHTML = `
+  <article class="story-step" data-step="1">
+    <span class="fig-tag">FIG. 01 — CAPTURA</span>
+    <span class="story-num">01</span>
+    <h2>Sube una foto real</h2>
+    <p>Desde la cámara o la galería. Interior o fachada, tal como está hoy — sin planos ni renders previos.</p>
+    <div class="story-visual">
+      <div class="sv-frame">
+        <div class="sv-corner tl"></div><div class="sv-corner tr"></div>
+        <div class="sv-corner bl"></div><div class="sv-corner br"></div>
+        <div class="sv-icon">📷</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="story-step" data-step="2">
+    <span class="fig-tag">FIG. 02 — ESTILO</span>
+    <span class="story-num">02</span>
+    <h2>Elige una tendencia</h2>
+    <p>Minimalista, industrial, cálido o nórdico. Cada opción reconfigura automáticamente materiales, iluminación y texturas.</p>
+    <div class="story-visual">
+      <div class="sv-chips">
+        <span>Minimalista</span><span>Industrial</span><span>Cálido</span><span>Escandinavo</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="story-step" data-step="3">
+    <span class="fig-tag">FIG. 03 — PROCESAMIENTO</span>
+    <span class="story-num">03</span>
+    <h2>Fusión Estructural AI</h2>
+    <p>Mantenemos la arquitectura base (muros, columnas y accesos fijados) y alteramos drásticamente el interiorismo.</p>
+    <div class="story-visual">
+      <div class="sv-scan"><div class="sv-scan-line"></div></div>
+    </div>
+  </article>
+
+  <article class="story-step" data-step="4">
+    <span class="fig-tag">FIG. 04 — CONEXIÓN</span>
+    <span class="story-num">04</span>
+    <h2>Presupuesta en Obra</h2>
+    <p>Con la propuesta lista, ejecutas el puente directo hacia WhatsApp con el equipo de arquitectos de acero.studio.</p>
+    <div class="story-visual">
+      <div class="sv-wa">💬 Enviar a WhatsApp →</div>
+    </div>
+  </article>
+`;
+
+// Inyectar pasos en ambas vistas (Desktop / Mobile Inline)
+document.getElementById('desktopSteps').innerHTML = stepsHTML;
+document.getElementById('mobileSteps').innerHTML = stepsHTML;
+
+/* ============================================================
+   SCROLLYTELLING CORE OBSERVER
+============================================================ */
+(function initStoryScroll(){
+  const steps = document.querySelectorAll('.story-step');
+  const dots = document.querySelectorAll('.p-dot');
+  if(!steps.length) return;
+
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        const n = entry.target.dataset.step;
+        dots.forEach(d => d.classList.toggle('active', d.dataset.p === n));
+      }
+    });
+  }, { threshold: 0.25 });
+
+  steps.forEach(step => observer.observe(step));
+})();
+
+function setState(s){
+  state = s;
+  stateTag.textContent = "estado: " + s;
+}
+
+function scrollBottom(){
+  requestAnimationFrame(()=> chat.scrollTop = chat.scrollHeight);
+}
+
+/* ===== Generadores de Mensajes ===== */
+function botBubble(html, figTag){
+  const row = document.createElement('div');
+  row.className = 'row bot';
+  row.innerHTML = `<div class="bubble bot">${figTag ? `<span class="fig-tag">${figTag}</span>`:''}${html}</div>`;
+  chatMessages.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function userBubble(html){
+  const row = document.createElement('div');
+  row.className = 'row user';
+  row.innerHTML = `<div class="bubble user">${html}</div>`;
+  chatMessages.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function typingBubble(){
+  const row = document.createElement('div');
+  row.className = 'row bot';
+  row.innerHTML = `<div class="bubble bot"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  chatMessages.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function botDelay(fn, ms=650){
+  const t = typingBubble();
+  setTimeout(()=>{ t.remove(); fn(); }, ms);
+}
+
+/* ===== Control de Flujos Iniciales ===== */
+function start(){
+  const isMobile = window.innerWidth < 980;
+  if(!isMobile) {
+    botBubble(
+      "Hola 👋 Soy el asistente de rediseño de <b>acero.studio</b>. Te ayudo a visualizar cómo se vería tu cafetería con un nuevo diseño de interior o fachada.<br><br>Para empezar, envíame una foto del espacio desde los controles inferiores.",
+      "FIG. 01 — INICIO"
+    );
+  }
+  setState("waiting_photo");
+}
+
+/* ===== Transición Crítica Solicitada ===== */
+function onImageSelected(file){
+  if(!file) return;
+  uploadedFile = file;
+  uploadedImageURL = URL.createObjectURL(file);
+
+  const isMobile = window.innerWidth < 980;
+
+  if (isMobile) {
+    // 1. Ocultar de inmediato el scrollytelling en la pantalla del chat
+    storyInline.style.display = 'none';
+    chatMessages.innerHTML = ''; // Limpiar residuos
+
+    // 2. Crear / Activar pantalla de espera ahí mismo
+    waitingScanImg.src = uploadedImageURL;
+    waitingScreen.style.display = 'flex';
+    setState("generating");
+
+    // 3. Simular tiempo de procesamiento y renderizado
+    setTimeout(() => {
+      waitingScreen.style.display = 'none';
+      // Desplegar directamente el mensaje con la imagen de la cafetería reinventada
+      showResult("Industrial / Moderno");
+    }, 3200);
+
+  } else {
+    // Flujo convencional en Desktop (Panel lateral estático preservado)
+    userBubble(`<img src="${uploadedImageURL}" alt="Foto enviada">`);
+    botDelay(()=>{
+      let chipsHtml = STYLES.map(s => `<button class="chip" data-style="${s}">${s}</button>`).join('');
+      botBubble(
+        `Foto recibida con éxito. ¿Qué tendencia de estilo deseas inyectar a tu cafetería?<div class="chips">${chipsHtml}</div>`,
+        "FIG. 02 — ESTILO"
+      );
+      document.querySelectorAll('.chip').forEach(chip=>{
+        chip.addEventListener('click', ()=> onStyleChosen(chip.dataset.style));
+      });
+      setState("waiting_style");
+    });
+  }
+}
+
+function onStyleChosen(style){
+  chosenStyle = style;
+  document.querySelectorAll('.chip').forEach(c => c.style.pointerEvents='none');
+  userBubble(style);
+  setState("generating");
+
+  botDelay(()=>{
+    const genRow = botBubble(
+      `Generando propuesta en estilo <b>${style}</b>…<div class="scan-wrap"><img src="${uploadedImageURL}"><div class="scan-line"></div><div class="scan-label">renderizando · ControlNet activo</div></div>`,
+      "FIG. 03 — GENERACIÓN"
+    );
+    scrollBottom();
+
+    setTimeout(()=>{
+      genRow.remove();
+      showResult(style);
+    }, 2200);
+  }, 500);
+}
+
+function showResult(style){
+  chosenStyle = style;
+  botBubble(
+    `¡Listo! Aquí tienes la propuesta para tu <b>Cafetería Reinventada</b> bajo un enfoque conceptual <b>${style}</b>.
+     <div class="scan-wrap" style="border-color:var(--accent); max-width: 280px;">
+       <img src="${REINVENTED_CAFE_IMG}" alt="Cafetería Reinventada" style="max-width: 100%;">
+     </div>
+     <span class="result-tag">Diseño Generado · v1.0 (Alta Fidelidad)</span><br>
+     <div style="margin-top:10px; font-size:.8rem; color:var(--ink-soft)">
+       ¿Te gustaría refinar esta propuesta espacial con un arquitecto o cotizar la obra civil?
+     </div>
+     <button class="cta-btn" id="btnWA">💬 Continuar a WhatsApp</button>
+     <button class="cta-btn ghost" id="btnRetry">Probar otro estilo</button>`,
+    "FIG. 04 — RESULTADO FINAL"
+  );
+  
+  document.getElementById('btnWA').addEventListener('click', goToWhatsapp);
+  document.getElementById('btnRetry').addEventListener('click', ()=>{
+    const isMobile = window.innerWidth < 980;
+    if(isMobile) {
+      chatMessages.innerHTML = '';
+      storyInline.style.display = 'block';
+      setState("waiting_photo");
+    } else {
+      document.querySelectorAll('.chip').forEach(c => c.style.pointerEvents='auto');
+      botBubble("Selecciona una alternativa de diseño para esta misma captura:" +
+        `<div class="chips">${STYLES.map(s => `<button class="chip" data-style="${s}">${s}</button>`).join('')}</div>`,
+        "FIG. 02 — ESTILO"
+      );
+      document.querySelectorAll('.chip').forEach(chip=>{
+        chip.addEventListener('click', ()=> onStyleChosen(chip.dataset.style));
+      });
+    }
+  });
+  setState("result");
+}
+
+function goToWhatsapp(){
+  const msg = `Hola, vengo de la app web de acero.studio. Me interesa cotizar y materializar el rediseño de mi cafetería en estilo ${chosenStyle}.`;
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  botBubble(
+    `Redireccionando de manera segura. Recuerda guardar y adjuntar las imágenes de tu espacio en la ventana de chat de WhatsApp debido a políticas de privacidad del navegador.`,
+    "FIG. 05 — PROYECTO"
+  );
+  setState("whatsapp");
+  setTimeout(()=> window.open(url, '_blank'), 800);
+}
+
+/* ===== Conversación Asistida Estándar ===== */
+function handleUserText(text){
+  userBubble(text);
+  const t = text.toLowerCase();
+
+  botDelay(()=>{
+    if(state === "waiting_photo"){
+      botBubble("Para iniciar el renderizado inteligente, interactúa con los iconos de cámara 📷 o galería 🖼️ justo abajo.");
+      return;
+    }
+    if(t.includes("gracias") || t.includes("hola")){
+      botBubble("¡Un placer asistirte! Puedes cambiar el estilo volviendo a presionar el botón de reintentar o saltar directo a la cotización formal.");
+      return;
+    }
+    botBubble("Entendido. Envía una nueva captura o continúa el flujo hacia el canal de WhatsApp para coordinar una inspección técnica.");
+  }, 600);
+}
+
+/* ============================================================
+   LISTENERS Y INICIALIZADORES NATIVOS
+============================================================ */
+document.getElementById('btnCamera').addEventListener('click', () => document.getElementById('fileCamera').click());
+document.getElementById('btnGallery').addEventListener('click', () => document.getElementById('fileGallery').click());
+
+document.getElementById('fileCamera').addEventListener('change', function(){
+  if(this.files && this.files[0]) onImageSelected(this.files[0]);
+});
+document.getElementById('fileGallery').addEventListener('change', function(){
+  if(this.files && this.files[0]) onImageSelected(this.files[0]);
+});
+
+document.getElementById('btnSend').addEventListener('click', () => {
+  const inp = document.getElementById('textInput');
+  if(inp.value.trim()){ handleUserText(inp.value.trim()); inp.value = ''; }
+});
+document.getElementById('textInput').addEventListener('keypress', (e) => {
+  const inp = document.getElementById('textInput');
+  if(e.key === 'Enter' && inp.value.trim()){ handleUserText(inp.value.trim()); inp.value = ''; }
+});
+
+// Arrancar App
+start();
+</script>
+</body>
 </html>
