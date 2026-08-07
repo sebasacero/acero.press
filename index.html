@@ -147,14 +147,13 @@
             <div class="navbar-content">  
                 
                 <!-- SECCIÓN IZQUIERDA: Enlaces de Navegación -->
-                <div class="nav-links left">
-                    <a href="#home">Home</a>
-                    <a href="#beans">Beans</a>
-                    <a href="#contact">Contact</a>
-                </div>
+                <a href="#home">Home</a>
+                <a href="#beans">Beans</a>
+                <a href="#championship">Champions</a> <!-- Recomendado para la sección WAC -->
+                <a href="#contact">Contact</a>
 
                 <!-- SECCIÓN CENTRAL: Logo (con tu imagen) -->
-                <div class="nav-logo">
+                <div class="nav-logo" id="home">
                     <!-- Reemplaza "logo_aceropress.png" con la ruta a tu archivo de imagen del logo -->
                     <img src="image/logo_aceropress.png" alt="ACEROPRESS Logo" class="logo-img">
                 </div>
@@ -189,7 +188,7 @@
 
     </header>
     <!-- Sección de Compra -->
-<section class="product-section">
+<section class="product-section"id="beans">
   <!-- Banner superior -->
   <div class="product-banner">
     <div class="banner-text">BEANS BEANS BEANS BEANS BEANS</div>
@@ -199,7 +198,7 @@
   <div class="product-container">
     
     <!-- Columna Izquierda: Galería de Imágenes -->
-    <div class="product-gallery">
+    <div class="product-gallery" >
       <div class="image-wrapper">
         <button class="nav-btn prev" aria-label="Previous image">
           <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -361,7 +360,7 @@
 
 
 <!-- ===================== MÉTODO — Blog de recetas campeonas ===================== -->
-<div class="section-label" id="metodo">
+<div class="section-label" id="championship">
   <span class="num">03</span>
   <span class="rule"></span>
   <span class="sub">FIG. 03 — CHAMPIONSHIP ARCHIVE / ARCHIVO DE CAMPEONES</span>
@@ -2550,7 +2549,7 @@
 </div>
   
   
-<footer class="hero-footer">
+<footer class="hero-footer" id="contact">>
   <!-- Vídeo de Fondo -->
   <video class="footer-video-bg" autoplay loop muted playsinline>
     <source src="image/hero_main1.mp4" type="video/mp4" />
