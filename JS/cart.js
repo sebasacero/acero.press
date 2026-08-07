@@ -17,7 +17,7 @@
    Formato: código de país + número, sin +, sin espacios
    Ejemplo Colombia: 573001112233
 --------------------------------------------- */
-const WHATSAPP_NUMBER = '573152124327';
+const WHATSAPP_NUMBER = '573152125327';
 
 document.addEventListener('DOMContentLoaded', () => {
 
