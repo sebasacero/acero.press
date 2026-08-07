@@ -1384,14 +1384,13 @@ body {
 }
 
 /* Responsivo para móviles */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 16px 20px;
-  }
-
-  .nav-links {
-    display: none; /* Ocultar menú de texto en pantallas pequeñas */
-  }
+/* Cambia esto en tu CSS: */
+@media (max-width:880px){
+  /* En lugar de esconder .nav-links completo: */
+  .nav-links a { display: none; }
+  
+  /* Muestras el botón hamburguesa dentro del espacio de .nav-links: */
+  .menu-toggle { display: flex; }
 }
 /* ============================================
    BLOG DE RECETAS — WAC ARCHIVE
