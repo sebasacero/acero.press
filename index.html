@@ -148,12 +148,20 @@
         <div class="navbar-content">
 
             <!-- SECCIÓN IZQUIERDA: Enlaces de Navegación (desktop) -->
-            <div class="nav-links left">
-                <a href="#home">Home</a>
-                <a href="#beans">Beans</a>
-                <a href="#championship">Champions</a>
-                <a href="#contact">Contact</a>
-            </div>
+            <div class="nav-links">
+    <!-- Botón hamburguesa para mobile (usa el espacio izquierdo) -->
+    <button class="menu-toggle" id="openMenuMobile" aria-label="Abrir menú">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Enlaces de texto -->
+    <a href="#home">Home</a>
+    <a href="#beans">Beans</a>
+    <a href="#championship">Champions</a>
+    <a href="#contact">Contact</a>
+</div>
 
             <!-- HAMBURGUESA (solo mobile, reemplaza nav-links) -->
             <button id="nav-hamburger" class="hamburger-btn" aria-label="Abrir menú" aria-expanded="false">
