@@ -17,7 +17,7 @@
    Formato: código de país + número, sin +, sin espacios
    Ejemplo Colombia: 573001112233
 --------------------------------------------- */
-const WHATSAPP_NUMBER = '573152125327';
+const WHATSAPP_NUMBER = '573152124327';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -334,3 +334,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   console.log('[cart.js] Inicialización completa.');
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const hamburgerBtn = document.getElementById('nav-hamburger');
+    const navDrawer    = document.getElementById('nav-drawer');
+    const navOverlay   = document.getElementById('nav-overlay');
+    const navClose     = document.getElementById('nav-close');
+
+    function openNav(){
+      navDrawer.classList.add('open');
+      navOverlay.classList.add('open');
+      navDrawer.setAttribute('aria-hidden','false');
+      hamburgerBtn.setAttribute('aria-expanded','true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeNav(){
+      navDrawer.classList.remove('open');
+      navOverlay.classList.remove('open');
+      navDrawer.setAttribute('aria-hidden','true');
+      hamburgerBtn.setAttribute('aria-expanded','false');
+      document.body.style.overflow = '';
+    }
+
+    hamburgerBtn?.addEventListener('click', openNav);
+    navClose?.addEventListener('click', closeNav);
+    navOverlay?.addEventListener('click', closeNav);
+    document.querySelectorAll('[data-nav-link]').forEach(link => {
+      link.addEventListener('click', closeNav);
+    });
+
+    console.log('[nav-drawer.js] Menú lateral inicializado ✅');
+  } catch (err) {
+    console.error('[nav-drawer.js] Error:', err);
+  }
+});
+
