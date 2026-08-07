@@ -1242,9 +1242,7 @@ body {
 }
 
 @media (max-width:768px){
-  .navbar-content{
-    /* ya no hace falta justify-content:center aquí */
-  }
+  
   .nav-links.left{
     display:none; /* sigue oculto, pero ya no afecta el centrado del logo */
   }
@@ -1850,3 +1848,4 @@ body {
   width:17px;
   height:17px;
 }
+
