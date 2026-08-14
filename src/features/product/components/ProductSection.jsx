@@ -166,7 +166,6 @@ export default function ProductSection() {
           <div className="payment-options-link">
             <a href="#">{t('product.morePayment')}</a>
           </div>
-
           <div className="pickup-status">
             <div className="status-message"></div>
             <a href="#" className="store-info-link">{t('product.viewStore')}</a>
