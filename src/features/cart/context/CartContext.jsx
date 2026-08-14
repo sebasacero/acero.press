@@ -3,7 +3,7 @@ import { createContext, useContext, useMemo, useState, useCallback } from 'react
 const CartContext = createContext(null);
 
 // Cambia este número por el real. Formato: código de país + número, sin +, sin espacios.
-export const WHATSAPP_NUMBER = '573001112233';
+export const WHATSAPP_NUMBER = '57152125327';
 
 const money = (n) => '$' + Math.round(n).toLocaleString('es-CO');
 
