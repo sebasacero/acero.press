@@ -62,4 +62,4 @@ const socials = [
       </aside>
     </>
   );
-}
+
