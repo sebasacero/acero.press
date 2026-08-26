@@ -16,8 +16,8 @@ const VARIETIES = [
     prices: { '250G': 18000, '500G': 30000, '1KG': 55000 },
   },
   {
-    id: 'Castillo',
-    name: 'Castillo,
+    id: 'castillo',
+    name: 'Castillo',
     image: '/image/bagsbeans-castillo.png',
     prices: { '250G': 20000, '500G': 34000, '1KG': 60000 },
   },
