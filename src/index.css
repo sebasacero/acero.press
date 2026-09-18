@@ -9,6 +9,8 @@
   --magenta-bright:#FF0000;
   --yt:#FF0000;
   --cream:#F7F3E8;
+  --sales-bag: var(--magenta-bright);
+  --sales-prep: #2E8B57;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -59,6 +61,73 @@ a{ color:inherit; text-decoration:none; }
 }
 .btn:active{ transform:translate(2px,3px); box-shadow:none; }
 .btn:focus-visible{ outline:3px solid var(--magenta); outline-offset:3px; }
+
+/* === Sales Counter / Odometer === */
+.sales-counter-section{
+  background:var(--ink);
+  padding:2.6rem 1.5rem;
+}
+.sales-counter-inner{
+  max-width:900px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3rem;
+  flex-wrap:wrap;
+}
+.sales-counter-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.7rem;
+}
+.sales-counter-label{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.68rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.6);
+  text-align:center;
+}
+.sales-counter-divider{
+  width:1px;
+  height:52px;
+  background:rgba(255,255,255,.18);
+}
+.odo-wrap{
+  display:flex;
+  gap:.2rem;
+  background:var(--near-black);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;
+  padding:.5rem .6rem;
+}
+.odo-digit{
+  display:inline-block;
+  width:1.5ch;
+  height:1.5em;
+  overflow:hidden;
+  position:relative;
+  line-height:1.5em;
+}
+.odo-digit-strip{
+  display:flex;
+  flex-direction:column;
+  transition:transform .6s cubic-bezier(.3,1,.4,1);
+}
+.odo-digit-cell{
+  height:1.5em;
+  font-family:'JetBrains Mono', monospace;
+  font-weight:700;
+  font-size:1.5rem;
+  color:var(--magenta);
+  text-align:center;
+}
+@media(max-width:600px){
+  .sales-counter-inner{ gap:1.6rem; }
+  .odo-digit-cell{ font-size:1.1rem; }
+}
 
 /* === Marquee === */
 .mq-wrap{ overflow:hidden; border-bottom:1px solid var(--grid-line); border-top:1px solid var(--grid-line); }
@@ -341,9 +410,39 @@ a{ color:inherit; text-decoration:none; }
 .btn-buy-shop{
   width: 100%; background-color: #5a31f4; color: #ffffff; border: none; border-radius: 8px;
   padding: 16px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-bottom: 16px;
-  display: flex; align-items: center; justify-content: center; gap: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
+.btn-buy-icon{ flex-shrink: 0; }
 .shop-logo{ font-weight: 800; font-style: italic; font-size: 1.1rem; }
+
+.buy-now-row{ display: flex; gap: 10px; margin-bottom: 8px; }
+.buy-now-row .btn-buy-shop{ width: auto; flex: 1; margin-bottom: 0; }
+.btn-buy-card{
+  background-color: var(--near-black, #1E1E1E);
+}
+.btn-buy-card:disabled{ opacity: .6; cursor: default; }
+
+/* En mobile, los botones de compra muestran solo el ícono (carrito / tarjeta) */
+@media(max-width:700px){
+  .btn-buy-text{ display:none; }
+  .buy-now-row .btn-buy-shop{ padding: 14px 10px; }
+}
+
+.btn-checkout-card{
+  width: 100%; background-color: var(--near-black, #1E1E1E); color: #fff; border: none;
+  border-radius: 8px; padding: 14px; font-size: .95rem; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;
+}
+.btn-checkout-card:disabled{ opacity: .6; cursor: default; }
+
+.cart-payment-error{
+  color: var(--magenta, #de1b1b); font-size: .78rem; text-align: center; margin: -6px 0 12px;
+}
+.payment-worldwide-note{
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--ink-soft, #6B7290);
+  text-align: center; margin-bottom: 14px;
+}
+
 .payment-options-link{ text-align: center; margin-bottom: 30px; }
 .payment-options-link a{ font-size: 0.85rem; color: #555; text-decoration: underline; text-underline-offset: 3px; }
 
@@ -422,17 +521,32 @@ dialog.recipe-modal-banner{
   padding: 0;
   width: min(760px, 92vw);
   max-height: 88vh;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   background: var(--cream);
+  /* El reset global de margin:0 le quita al navegador el centrado por
+     defecto de <dialog> — lo forzamos explícitamente en las 2 direcciones. */
+  margin: auto;
+  position: fixed;
+  inset: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.35) inset;
 }
-dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.55); }
-.modal-container{ display:flex; flex-direction:column; max-height:88vh; overflow-y:auto; }
+dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.6); backdrop-filter: blur(2px); }
+.modal-container{ display:flex; flex-direction:column; max-height:88vh; overflow-y:auto; position: relative; }
+.modal-container::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:5px; z-index:6;
+  background: linear-gradient(90deg,
+    #cfd3d8 0%, #ffffff 15%, #8b8f96 30%, #eef0f2 45%, #9a9ea5 60%, #ffffff 75%, #b7bbc1 90%, #7d8188 100%);
+}
 .modal-close{
   position: absolute; top: 14px; right: 14px; z-index: 5; width: 34px; height: 34px; border-radius: 50%;
-  border: none; background: rgba(0,0,0,.5); color: #fff; font-size: 20px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.5);
+  background: linear-gradient(145deg, #f4f5f7 0%, #b7bbc1 45%, #8b8f96 60%, #eef0f2 100%);
+  color: #24262a; font-size: 20px; font-weight: 700; cursor: pointer;
   display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35), inset 0 1px 1px rgba(255,255,255,.8);
 }
+.modal-close:hover{ filter: brightness(1.05); }
 .hero-header{ position: relative; }
 .hero-video-wrapper{ position: relative; aspect-ratio: 16/7; background: var(--near-black); overflow:hidden; }
 .hero-video{ width: 100%; height: 100%; object-fit: cover; display:block; }
@@ -476,6 +590,45 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.55); }
 .cart-count-badge.pulse{ animation: cartPulse .35s ease; }
 @keyframes cartPulse{ 0%{transform:scale(1);} 40%{transform:scale(1.4);} 100%{transform:scale(1);} }
 .icon-link{ position:relative; }
+.nav-account-avatar{
+  width:22px; height:22px; border-radius:50%; object-fit:cover; display:block;
+}
+
+/* === Account drawer === */
+.account-drawer-body{ padding:24px 5vw; }
+.account-loading{ color:var(--ink-soft, #6B7290); font-size:.85rem; }
+
+.account-login-panel{ display:flex; flex-direction:column; gap:14px; }
+.account-blurb{ font-size:.9rem; color:var(--ink, #2A3550); line-height:1.6; }
+.btn-google{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  background:#fff; border:1.5px solid var(--grid-line, #D6CEB6); border-radius:8px;
+  padding:13px; font-size:.92rem; font-weight:600; color:var(--near-black, #1E1E1E); cursor:pointer;
+}
+.btn-google:hover{ border-color:var(--ink, #2A3550); }
+.account-fineprint{
+  font-family:'JetBrains Mono', monospace; font-size:.7rem; color:var(--ink-soft, #6B7290); text-align:center;
+}
+
+.account-profile-panel{ display:flex; flex-direction:column; gap:18px; }
+.account-profile-head{ display:flex; align-items:center; gap:12px; }
+.account-avatar{ width:48px; height:48px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.account-avatar-fallback{
+  display:flex; align-items:center; justify-content:center; background:var(--ink, #2A3550);
+  color:#fff; font-weight:800; font-size:1.1rem;
+}
+.account-name{ font-weight:700; color:var(--near-black, #1E1E1E); }
+.account-email{ font-size:.8rem; color:var(--ink-soft, #6B7290); }
+
+.account-offers-toggle{
+  display:flex; align-items:center; gap:10px; font-size:.88rem; color:var(--ink, #2A3550);
+  border:1px solid var(--grid-line, #D6CEB6); border-radius:8px; padding:12px 14px; cursor:pointer;
+}
+
+.account-links{ display:flex; flex-direction:column; gap:10px; }
+.account-links a{ font-size:.85rem; color:var(--ink, #2A3550); text-decoration:underline; text-underline-offset:3px; }
+
+.account-signout{ margin-top:4px; }
 
 .cart-overlay, .nav-overlay{
   position:fixed; inset:0; background:rgba(20,20,20,.45); opacity:0; pointer-events:none;
@@ -569,7 +722,7 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.55); }
 }
 
 .hero-location-badge{
-  position: absolute; left: 24px; bottom: 24px; z-index: 20;
+  position: absolute; left: 24px; bottom: 100px; z-index: 20;
   display: flex; align-items: center; gap: 10px;
   padding: 12px 16px; border-radius: 10px 16px 10px 16px;
   background: rgba(12,12,14,.5); backdrop-filter: blur(10px) saturate(120%);
@@ -583,7 +736,9 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.55); }
 .hero-location-address{ font-family:'JetBrains Mono', monospace; font-size:.72rem; letter-spacing:.02em; color:#fff; }
 .hero-location-cta{ font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.75); font-weight:700; }
 @media (max-width:700px){
-  .hero-location-badge{ left:16px; bottom:16px; padding:10px 12px; }
+  /* .sales-float en mobile mide 52px y queda en bottom:18px → su borde
+     superior está en 70px. Dejamos la insignia de ubicación por encima. */
+  .hero-location-badge{ left:16px; bottom:82px; padding:10px 12px; }
   .hero-location-address{ font-size:.68rem; }
 }
 
@@ -672,3 +827,200 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.55); }
 .lang-btn--single{ min-width:2.4rem; text-align:center; }
 
 .nav-drawer-lang{ display:flex; justify-content:center; margin-bottom:14px; }
+
+/* === Sales goal floating "odometer" button === */
+.sales-float{
+  position:fixed; bottom:24px; left:24px; z-index:300; width:64px; height:64px; border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 35%),
+    conic-gradient(from 200deg,
+      #f4f5f7 0deg, #cfd3d8 40deg, #8b8f96 80deg, #eef0f2 120deg, #9a9ea5 160deg,
+      #ffffff 200deg, #b7bbc1 240deg, #e6e8ea 280deg, #7d8188 320deg, #f4f5f7 360deg);
+  border:1px solid rgba(255,255,255,.6); cursor:pointer; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.35), inset 0 1px 2px rgba(255,255,255,.8), inset 0 -2px 4px rgba(0,0,0,.25);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.sales-float:hover{ transform:scale(1.07); box-shadow:0 6px 26px rgba(0,0,0,.45), inset 0 1px 2px rgba(255,255,255,.8), inset 0 -2px 4px rgba(0,0,0,.25); }
+.sales-float-ring{
+  position:absolute; inset:-5px; border-radius:50%; pointer-events:none;
+  background:conic-gradient(var(--sales-bag) calc(var(--sales-pct) * 1%), rgba(120,120,120,.25) 0);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  transition:background .4s ease;
+}
+.sales-float-inner{
+  position:relative; z-index:2; display:flex; flex-direction:column; align-items:center;
+  color:#2a2c30; font-family:'JetBrains Mono', monospace; line-height:1;
+  text-shadow:0 1px 0 rgba(255,255,255,.5);
+}
+.sales-float-pct{ font-size:1rem; font-weight:800; }
+.sales-float-label{ font-size:.5rem; letter-spacing:.08em; text-transform:uppercase; opacity:.65; margin-top:3px; }
+@media (max-width:700px){
+  .sales-float{ width:52px; height:52px; bottom:18px; left:18px; }
+  .sales-float-pct{ font-size:.82rem; }
+}
+
+/* === Sales goal modal === */
+dialog.sales-modal-banner{
+  border:none; padding:0; width:min(720px, 92vw); max-height:88vh; border-radius:14px;
+  overflow:hidden; background:var(--cream);
+  margin: auto;
+  position: fixed;
+  inset: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.35) inset;
+}
+dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filter: blur(2px); }
+.sales-modal-header{
+  position:relative; padding:28px 24px 20px; background:var(--near-black); color:#fff;
+  overflow: hidden;
+}
+.sales-modal-header::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:5px; z-index:2;
+  background: linear-gradient(90deg,
+    #cfd3d8 0%, #ffffff 15%, #8b8f96 30%, #eef0f2 45%, #9a9ea5 60%, #ffffff 75%, #b7bbc1 90%, #7d8188 100%);
+}
+.sales-badge{
+  background: linear-gradient(145deg, #f4f5f7 0%, #b7bbc1 45%, #8b8f96 60%, #eef0f2 100%);
+  color:#24262a; border:1px solid rgba(255,255,255,.5);
+}
+.sales-modal-header .hero-subtitle{ color:rgba(255,255,255,.7); max-width:48ch; }
+
+.sales-odo-panel{
+  position:relative; border:2px solid var(--ink); border-radius:12px 4px 14px 4px;
+  padding:1.2rem 1.2rem 1rem; margin-bottom:1.4rem;
+  background:repeating-linear-gradient(45deg, rgba(42,53,80,.035) 0 10px, transparent 10px 20px);
+}
+.sales-fig-label{
+  font-family:'JetBrains Mono', monospace; font-size:.68rem; color:var(--ink-soft);
+  margin-bottom:.8rem; letter-spacing:.05em; text-transform:uppercase;
+}
+.sales-odo-row{ display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap; margin-bottom:.9rem; }
+.sales-odo{ display:flex; gap:.25rem; background:var(--near-black); padding:.55rem .7rem; border-radius:6px; box-shadow:inset 0 2px 8px rgba(0,0,0,.45); }
+.sales-digit{
+  font-family:'JetBrains Mono', monospace; font-size:clamp(1.1rem, 3.6vw, 1.7rem); font-weight:700;
+  color:var(--cream); background:#33375a; border-radius:3px; width:1.05ch; text-align:center; padding:.05rem;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.6), inset 0 -1px 0 rgba(255,255,255,.06);
+}
+.sales-odo-sep{ font-family:'JetBrains Mono', monospace; font-size:1.3rem; color:var(--sales-bag); font-weight:700; }
+.sales-odo-target{ font-family:'JetBrains Mono', monospace; font-size:1.05rem; color:var(--ink-soft); font-weight:700; }
+.sales-seg-bar{ display:flex; gap:3px; margin-bottom:.5rem; }
+.sales-seg{ flex:1; height:10px; background:var(--grid-line); border-radius:1px; }
+.sales-seg.filled{ background:var(--sales-bag); }
+.sales-progress-caption{ font-family:'JetBrains Mono', monospace; font-size:.72rem; color:var(--ink-soft); }
+
+.sales-specs-bar{ margin-bottom:1.6rem; }
+
+.sales-history h4{ font-family:'Space Grotesk', sans-serif; font-size:.95rem; text-transform:uppercase; letter-spacing:.03em; margin-bottom:.7rem; color:var(--ink); }
+.sales-history-list{ display:flex; flex-direction:column; gap:2px; max-height:260px; overflow-y:auto; }
+.sales-history-item{
+  display:flex; align-items:center; gap:10px; padding:.5rem .3rem; border-bottom:1px solid var(--grid-line);
+  font-size:.82rem;
+}
+.sales-history-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.sales-history-bag .sales-history-dot{ background:var(--sales-bag); }
+.sales-history-prep .sales-history-dot{ background:var(--sales-prep); }
+.sales-history-label{ flex:1; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sales-history-time{ color:var(--ink-soft); font-family:'JetBrains Mono', monospace; font-size:.7rem; flex-shrink:0; }
+.sales-history-amount{ font-family:'JetBrains Mono', monospace; font-weight:700; flex-shrink:0; }
+.sales-history-bag .sales-history-amount{ color:var(--sales-bag); }
+.sales-history-prep .sales-history-amount{ color:var(--sales-prep); }
+
+/* === Checkout modal (pagos locales + internacionales) === */
+.payment-modal-wrap{
+  position:fixed; inset:0; z-index:1500; display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+.payment-modal-banner{
+  background:var(--cream); border-radius:12px; width:min(560px, 100%); max-height:90vh;
+  overflow-y:auto; position:relative;
+}
+.payment-modal-header{ background:var(--near-black); padding:24px 24px 18px; position:relative; }
+.payment-modal-total{ font-family:'JetBrains Mono', monospace; color:rgba(255,255,255,.7); font-size:.85rem; margin-top:.4rem; }
+
+.payment-tabs{ display:flex; flex-wrap:wrap; gap:6px; padding:16px 24px 0; background:var(--near-black); }
+.payment-tab-btn{
+  background:rgba(255,255,255,.08); color:rgba(255,255,255,.65); border:none; border-radius:8px 8px 0 0;
+  padding:.6rem .9rem; font-size:.76rem; font-weight:700; cursor:pointer; letter-spacing:.02em;
+}
+.payment-tab-btn.active{ background:var(--cream); color:var(--near-black); }
+
+.payment-modal-body{ padding:24px; }
+.payment-form{ display:flex; flex-direction:column; gap:14px; }
+.payment-field{ display:flex; flex-direction:column; gap:6px; font-size:.8rem; font-weight:600; color:var(--ink); flex:1; }
+.payment-field input, .payment-field select{
+  padding:.65rem .75rem; border:1.5px solid var(--grid-line); border-radius:8px; font-family:inherit; font-size:.9rem;
+  background:#fff; color:var(--near-black);
+}
+.payment-row{ display:flex; gap:12px; }
+.payment-row .payment-field{ min-width:0; }
+
+.payment-card-input-row{ position:relative; display:flex; align-items:center; }
+.payment-card-input-row input{ flex:1; }
+.payment-brand-tag{
+  position:absolute; right:10px; font-family:'JetBrains Mono', monospace; font-size:.68rem;
+  color:var(--ink-soft); background:var(--paper, #EDE6D3); padding:.15rem .5rem; border-radius:4px;
+}
+.payment-expiry-row{ display:flex; align-items:center; gap:6px; }
+.payment-expiry-row input{ width:3.2rem; text-align:center; }
+
+.payment-wallet-options{ display:flex; gap:10px; }
+.payment-wallet-btn{
+  flex:1; padding:.9rem; border:1.5px solid var(--grid-line); border-radius:8px; background:#fff;
+  font-weight:700; font-size:.88rem; cursor:pointer; color:var(--ink);
+}
+.payment-wallet-btn.active{ border-color:var(--near-black); background:var(--near-black); color:#fff; }
+
+.payment-hint{ font-family:'JetBrains Mono', monospace; font-size:.72rem; color:var(--ink-soft); }
+.payment-status-msg{
+  font-size:.82rem; color:var(--ink); background:var(--paper, #EDE6D3); padding:.6rem .8rem; border-radius:8px;
+}
+
+@media(max-width:600px){
+  .payment-tabs{ padding:14px 14px 0; }
+  .payment-modal-body{ padding:18px; }
+  .payment-row{ flex-direction:column; }
+}
+
+/* === Account: suscripción mensual + historial de pedidos === */
+.account-monthly-btn{
+  width:100%; padding:.75rem 1rem; border-radius:8px; border:1.5px solid var(--magenta-bright, #de1b1b);
+  background:#fff; color:var(--magenta-bright, #de1b1b); font-weight:700; font-size:.85rem; cursor:pointer;
+}
+.account-monthly-btn.active{ background:var(--magenta-bright, #de1b1b); color:#fff; }
+
+.account-orders h4{
+  font-size:.85rem; text-transform:uppercase; letter-spacing:.04em; color:var(--ink, #2A3550);
+  margin-bottom:.6rem; margin-top:.4rem;
+}
+.account-orders-list{ display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; }
+.account-order-item{
+  border:1px solid var(--grid-line, #D6CEB6); border-radius:8px; padding:.6rem .75rem; font-size:.78rem;
+}
+.account-order-top{ display:flex; justify-content:space-between; margin-bottom:.3rem; color:var(--ink-soft, #6B7290); }
+.account-order-status{ font-weight:700; padding:.05rem .5rem; border-radius:50px; font-size:.68rem; text-transform:uppercase; }
+.account-order-status.status-pending{ background:var(--paper, #EDE6D3); color:var(--ink, #2A3550); }
+.account-order-status.status-confirmed{ background:#d9e6ff; color:#1a4db8; }
+.account-order-status.status-completed{ background:#dcefe2; color:#0f7d4d; }
+.account-order-status.status-cancelled{ background:#f3d9d3; color:#8f1c1c; }
+.account-order-items{ color:var(--ink, #2A3550); }
+
+/* === Cold Brew: la sección hero convertida en carrusel de 4 diapositivas idénticas === */
+.coldbrew-carousel{ position:relative; overflow:hidden; }
+.coldbrew-carousel-track{ display:flex; transition:transform .7s cubic-bezier(.4,0,.2,1); }
+.coldbrew-slide{ flex:0 0 100%; min-width:0; }
+/* Dentro de una diapositiva, el .hero ya no necesita min-height propio del
+   documento completo — se comporta igual, solo que ahora vive dentro del track. */
+.coldbrew-carousel-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.35); color:#fff;
+  border:1px solid rgba(255,255,255,.4); width:42px; height:42px; border-radius:50%; font-size:1.5rem;
+  cursor:pointer; z-index:5; line-height:1;
+}
+.coldbrew-carousel-arrow.left{ left:20px; } .coldbrew-carousel-arrow.right{ right:20px; }
+.coldbrew-carousel-arrow:hover{ background:rgba(0,0,0,.6); }
+.coldbrew-carousel-dots{ position:absolute; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:5; }
+.coldbrew-carousel-dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.4); border:none; cursor:pointer; padding:0; }
+.coldbrew-carousel-dot.active{ background:#fff; width:24px; border-radius:4px; transition:width .3s; }
+@media(max-width:700px){
+  .coldbrew-carousel-arrow{ width:34px; height:34px; font-size:1.2rem; }
+}

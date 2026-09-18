@@ -1,9 +1,18 @@
-import { WHATSAPP_NUMBER } from '../../features/cart/context/CartContext.jsx';
+import { useState, useEffect } from 'react';
+import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
+
+const FALLBACK_WHATSAPP_NUMBER = '573152125327';
 
 export default function WhatsAppButton() {
   const { t } = useLanguage();
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.greeting'))}`;
+  const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
+
+  useEffect(() => {
+    fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then(setNumber);
+  }, []);
+
+  const href = `https://wa.me/${number}?text=${encodeURIComponent(t('whatsapp.greeting'))}`;
 
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="WhatsApp">

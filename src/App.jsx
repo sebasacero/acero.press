@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import { CartProvider } from './features/cart/context/CartContext.jsx';
+import { AuthProvider } from './features/account/AuthContext.jsx';
 import { LanguageProvider } from './features/i18n/LanguageContext.jsx';
 import Navbar from './shared/layout/Navbar.jsx';
 import NavDrawer from './shared/layout/NavDrawer.jsx';
 import Footer from './shared/layout/Footer.jsx';
 import WhatsAppButton from './shared/layout/WhatsAppButton.jsx';
 import CartDrawer from './features/cart/components/CartDrawer.jsx';
+import CheckoutModal from './features/payment/CheckoutModal.jsx';
+import AccountDrawer from './features/account/AccountDrawer.jsx';
 import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
 import CafeHero from './features/home/sections/CafeHero.jsx';
 import Marquee from './features/home/sections/Marquee.jsx';
+import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
 import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
 
@@ -22,33 +26,38 @@ export default function App() {
 
   return (
     <LanguageProvider>
-      <CartProvider>
-        <header className="hero-container">
-          <Navbar navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
-          <CafeHero />
-        </header>
+      <AuthProvider>
+        <CartProvider>
+          <header className="hero-container">
+            <Navbar navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
+            <CafeHero />
+          </header>
 
-        <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
+          <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
 
-        <ProductSection />
+          <ProductSection />
 
-        <Marquee />
+          <Marquee />
 
-        <ColdBrewHero />
+          <ColdBrewHero />
 
-        <Marquee />
+          <Marquee />
 
-        <WacBanner />
+          <WacBanner />
 
-        <RecipeArchive />
+          <RecipeArchive />
 
-        <Marquee />
+          <Marquee />
 
-        <Footer />
+          <Footer />
 
-        <CartDrawer />
-        <WhatsAppButton />
-      </CartProvider>
+          <CartDrawer />
+          <CheckoutModal />
+          <AccountDrawer />
+          <SalesFloatButton />
+          <WhatsAppButton />
+        </CartProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }

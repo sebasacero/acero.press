@@ -1,9 +1,11 @@
 import { useCart } from '../../features/cart/context/CartContext.jsx';
+import { useAuth } from '../../features/account/AuthContext.jsx';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 import LanguageSwitcher from '../../features/i18n/LanguageSwitcher.jsx';
 
 export default function Navbar({ onOpenNavDrawer, navOpen }) {
   const { open, totalQty } = useCart();
+  const { open: openAccount, isLoggedIn, customer } = useAuth();
   const { t } = useLanguage();
 
   return (
@@ -36,11 +38,23 @@ export default function Navbar({ onOpenNavDrawer, navOpen }) {
 
         <div className="nav-icons right">
           <LanguageSwitcher variant="light" />
-          <a href="#account" className="icon-link" aria-label="Cuenta de usuario">
-            <svg className="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+          <a
+            href="#account"
+            className="icon-link"
+            aria-label="Cuenta de usuario"
+            onClick={(e) => {
+              e.preventDefault();
+              openAccount();
+            }}
+          >
+            {isLoggedIn && customer?.avatar_url ? (
+              <img src={customer.avatar_url} alt="" className="nav-account-avatar" />
+            ) : (
+              <svg className="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            )}
           </a>
           <a
             href="#cart"

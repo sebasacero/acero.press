@@ -2,7 +2,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 
 export default function CartDrawer() {
-  const { cart, isOpen, close, updateQty, removeItem, checkout, subtotal, money } = useCart();
+  const { cart, isOpen, close, updateQty, removeItem, checkout, checkoutCard, subtotal, money } = useCart();
   const { t } = useLanguage();
 
   return (
@@ -59,6 +59,15 @@ export default function CartDrawer() {
             <span>{money(subtotal)}</span>
           </div>
           <button className="btn-checkout" onClick={checkout}>{t('cart.checkout')}</button>
+
+          <button className="btn-checkout btn-checkout-card" onClick={checkoutCard}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            {t('cart.checkoutCard')}
+          </button>
+
           <button className="btn-continue" onClick={close}>{t('cart.continue')}</button>
         </div>
       </aside>
