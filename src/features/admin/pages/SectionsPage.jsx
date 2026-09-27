@@ -13,6 +13,7 @@ export default function SectionsPage() {
   const [saving, setSaving] = useState(false);
   const [newSlug, setNewSlug] = useState('');
   const [newType, setNewType] = useState(SECTION_TYPES[0]);
+  const [slidesLang, setSlidesLang] = useState('es');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,6 +70,25 @@ export default function SectionsPage() {
   const removeBanner = (i) =>
     setDraftContent((c) => ({ ...c, banners: (c.banners || []).filter((_, idx) => idx !== i) }));
 
+  // --- Editor de "slides" (usado por el carrusel Cold Brew) ---
+  const updateSlideLangField = (i, field, value) => {
+    setDraftContent((c) => {
+      const slides = [...(c.slides || [])];
+      slides[i] = { ...slides[i], [field]: { ...slides[i][field], [slidesLang]: value } };
+      return { ...c, slides };
+    });
+  };
+  const updateSlidePlainField = (i, field, value) => {
+    setDraftContent((c) => {
+      const slides = [...(c.slides || [])];
+      slides[i] = { ...slides[i], [field]: value };
+      return { ...c, slides };
+    });
+  };
+  const updateSlideDose = (i, value) => {
+    updateSlidePlainField(i, 'dose', value.split('').slice(0, 6));
+  };
+
   const updateField = (key, value) => setDraftContent((c) => ({ ...c, [key]: value }));
 
   if (loading) return <p className="admin-loading">Cargando secciones…</p>;
@@ -118,7 +138,74 @@ export default function SectionsPage() {
 
             {expanded === s.id && (
               <div className="admin-section-editor">
-                {Array.isArray(draftContent.banners) ? (
+                {Array.isArray(draftContent.slides) ? (
+                  <>
+                    <div className="admin-lang-tabs">
+                      {['es', 'en', 'ja'].map((l) => (
+                        <button
+                          key={l}
+                          className={`admin-tab ${slidesLang === l ? 'active' : ''}`}
+                          onClick={() => setSlidesLang(l)}
+                        >
+                          {l.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    {draftContent.slides.map((slide, i) => (
+                      <div key={i} className="admin-slide-edit-card">
+                        <p className="admin-slide-edit-title">Diapositiva {i + 1}</p>
+                        <div className="admin-slide-edit-row">
+                          <label className="admin-field">
+                            <span>Video (URL)</span>
+                            <input value={slide.video} onChange={(e) => updateSlidePlainField(i, 'video', e.target.value)} />
+                          </label>
+                          <label className="admin-field">
+                            <span>% barra progreso</span>
+                            <input
+                              type="number"
+                              value={slide.ratioPercent}
+                              onChange={(e) => updateSlidePlainField(i, 'ratioPercent', Number(e.target.value))}
+                            />
+                          </label>
+                          <label className="admin-field">
+                            <span>Dosis (ej: 024g)</span>
+                            <input value={(slide.dose || []).join('')} onChange={(e) => updateSlideDose(i, e.target.value)} />
+                          </label>
+                        </div>
+                        <div className="admin-slide-edit-row">
+                          <label className="admin-field">
+                            <span>Título grande ({slidesLang})</span>
+                            <input value={slide.title1?.[slidesLang] || ''} onChange={(e) => updateSlideLangField(i, 'title1', e.target.value)} />
+                          </label>
+                          <label className="admin-field">
+                            <span>Ratio ({slidesLang})</span>
+                            <input value={slide.ratio?.[slidesLang] || ''} onChange={(e) => updateSlideLangField(i, 'ratio', e.target.value)} />
+                          </label>
+                          <label className="admin-field">
+                            <span>Líquido/objetivo ({slidesLang})</span>
+                            <input value={slide.target?.[slidesLang] || ''} onChange={(e) => updateSlideLangField(i, 'target', e.target.value)} />
+                          </label>
+                        </div>
+                        <label className="admin-field" style={{ marginBottom: '.5rem' }}>
+                          <span>Etiqueta FIG. ({slidesLang})</span>
+                          <input value={slide.figLabel?.[slidesLang] || ''} onChange={(e) => updateSlideLangField(i, 'figLabel', e.target.value)} />
+                        </label>
+                        <label className="admin-field" style={{ marginBottom: '.5rem' }}>
+                          <span>Etiqueta de dosis ({slidesLang})</span>
+                          <input value={slide.doseLabel?.[slidesLang] || ''} onChange={(e) => updateSlideLangField(i, 'doseLabel', e.target.value)} />
+                        </label>
+                        <label className="admin-field">
+                          <span>Descripción / caption ({slidesLang})</span>
+                          <textarea
+                            className="admin-settings-textarea"
+                            value={slide.caption?.[slidesLang] || ''}
+                            onChange={(e) => updateSlideLangField(i, 'caption', e.target.value)}
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </>
+                ) : Array.isArray(draftContent.banners) ? (
                   <>
                     {draftContent.banners.map((b, i) => (
                       <div key={i} className="admin-banner-edit-row">

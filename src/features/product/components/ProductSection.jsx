@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../../cart/context/CartContext.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchCoffeeVarieties } from '../../../shared/lib/catalog.js';
+import SectionEditButton from '../../admin/SectionEditButton.jsx';
 
 const SIZES = ['250G', '500G', '1KG'];
 
@@ -100,6 +101,7 @@ export default function ProductSection() {
 
   return (
     <section className="product-section" id="beans">
+      <SectionEditButton toolId="catalog" label="Editar catálogo" />
       <div className="product-banner">
         <div className="banner-text">{t('banners.beans')}</div>
       </div>

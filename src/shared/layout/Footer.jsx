@@ -1,5 +1,6 @@
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 import { useSocialLinks } from '../lib/useSocialLinks.js';
+import SectionEditButton from '../../features/admin/SectionEditButton.jsx';
 
 const socialIcons = [
   {
@@ -31,6 +32,7 @@ export default function Footer() {
   return (
     <>
       <footer className="hero-footer">
+        <SectionEditButton toolId="settings" label="Editar redes sociales" />
         <video className="footer-video-bg" autoPlay loop muted playsInline>
           <source src="/image/hero_main1.mp4" type="video/mp4" />
         </video>

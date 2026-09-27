@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
+import SectionEditButton from '../../admin/SectionEditButton.jsx';
 
 const classes = ['mh', '', 'mc', '', 'mh', '', 'mc', '', 'mh', '', 'mc'];
 
@@ -25,6 +26,7 @@ export default function Marquee() {
 
   return (
     <div className="mq-wrap">
+      <SectionEditButton toolId="settings" label="Editar texto del marquee" />
       <div className="mq-track">
         {doubled.map((text, i) => (
           <span key={i} className={classes[i % classes.length]}>{text}</span>

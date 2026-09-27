@@ -1,24 +1,8 @@
 import { useState } from 'react';
 import { useAdminAuth } from './useAdminAuth.js';
 import AdminLogin from './AdminLogin.jsx';
-import DashboardPage from './pages/DashboardPage.jsx';
-import CatalogPage from './pages/CatalogPage.jsx';
-import InventoryPage from './pages/InventoryPage.jsx';
-import SettingsPage from './pages/SettingsPage.jsx';
-import SectionsPage from './pages/SectionsPage.jsx';
-import OrdersPage from './pages/OrdersPage.jsx';
-import TablesPage from './pages/TablesPage.jsx';
+import { ADMIN_TOOLS } from './adminTools.js';
 import './admin.css';
-
-const TABS = [
-  { id: 'dashboard', label: 'Dashboard', Component: DashboardPage },
-  { id: 'orders', label: 'Pedidos', Component: OrdersPage },
-  { id: 'tables', label: 'Mesas / POS', Component: TablesPage },
-  { id: 'inventory', label: 'Inventario', Component: InventoryPage },
-  { id: 'catalog', label: 'Catálogo', Component: CatalogPage },
-  { id: 'settings', label: 'Configuración', Component: SettingsPage },
-  { id: 'sections', label: 'Secciones', Component: SectionsPage },
-];
 
 export default function AdminApp() {
   const { session, isAdmin, adminInfo, loading, signOut } = useAdminAuth();
@@ -41,14 +25,14 @@ export default function AdminApp() {
     );
   }
 
-  const ActiveComponent = TABS.find((t) => t.id === tab)?.Component ?? DashboardPage;
+  const ActiveComponent = ADMIN_TOOLS.find((t) => t.id === tab)?.Component ?? ADMIN_TOOLS[0].Component;
 
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <div className="admin-sidebar-logo">ACERO<span>PRESS</span></div>
         <nav className="admin-nav">
-          {TABS.map((t) => (
+          {ADMIN_TOOLS.map((t) => (
             <button
               key={t.id}
               className={`admin-nav-btn ${tab === t.id ? 'active' : ''}`}

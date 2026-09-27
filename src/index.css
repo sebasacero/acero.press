@@ -130,7 +130,7 @@ a{ color:inherit; text-decoration:none; }
 }
 
 /* === Marquee === */
-.mq-wrap{ overflow:hidden; border-bottom:1px solid var(--grid-line); border-top:1px solid var(--grid-line); }
+.mq-wrap{ position:relative; overflow:hidden; border-bottom:1px solid var(--grid-line); border-top:1px solid var(--grid-line); }
 .mq-track{
   display:flex; gap:1.2rem; white-space:nowrap; padding:.55rem 0;
   font-family:'JetBrains Mono', monospace; font-size:.7rem; letter-spacing:.05em;
@@ -1024,3 +1024,19 @@ dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filt
 @media(max-width:700px){
   .coldbrew-carousel-arrow{ width:34px; height:34px; font-size:1.2rem; }
 }
+
+.product-section{ position:relative; }
+
+/* === Botón de edición de sección (solo visible para el owner logueado) === */
+.section-edit-btn{
+  position:absolute; top:14px; right:14px; z-index:50;
+  width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,255,255,.6);
+  background:linear-gradient(145deg, #f4f5f7 0%, #b7bbc1 45%, #8b8f96 60%, #eef0f2 100%);
+  color:#24262a; font-size:15px; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.35), inset 0 1px 1px rgba(255,255,255,.8);
+}
+.section-edit-btn:hover{ filter:brightness(1.06); transform:scale(1.05); }
+
+/* El marquee es una franja muy delgada — el botón de editar necesita ser más pequeño ahí */
+.mq-wrap .section-edit-btn{ width:20px; height:20px; font-size:10px; top:50%; right:8px; transform:translateY(-50%); }
+.mq-wrap .section-edit-btn:hover{ transform:translateY(-50%) scale(1.1); }

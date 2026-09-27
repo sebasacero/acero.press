@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import { CartProvider } from './features/cart/context/CartContext.jsx';
 import { AuthProvider } from './features/account/AuthContext.jsx';
 import { LanguageProvider } from './features/i18n/LanguageContext.jsx';
+import { AdminUIProvider } from './features/admin/AdminUIContext.jsx';
+import AdminDock from './features/admin/AdminDock.jsx';
+import AdminOverlayHost from './features/admin/AdminOverlayHost.jsx';
+import ActiveFloatWidget from './features/admin/ActiveFloatWidget.jsx';
 import Navbar from './shared/layout/Navbar.jsx';
 import NavDrawer from './shared/layout/NavDrawer.jsx';
 import Footer from './shared/layout/Footer.jsx';
-import WhatsAppButton from './shared/layout/WhatsAppButton.jsx';
 import CartDrawer from './features/cart/components/CartDrawer.jsx';
 import CheckoutModal from './features/payment/CheckoutModal.jsx';
 import AccountDrawer from './features/account/AccountDrawer.jsx';
@@ -28,34 +31,39 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <CartProvider>
-          <header className="hero-container">
-            <Navbar navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
-            <CafeHero />
-          </header>
+          <AdminUIProvider>
+            <header className="hero-container">
+              <Navbar navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
+              <CafeHero />
+            </header>
 
-          <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
+            <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
 
-          <ProductSection />
+            <ProductSection />
 
-          <Marquee />
+            <Marquee />
 
-          <ColdBrewHero />
+            <ColdBrewHero />
 
-          <Marquee />
+            <Marquee />
 
-          <WacBanner />
+            <WacBanner />
 
-          <RecipeArchive />
+            <RecipeArchive />
 
-          <Marquee />
+            <Marquee />
 
-          <Footer />
+            <Footer />
 
-          <CartDrawer />
-          <CheckoutModal />
-          <AccountDrawer />
-          <SalesFloatButton />
-          <WhatsAppButton />
+            <CartDrawer />
+            <CheckoutModal />
+            <AccountDrawer />
+            <SalesFloatButton />
+            <ActiveFloatWidget />
+
+            <AdminDock />
+            <AdminOverlayHost />
+          </AdminUIProvider>
         </CartProvider>
       </AuthProvider>
     </LanguageProvider>
