@@ -382,7 +382,16 @@
 }
 
 /* === Botón flotante de acceso rápido a Espresale (reemplaza al de WhatsApp) === */
-.espresale-float{ background:var(--near-black,#1E1E1E); }
+.espresale-float{ background:var(--near-black,#1E1E1E); border:none; cursor:pointer; padding:0; position:fixed; }
+.espresale-float svg{ width:26px; height:26px; }
+.espresale-float-pulse{ background:var(--magenta-bright, #de1b1b) !important; }
+.espresale-float-tip{
+  position:absolute; right:calc(100% + 12px); top:50%; transform:translateY(-50%);
+  background:var(--a-ink, #2A3550); color:#fff; font-size:.72rem; font-weight:700;
+  padding:.4rem .7rem; border-radius:6px; white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity .2s ease;
+}
+.espresale-float:hover .espresale-float-tip{ opacity:1; }
 
 /* === Editor de "slides" (Cold Brew carousel) === */
 .admin-lang-tabs{ display:flex; gap:.4rem; margin-bottom:1rem; position:sticky; top:0; background:var(--a-cream); padding:.4rem 0; z-index:2; }
@@ -396,6 +405,9 @@
 /* === Section edit button (lápiz sobre secciones del sitio en vivo) === */
 .section-edit-wrap{ position:absolute; z-index:40; }
 .section-edit-top-right{ top:16px; right:16px; }
+.section-edit-portal-backdrop{
+  position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.35);
+}
 .section-edit-btn{
   width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.5);
   background:linear-gradient(145deg, #f4f5f7 0%, #b7bbc1 45%, #8b8f96 60%, #eef0f2 100%);

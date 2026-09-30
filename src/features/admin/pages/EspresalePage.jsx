@@ -28,11 +28,9 @@ function drawCard(canvas, { variety, weather, timeStr }) {
   canvas.width = S;
   canvas.height = S;
 
-  // Fondo
   ctx.fillStyle = '#1E1E1E';
   ctx.fillRect(0, 0, S, S);
 
-  // Franja cromada superior (marca de la casa)
   const chrome = ctx.createLinearGradient(0, 0, S, 0);
   chrome.addColorStop(0, '#cfd3d8');
   chrome.addColorStop(0.15, '#ffffff');
@@ -45,7 +43,6 @@ function drawCard(canvas, { variety, weather, timeStr }) {
   ctx.fillStyle = chrome;
   ctx.fillRect(0, 0, S, 14);
 
-  // Marca
   ctx.fillStyle = '#F7F3E8';
   ctx.font = '700 40px Arial';
   ctx.textBaseline = 'alphabetic';
@@ -54,12 +51,10 @@ function drawCard(canvas, { variety, weather, timeStr }) {
   ctx.font = '700 40px Arial';
   ctx.fillText('.press', 60 + ctx.measureText('ACERO').width, 110);
 
-  // Nombre de la variedad (grande)
   ctx.fillStyle = '#F7F3E8';
   ctx.font = '900 84px Arial';
   wrapText(ctx, variety.name.toUpperCase(), 60, 260, S - 120, 88);
 
-  // Panel de receta (estilo cromado, tarjeta clara)
   const panelY = 420;
   const panelH = 330;
   ctx.fillStyle = 'rgba(247,243,232,0.06)';
@@ -76,7 +71,6 @@ function drawCard(canvas, { variety, weather, timeStr }) {
   ctx.font = '400 34px Arial';
   wrapText(ctx, variety.recipe_text || 'Consulta la receta con nuestro barista.', 84, panelY + 110, S - 170, 46);
 
-  // Fila inferior: hora / clima / lugar
   const footY = S - 90;
   ctx.font = '600 30px Arial';
   ctx.fillStyle = '#F7F3E8';
@@ -93,6 +87,19 @@ export default function EspresalePage() {
   const [saving, setSaving] = useState(false);
   const [savedUrl, setSavedUrl] = useState(null);
   const canvasRef = useRef(null);
+
+  // --- Cámara: foto o video real ---
+  const [capturedFile, setCapturedFile] = useState(null);
+  const [capturedType, setCapturedType] = useState(null); // 'image' | 'video'
+  const [capturedPreviewUrl, setCapturedPreviewUrl] = useState(null);
+  const [capturedSaving, setCapturedSaving] = useState(false);
+  const [capturedSavedUrl, setCapturedSavedUrl] = useState(null);
+  const photoInputRef = useRef(null);
+  const videoInputRef = useRef(null);
+
+  // --- Publicar en Instagram (usa la función publish-content ya desplegada) ---
+  const [igPublishing, setIgPublishing] = useState(false);
+  const [igResult, setIgResult] = useState(null);
 
   useEffect(() => {
     supabase
@@ -124,7 +131,7 @@ export default function EspresalePage() {
   };
 
   const buildCaption = () =>
-    `☕ ${selected.name} — AceroPress\n\n${selected.recipe_text}\n\n${weather.icon} ${weather.tempC}°C en Bogotá · ${new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}\n\nTe compartimos esta foto de tu preparación 👇 (adjúntala manualmente si no se adjuntó sola).`;
+    `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${weather.tempC}°C en Bogotá · ${new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}`;
 
   const openWhatsAppToCustomer = () => {
     if (!phone.trim()) {
@@ -132,7 +139,8 @@ export default function EspresalePage() {
       return;
     }
     const digits = phone.replace(/\D/g, '');
-    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(buildCaption())}`, '_blank');
+    const msg = buildCaption() + '\n\nTe compartimos esta foto de tu preparación 👇 (adjúntala manualmente si no se adjuntó sola).';
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const saveToPublications = async () => {
@@ -160,12 +168,73 @@ export default function EspresalePage() {
     }, 'image/png');
   };
 
+  // --- Cámara ---
+  const handleCapture = (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCapturedFile(file);
+    setCapturedType(type);
+    setCapturedPreviewUrl(URL.createObjectURL(file));
+    setCapturedSavedUrl(null);
+    setIgResult(null);
+  };
+
+  const saveCapturedToPublications = async () => {
+    if (!capturedFile) return;
+    setCapturedSaving(true);
+    const ext = capturedType === 'video' ? 'mp4' : 'jpg';
+    const fileName = `espresale/${Date.now()}-captura.${ext}`;
+    const { error: uploadError } = await supabase.storage.from('marketing').upload(fileName, capturedFile, {
+      contentType: capturedFile.type,
+    });
+    if (uploadError) {
+      console.error(uploadError);
+      alert('No se pudo guardar el archivo.');
+      setCapturedSaving(false);
+      return;
+    }
+    const { data: pub } = supabase.storage.from('marketing').getPublicUrl(fileName);
+    await supabase.from('publications').insert({
+      video_url: pub.publicUrl,
+      caption: buildCaption(),
+      caption_es: buildCaption(),
+    });
+    setCapturedSavedUrl(pub.publicUrl);
+    setCapturedSaving(false);
+  };
+
+  // Instagram (Reels) solo acepta video — usa la función publish-content que
+  // ya está desplegada en este proyecto de Supabase.
+  const publishToInstagram = async () => {
+    const videoUrl = capturedSavedUrl;
+    if (!videoUrl) {
+      alert('Primero guarda un video en Publicaciones (Instagram Reels no acepta fotos).');
+      return;
+    }
+    setIgPublishing(true);
+    setIgResult(null);
+    const { data, error } = await supabase.functions.invoke('publish-content', {
+      body: { video_url: videoUrl, caption: buildCaption(), platforms: { ig: true } },
+    });
+    setIgPublishing(false);
+    if (error) {
+      setIgResult({ ok: false, message: error.message || 'No se pudo publicar.' });
+      return;
+    }
+    const igOutcome = data?.results?.instagram;
+    if (igOutcome?.success) {
+      setIgResult({ ok: true, message: '✓ Publicado en Instagram.' });
+    } else {
+      setIgResult({ ok: false, message: igOutcome?.error || 'Instagram no confirmó la publicación (revisa las credenciales configuradas en la función).' });
+    }
+  };
+
   return (
     <div className="admin-page">
       <h1 className="admin-page-title">Espresale</h1>
       <p className="admin-page-sub">
         Elige la variedad, escribe el WhatsApp del cliente y genera la tarjeta con receta, clima y hora —
-        para enviarla al cliente y/o guardarla en Publicaciones.
+        o toma una foto/video real desde la cámara para publicar directo en Instagram.
       </p>
 
       <div className="admin-espresale-layout">
@@ -207,6 +276,58 @@ export default function EspresalePage() {
           <button className="admin-btn-primary" disabled={!selected} onClick={generate}>
             Generar tarjeta
           </button>
+
+          <div className="admin-card">
+            <div className="admin-card-header"><h3>4. Foto o video real (cámara)</h3></div>
+            <p className="admin-page-sub" style={{ marginBottom: '.6rem' }}>
+              En celular, esto abre la cámara directamente. Un video es necesario si vas a publicar en Instagram Reels.
+            </p>
+            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+              <button className="admin-btn-ghost admin-btn-sm" onClick={() => photoInputRef.current?.click()}>
+                📷 Tomar foto
+              </button>
+              <button className="admin-btn-ghost admin-btn-sm" onClick={() => videoInputRef.current?.click()}>
+                🎥 Grabar video
+              </button>
+            </div>
+            <input
+              ref={photoInputRef} type="file" accept="image/*" capture="environment"
+              style={{ display: 'none' }} onChange={(e) => handleCapture(e, 'image')}
+            />
+            <input
+              ref={videoInputRef} type="file" accept="video/*" capture="environment"
+              style={{ display: 'none' }} onChange={(e) => handleCapture(e, 'video')}
+            />
+
+            {capturedPreviewUrl && (
+              <div style={{ marginTop: '.8rem' }}>
+                {capturedType === 'video' ? (
+                  <video src={capturedPreviewUrl} controls style={{ width: '100%', borderRadius: 8 }} />
+                ) : (
+                  <img src={capturedPreviewUrl} alt="" style={{ width: '100%', borderRadius: 8 }} />
+                )}
+                <div style={{ display: 'flex', gap: '.5rem', marginTop: '.6rem', flexWrap: 'wrap' }}>
+                  <button className="admin-btn-primary admin-btn-sm" disabled={capturedSaving} onClick={saveCapturedToPublications}>
+                    {capturedSaving ? 'Guardando…' : 'Guardar en Publicaciones'}
+                  </button>
+                  {capturedType === 'video' && (
+                    <button className="admin-btn-primary admin-btn-sm" disabled={igPublishing || !capturedSavedUrl} onClick={publishToInstagram}>
+                      {igPublishing ? 'Publicando…' : '📸 Publicar en Instagram'}
+                    </button>
+                  )}
+                </div>
+                {capturedSavedUrl && <p className="admin-fineprint">✓ Guardado en Publicaciones.</p>}
+                {capturedType === 'video' && !capturedSavedUrl && (
+                  <p className="admin-fineprint">Guarda el video primero para poder publicarlo en Instagram.</p>
+                )}
+                {igResult && (
+                  <p className="admin-fineprint" style={{ color: igResult.ok ? '#0f7d4d' : '#de1b1b' }}>
+                    {igResult.message}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="admin-espresale-preview">
@@ -225,7 +346,8 @@ export default function EspresalePage() {
               {savedUrl && <p className="admin-fineprint">✓ Guardada — ya aparece en la pestaña Publicaciones.</p>}
               <p className="admin-fineprint">
                 WhatsApp no permite adjuntar imágenes automáticamente a un número — descarga la imagen
-                primero y adjúntala tú mismo en el chat que se abre.
+                primero y adjúntala tú mismo en el chat que se abre. Esta tarjeta (imagen fija) tampoco
+                sirve para Instagram Reels — usa la cámara (abajo) para eso.
               </p>
             </div>
           )}
