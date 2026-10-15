@@ -27,7 +27,8 @@ export default function EspresalePage() {
   const [varieties, setVarieties] = useState(null);
   const [selected, setSelected] = useState(null);
   const [phone, setPhone] = useState('');
-  const [format, setFormat] = useState('square');
+  const [format, setFormat] = useState('feed');
+  const [showZones, setShowZones] = useState(true);
   const [weather, setWeather] = useState({ tempC: null, condition: '', icon: '' });
   const [now, setNow] = useState(() => new Date());
   const canvasRef = useRef(null);
@@ -199,7 +200,15 @@ export default function EspresalePage() {
       : { ok: false, message: ig?.error || 'Instagram no confirmó la publicación (revisa las credenciales de la función).' });
   };
 
-  const { w, h } = FORMATS[format];
+  const { w, h, safe } = FORMATS[format];
+  const pct = (v, total) => `${(v / total) * 100}%`;
+  // Lo que queda fuera de la zona segura (lo tapa la app), en % del lienzo
+  const shades = [
+    { left: 0, top: 0, width: '100%', height: pct(safe.y0, h) },
+    { left: 0, top: pct(safe.y1, h), width: '100%', height: pct(h - safe.y1, h) },
+    { left: 0, top: pct(safe.y0, h), width: pct(safe.x0, w), height: pct(safe.y1 - safe.y0, h) },
+    { left: pct(safe.x1, w), top: pct(safe.y0, h), width: pct(w - safe.x1, w), height: pct(safe.y1 - safe.y0, h) },
+  ];
 
   return (
     <div className="admin-page esp">
@@ -297,12 +306,19 @@ export default function EspresalePage() {
             <StepHead n="03" title="Formato" done />
             <div className="esp-chips">
               {Object.entries(FORMATS).map(([id, f]) => (
-                <button key={id} type="button" className={`esp-chip ${format === id ? 'active' : ''}`} onClick={() => setFormat(id)}>
+                <button key={id} type="button" className={`esp-chip esp-chip-format ${format === id ? 'active' : ''}`} onClick={() => setFormat(id)}>
                   <span className={`esp-ratio esp-ratio-${id}`} aria-hidden="true" />
-                  {f.label}
+                  <span className="esp-chip-text">
+                    {f.label}
+                    <small>{f.apps}</small>
+                  </span>
                 </button>
               ))}
             </div>
+            <label className="esp-toggle">
+              <input type="checkbox" checked={showZones} onChange={(e) => setShowZones(e.target.checked)} />
+              Ver zonas de la app en la vista previa
+            </label>
           </section>
 
           <section className="esp-step">
@@ -321,11 +337,24 @@ export default function EspresalePage() {
         <div className="esp-preview">
           <div className="esp-cota esp-cota-dark">
             <span>VISTA PREVIA · {w}×{h}</span>
-            <span className="esp-badge">{FORMATS[format].label}</span>
+            <span className="esp-badge">{FORMATS[format].apps}</span>
           </div>
 
           <div className={`esp-canvas-wrap esp-canvas-${format}`}>
-            <canvas ref={canvasRef} className="esp-canvas" hidden={!selected} />
+            <div className="esp-canvas-frame" hidden={!selected}>
+              <canvas ref={canvasRef} className="esp-canvas" />
+              {showZones && (
+                <div className="esp-zones" aria-hidden="true">
+                  {shades.map((st, i) => <span key={i} className="esp-zone-shade" style={st} />)}
+                  <span
+                    className="esp-zone-safe"
+                    style={{ left: pct(safe.x0, w), top: pct(safe.y0, h), width: pct(safe.x1 - safe.x0, w), height: pct(safe.y1 - safe.y0, h) }}
+                  >
+                    <em>ZONA SEGURA</em>
+                  </span>
+                </div>
+              )}
+            </div>
             {!selected && (
               <div className="esp-empty">
                 <span className="esp-empty-fig">FIG. 01</span>
