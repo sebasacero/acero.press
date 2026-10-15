@@ -1,105 +1,52 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { fetchBogotaWeather } from '../../../shared/lib/weather.js';
+import { drawEspresaleCard, parseRecipe, FORMATS } from '../espresaleCard.js';
 
-const CARD_SIZE = 1080;
+const slug = (s) => String(s || 'tarjeta').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(' ');
-  let line = '';
-  let curY = y;
-  for (const word of words) {
-    const test = line + word + ' ';
-    if (ctx.measureText(test).width > maxWidth && line) {
-      ctx.fillText(line.trim(), x, curY);
-      line = word + ' ';
-      curY += lineHeight;
-    } else {
-      line = test;
-    }
-  }
-  ctx.fillText(line.trim(), x, curY);
-  return curY + lineHeight;
+/** Número de WhatsApp: si escriben un celular colombiano de 10 dígitos, le agrega el 57. */
+function waDigits(phone) {
+  const d = phone.replace(/\D/g, '');
+  return d.length === 10 && d.startsWith('3') ? `57${d}` : d;
 }
 
-function drawCard(canvas, { variety, weather, timeStr }) {
-  const ctx = canvas.getContext('2d');
-  const S = CARD_SIZE;
-  canvas.width = S;
-  canvas.height = S;
-
-  ctx.fillStyle = '#1E1E1E';
-  ctx.fillRect(0, 0, S, S);
-
-  const chrome = ctx.createLinearGradient(0, 0, S, 0);
-  chrome.addColorStop(0, '#cfd3d8');
-  chrome.addColorStop(0.15, '#ffffff');
-  chrome.addColorStop(0.3, '#8b8f96');
-  chrome.addColorStop(0.45, '#eef0f2');
-  chrome.addColorStop(0.6, '#9a9ea5');
-  chrome.addColorStop(0.75, '#ffffff');
-  chrome.addColorStop(0.9, '#b7bbc1');
-  chrome.addColorStop(1, '#7d8188');
-  ctx.fillStyle = chrome;
-  ctx.fillRect(0, 0, S, 14);
-
-  ctx.fillStyle = '#F7F3E8';
-  ctx.font = '700 40px Arial';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('ACERO', 60, 110);
-  ctx.fillStyle = '#de1b1b';
-  ctx.font = '700 40px Arial';
-  ctx.fillText('.press', 60 + ctx.measureText('ACERO').width, 110);
-
-  ctx.fillStyle = '#F7F3E8';
-  ctx.font = '900 84px Arial';
-  wrapText(ctx, variety.name.toUpperCase(), 60, 260, S - 120, 88);
-
-  const panelY = 420;
-  const panelH = 330;
-  ctx.fillStyle = 'rgba(247,243,232,0.06)';
-  ctx.fillRect(50, panelY, S - 100, panelH);
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(50, panelY, S - 100, panelH);
-
-  ctx.fillStyle = '#de1b1b';
-  ctx.font = '700 26px monospace';
-  ctx.fillText('RECETA', 84, panelY + 56);
-
-  ctx.fillStyle = '#F7F3E8';
-  ctx.font = '400 34px Arial';
-  wrapText(ctx, variety.recipe_text || 'Consulta la receta con nuestro barista.', 84, panelY + 110, S - 170, 46);
-
-  const footY = S - 90;
-  ctx.font = '600 30px Arial';
-  ctx.fillStyle = '#F7F3E8';
-  const line = `${weather.icon}  ${weather.tempC !== null ? weather.tempC + '°C' : ''}  ·  ${timeStr}  ·  AceroPress, Bogotá`;
-  ctx.fillText(line, 60, footY);
+function StepHead({ n, title, done, hint }) {
+  return (
+    <div className="esp-step-head">
+      <span className={`esp-step-num ${done ? 'is-done' : ''}`}>{done ? '✓' : n}</span>
+      <div>
+        <h3 className="esp-step-title">{title}</h3>
+        {hint && <p className="esp-step-hint">{hint}</p>}
+      </div>
+    </div>
+  );
 }
 
 export default function EspresalePage() {
-  const [varieties, setVarieties] = useState([]);
+  const [varieties, setVarieties] = useState(null);
   const [selected, setSelected] = useState(null);
   const [phone, setPhone] = useState('');
-  const [weather, setWeather] = useState({ tempC: null, condition: '', icon: '🌡️' });
-  const [generated, setGenerated] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [savedUrl, setSavedUrl] = useState(null);
+  const [format, setFormat] = useState('square');
+  const [weather, setWeather] = useState({ tempC: null, condition: '', icon: '' });
+  const [now, setNow] = useState(() => new Date());
   const canvasRef = useRef(null);
 
-  // --- Cámara: foto o video real ---
-  const [capturedFile, setCapturedFile] = useState(null);
-  const [capturedType, setCapturedType] = useState(null); // 'image' | 'video'
-  const [capturedPreviewUrl, setCapturedPreviewUrl] = useState(null);
+  // Tarjeta: guardado en Publicaciones
+  const [saving, setSaving] = useState(false);
+  const [savedUrl, setSavedUrl] = useState(null);
+  const [notice, setNotice] = useState(null);
+
+  // Cámara: foto (fondo de la tarjeta) o video (para Reels)
+  const [captured, setCaptured] = useState(null); // { file, type, url }
+  const [photoImg, setPhotoImg] = useState(null);
+  const [usePhoto, setUsePhoto] = useState(true);
   const [capturedSaving, setCapturedSaving] = useState(false);
   const [capturedSavedUrl, setCapturedSavedUrl] = useState(null);
-  const photoInputRef = useRef(null);
-  const videoInputRef = useRef(null);
-
-  // --- Publicar en Instagram (usa la función publish-content ya desplegada) ---
   const [igPublishing, setIgPublishing] = useState(false);
   const [igResult, setIgResult] = useState(null);
+  const photoInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   useEffect(() => {
     supabase
@@ -107,250 +54,308 @@ export default function EspresalePage() {
       .select('id, name, recipe_text')
       .eq('category', 'coffee_bag')
       .eq('active', true)
-      .then(({ data }) => setVarieties(data ?? []));
+      .then(({ data, error }) => {
+        if (error) console.error('Error cargando variedades:', error.message);
+        setVarieties(data ?? []);
+      });
     fetchBogotaWeather().then(setWeather);
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
   }, []);
 
-  const generate = useCallback(() => {
-    if (!selected || !canvasRef.current) return;
-    const timeStr = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    drawCard(canvasRef.current, { variety: selected, weather, timeStr });
-    setGenerated(true);
-    setSavedUrl(null);
-  }, [selected, weather]);
+  // Foto capturada → imagen para el fondo de la tarjeta
+  useEffect(() => {
+    if (captured?.type !== 'image') { setPhotoImg(null); return undefined; }
+    const img = new Image();
+    img.onload = () => setPhotoImg(img);
+    img.src = captured.url;
+    return () => { img.onload = null; };
+  }, [captured]);
 
-  const download = () => {
-    canvasRef.current.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `espresale-${selected.name.toLowerCase().replace(/\s+/g, '-')}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  };
+  useEffect(() => () => { if (captured?.url) URL.revokeObjectURL(captured.url); }, [captured]);
+
+  const minuteKey = `${now.getHours()}:${now.getMinutes()}`;
+  useEffect(() => {
+    if (!selected || !canvasRef.current) return;
+    drawEspresaleCard(canvasRef.current, {
+      variety: selected,
+      weather,
+      date: new Date(),
+      format,
+      photo: usePhoto ? photoImg : null,
+    });
+    setSavedUrl(null);
+  }, [selected, weather, format, photoImg, usePhoto, minuteKey]);
+
+  const recipe = useMemo(() => parseRecipe(selected?.recipe_text || ''), [selected]);
+  const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+  const tempStr = weather.tempC !== null ? `${weather.tempC}°C` : '—';
+  const fileName = `espresale-${slug(selected?.name)}.png`;
 
   const buildCaption = () =>
-    `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${weather.tempC}°C en Bogotá · ${new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}`;
+    `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${tempStr} en Bogotá · ${timeStr}`;
 
-  const openWhatsAppToCustomer = () => {
-    if (!phone.trim()) {
-      alert('Escribe el número de WhatsApp del cliente primero.');
+  const toBlob = () => new Promise((resolve) => canvasRef.current.toBlob(resolve, 'image/png'));
+
+  const download = async () => {
+    const blob = await toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const canShareFiles = typeof navigator !== 'undefined' && !!navigator.canShare
+    && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] });
+
+  // En el celular, el menú de compartir sí adjunta la imagen (a WhatsApp,
+  // Instagram, etc.) — wa.me solo puede llevar texto.
+  const share = async () => {
+    const blob = await toBlob();
+    const file = new File([blob], fileName, { type: 'image/png' });
+    try {
+      await navigator.share({ files: [file], text: buildCaption() });
+    } catch (err) {
+      if (err?.name !== 'AbortError') setNotice({ ok: false, text: 'No se pudo abrir el menú de compartir.' });
+    }
+  };
+
+  const openWhatsApp = () => {
+    const digits = waDigits(phone);
+    if (!digits) {
+      setNotice({ ok: false, text: 'Escribe el WhatsApp del cliente (paso 04).' });
       return;
     }
-    const digits = phone.replace(/\D/g, '');
-    const msg = buildCaption() + '\n\nTe compartimos esta foto de tu preparación 👇 (adjúntala manualmente si no se adjuntó sola).';
+    const msg = `${buildCaption()}\n\nTe compartimos la tarjeta de tu preparación 👇`;
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, '_blank');
+    setNotice({ ok: true, text: 'Se abrió el chat — adjunta la imagen que descargaste.' });
+  };
+
+  const uploadPublication = async (blobOrFile, ext, contentType) => {
+    const path = `espresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
+    const { error } = await supabase.storage.from('marketing').upload(path, blobOrFile, { contentType });
+    if (error) throw error;
+    const { data: pub } = supabase.storage.from('marketing').getPublicUrl(path);
+    const caption = buildCaption();
+    const { error: insertError } = await supabase.from('publications').insert({ video_url: pub.publicUrl, caption, caption_es: caption });
+    if (insertError) throw insertError;
+    return pub.publicUrl;
   };
 
   const saveToPublications = async () => {
-    if (!canvasRef.current) return;
     setSaving(true);
-    canvasRef.current.toBlob(async (blob) => {
-      const fileName = `espresale/${Date.now()}-${selected.name.toLowerCase().replace(/\s+/g, '-')}.png`;
-      const { error: uploadError } = await supabase.storage.from('marketing').upload(fileName, blob, {
-        contentType: 'image/png',
-      });
-      if (uploadError) {
-        console.error(uploadError);
-        alert('No se pudo guardar la imagen.');
-        setSaving(false);
-        return;
-      }
-      const { data: pub } = supabase.storage.from('marketing').getPublicUrl(fileName);
-      await supabase.from('publications').insert({
-        video_url: pub.publicUrl,
-        caption: buildCaption(),
-        caption_es: buildCaption(),
-      });
-      setSavedUrl(pub.publicUrl);
-      setSaving(false);
-    }, 'image/png');
+    setNotice(null);
+    try {
+      setSavedUrl(await uploadPublication(await toBlob(), 'png', 'image/png'));
+      setNotice({ ok: true, text: 'Guardada — ya aparece en Publicaciones.' });
+    } catch (err) {
+      console.error(err);
+      setNotice({ ok: false, text: `No se pudo guardar: ${err.message || 'error desconocido'}` });
+    }
+    setSaving(false);
   };
 
-  // --- Cámara ---
   const handleCapture = (e, type) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    setCapturedFile(file);
-    setCapturedType(type);
-    setCapturedPreviewUrl(URL.createObjectURL(file));
+    setCaptured({ file, type, url: URL.createObjectURL(file) });
+    setUsePhoto(true);
     setCapturedSavedUrl(null);
     setIgResult(null);
   };
 
-  const saveCapturedToPublications = async () => {
-    if (!capturedFile) return;
+  const saveCaptured = async () => {
     setCapturedSaving(true);
-    const ext = capturedType === 'video' ? 'mp4' : 'jpg';
-    const fileName = `espresale/${Date.now()}-captura.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('marketing').upload(fileName, capturedFile, {
-      contentType: capturedFile.type,
-    });
-    if (uploadError) {
-      console.error(uploadError);
-      alert('No se pudo guardar el archivo.');
-      setCapturedSaving(false);
-      return;
+    try {
+      const ext = captured.type === 'video' ? 'mp4' : 'jpg';
+      setCapturedSavedUrl(await uploadPublication(captured.file, ext, captured.file.type));
+    } catch (err) {
+      console.error(err);
+      setIgResult({ ok: false, message: `No se pudo guardar: ${err.message || 'error desconocido'}` });
     }
-    const { data: pub } = supabase.storage.from('marketing').getPublicUrl(fileName);
-    await supabase.from('publications').insert({
-      video_url: pub.publicUrl,
-      caption: buildCaption(),
-      caption_es: buildCaption(),
-    });
-    setCapturedSavedUrl(pub.publicUrl);
     setCapturedSaving(false);
   };
 
   // Instagram (Reels) solo acepta video — usa la función publish-content que
   // ya está desplegada en este proyecto de Supabase.
   const publishToInstagram = async () => {
-    const videoUrl = capturedSavedUrl;
-    if (!videoUrl) {
-      alert('Primero guarda un video en Publicaciones (Instagram Reels no acepta fotos).');
-      return;
-    }
+    if (!capturedSavedUrl) return;
     setIgPublishing(true);
     setIgResult(null);
     const { data, error } = await supabase.functions.invoke('publish-content', {
-      body: { video_url: videoUrl, caption: buildCaption(), platforms: { ig: true } },
+      body: { video_url: capturedSavedUrl, caption: buildCaption(), platforms: { ig: true } },
     });
     setIgPublishing(false);
     if (error) {
       setIgResult({ ok: false, message: error.message || 'No se pudo publicar.' });
       return;
     }
-    const igOutcome = data?.results?.instagram;
-    if (igOutcome?.success) {
-      setIgResult({ ok: true, message: '✓ Publicado en Instagram.' });
-    } else {
-      setIgResult({ ok: false, message: igOutcome?.error || 'Instagram no confirmó la publicación (revisa las credenciales configuradas en la función).' });
-    }
+    const ig = data?.results?.instagram;
+    setIgResult(ig?.success
+      ? { ok: true, message: 'Publicado en Instagram.' }
+      : { ok: false, message: ig?.error || 'Instagram no confirmó la publicación (revisa las credenciales de la función).' });
   };
 
+  const { w, h } = FORMATS[format];
+
   return (
-    <div className="admin-page">
-      <h1 className="admin-page-title">Espresale</h1>
-      <p className="admin-page-sub">
-        Elige la variedad, escribe el WhatsApp del cliente y genera la tarjeta con receta, clima y hora —
-        o toma una foto/video real desde la cámara para publicar directo en Instagram.
-      </p>
+    <div className="admin-page esp">
+      <header className="esp-head">
+        <div className="esp-cota">
+          <span>FIG. 06 — ESPRESALE / VENTA RÁPIDA</span>
+          <span className="esp-badge">{weather.icon} {tempStr} · {timeStr}</span>
+        </div>
+        <h1 className="esp-title">Espresale.</h1>
+        <p className="esp-sub">
+          Elige la variedad y la tarjeta se dibuja sola como un plano de la receta — con clima y hora
+          de Bogotá. Mándasela al cliente o guárdala para redes.
+        </p>
+      </header>
 
-      <div className="admin-espresale-layout">
-        <div className="admin-espresale-form">
-          <div className="admin-card">
-            <div className="admin-card-header"><h3>1. Variedad</h3></div>
-            <div className="admin-espresale-varieties">
-              {varieties.map((v) => (
-                <button
-                  key={v.id}
-                  className={`admin-variety-btn ${selected?.id === v.id ? 'active' : ''}`}
-                  onClick={() => { setSelected(v); setGenerated(false); }}
-                >
-                  {v.name}
-                </button>
-              ))}
-            </div>
-          </div>
+      <div className="esp-layout">
+        <div className="esp-steps">
+          <section className="esp-step">
+            <StepHead n="01" title="Variedad" done={!!selected} />
+            {varieties === null ? (
+              <p className="esp-muted">Cargando variedades…</p>
+            ) : varieties.length === 0 ? (
+              <p className="esp-muted">No hay cafés activos en el catálogo (categoría coffee_bag).</p>
+            ) : (
+              <div className="esp-chips">
+                {varieties.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    className={`esp-chip ${selected?.id === v.id ? 'active' : ''}`}
+                    onClick={() => setSelected(v)}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {selected && (
+              <dl className="esp-specs">
+                <div><dt>Dosis</dt><dd>{recipe.dose ? `${recipe.dose}g` : '—'}</dd></div>
+                <div><dt>Agua</dt><dd>{recipe.water ? `${recipe.water}ml` : '—'}</dd></div>
+                <div><dt>Temp</dt><dd>{recipe.temp ? `${recipe.temp}°C` : '—'}</dd></div>
+                <div><dt>Tiempo</dt><dd>{recipe.time || '—'}</dd></div>
+              </dl>
+            )}
+            {selected && !selected.recipe_text && (
+              <p className="esp-muted">Esta variedad no tiene receta — agrégala en Catálogo.</p>
+            )}
+          </section>
 
-          <div className="admin-card">
-            <div className="admin-card-header"><h3>2. WhatsApp del cliente</h3></div>
-            <input
-              type="text"
-              className="admin-price-input"
-              style={{ width: '100%' }}
-              placeholder="57300xxxxxxx"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+          <section className="esp-step">
+            <StepHead
+              n="02"
+              title="Fondo"
+              done={!!captured}
+              hint="Plano de papel, o una foto real de la preparación detrás de la hoja."
             />
-          </div>
-
-          <div className="admin-card">
-            <div className="admin-card-header"><h3>3. Clima y hora (automático)</h3></div>
-            <p className="admin-page-sub" style={{ margin: 0 }}>
-              {weather.icon} {weather.tempC !== null ? `${weather.tempC}°C` : '—'} en Bogotá · {new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          </div>
-
-          <button className="admin-btn-primary" disabled={!selected} onClick={generate}>
-            Generar tarjeta
-          </button>
-
-          <div className="admin-card">
-            <div className="admin-card-header"><h3>4. Foto o video real (cámara)</h3></div>
-            <p className="admin-page-sub" style={{ marginBottom: '.6rem' }}>
-              En celular, esto abre la cámara directamente. Un video es necesario si vas a publicar en Instagram Reels.
-            </p>
-            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
-              <button className="admin-btn-ghost admin-btn-sm" onClick={() => photoInputRef.current?.click()}>
+            <div className="esp-chips">
+              <button type="button" className={`esp-chip ${!(usePhoto && photoImg) ? 'active' : ''}`} onClick={() => setUsePhoto(false)}>
+                Plano
+              </button>
+              {photoImg && (
+                <button type="button" className={`esp-chip ${usePhoto ? 'active' : ''}`} onClick={() => setUsePhoto(true)}>
+                  Foto
+                </button>
+              )}
+              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => photoInputRef.current?.click()}>
                 📷 Tomar foto
               </button>
-              <button className="admin-btn-ghost admin-btn-sm" onClick={() => videoInputRef.current?.click()}>
+              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => videoInputRef.current?.click()}>
                 🎥 Grabar video
               </button>
             </div>
-            <input
-              ref={photoInputRef} type="file" accept="image/*" capture="environment"
-              style={{ display: 'none' }} onChange={(e) => handleCapture(e, 'image')}
-            />
-            <input
-              ref={videoInputRef} type="file" accept="video/*" capture="environment"
-              style={{ display: 'none' }} onChange={(e) => handleCapture(e, 'video')}
-            />
+            <input ref={photoInputRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => handleCapture(e, 'image')} />
+            <input ref={videoInputRef} type="file" accept="video/*" capture="environment" hidden onChange={(e) => handleCapture(e, 'video')} />
 
-            {capturedPreviewUrl && (
-              <div style={{ marginTop: '.8rem' }}>
-                {capturedType === 'video' ? (
-                  <video src={capturedPreviewUrl} controls style={{ width: '100%', borderRadius: 8 }} />
-                ) : (
-                  <img src={capturedPreviewUrl} alt="" style={{ width: '100%', borderRadius: 8 }} />
-                )}
-                <div style={{ display: 'flex', gap: '.5rem', marginTop: '.6rem', flexWrap: 'wrap' }}>
-                  <button className="admin-btn-primary admin-btn-sm" disabled={capturedSaving} onClick={saveCapturedToPublications}>
-                    {capturedSaving ? 'Guardando…' : 'Guardar en Publicaciones'}
+            {captured?.type === 'video' && (
+              <div className="esp-capture">
+                <video src={captured.url} controls playsInline />
+                <p className="esp-muted">El video no va en la tarjeta: guárdalo y publícalo como Reel.</p>
+                <div className="esp-actions-row">
+                  <button type="button" className="esp-btn esp-btn-ghost" disabled={capturedSaving || !!capturedSavedUrl} onClick={saveCaptured}>
+                    {capturedSavedUrl ? '✓ Guardado' : capturedSaving ? 'Guardando…' : 'Guardar en Publicaciones'}
                   </button>
-                  {capturedType === 'video' && (
-                    <button className="admin-btn-primary admin-btn-sm" disabled={igPublishing || !capturedSavedUrl} onClick={publishToInstagram}>
-                      {igPublishing ? 'Publicando…' : '📸 Publicar en Instagram'}
-                    </button>
-                  )}
+                  <button type="button" className="esp-btn esp-btn-primary" disabled={igPublishing || !capturedSavedUrl} onClick={publishToInstagram}>
+                    {igPublishing ? 'Publicando…' : 'Publicar en Instagram'}
+                  </button>
                 </div>
-                {capturedSavedUrl && <p className="admin-fineprint">✓ Guardado en Publicaciones.</p>}
-                {capturedType === 'video' && !capturedSavedUrl && (
-                  <p className="admin-fineprint">Guarda el video primero para poder publicarlo en Instagram.</p>
-                )}
-                {igResult && (
-                  <p className="admin-fineprint" style={{ color: igResult.ok ? '#0f7d4d' : '#de1b1b' }}>
-                    {igResult.message}
-                  </p>
-                )}
+                {igResult && <p className={`esp-notice ${igResult.ok ? 'ok' : 'err'}`}>{igResult.message}</p>}
+              </div>
+            )}
+          </section>
+
+          <section className="esp-step">
+            <StepHead n="03" title="Formato" done />
+            <div className="esp-chips">
+              {Object.entries(FORMATS).map(([id, f]) => (
+                <button key={id} type="button" className={`esp-chip ${format === id ? 'active' : ''}`} onClick={() => setFormat(id)}>
+                  <span className={`esp-ratio esp-ratio-${id}`} aria-hidden="true" />
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="esp-step">
+            <StepHead n="04" title="WhatsApp del cliente" done={waDigits(phone).length >= 11} hint="Opcional. Con 10 dígitos se agrega el +57." />
+            <input
+              type="tel"
+              inputMode="tel"
+              className="esp-input"
+              placeholder="300 123 4567"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </section>
+        </div>
+
+        <div className="esp-preview">
+          <div className="esp-cota esp-cota-dark">
+            <span>VISTA PREVIA · {w}×{h}</span>
+            <span className="esp-badge">{FORMATS[format].label}</span>
+          </div>
+
+          <div className={`esp-canvas-wrap esp-canvas-${format}`}>
+            <canvas ref={canvasRef} className="esp-canvas" hidden={!selected} />
+            {!selected && (
+              <div className="esp-empty">
+                <span className="esp-empty-fig">FIG. 01</span>
+                <p>Elige una variedad para dibujar la tarjeta.</p>
               </div>
             )}
           </div>
-        </div>
 
-        <div className="admin-espresale-preview">
-          <canvas ref={canvasRef} className="admin-espresale-canvas" style={{ display: generated ? 'block' : 'none' }} />
-          {!generated && <p className="admin-loading">Elige una variedad y da clic en "Generar tarjeta".</p>}
-
-          {generated && (
-            <div className="admin-espresale-actions">
-              <button className="admin-btn-ghost admin-btn-sm" onClick={download}>Descargar imagen</button>
-              <button className="admin-btn-ghost admin-btn-sm" onClick={openWhatsAppToCustomer}>
-                Abrir WhatsApp del cliente
+          <div className="esp-actions">
+            {canShareFiles && (
+              <button type="button" className="esp-btn esp-btn-primary" disabled={!selected} onClick={share}>
+                Compartir imagen
               </button>
-              <button className="admin-btn-primary admin-btn-sm" disabled={saving} onClick={saveToPublications}>
-                {saving ? 'Guardando…' : 'Guardar en Publicaciones'}
-              </button>
-              {savedUrl && <p className="admin-fineprint">✓ Guardada — ya aparece en la pestaña Publicaciones.</p>}
-              <p className="admin-fineprint">
-                WhatsApp no permite adjuntar imágenes automáticamente a un número — descarga la imagen
-                primero y adjúntala tú mismo en el chat que se abre. Esta tarjeta (imagen fija) tampoco
-                sirve para Instagram Reels — usa la cámara (abajo) para eso.
-              </p>
-            </div>
-          )}
+            )}
+            <button type="button" className={`esp-btn ${canShareFiles ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!selected} onClick={download}>
+              Descargar PNG
+            </button>
+            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>
+              Abrir WhatsApp
+            </button>
+            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || saving || !!savedUrl} onClick={saveToPublications}>
+              {savedUrl ? '✓ En Publicaciones' : saving ? 'Guardando…' : 'Guardar en Publicaciones'}
+            </button>
+          </div>
+          {notice && <p className={`esp-notice ${notice.ok ? 'ok' : 'err'}`}>{notice.text}</p>}
+          <p className="esp-fineprint">
+            {canShareFiles
+              ? '“Compartir imagen” abre el menú del celular y adjunta la tarjeta a WhatsApp o Instagram.'
+              : 'WhatsApp Web no adjunta imágenes solo: descarga el PNG y arrástralo al chat que se abre.'}
+          </p>
         </div>
       </div>
     </div>

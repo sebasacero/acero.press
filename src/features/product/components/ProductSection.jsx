@@ -53,6 +53,7 @@ export default function ProductSection() {
   if (!product) {
     return (
       <section className="product-section" id="beans">
+        <SectionEditButton section="Catálogo de café" toolId="catalog" />
         <div className="product-banner">
           <div className="banner-text">{t('banners.beans')}</div>
         </div>
@@ -101,7 +102,7 @@ export default function ProductSection() {
 
   return (
     <section className="product-section" id="beans">
-      <SectionEditButton toolId="catalog" label="Editar catálogo" />
+      <SectionEditButton section="Catálogo de café" toolId="catalog" />
       <div className="product-banner">
         <div className="banner-text">{t('banners.beans')}</div>
       </div>

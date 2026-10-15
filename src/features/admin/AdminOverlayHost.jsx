@@ -1,11 +1,22 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useAdminUI } from './AdminUIContext.jsx';
 import { ADMIN_TOOLS } from './adminTools.js';
 import './admin.css';
 
 export default function AdminOverlayHost() {
   const { activeTool, openTool, close, isOpen } = useAdminUI();
-  const [collapsedNav, setCollapsedNav] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, close]);
 
   if (!isOpen) return null;
 
@@ -14,7 +25,7 @@ export default function AdminOverlayHost() {
   return (
     <div className="admin-overlay-backdrop" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
       <div className="admin-overlay-shell admin-shell">
-        <aside className={`admin-sidebar ${collapsedNav ? 'is-collapsed' : ''}`}>
+        <aside className="admin-sidebar">
           <div className="admin-sidebar-logo">ACERO<span>PRESS</span></div>
           <nav className="admin-nav">
             {ADMIN_TOOLS.map((t) => (
@@ -35,7 +46,6 @@ export default function AdminOverlayHost() {
         </aside>
         <main className="admin-main">
           <button className="admin-overlay-close" onClick={close} aria-label="Cerrar">×</button>
-          <button className="admin-overlay-navtoggle" onClick={() => setCollapsedNav((v) => !v)} aria-label="Menú">☰</button>
           <ActiveComponent />
         </main>
       </div>

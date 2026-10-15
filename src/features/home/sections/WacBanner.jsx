@@ -3,6 +3,8 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
 
+const WAC_FIELDS = [{ key: 'banner_wac', label: 'Texto de la franja', hint: 'Se muestra grande en una sola línea.' }];
+
 export default function WacBanner() {
   const { t, lang } = useLanguage();
   const [text, setText] = useState(null);
@@ -15,11 +17,7 @@ export default function WacBanner() {
 
   return (
     <div className="product-banner" style={{ position: 'relative' }}>
-      <SectionEditButton
-        className="section-edit-top-right"
-        onSaved={load}
-        fields={[{ baseKey: 'banner_wac', label: 'Texto del banner (se repite en bucle)' }]}
-      />
+      <SectionEditButton section="Franja WAC" fig="FIG. 03 — FRANJA" onSaved={load} fields={WAC_FIELDS} />
       <div className="banner-text-wac">{text || t('banners.wac')}</div>
     </div>
   );

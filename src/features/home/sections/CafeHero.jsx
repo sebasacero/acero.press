@@ -3,6 +3,11 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
 
+const HERO_FIELDS = [
+  { key: 'hero_address', label: 'Dirección (insignia de ubicación)' },
+  { key: 'hero_address_cta', label: 'Texto bajo la dirección' },
+];
+
 export default function CafeHero() {
   const { t, lang } = useLanguage();
   const [address, setAddress] = useState(null);
@@ -21,12 +26,11 @@ export default function CafeHero() {
       <div className="hero-dim-overlay" aria-hidden="true"></div>
 
       <SectionEditButton
-        className="section-edit-top-right"
+        section="Portada"
+        fig="FIG. 00 — PORTADA"
+        placement="hero"
         onSaved={load}
-        fields={[
-          { baseKey: 'hero_address', label: 'Dirección' },
-          { baseKey: 'hero_address_cta', label: 'Texto del botón' },
-        ]}
+        fields={HERO_FIELDS}
       />
 
       <a href="#beans" className="hero-location-badge" aria-label={addressCta || t('hero.addressCta')}>

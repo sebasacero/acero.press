@@ -1,5 +1,5 @@
 import WhatsAppButton from '../../shared/layout/WhatsAppButton.jsx';
-import { useAdminAuth } from './useAdminAuth.js';
+import { useIsOwner } from './useAdminAuth.js';
 import { useAdminUI } from './AdminUIContext.jsx';
 
 function EspresaleQuickButton() {
@@ -26,9 +26,9 @@ function EspresaleQuickButton() {
  * o si no has iniciado sesión) siempre ve el botón normal de WhatsApp.
  */
 export default function ActiveFloatWidget() {
-  const { isAdmin, adminInfo } = useAdminAuth();
+  const isOwner = useIsOwner();
 
-  if (isAdmin && adminInfo?.role === 'owner') {
+  if (isOwner) {
     return <EspresaleQuickButton />;
   }
   return <WhatsAppButton />;

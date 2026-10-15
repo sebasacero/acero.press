@@ -1,50 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useSyncExternalStore, useCallback } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 
+// Estado de sesión compartido: antes cada lápiz/dock/botón llamaba a
+// useAdminAuth() por su cuenta y cada uno abría su propio listener de
+// Supabase y consultaba admin_users. Ahora hay una sola suscripción para
+// toda la app y todos los componentes leen el mismo estado.
+let state = { session: null, isAdmin: false, adminInfo: null, loading: true };
+const listeners = new Set();
+let started = false;
+
+function setState(patch) {
+  state = { ...state, ...patch };
+  listeners.forEach((l) => l());
+}
+
+async function checkAdmin(session) {
+  if (!session) {
+    setState({ session: null, isAdmin: false, adminInfo: null, loading: false });
+    return;
+  }
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('id, full_name, role')
+    .eq('auth_user_id', session.user.id)
+    .maybeSingle();
+
+  if (error) console.error('Error verificando admin:', error.message);
+  setState({ session, isAdmin: !error && !!data, adminInfo: error ? null : data, loading: false });
+}
+
+function start() {
+  if (started) return;
+  started = true;
+  supabase.auth.getSession().then(({ data }) => checkAdmin(data.session));
+  supabase.auth.onAuthStateChange((_event, newSession) => {
+    // Los refrescos de token no cambian de usuario: no vuelvas a consultar.
+    if (newSession?.user?.id && newSession.user.id === state.session?.user?.id) {
+      setState({ session: newSession });
+      return;
+    }
+    setState({ loading: true });
+    checkAdmin(newSession);
+  });
+}
+
+function subscribe(listener) {
+  start();
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+const getSnapshot = () => state;
+
 export function useAdminAuth() {
-  const [session, setSession] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminInfo, setAdminInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const checkAdmin = useCallback(async (currentSession) => {
-    if (!currentSession) {
-      setIsAdmin(false);
-      setAdminInfo(null);
-      return;
-    }
-    const { data, error } = await supabase
-      .from('admin_users')
-      .select('id, full_name, role')
-      .eq('auth_user_id', currentSession.user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error verificando admin:', error.message);
-      setIsAdmin(false);
-      setAdminInfo(null);
-      return;
-    }
-    setIsAdmin(!!data);
-    setAdminInfo(data);
-  }, []);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      await checkAdmin(data.session);
-      setLoading(false);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
-      setLoading(true);
-      await checkAdmin(newSession);
-      setLoading(false);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, [checkAdmin]);
+  const snap = useSyncExternalStore(subscribe, getSnapshot);
 
   const signIn = useCallback(async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -55,5 +64,11 @@ export function useAdminAuth() {
     await supabase.auth.signOut();
   }, []);
 
-  return { session, isAdmin, adminInfo, loading, signIn, signOut };
+  return { ...snap, signIn, signOut };
+}
+
+/** true solo para tu cuenta (role: owner) — quien ve lápices, dock y Espresale. */
+export function useIsOwner() {
+  const { isAdmin, adminInfo } = useSyncExternalStore(subscribe, getSnapshot);
+  return isAdmin && adminInfo?.role === 'owner';
 }

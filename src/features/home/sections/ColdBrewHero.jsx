@@ -5,6 +5,8 @@ import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
 
 const TOTAL_SEGMENTS = 20;
 const AUTO_MS = 6000;
+const PRICE_LABEL = { es: 'PRECIO', en: 'PRICE', ja: '価格' };
+const money = (n) => '$' + Math.round(n).toLocaleString('es-CO');
 
 // Respaldo local, solo por si Supabase no responde a tiempo — el contenido
 // real y editable vive en page_sections (slug: 'cold_brew'), editable desde
@@ -99,6 +101,13 @@ function ColdBrewSlide({ t, lang, videoRef, slide }) {
         </div>
 
         <div className="progress-caption">{slide.caption[lang]}</div>
+
+        {Number(slide.price) > 0 && (
+          <div className="cota cota-price">
+            <span className="annot">{PRICE_LABEL[lang] || PRICE_LABEL.es}</span>
+            <span className="price-value">{money(slide.price)} <small>COP</small></span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -143,7 +152,7 @@ export default function ColdBrewHero() {
 
   return (
     <section className="coldbrew-carousel" id="inicio">
-      <ColdBrewCarouselEditor onSaved={load} />
+      <ColdBrewCarouselEditor slides={slides} activeIndex={index} onSaved={load} />
 
       <div className="coldbrew-carousel-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         {slides.map((s, i) => (
