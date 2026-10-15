@@ -2,6 +2,17 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { fetchBogotaWeather } from '../../../shared/lib/weather.js';
 import { drawEspresaleCard, parseRecipe, FORMATS } from '../espresaleCard.js';
+import { publishToInstagram as igPublish, recordEspresaleSale } from '../../../shared/lib/instagram.js';
+
+const PAY_METHODS = [
+  { id: 'cash', label: 'Efectivo' },
+  { id: 'nequi', label: 'Nequi' },
+  { id: 'daviplata', label: 'Daviplata' },
+  { id: 'card', label: 'Tarjeta' },
+];
+const money = (n) => '$' + Math.round(n).toLocaleString('es-CO');
+// Formato de la tarjeta → tipo de publicación en Instagram
+const IG_KIND = { feed: 'image', story: 'story' };
 
 const slug = (s) => String(s || 'tarjeta').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
 
@@ -49,10 +60,18 @@ export default function EspresalePage() {
   const photoInputRef = useRef(null);
   const videoInputRef = useRef(null);
 
+  // Venta (paso 05) y publicación de la tarjeta en Instagram
+  const [variantId, setVariantId] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [payMethod, setPayMethod] = useState('cash');
+  const [sale, setSale] = useState(null); // { orderId, total }
+  const [saleBusy, setSaleBusy] = useState(null); // 'sale' | 'publish'
+  const [cardPost, setCardPost] = useState(null); // { ok, text }
+
   useEffect(() => {
     supabase
       .from('products')
-      .select('id, name, recipe_text')
+      .select('id, name, recipe_text, product_variants(id, label, price, active)')
       .eq('category', 'coffee_bag')
       .eq('active', true)
       .then(({ data, error }) => {
@@ -89,6 +108,19 @@ export default function EspresalePage() {
   }, [selected, weather, format, photoImg, usePhoto, minuteKey]);
 
   const recipe = useMemo(() => parseRecipe(selected?.recipe_text || ''), [selected]);
+  const variants = useMemo(
+    () => (selected?.product_variants ?? []).filter((v) => v.active).sort((a, b) => Number(a.price) - Number(b.price)),
+    [selected]
+  );
+  const variant = variants.find((v) => v.id === variantId) ?? null;
+
+  // Al cambiar de variedad: primera presentación y venta nueva
+  useEffect(() => {
+    setVariantId(variants[0]?.id ?? null);
+    setQty(1);
+    setSale(null);
+    setCardPost(null);
+  }, [variants]);
   const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const tempStr = weather.tempC !== null ? `${weather.tempC}°C` : '—';
   const fileName = `espresale-${slug(selected?.name)}.png`;
@@ -134,22 +166,27 @@ export default function EspresalePage() {
     setNotice({ ok: true, text: 'Se abrió el chat — adjunta la imagen que descargaste.' });
   };
 
-  const uploadPublication = async (blobOrFile, ext, contentType) => {
+  // Sube el archivo a Storage y crea su fila en Publicaciones. Devuelve { url, id }.
+  const uploadPublication = async (blobOrFile, ext, contentType, extra = {}) => {
     const path = `espresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
     const { error } = await supabase.storage.from('marketing').upload(path, blobOrFile, { contentType });
     if (error) throw error;
     const { data: pub } = supabase.storage.from('marketing').getPublicUrl(path);
     const caption = buildCaption();
-    const { error: insertError } = await supabase.from('publications').insert({ video_url: pub.publicUrl, caption, caption_es: caption });
+    const { data: row, error: insertError } = await supabase
+      .from('publications')
+      .insert({ video_url: pub.publicUrl, caption, caption_es: caption, created_at: new Date().toISOString(), ...extra })
+      .select('id')
+      .single();
     if (insertError) throw insertError;
-    return pub.publicUrl;
+    return { url: pub.publicUrl, id: row.id };
   };
 
   const saveToPublications = async () => {
     setSaving(true);
     setNotice(null);
     try {
-      setSavedUrl(await uploadPublication(await toBlob(), 'png', 'image/png'));
+      setSavedUrl((await uploadPublication(await toBlob(), 'png', 'image/png', { media_kind: IG_KIND[format] })).url);
       setNotice({ ok: true, text: 'Guardada — ya aparece en Publicaciones.' });
     } catch (err) {
       console.error(err);
@@ -172,7 +209,11 @@ export default function EspresalePage() {
     setCapturedSaving(true);
     try {
       const ext = captured.type === 'video' ? 'mp4' : 'jpg';
-      setCapturedSavedUrl(await uploadPublication(captured.file, ext, captured.file.type));
+      const saved = await uploadPublication(captured.file, ext, captured.file.type, {
+        media_kind: captured.type === 'video' ? 'reel' : 'image',
+        ...(sale ? { order_id: sale.orderId } : {}),
+      });
+      setCapturedSavedUrl(saved);
     } catch (err) {
       console.error(err);
       setIgResult({ ok: false, message: `No se pudo guardar: ${err.message || 'error desconocido'}` });
@@ -180,24 +221,59 @@ export default function EspresalePage() {
     setCapturedSaving(false);
   };
 
-  // Instagram (Reels) solo acepta video — usa la función publish-content que
-  // ya está desplegada en este proyecto de Supabase.
+  // Video capturado → Reel
   const publishToInstagram = async () => {
     if (!capturedSavedUrl) return;
     setIgPublishing(true);
     setIgResult(null);
-    const { data, error } = await supabase.functions.invoke('publish-content', {
-      body: { video_url: capturedSavedUrl, caption: buildCaption(), platforms: { ig: true } },
-    });
-    setIgPublishing(false);
-    if (error) {
-      setIgResult({ ok: false, message: error.message || 'No se pudo publicar.' });
-      return;
+    try {
+      const ig = await igPublish({ mediaUrl: capturedSavedUrl.url, kind: 'reel', caption: buildCaption(), publicationId: capturedSavedUrl.id });
+      setIgResult(ig.success ? { ok: true, message: 'Reel publicado en Instagram.' } : { ok: false, message: ig.error || 'Instagram no confirmó la publicación.' });
+    } catch (err) {
+      setIgResult({ ok: false, message: err.message });
     }
-    const ig = data?.results?.instagram;
-    setIgResult(ig?.success
-      ? { ok: true, message: 'Publicado en Instagram.' }
-      : { ok: false, message: ig?.error || 'Instagram no confirmó la publicación (revisa las credenciales de la función).' });
+    setIgPublishing(false);
+  };
+
+  // Tarjeta → post del feed (4:5) o historia (9:16). Instagram solo acepta JPEG.
+  const publishCard = async (orderId = sale?.orderId) => {
+    setSaleBusy('publish');
+    setCardPost(null);
+    try {
+      const jpeg = await new Promise((resolve) => canvasRef.current.toBlob(resolve, 'image/jpeg', 0.92));
+      const saved = await uploadPublication(jpeg, 'jpg', 'image/jpeg', {
+        media_kind: IG_KIND[format],
+        ...(orderId ? { order_id: orderId } : {}),
+      });
+      const ig = await igPublish({ mediaUrl: saved.url, kind: IG_KIND[format], caption: buildCaption(), publicationId: saved.id });
+      setCardPost(ig.success
+        ? { ok: true, text: format === 'story' ? 'Historia publicada en Instagram.' : 'Post publicado en el feed de Instagram.' }
+        : { ok: false, text: ig.error || 'Instagram no confirmó la publicación.' });
+    } catch (err) {
+      setCardPost({ ok: false, text: `No se publicó: ${err.message}` });
+    }
+    setSaleBusy(null);
+  };
+
+  const registerSale = async (alsoPublish) => {
+    if (!variant) return;
+    setSaleBusy('sale');
+    setCardPost(null);
+    try {
+      const r = await recordEspresaleSale({
+        variant,
+        productName: selected.name,
+        qty,
+        paymentMethod: payMethod,
+        phone: waDigits(phone),
+      });
+      setSale(r);
+      setSaleBusy(null);
+      if (alsoPublish) await publishCard(r.orderId);
+    } catch (err) {
+      setCardPost({ ok: false, text: `No se registró la venta: ${err.message}` });
+      setSaleBusy(null);
+    }
   };
 
   const { w, h, safe } = FORMATS[format];
@@ -332,6 +408,57 @@ export default function EspresalePage() {
               onChange={(e) => setPhone(e.target.value)}
             />
           </section>
+
+          <section className="esp-step">
+            <StepHead
+              n="05"
+              title="Venta"
+              done={!!sale}
+              hint="Suma al contador de ventas, al dashboard y descuenta inventario."
+            />
+            {!selected ? (
+              <p className="esp-muted">Elige primero la variedad.</p>
+            ) : variants.length === 0 ? (
+              <p className="esp-muted">Esta variedad no tiene presentaciones con precio activas (Catálogo).</p>
+            ) : (
+              <>
+                <div className="esp-chips">
+                  {variants.map((v) => (
+                    <button key={v.id} type="button" className={`esp-chip ${variantId === v.id ? 'active' : ''}`} onClick={() => setVariantId(v.id)}>
+                      {v.label} · {money(v.price)}
+                    </button>
+                  ))}
+                </div>
+                <div className="esp-sale-row">
+                  <div className="esp-qty" role="group" aria-label="Cantidad">
+                    <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">−</button>
+                    <span>{qty}</span>
+                    <button type="button" onClick={() => setQty((q) => Math.min(99, q + 1))} aria-label="Más">+</button>
+                  </div>
+                  <strong className="esp-sale-total">{variant ? money(Number(variant.price) * qty) : '—'}</strong>
+                </div>
+                <div className="esp-chips">
+                  {PAY_METHODS.map((m) => (
+                    <button key={m.id} type="button" className={`esp-chip esp-chip-ghost ${payMethod === m.id ? 'active' : ''}`} onClick={() => setPayMethod(m.id)}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+                {sale ? (
+                  <p className="esp-notice ok">✓ Venta registrada: {money(sale.total)}.</p>
+                ) : (
+                  <div className="esp-actions-row">
+                    <button type="button" className="esp-btn esp-btn-ghost" disabled={!!saleBusy || !variant} onClick={() => registerSale(false)}>
+                      {saleBusy === 'sale' ? 'Registrando…' : 'Registrar venta'}
+                    </button>
+                    <button type="button" className="esp-btn esp-btn-primary" disabled={!!saleBusy || !variant} onClick={() => registerSale(true)}>
+                      Registrar y publicar
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
         </div>
 
         <div className="esp-preview">
@@ -375,10 +502,14 @@ export default function EspresalePage() {
             <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>
               Abrir WhatsApp
             </button>
+            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || !!saleBusy} onClick={() => publishCard()}>
+              {saleBusy === 'publish' ? 'Publicando…' : `Publicar ${format === 'story' ? 'historia' : 'en el feed'}`}
+            </button>
             <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || saving || !!savedUrl} onClick={saveToPublications}>
               {savedUrl ? '✓ En Publicaciones' : saving ? 'Guardando…' : 'Guardar en Publicaciones'}
             </button>
           </div>
+          {cardPost && <p className={`esp-notice ${cardPost.ok ? 'ok' : 'err'}`}>{cardPost.text}</p>}
           {notice && <p className={`esp-notice ${notice.ok ? 'ok' : 'err'}`}>{notice.text}</p>}
           <p className="esp-fineprint">
             {canShareFiles

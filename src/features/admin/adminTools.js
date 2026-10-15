@@ -5,6 +5,7 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import SectionsPage from './pages/SectionsPage.jsx';
 import EspresalePage from './pages/EspresalePage.jsx';
 import PublicationsPage from './pages/PublicationsPage.jsx';
+import InstagramPage from './pages/InstagramPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import TablesPage from './pages/TablesPage.jsx';
 
@@ -18,4 +19,5 @@ export const ADMIN_TOOLS = [
   { id: 'sections', label: 'Secciones', Component: SectionsPage },
   { id: 'espresale', label: 'Espresale', Component: EspresalePage },
   { id: 'publications', label: 'Publicaciones', Component: PublicationsPage },
+  { id: 'instagram', label: 'Instagram', Component: InstagramPage },
 ];

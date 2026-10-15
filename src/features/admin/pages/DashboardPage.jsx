@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import MiniMarkdown from '../MiniMarkdown.jsx';
 
 const money = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
 
@@ -85,6 +86,8 @@ export default function DashboardPage() {
   const [aiAt, setAiAt] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiSources, setAiSources] = useState([]);
   const [savingAlgo, setSavingAlgo] = useState(false);
   const [algoError, setAlgoError] = useState(null);
 
@@ -167,7 +170,7 @@ export default function DashboardPage() {
     loadAll();
     supabase
       .from('growth_ai_insights')
-      .select('insight, model, created_at')
+      .select('insight, model, created_at, sources')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -176,30 +179,38 @@ export default function DashboardPage() {
           setAiInsight(data.insight);
           setAiModel(data.model);
           setAiAt(data.created_at);
+          setAiSources(data.sources ?? []);
         }
       });
   }, [loadAll]);
 
+  // El servidor junta los datos reales (ventas, Espresale, inventario,
+  // Instagram) con tu sesión y Claude los cruza con tendencias de la web.
   const runAiAgent = async () => {
     setAiLoading(true);
     setAiError(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/growth-agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metrics }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+        },
+        body: JSON.stringify({ question: aiQuestion.trim() || undefined }),
       });
-      if (!res.ok) throw new Error('not-configured');
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error === 'not-configured'
+          ? 'El asistente aún no está configurado: falta ANTHROPIC_API_KEY en Vercel.'
+          : data.error || 'No se pudo completar el análisis. Intenta de nuevo.');
+      }
       setAiInsight(data.insight);
       setAiModel(data.model);
+      setAiSources(data.sources ?? []);
       setAiAt(new Date().toISOString());
     } catch (err) {
-      setAiError(
-        err.message === 'not-configured'
-          ? 'El agente de IA aún no está configurado (falta ANTHROPIC_API_KEY en el servidor).'
-          : 'No se pudo completar el análisis. Intenta de nuevo.'
-      );
+      setAiError(err.message);
     }
     setAiLoading(false);
   };
@@ -300,9 +311,19 @@ export default function DashboardPage() {
         </div>
 
         <div className="admin-ai-agent">
-          <button className="admin-btn-primary admin-btn-sm" disabled={aiLoading} onClick={runAiAgent}>
-            {aiLoading ? 'Analizando con IA…' : '🤖 Analizar con IA (tendencias de mercado)'}
-          </button>
+          <div className="admin-ai-ask">
+            <input
+              type="text"
+              value={aiQuestion}
+              onChange={(e) => setAiQuestion(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !aiLoading) runAiAgent(); }}
+              placeholder="Pregunta algo (opcional): ¿qué publico esta semana para vender más cold brew?"
+              aria-label="Pregunta para el asistente"
+            />
+            <button className="admin-btn-primary admin-btn-sm" disabled={aiLoading} onClick={runAiAgent}>
+              {aiLoading ? 'Analizando ventas, redes y tendencias… (hasta 2 min)' : aiQuestion.trim() ? 'Preguntar al asistente' : 'Análisis de la semana'}
+            </button>
+          </div>
           {aiError && <p className="cart-payment-error">{aiError}</p>}
           {aiInsight && (
             <div className="admin-ai-insight">
@@ -310,7 +331,17 @@ export default function DashboardPage() {
                 <span>Análisis de IA ({aiModel})</span>
                 <span>{new Date(aiAt).toLocaleString('es-CO')}</span>
               </div>
-              <p style={{ whiteSpace: 'pre-line' }}>{aiInsight}</p>
+              <MiniMarkdown text={aiInsight} />
+              {aiSources.length > 0 && (
+                <details className="admin-ai-sources">
+                  <summary>Fuentes consultadas ({aiSources.length})</summary>
+                  <ul>
+                    {aiSources.map((src) => (
+                      <li key={src.url}><a href={src.url} target="_blank" rel="noopener noreferrer">{src.title || src.url}</a></li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </div>
           )}
         </div>

@@ -727,3 +727,44 @@
   .admin-overlay-close{ top:9px; right:10px; background:#fa2525; box-shadow:-10px 0 14px var(--a-ink); }
   .admin-main{ padding:1.4rem 1.1rem; }
 }
+
+/* === Instagram (asistente de conexión) === */
+.ig-specs{ grid-template-columns:repeat(3, 1fr); }
+.ig-segbar{ display:grid; grid-template-columns:repeat(20, minmax(0,1fr)); gap:3px; }
+.ig-segbar span{ height:8px; background:rgba(42,53,80,.15); }
+.ig-segbar span.on{ background:var(--esp-ink); }
+.ig-segbar span.warn{ background:var(--esp-red); }
+.ig-guide{ margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:.45rem; font-size:.85rem; line-height:1.5; color:var(--esp-ink); }
+.ig-guide a{ color:var(--esp-red); font-weight:600; }
+.ig-guide code{ font-family:var(--esp-mono); font-size:.74rem; background:rgba(42,53,80,.08); padding:1px 4px; }
+.ig-token-field{ display:flex; flex-direction:column; gap:.35rem; font-family:var(--esp-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--esp-soft); }
+.ig-token-field textarea{ resize:vertical; font-size:.8rem; text-transform:none; letter-spacing:0; word-break:break-all; }
+.ig-notice{ padding:.8rem 1.1rem; }
+.ig-empty{ aspect-ratio:auto; min-height:260px; width:100%; }
+.ig-posts{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; max-height:70vh; overflow-y:auto; }
+.ig-post{ display:grid; grid-template-columns:76px 1fr; gap:12px; padding:10px; border:1px solid rgba(237,230,211,.2); background:rgba(10,14,28,.35); }
+.ig-post img, .ig-thumb-empty{ width:76px; height:95px; object-fit:cover; display:block; background:rgba(237,230,211,.08); }
+.ig-post-body{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.ig-post-meta{ display:flex; justify-content:space-between; font-family:var(--esp-mono); font-size:10px; letter-spacing:.06em; color:rgba(242,238,226,.6); }
+.ig-post-caption{ font-size:.8rem; line-height:1.4; color:#F2EEE2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.ig-post-stats{ display:flex; flex-wrap:wrap; gap:4px 12px; font-family:var(--esp-mono); font-size:10.5px; color:rgba(242,238,226,.65); }
+.ig-post-stats strong{ color:#fa2525; }
+.ig-post-body a{ font-family:var(--esp-mono); font-size:10.5px; color:#F2EEE2; }
+
+/* Espresale · paso 05 (venta) */
+.esp-sale-row{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.esp-qty{ display:inline-flex; align-items:center; border:1.5px solid var(--esp-ink); background:#fff; }
+.esp-qty button{ width:40px; height:40px; border:none; background:transparent; font-size:1.1rem; cursor:pointer; color:var(--esp-ink); }
+.esp-qty span{ min-width:36px; text-align:center; font-family:var(--esp-mono); font-weight:700; color:var(--esp-ink); }
+.esp-sale-total{ font-family:'Space Grotesk', sans-serif; font-size:1.5rem; color:var(--esp-red); }
+
+/* Asistente de crecimiento */
+.admin-ai-ask{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.admin-ai-ask input{ flex:1 1 280px; padding:.55rem .7rem; border:1.5px solid var(--a-border); border-radius:8px; font:inherit; font-size:.85rem; }
+.mini-md h4{ font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:.85rem; letter-spacing:.03em; color:var(--a-ink); margin:.9rem 0 .35rem; }
+.mini-md h4:first-child{ margin-top:0; }
+.mini-md p, .mini-md li{ font-size:.85rem; color:var(--a-ink); line-height:1.6; }
+.mini-md ul, .mini-md ol{ padding-left:1.2rem; margin:.2rem 0 .5rem; }
+.mini-md a, .admin-ai-sources a{ color:var(--a-magenta); }
+.admin-ai-sources{ margin-top:.8rem; font-size:.78rem; color:var(--a-ink-soft); }
+.admin-ai-sources ul{ padding-left:1.1rem; margin-top:.4rem; }
