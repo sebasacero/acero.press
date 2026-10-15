@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchAppConfig } from './appConfig.js';
 
 const FALLBACKS = {
@@ -20,6 +20,9 @@ export function useSocialLinks() {
     youtube: FALLBACKS.social_youtube,
   });
 
+  const [version, setVersion] = useState(0);
+  const reload = useCallback(() => setVersion((v) => v + 1), []);
+
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -33,7 +36,7 @@ export function useSocialLinks() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [version]);
 
-  return links;
+  return { ...links, reload };
 }

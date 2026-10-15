@@ -25,6 +25,13 @@ const socialIcons = [
   },
 ];
 
+const SOCIAL_FIELDS = [
+  { key: 'social_instagram', label: 'Instagram (URL)', i18n: false, type: 'url' },
+  { key: 'social_tiktok', label: 'TikTok (URL)', i18n: false, type: 'url' },
+  { key: 'social_facebook', label: 'Facebook (URL)', i18n: false, type: 'url' },
+  { key: 'social_youtube', label: 'YouTube (URL)', i18n: false, type: 'url' },
+];
+
 export default function Footer() {
   const { t } = useLanguage();
   const socialLinks = useSocialLinks();
@@ -32,7 +39,7 @@ export default function Footer() {
   return (
     <>
       <footer className="hero-footer">
-        <SectionEditButton toolId="settings" label="Editar redes sociales" />
+        <SectionEditButton section="Redes sociales" fig="FIG. — PIE DE PÁGINA" onSaved={socialLinks.reload} fields={SOCIAL_FIELDS} />
         <video className="footer-video-bg" autoPlay loop muted playsInline>
           <source src="/image/hero_main1.mp4" type="video/mp4" />
         </video>
