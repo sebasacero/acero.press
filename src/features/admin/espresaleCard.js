@@ -15,9 +15,15 @@ const MONO = '"JetBrains Mono", ui-monospace, monospace';
 const GROTESK = '"Space Grotesk", Archivo, sans-serif';
 const MARKER = '"Permanent Marker", cursive';
 
+// Formatos del sistema de publicaciones (lienzo "Formato de redes"):
+// `safe` es la zona que ninguna app tapa; logo, título, panel y cajetín
+// viven dentro de ella. El fondo (papel, cuadrícula, marco) sí llega al borde.
+//  - feed: Instagram 4:5, margen 96 (cabe en el recorte 3:4 del perfil).
+//  - story: vertical universal para Stories, Reels y TikTok: libre 270
+//    arriba, 440 abajo y 180 a la derecha (botones de Reels/TikTok).
 export const FORMATS = {
-  square: { w: 1080, h: 1080, label: 'Post 1:1' },
-  story: { w: 1080, h: 1920, label: 'Historia 9:16' },
+  feed: { w: 1080, h: 1350, label: 'Feed 4:5', apps: 'Instagram feed', safe: { x0: 96, y0: 96, x1: 984, y1: 1254 }, logoH: 72 },
+  story: { w: 1080, h: 1920, label: 'Vertical 9:16', apps: 'Stories · Reels · TikTok', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80 },
 };
 
 /** Saca dosis, agua, temperatura y tiempo del texto libre de la receta. */
@@ -504,11 +510,14 @@ function drawTitleBlock(ctx, x, y, w, h, cells, theme) {
     ctx.font = `500 13px ${MONO}`;
     ctx.fillStyle = theme.soft;
     ctx.fillText(cell.label, cx + 16, y + 26);
-    ctx.font = `700 ${cell.size || 30}px ${GROTESK}`;
     ctx.fillStyle = cell.accent ? C.red : theme.ink;
-    let value = cell.value;
-    while (ctx.measureText(value).width > cw - 30 && value.length > 3) value = value.slice(0, -1);
-    ctx.fillText(value, cx + 16, y + h - 22);
+    let size = cell.size || 30;
+    ctx.font = `700 ${size}px ${GROTESK}`;
+    while (ctx.measureText(cell.value).width > cw - 30 && size > 16) {
+      size -= 1;
+      ctx.font = `700 ${size}px ${GROTESK}`;
+    }
+    ctx.fillText(cell.value, cx + 16, y + h - 22);
     cx += cw;
   });
 }
@@ -527,27 +536,27 @@ function fitTitle(ctx, text, maxWidth, maxLines, start, min) {
  * Dibuja la tarjeta. `photo` (Image) es opcional: si existe, la hoja se
  * monta sobre la foto (como el video de fondo de los banners).
  */
-export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'square', photo = null }) {
+export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'feed', photo = null }) {
   await ensureFonts();
   const logo = await loadImage('/image/logo.png');
-  const { w, h } = FORMATS[format] || FORMATS.square;
-  const story = format === 'story';
+  const F = FORMATS[format] || FORMATS.feed;
+  const { w, h, safe, logoH } = F;
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
   const r = parseRecipe(variety.recipe_text || '');
 
   const theme = photo
-    ? { ink: C.cream, soft: 'rgba(247,243,232,0.7)', line: 'rgba(247,243,232,0.75)', bg: 'rgba(14,15,19,0.85)', blockBg: 'rgba(14,15,19,0.72)' }
-    : { ink: C.ink, soft: C.inkSoft, line: C.ink, bg: C.paper, blockBg: 'rgba(237,230,211,0.92)' };
+    ? { ink: C.cream, soft: 'rgba(247,243,232,0.75)', line: 'rgba(247,243,232,0.75)', bg: 'rgba(14,15,19,0.85)', blockBg: 'rgba(14,15,19,0.72)' }
+    : { ink: C.ink, soft: C.inkSoft, line: C.ink, bg: C.paper, blockBg: 'rgba(237,230,211,0.94)' };
 
-  // Fondo: papel cuadriculado o foto con el mismo degradado del banner
+  // Fondo a sangre: papel cuadriculado o foto con el degradado del banner
   if (photo) {
     drawCover(ctx, photo, w, h);
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, 'rgba(10,10,12,0.72)');
-    g.addColorStop(0.45, 'rgba(10,10,12,0.25)');
-    g.addColorStop(1, 'rgba(10,10,12,0.8)');
+    g.addColorStop(0.45, 'rgba(10,10,12,0.28)');
+    g.addColorStop(1, 'rgba(10,10,12,0.82)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
     grid(ctx, w, h, 27, 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.1)');
@@ -555,7 +564,6 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
     ctx.fillStyle = C.paper;
     ctx.fillRect(0, 0, w, h);
     grid(ctx, w, h, 27, 'rgba(42,53,80,0.08)', 'rgba(42,53,80,0.17)');
-    // Viñeta suave de papel envejecido
     const v = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
     v.addColorStop(0, 'rgba(120,90,40,0)');
     v.addColorStop(1, 'rgba(120,90,40,0.16)');
@@ -565,35 +573,35 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
 
   sheetFrame(ctx, w, h, theme.line, theme.soft);
 
-  const X0 = 92;
-  const X1 = w - 92;
-  let y = 92;
+  const X0 = safe.x0;
+  const X1 = safe.x1;
+  let y = safe.y0;
 
-  // Encabezado: logo ACERO + .press y referencia de la hoja
+  // A · Logo arriba a la izquierda, en el ancla de la zona segura
   if (logo) {
-    const lh = 54;
-    const lw = (logo.width / logo.height) * lh;
-    ctx.drawImage(logo, X0, y, lw, lh);
+    const lw = (logo.width / logo.height) * logoH;
+    ctx.drawImage(logo, X0, y, lw, logoH);
     ctx.save();
-    ctx.translate(X0 + lw + 8, y + lh - 6);
+    ctx.translate(X0 + lw + 8, y + logoH - 6);
     ctx.rotate(-0.1);
-    ctx.font = `30px ${MARKER}`;
+    ctx.font = `${Math.round(logoH * 0.55)}px ${MARKER}`;
     ctx.fillStyle = C.red;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('.press', 0, 0);
     ctx.restore();
   }
+  // B · Cota FIG. arriba a la derecha, a la altura del logo
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = `700 17px ${MONO}`;
+  ctx.font = `700 19px ${MONO}`;
   ctx.fillStyle = theme.ink;
-  ctx.fillText('FIG. 01 — ESPRESALE', X1, y + 22);
-  ctx.font = `500 14px ${MONO}`;
+  ctx.fillText('FIG. 03 — ESPRESALE', X1, y + 26);
+  ctx.font = `500 15px ${MONO}`;
   ctx.fillStyle = theme.soft;
-  ctx.fillText(`HOJA 01/01 · ESC 1:1 · ${w}×${h}`, X1, y + 46);
+  ctx.fillText(`${F.label.toUpperCase()} · ${w}×${h}`, X1, y + 52);
 
-  y += 80;
+  y += logoH + 24;
   ctx.strokeStyle = theme.line;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([6, 6]);
@@ -603,9 +611,9 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Título: la variedad, como el "COLD BREW." del banner
+  // C · Título: la variedad, como el "COLD BREW." del banner
   const name = `${String(variety.name || '').toUpperCase()}.`;
-  const t = fitTitle(ctx, name, X1 - X0, 2, story ? 132 : 100, 56);
+  const t = fitTitle(ctx, name, X1 - X0, 2, 108, 56);
   ctx.fillStyle = theme.ink;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
@@ -613,7 +621,6 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   t.lines.forEach((line, i) => ctx.fillText(line, X0, y + i * t.size * 0.98));
   y += (t.lines.length - 1) * t.size * 0.98 + 40;
 
-  // Etiqueta esquemática con punto rojo
   ctx.fillStyle = C.red;
   ctx.beginPath();
   ctx.arc(X0 + 6, y - 7, 6, 0, Math.PI * 2);
@@ -623,9 +630,9 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   ctx.fillText('BOGOTÁ, 2.600 MSNM · RECETA AEROPRESS', X0 + 22, y);
   y += 34;
 
-  // Cajetín abajo
+  // E · Cajetín al final de la zona segura
   const blockH = 96;
-  const blockY = h - 92 - blockH;
+  const blockY = safe.y1 - blockH;
   const time = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const day = date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
   const temp = weather?.tempC !== null && weather?.tempC !== undefined ? `${weather.tempC}°C` : '—';
@@ -644,40 +651,32 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
     theme
   );
 
-  // Zona central: dibujo + panel
+  // D · Dibujo acotado (izquierda) + panel del odómetro (derecha)
   const recipeText = variety.recipe_text || 'Pregúntale a tu barista por la receta de hoy.';
-  if (story) {
-    const avail = blockY - 40 - y;
-    const panelW = X1 - X0;
-    const lines = panelLines(ctx, recipeText, panelW, 5);
-    const panelH = PANEL_BASE + lines.length * PANEL_LINE;
-    if (!photo) {
-      const drawH = Math.max(320, avail - panelH - 50);
-      const scale = Math.min(1.5, drawH / 560);
-      ctx.save();
-      ctx.translate(w / 2 - 150 * scale - 40, y + 10);
-      ctx.scale(scale, scale);
-      drawAeropress(ctx, r, theme.ink, theme.bg);
-      ctx.restore();
-    }
-    drawPanel(ctx, X0, blockY - 40 - panelH, panelW, r, lines);
-  } else {
-    const panelW = 470;
-    const panelX = X1 - panelW;
-    const zoneTop = y;
-    const zoneBottom = blockY - 28;
-    const fit = Math.floor((zoneBottom - zoneTop - PANEL_BASE) / PANEL_LINE);
-    const lines = panelLines(ctx, recipeText, panelW, Math.min(4, fit));
-    const panelH = PANEL_BASE + lines.length * PANEL_LINE;
-    if (!photo) {
-      const scale = Math.min(0.92, (zoneBottom - zoneTop) / 560);
-      ctx.save();
-      ctx.translate(X0 + 18, zoneTop + 6);
-      ctx.scale(scale, scale);
-      drawAeropress(ctx, r, theme.ink, theme.bg);
-      ctx.restore();
-    }
+  const panelW = Math.min(490, X1 - X0);
+  const panelX = X1 - panelW;
+  const zoneTop = y;
+  const zoneBottom = blockY - 28;
+  const fit = Math.floor((zoneBottom - zoneTop - PANEL_BASE) / PANEL_LINE);
+  const lines = panelLines(ctx, recipeText, panelW, Math.max(0, Math.min(4, fit)));
+  const panelH = PANEL_BASE + lines.length * PANEL_LINE;
+  if (photo) {
+    // Con foto: el panel abajo, para que la foto respire arriba
     drawPanel(ctx, panelX, Math.max(zoneTop, zoneBottom - panelH), panelW, r, lines);
+  } else {
+    const drawW = panelX - X0 - 20;
+    // 430 = ancho del dibujo con sus etiquetas de cota (unidades locales)
+    const scale = Math.min(0.92, (zoneBottom - zoneTop) / 560, drawW / 430);
+    const drawH = 560 * scale;
+    // Dibujo y panel centrados juntos en el espacio libre (en el vertical sobra alto)
+    const groupH = Math.max(drawH, panelH);
+    const groupTop = zoneTop + Math.max(0, (zoneBottom - zoneTop - groupH) / 2);
+    ctx.save();
+    ctx.translate(X0 + 10, groupTop + (groupH - drawH) / 2);
+    ctx.scale(scale, scale);
+    drawAeropress(ctx, r, theme.ink, theme.bg);
+    ctx.restore();
+    drawPanel(ctx, panelX, groupTop + (groupH - panelH) / 2, panelW, r, lines);
   }
 
   return r;
