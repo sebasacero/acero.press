@@ -518,9 +518,62 @@ a{ color:inherit; text-decoration:none; }
 }
 .shop-soon svg{ color:var(--ink); }
 
+/* Pestañas Café / AeroPress */
+.shop-tabs{ display:flex; justify-content:center; gap:8px; margin:-14px 0 22px; }
+.shop-tabs button{
+  display:inline-flex; align-items:center; gap:8px; min-width:132px; justify-content:center;
+  padding:10px 20px; border-radius:999px; border:1.5px solid var(--near-black); background:transparent; cursor:pointer;
+  font-family:'Archivo', sans-serif; font-size:.9rem; font-weight:600; color:var(--near-black); transition:background-color .15s ease, color .15s ease;
+}
+.shop-tabs button span{ font-family:'JetBrains Mono', monospace; font-size:.66rem; opacity:.6; }
+.shop-tabs button:hover{ background:rgba(30,30,30,.06); }
+.shop-tabs button.is-on{ background:var(--near-black); color:#fff; }
+
+/* Filtros variedad / región */
+.shop-filters{ display:flex; justify-content:center; align-items:flex-end; flex-wrap:wrap; gap:10px 14px; margin-bottom:24px; }
+.shop-filter{ display:flex; flex-direction:column; gap:5px; }
+.shop-filter span{ font-family:'JetBrains Mono', monospace; font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+.shop-filter select{
+  appearance:none; -webkit-appearance:none; min-width:190px; padding:9px 34px 9px 12px; border-radius:7px;
+  border:1px solid rgba(30,30,30,.3); color:var(--near-black); font-family:'Archivo', sans-serif; font-size:.88rem; cursor:pointer;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231E1E1E' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 12px center;
+}
+.shop-filter select:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+.shop-filter-clear{ background:none; border:none; padding:9px 4px; cursor:pointer; font-size:.82rem; color:#555; text-decoration:underline; text-underline-offset:3px; }
+
+/* Carrusel */
+.shop-carousel{ position:relative; display:flex; align-items:center; gap:8px; }
+.shop-track{
+  flex:1; min-width:0; display:flex; gap:20px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+  padding:6px 4px 14px; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+}
+.shop-track::-webkit-scrollbar{ display:none; }
+/* Pocas tarjetas: centradas (con márgenes automáticos, así el scroll sigue funcionando cuando son muchas). */
+.shop-track > .shop-card:first-child{ margin-left:auto; }
+.shop-track > .shop-card:last-child{ margin-right:auto; }
+.shop-carousel.is-static .shop-arrow{ visibility:hidden; }
+.shop-tabs + .shop-sub{ margin:-6px auto 26px; }
+.shop-track .shop-card{ flex:0 0 calc((100% - 60px) / 4); scroll-snap-align:start; }
+.shop-arrow{
+  flex-shrink:0; width:40px; height:40px; border-radius:50%; border:1.5px solid var(--near-black); background:var(--cream);
+  color:var(--near-black); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity .15s ease, background-color .15s ease;
+}
+.shop-arrow:hover:not(:disabled){ background:var(--near-black); color:#fff; }
+.shop-arrow:disabled{ opacity:.2; cursor:default; }
+@media (max-width: 1000px){ .shop-track .shop-card{ flex-basis:calc((100% - 40px) / 3); } }
+@media (max-width: 700px){
+  .shop-tabs button{ min-width:0; flex:1; max-width:170px; padding:9px 12px; }
+  .shop-filters{ display:grid; grid-template-columns:1fr 1fr; align-items:end; }
+  .shop-filter select{ min-width:0; width:100%; font-size:.8rem; padding:9px 26px 9px 10px; background-position:right 9px center; }
+  .shop-filter-clear{ grid-column:1 / -1; justify-self:center; padding:2px; }
+  .shop-arrow{ display:none; }
+  .shop-track{ gap:12px; margin:0 -14px; padding:6px 14px 14px; scroll-padding-inline:14px; }
+  .shop-track .shop-card{ flex-basis:62%; }
+}
+
 /* Barra de compra del seleccionado: se queda abajo mientras se recorre la tienda */
 .shop-buybar{
-  position:sticky; bottom:14px; z-index:5; margin:56px auto 18px; max-width:860px;
+  position:sticky; bottom:14px; z-index:5; margin:22px auto 18px; max-width:860px;
   display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px;
   background:rgba(247,243,232,.94); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
   border:1px solid rgba(42,53,80,.18); border-radius:12px; box-shadow:0 14px 34px -16px rgba(30,30,30,.45);

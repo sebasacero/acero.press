@@ -16,7 +16,7 @@ export default function CatalogPage() {
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, slug, brand, description, category, image_url, active, product_variants(id, label, price, active)')
+      .select('id, name, slug, brand, description, variety, region, category, image_url, active, product_variants(id, label, price, active)')
       .order('name');
     if (error) console.error(error.message);
     setProducts(data ?? []);
@@ -32,10 +32,12 @@ export default function CatalogPage() {
     [products]
   );
 
+  const listOf = (k) => [...new Set(products.map((p) => p[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
   const visible = products.filter((p) =>
     (cat === 'all' || p.category === cat) &&
     (brand === 'all' || (brand === HOUSE_BRAND ? !p.brand : p.brand === brand)) &&
-    (!q.trim() || norm(`${p.name} ${p.brand ?? HOUSE_BRAND}`).includes(norm(q.trim())))
+    (!q.trim() || norm(`${p.name} ${p.brand ?? HOUSE_BRAND} ${p.variety ?? ''} ${p.region ?? ''}`).includes(norm(q.trim())))
   );
 
   const updateVariantPrice = async (variantId, price) => {
@@ -100,7 +102,10 @@ export default function CatalogPage() {
               <div className="cat-card-meta">
                 <span className={`cat-brand ${p.brand ? 'is-ally' : ''}`}>{p.brand ?? HOUSE_BRAND}</span>
                 <h3>{p.name}</h3>
-                <span className="cat-tag">{CATEGORIES.find((c) => c.id === p.category)?.label ?? p.category}</span>
+                <span className="cat-tag">
+                  {CATEGORIES.find((c) => c.id === p.category)?.label ?? p.category}
+                  {p.category === 'coffee_bag' && (p.variety || p.region) ? ` · ${[p.variety, p.region].filter(Boolean).join(' · ')}` : ''}
+                </span>
               </div>
             </div>
             <div className="admin-card-header">
@@ -161,6 +166,8 @@ export default function CatalogPage() {
         <ProductEditor
           product={editing === 'new' ? null : editing}
           brands={brands}
+          varieties={listOf('variety')}
+          regions={listOf('region')}
           onClose={() => setEditing(null)}
           onSaved={async () => { setEditing(null); await load(); }}
         />

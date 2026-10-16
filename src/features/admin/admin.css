@@ -1264,3 +1264,6 @@
 .ax-main .admin-catalog-grid .admin-table .admin-btn-ghost{ width:100%; padding-left:4px; padding-right:4px; font-size:9.5px; overflow:hidden; text-overflow:ellipsis; }
 .ax-main .admin-catalog-grid .admin-table td:first-child{ overflow-wrap:anywhere; }
 .cat-head{ align-items:center; }
+.pe-two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.pe-two-hint{ grid-column:1 / -1; margin-top:-4px; }
+@media (max-width:520px){ .pe-two{ grid-template-columns:1fr; } }

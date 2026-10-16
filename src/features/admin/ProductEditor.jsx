@@ -19,13 +19,15 @@ const newRow = (label = '', price = '') => ({ key: `new-${++tmpId}`, id: null, l
  * Crear o editar un producto del catálogo (propio o de una marca aliada).
  * product = null → nuevo. brands: marcas ya usadas, para sugerirlas.
  */
-export default function ProductEditor({ product, brands = [], onClose, onSaved }) {
+export default function ProductEditor({ product, brands = [], varieties = [], regions = [], onClose, onSaved }) {
   const isNew = !product;
   const [form, setForm] = useState(() => ({
     name: product?.name ?? '',
     brand: product?.brand ?? '',
     category: product?.category ?? 'coffee_bag',
     description: product?.description ?? '',
+    variety: product?.variety ?? '',
+    region: product?.region ?? '',
     image_url: product?.image_url ?? '',
   }));
   const [variants, setVariants] = useState(() =>
@@ -84,6 +86,8 @@ export default function ProductEditor({ product, brands = [], onClose, onSaved }
       brand: form.brand.trim() && form.brand.trim().toLowerCase() !== HOUSE_BRAND.toLowerCase() ? form.brand.trim() : null,
       category: form.category,
       description: form.description.trim() || null,
+      variety: form.category === 'coffee_bag' ? form.variety.trim() || null : null,
+      region: form.category === 'coffee_bag' ? form.region.trim() || null : null,
       image_url: form.image_url.trim() || null,
     };
 
@@ -190,6 +194,22 @@ export default function ProductEditor({ product, brands = [], onClose, onSaved }
         </div>
         {category && <span className="bp-field-hint">{category.hint}</span>}
       </div>
+
+      {form.category === 'coffee_bag' && (
+        <div className="pe-two">
+          <label className="bp-field">
+            <span className="bp-field-label">Variedad</span>
+            <input value={form.variety} onChange={(e) => set('variety', e.target.value)} list="pe-varieties" placeholder="Ej. Geisha, Caturra" />
+            <datalist id="pe-varieties">{varieties.map((v) => <option key={v} value={v} />)}</datalist>
+          </label>
+          <label className="bp-field">
+            <span className="bp-field-label">Región</span>
+            <input value={form.region} onChange={(e) => set('region', e.target.value)} list="pe-regions" placeholder="Ej. Huila, Nariño" />
+            <datalist id="pe-regions">{regions.map((r) => <option key={r} value={r} />)}</datalist>
+          </label>
+          <span className="bp-field-hint pe-two-hint">Con esto el cliente filtra por variedad y región en la tienda. Escríbelas igual en cada producto para que se agrupen.</span>
+        </div>
+      )}
 
       <label className="bp-field">
         <span className="bp-field-label">Descripción</span>

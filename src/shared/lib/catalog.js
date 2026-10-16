@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient.js';
  * Trae los productos activos de una categoría (coffee_bag | aeropress_equipment)
  * con sus presentaciones (variantes) activas:
  *
- * [{ id, name, brand, description, image, sizes: ['250G', '500G', '1KG'],
+ * [{ id, name, brand, description, variety, region, image, sizes: ['250G', '500G', '1KG'],
  *    prices: { '250G': 18000, ... }, variantIds: { '250G': 'uuid...', ... } }]
  *
  * `sizes` viene ordenado: para el café por tamaño; para el resto, por precio.
@@ -14,7 +14,7 @@ const COFFEE_ORDER = ['250G', '500G', '1KG'];
 export async function fetchProductsByCategory(category) {
   const { data, error } = await supabase
     .from('products')
-    .select('id, slug, name, brand, description, image_url, product_variants(id, label, price, active)')
+    .select('id, slug, name, brand, description, variety, region, image_url, product_variants(id, label, price, active)')
     .eq('category', category)
     .eq('active', true)
     .order('name');
@@ -44,6 +44,8 @@ export async function fetchProductsByCategory(category) {
         name: p.name,
         brand: p.brand ?? null,
         description: p.description ?? null,
+        variety: p.variety ?? null,
+        region: p.region ?? null,
         image: p.image_url,
         sizes: active.map((v) => v.label),
         prices,
