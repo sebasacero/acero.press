@@ -80,7 +80,7 @@ const METRIC_VALUE = (metrics) => ({
 });
 const PCT_METRICS = ['sales_velocity', 'revenue_growth', 'repeat_customer_rate'];
 const STATUS_LABEL = { pending: 'Pendiente', confirmed: 'Confirmado', completed: 'Completado', cancelled: 'Cancelado' };
-const SOURCE_LABEL = { web: 'Web', whatsapp: 'WhatsApp', pos: 'POS', table: 'Mesas', web_card: 'Tarjeta web', espresale: 'Espresale' };
+const SOURCE_LABEL = { web: 'Web', whatsapp: 'WhatsApp', pos: 'POS', table: 'Mesas', web_card: 'Tarjeta web', esspresale: 'Esspresale' };
 const DAY_MS = 86_400_000;
 const bogotaDay = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
 const shortMoney = (n) => (n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `$${Math.round(n / 1000)}k` : money(n));
@@ -338,7 +338,7 @@ export default function DashboardPage() {
       });
   }, [loadAll]);
 
-  // El servidor junta los datos reales (ventas, Espresale, inventario,
+  // El servidor junta los datos reales (ventas, Esspresale, inventario,
   // Instagram) con tu sesión y Claude los cruza con tendencias de la web.
   const runAiAgent = async () => {
     setAiLoading(true);

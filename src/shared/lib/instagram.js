@@ -41,7 +41,7 @@ export async function publishToInstagram({ mediaUrl, kind, caption, publicationI
 }
 
 /**
- * Registra una venta de Espresale como pedido completado (suma al contador,
+ * Registra una venta de Esspresale como pedido completado (suma al contador,
  * al dashboard y al agente) y descuenta el inventario de la variante.
  */
 export async function recordEspresaleSale({ variant, productName, qty, paymentMethod, phone }) {
@@ -50,11 +50,11 @@ export async function recordEspresaleSale({ variant, productName, qty, paymentMe
   const { data: order, error } = await supabase
     .from('orders')
     .insert({
-      source: 'espresale',
+      source: 'esspresale',
       status: 'completed',
       total,
       payment_method: paymentMethod,
-      payment_provider: 'espresale',
+      payment_provider: 'esspresale',
       customer_phone: phone || null,
       closed_at: now,
     })

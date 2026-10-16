@@ -175,7 +175,7 @@ export default function EspresalePage() {
   }, [variants]);
   const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const tempStr = weather.tempC !== null ? `${weather.tempC}°C` : '—';
-  const fileName = `espresale-${slug(selected?.name)}.png`;
+  const fileName = `esspresale-${slug(selected?.name)}.png`;
 
   const buildCaption = () =>
     `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${tempStr} en Bogotá · ${timeStr}`;
@@ -274,7 +274,7 @@ export default function EspresalePage() {
 
   // Sube el archivo a Storage y crea su fila en Publicaciones. Devuelve { url, id }.
   const uploadPublication = async (blobOrFile, ext, contentType, extra = {}) => {
-    const path = `espresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
+    const path = `esspresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
     const { error } = await supabase.storage.from('marketing').upload(path, blobOrFile, { contentType });
     if (error) throw error;
     const { data: pub } = supabase.storage.from('marketing').getPublicUrl(path);
@@ -374,10 +374,10 @@ export default function EspresalePage() {
     <div className="admin-page esp">
       <header className="esp-head">
         <div className="esp-cota">
-          <span>FIG. 06 — ESPRESALE / VENTA RÁPIDA</span>
+          <span>FIG. 06 — ESSPRESALE / VENTA RÁPIDA</span>
           <span className="esp-badge">{weather.icon} {tempStr} · {timeStr}</span>
         </div>
-        <h1 className="esp-title">Espresale.</h1>
+        <h1 className="esp-title">Esspresale.</h1>
         <p className="esp-sub">
           Elige la variedad y la tarjeta se dibuja sola como un plano de la receta — con clima y hora
           de Bogotá. Mándasela al cliente o guárdala para redes.

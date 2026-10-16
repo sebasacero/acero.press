@@ -1,4 +1,4 @@
--- Conexión de Instagram renovable desde el panel, ventas de Espresale y
+-- Conexión de Instagram renovable desde el panel, ventas de Esspresale y
 -- métricas de redes para el agente de crecimiento.
 --
 -- Nada aquí guarda secretos de Meta (App ID / App Secret): esos viven en los
@@ -81,10 +81,10 @@ drop policy if exists "solo admin ve el historial de la cuenta" on public.ig_acc
 create policy "solo admin ve el historial de la cuenta" on public.ig_account_daily
   for select using (public.is_admin());
 
--- 3) Ventas de Espresale -----------------------------------------------------
--- Una venta de Espresale es un pedido normal (suma al contador y al
--- dashboard) con source = 'espresale'.
-alter type public.order_source add value if not exists 'espresale';
+-- 3) Ventas de Esspresale -----------------------------------------------------
+-- Una venta de Esspresale es un pedido normal (suma al contador y al
+-- dashboard) con source = 'esspresale'.
+alter type public.order_source add value if not exists 'esspresale';
 
 -- Enlace entre la venta, la tarjeta publicada y su post en Instagram, para
 -- que el agente pueda cruzar ventas con lo que pasó en redes.

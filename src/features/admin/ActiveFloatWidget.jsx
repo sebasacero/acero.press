@@ -9,7 +9,7 @@ function EspresaleQuickButton() {
       type="button"
       className="wa-float espresale-float"
       onClick={() => openTool('espresale')}
-      aria-label="Venta rápida — Espresale"
+      aria-label="Venta rápida — Esspresale"
     >
       <span className="wa-float-pulse espresale-float-pulse" aria-hidden="true"></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
