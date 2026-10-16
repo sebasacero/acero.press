@@ -26,7 +26,7 @@ export const instagramRefresh = () => call('instagram-auth', { action: 'refresh'
 export const instagramSync = () => call('instagram-sync', {});
 
 /**
- * Publica en Instagram. kind: 'image' (feed) | 'story' | 'reel'.
+ * Publica en Instagram. kind: 'image' (feed) | 'story' | 'reel' | 'story_video'.
  * Devuelve el resultado de Instagram ({ success, post_id } o { error }).
  */
 export async function publishToInstagram({ mediaUrl, kind, caption, publicationId }) {

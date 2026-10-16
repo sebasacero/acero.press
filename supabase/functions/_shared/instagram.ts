@@ -215,18 +215,21 @@ export async function getConnection(admin: SupabaseClient): Promise<IgConnection
  */
 export async function publishMedia(
   conn: IgConnection,
-  opts: { kind: "image" | "story" | "reel"; url: string; caption?: string },
+  opts: { kind: "image" | "story" | "reel" | "story_video"; url: string; caption?: string },
 ) {
   const params: Record<string, string> = { access_token: conn.token };
   if (opts.kind === "reel") {
     params.media_type = "REELS";
+    params.video_url = opts.url;
+  } else if (opts.kind === "story_video") {
+    params.media_type = "STORIES";
     params.video_url = opts.url;
   } else {
     params.image_url = opts.url;
     if (opts.kind === "story") params.media_type = "STORIES";
   }
   // Las historias no llevan texto: Instagram ignora/rechaza el caption.
-  if (opts.caption && opts.kind !== "story") params.caption = opts.caption;
+  if (opts.caption && opts.kind !== "story" && opts.kind !== "story_video") params.caption = opts.caption;
 
   const container = await graph(`${conn.base}/${conn.accountId}/media`, {
     method: "POST",
@@ -235,8 +238,9 @@ export async function publishMedia(
   });
 
   // Imágenes: casi inmediato. Videos: hasta ~45 s (límite de la Edge Function).
-  const attempts = opts.kind === "reel" ? 9 : 6;
-  const wait = opts.kind === "reel" ? 5000 : 1500;
+  const isVideo = opts.kind === "reel" || opts.kind === "story_video";
+  const attempts = isVideo ? 9 : 6;
+  const wait = isVideo ? 5000 : 1500;
   let status = "IN_PROGRESS";
   for (let i = 0; i < attempts && status !== "FINISHED"; i++) {
     const s = await graph(`${conn.base}/${container.id}?fields=status_code&access_token=${encodeURIComponent(conn.token)}`);

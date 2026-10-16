@@ -56,7 +56,8 @@ export default function PublicationsPage() {
   // Publica en Instagram: videos como Reel, imágenes JPEG como post o historia.
   const publishToInstagram = async (item) => {
     setIgBusyId(item.id);
-    const kind = isVideoUrl(item.video_url) ? 'reel' : item.media_kind === 'story' ? 'story' : 'image';
+    const isStory = item.media_kind === 'story';
+    const kind = isVideoUrl(item.video_url) ? (isStory ? 'story_video' : 'reel') : isStory ? 'story' : 'image';
     try {
       const ig = await igPublish({ mediaUrl: item.video_url, kind, caption: item.caption, publicationId: item.id });
       setIgResults((r) => ({

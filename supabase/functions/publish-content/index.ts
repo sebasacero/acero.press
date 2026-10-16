@@ -2,7 +2,7 @@
 //
 // POST {
 //   media_url | video_url: string,          // URL pública (Supabase Storage)
-//   media_kind?: "reel" | "image" | "story", // default "reel" (compatibilidad)
+//   media_kind?: "reel" | "image" | "story" | "story_video", // default "reel"
 //   caption?: string,
 //   platforms: { ig?: boolean, tk?: boolean, yt?: boolean },
 //   schedule_at?: string | null,            // solo Reels/TikTok/YouTube
@@ -28,14 +28,14 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const mediaUrl = (body.media_url ?? body.video_url) as string;
-    const mediaKind = (body.media_kind ?? "reel") as "reel" | "image" | "story";
+    const mediaKind = (body.media_kind ?? "reel") as "reel" | "image" | "story" | "story_video";
     const caption = (body.caption as string) || "";
     const platforms = (body.platforms ?? {}) as Record<string, boolean>;
     const scheduleAt = (body.schedule_at as string | null) ?? null;
     const publicationId = body.publication_id as number | undefined;
 
     if (!mediaUrl) throw new HttpError(400, "No se recibió media_url");
-    if (!["reel", "image", "story"].includes(mediaKind)) throw new HttpError(400, "media_kind inválido");
+    if (!["reel", "image", "story", "story_video"].includes(mediaKind)) throw new HttpError(400, "media_kind inválido");
 
     const results: Record<string, any> = {};
 
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       platforms,
       results,
       scheduled_at: scheduleAt,
-      media_kind: mediaKind,
+      media_kind: mediaKind === "story_video" ? "story" : mediaKind,
       ...(igMediaId ? { ig_media_id: igMediaId } : {}),
       ...(anySuccess && !scheduleAt ? { published: true } : {}),
     };

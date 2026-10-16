@@ -98,9 +98,13 @@ function wrapLines(ctx, text, maxWidth, maxLines = Infinity) {
 }
 
 function drawCover(ctx, img, w, h) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const dw = img.width * scale;
-  const dh = img.height * scale;
+  // Sirve para fotos (Image) y para cuadros de video (HTMLVideoElement).
+  const iw = img.videoWidth || img.naturalWidth || img.width;
+  const ih = img.videoHeight || img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  const scale = Math.max(w / iw, h / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
   ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
 }
 
@@ -535,8 +539,11 @@ function fitTitle(ctx, text, maxWidth, maxLines, start, min) {
 /**
  * Dibuja la tarjeta. `photo` (Image) es opcional: si existe, la hoja se
  * monta sobre la foto (como el video de fondo de los banners).
+ * Con `videoOverlay: true` dibuja solo la capa de encima (degradado,
+ * cuadrícula, marco y contenido) sobre fondo transparente, para
+ * componerla cuadro a cuadro encima de un video (ver recordCardVideo).
  */
-export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'feed', photo = null }) {
+export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'feed', photo = null, videoOverlay = false }) {
   await ensureFonts();
   const logo = await loadImage('/image/logo.png');
   const F = FORMATS[format] || FORMATS.feed;
@@ -546,13 +553,14 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   const ctx = canvas.getContext('2d');
   const r = parseRecipe(variety.recipe_text || '');
 
-  const theme = photo
+  const theme = photo || videoOverlay
     ? { ink: C.cream, soft: 'rgba(247,243,232,0.75)', line: 'rgba(247,243,232,0.75)', bg: 'rgba(14,15,19,0.85)', blockBg: 'rgba(14,15,19,0.72)' }
     : { ink: C.ink, soft: C.inkSoft, line: C.ink, bg: C.paper, blockBg: 'rgba(237,230,211,0.94)' };
 
-  // Fondo a sangre: papel cuadriculado o foto con el degradado del banner
-  if (photo) {
-    drawCover(ctx, photo, w, h);
+  // Fondo a sangre: papel cuadriculado o foto/video con el degradado del banner
+  if (photo || videoOverlay) {
+    ctx.clearRect(0, 0, w, h);
+    if (photo) drawCover(ctx, photo, w, h);
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, 'rgba(10,10,12,0.72)');
     g.addColorStop(0.45, 'rgba(10,10,12,0.28)');
@@ -660,8 +668,8 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   const fit = Math.floor((zoneBottom - zoneTop - PANEL_BASE) / PANEL_LINE);
   const lines = panelLines(ctx, recipeText, panelW, Math.max(0, Math.min(4, fit)));
   const panelH = PANEL_BASE + lines.length * PANEL_LINE;
-  if (photo) {
-    // Con foto: el panel abajo, para que la foto respire arriba
+  if (photo || videoOverlay) {
+    // Con foto o video: el panel abajo, para que la foto respire arriba
     drawPanel(ctx, panelX, Math.max(zoneTop, zoneBottom - panelH), panelW, r, lines);
   } else {
     const drawW = panelX - X0 - 20;
@@ -680,4 +688,110 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   }
 
   return r;
+}
+
+/** Un cuadro del video de la tarjeta: el video de fondo y la capa encima. */
+export function composeVideoFrame(ctx, video, overlay) {
+  const { width: w, height: h } = ctx.canvas;
+  ctx.fillStyle = '#0b0c0f';
+  ctx.fillRect(0, 0, w, h);
+  drawCover(ctx, video, w, h);
+  ctx.drawImage(overlay, 0, 0, w, h);
+}
+
+// Instagram solo acepta MP4 (H.264). Safari y Chrome recientes graban MP4;
+// si el navegador solo sabe WebM, el video sirve para descargar/WhatsApp.
+const VIDEO_TYPES = [
+  'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+  'video/mp4;codecs=avc1',
+  'video/mp4',
+  'video/webm;codecs=vp9,opus',
+  'video/webm;codecs=vp8,opus',
+  'video/webm',
+];
+
+export function pickVideoType() {
+  if (typeof MediaRecorder === 'undefined') return null;
+  return VIDEO_TYPES.find((t) => MediaRecorder.isTypeSupported(t)) ?? null;
+}
+
+/**
+ * Graba el video con la tarjeta encima, en tiempo real (dura lo mismo que el
+ * clip, máximo `maxSeconds`). Incluye el audio original si el navegador lo
+ * permite. Devuelve { blob, type, ext }.
+ */
+export async function recordCardVideo({ video, overlay, width, height, maxSeconds = 60, onProgress }) {
+  const type = pickVideoType();
+  if (!type || !HTMLCanvasElement.prototype.captureStream) {
+    throw new Error('Este navegador no puede grabar video. Prueba en Chrome o Safari actualizados.');
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const stream = canvas.captureStream(30);
+
+  // Audio del clip original (si se puede); si no, el video sale sin sonido.
+  // Cada grabación usa su propio <video>, así que la fuente de audio es nueva.
+  let hasAudio = false;
+  let audioCtx = null;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaElementSource(video);
+    const dest = audioCtx.createMediaStreamDestination();
+    src.connect(dest);
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
+    hasAudio = true;
+  } catch {
+    hasAudio = false;
+  }
+
+  const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8_000_000 });
+  const chunks = [];
+  recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  const stopped = new Promise((resolve) => { recorder.onstop = resolve; });
+
+  const duration = Math.min(Number.isFinite(video.duration) ? video.duration : maxSeconds, maxSeconds);
+  video.pause();
+  video.loop = false;
+  video.muted = !hasAudio; // con WebAudio el sonido va a la grabación, no al parlante
+  video.currentTime = 0;
+  await new Promise((r) => { video.onseeked = r; setTimeout(r, 500); });
+
+  let raf = 0;
+  const draw = () => {
+    composeVideoFrame(ctx, video, overlay);
+    onProgress?.(Math.min(1, video.currentTime / duration));
+    if (video.currentTime >= duration || video.ended) {
+      if (recorder.state === 'recording') recorder.stop();
+      return;
+    }
+    raf = requestAnimationFrame(draw);
+  };
+
+  composeVideoFrame(ctx, video, overlay);
+  recorder.start(250);
+  try {
+    await video.play();
+  } catch {
+    // iOS puede bloquear la reproducción con sonido: se graba sin audio.
+    video.muted = true;
+    await video.play();
+  }
+  draw();
+  await stopped;
+  cancelAnimationFrame(raf);
+  video.pause();
+  stream.getTracks().forEach((t) => t.stop());
+  if (audioCtx) audioCtx.close().catch(() => {});
+
+  const blob = new Blob(chunks, { type: type.split(';')[0] });
+  return {
+    blob,
+    type: type.split(';')[0],
+    ext: type.startsWith('video/mp4') ? 'mp4' : 'webm',
+    // Instagram exige H.264: solo es seguro publicar si se grabó con avc1.
+    igReady: type.includes('avc1'),
+  };
 }
