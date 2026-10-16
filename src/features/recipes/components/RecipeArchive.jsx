@@ -12,6 +12,10 @@ export default function RecipeArchive() {
   const [focusKit, setFocusKit] = useState(false);
   const pairings = useRecipePairings();
   const open = (recipe, opts = {}) => { setFocusKit(!!opts.kit); setOpenRecipe(recipe); };
+  // Pregunta al barista desde una tarjeta sin kit: qué café de la tienda le va a esa receta.
+  const [baristaAsk, setBaristaAsk] = useState(null);
+  const askBarista = (recipe) =>
+    setBaristaAsk({ id: Date.now(), text: t('barista.askPrompt').replace('{year}', recipe.year).replace('{name}', recipe.name) });
   const [activeIndex, setActiveIndex] = useState(0);
   const trackRef = useRef(null);
 
@@ -89,14 +93,22 @@ export default function RecipeArchive() {
         <button className="recipe-arrow prev" aria-label="Prev" onClick={() => scrollByCards(-1)}>‹</button>
         <div className="recipe-blog" ref={trackRef}>
           {visibleRecipes.map((recipe) => (
-            <RecipeCard key={recipe.year} recipe={recipe} pairing={pairings[recipe.year]} onOpen={open} />
+            <RecipeCard key={recipe.year} recipe={recipe} pairing={pairings[recipe.year]} onOpen={open} onAskBarista={askBarista} />
           ))}
         </div>
         <button className="recipe-arrow next" aria-label="Next" onClick={() => scrollByCards(1)}>›</button>
       </div>
 
-      <div className="sp">
-        <BaristaChat onOpenRecipe={(year) => { const r = recipes.find((x) => x.year === year); if (r) open(r); }} />
+      <div className="sp barista-wrap" id="barista">
+        <div className="barista-heading">
+          <span className="barista-fig">{t('barista.fig')}</span>
+          <h3>{t('barista.title')}</h3>
+          <p>{t('barista.sub')}</p>
+        </div>
+        <BaristaChat
+          request={baristaAsk}
+          onOpenRecipe={(year) => { const r = recipes.find((x) => x.year === year); if (r) open(r); }}
+        />
       </div>
 
       <RecipeModal

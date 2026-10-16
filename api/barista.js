@@ -14,6 +14,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import recipes from '../src/features/recipes/data/recipes.js';
+import { PRODUCT_FIELDS, shapeProducts } from '../src/shared/lib/productShape.js';
+import { resolvePairings } from '../src/shared/lib/pairing.js';
 
 const MODEL = 'claude-opus-5-5';
 const MAX_TURNS = 12; // mensajes del historial que se envían
@@ -92,23 +94,17 @@ async function loadCatalog() {
     { auth: { persistSession: false } },
   );
   const [prod, pair] = await Promise.all([
-    sb.from('products')
-      .select('id, slug, name, brand, description, variety, region, category, image_url, product_variants(id, label, price, active)')
-      .eq('active', true)
-      .order('name'),
-    sb.from('recipe_pairings').select('recipe_year, coffee_id, coffee_size, kit_ids, note'),
+    sb.from('products').select(PRODUCT_FIELDS).eq('active', true).order('name'),
+    sb.from('recipe_pairings').select('*'),
   ]);
-  const products = (prod.data ?? [])
-    .map((p) => ({ ...p, variants: (p.product_variants ?? []).filter((v) => v.active) }))
-    .filter((p) => p.variants.length);
-  const slugById = Object.fromEntries(products.map((p) => [p.id, p.slug]));
-  const pairings = (pair.data ?? []).map((r) => ({
-    recipe_year: r.recipe_year,
-    coffee: slugById[r.coffee_id] ?? null,
-    size: r.coffee_size,
-    kit: (r.kit_ids ?? []).map((id) => slugById[id]).filter(Boolean),
-    note: r.note,
-  })).filter((r) => r.coffee);
+  const products = shapeProducts(prod.data);
+  const coffees = products.filter((p) => p.category === 'coffee_bag');
+  const gear = products.filter((p) => p.category !== 'coffee_bag');
+  // Mismo emparejamiento que ve el cliente: manual > agente > regla automática.
+  const effective = resolvePairings(recipes, coffees, gear, pair.error ? [] : pair.data ?? []);
+  const pairings = Object.entries(effective).map(([year, e]) => ({
+    recipe_year: Number(year), coffee: e.coffee.id, size: e.size, kit: e.extras.map((x) => x.id), note: e.note,
+  }));
   return { products, pairings };
 }
 
@@ -145,14 +141,14 @@ export default async function handler(req, res) {
   try {
     const { products, pairings } = await loadCatalog();
     const catalog = products.map((p) => ({
-      slug: p.slug,
+      slug: p.id,
       name: p.name,
       brand: p.brand ?? 'Acero.press',
       category: p.category === 'coffee_bag' ? 'café en bolsa' : 'equipo AeroPress',
       variety: p.variety,
       region: p.region,
       description: p.description,
-      sizes: p.variants.map((v) => `${v.label}: $${Number(v.price).toLocaleString('es-CO')} COP`),
+      sizes: p.sizes.map((s) => `${s}: $${Number(p.prices[s]).toLocaleString('es-CO')} COP`),
     }));
 
     // Datos estables primero (se cachean); la conversación va después.
@@ -194,19 +190,19 @@ export default async function handler(req, res) {
     }
 
     // Solo productos reales, con su precio y variante para el carrito.
-    const bySlug = Object.fromEntries(products.map((p) => [p.slug, p]));
+    const bySlug = Object.fromEntries(products.map((p) => [p.id, p]));
     const items = (out.products ?? []).slice(0, 3).flatMap((rec) => {
       const p = bySlug[rec.slug];
       if (!p) return [];
-      const v = p.variants.find((x) => x.label === rec.size) ?? p.variants[0];
+      const size = p.prices[rec.size] != null ? rec.size : p.sizes[0];
       return [{
-        slug: p.slug,
+        slug: p.id,
         name: p.name,
         brand: p.brand,
-        image: p.image_url,
-        size: v.label,
-        price: Number(v.price),
-        variantId: v.id,
+        image: p.image,
+        size,
+        price: p.prices[size],
+        variantId: p.variantIds[size],
         why: String(rec.why ?? '').slice(0, 200),
       }];
     });

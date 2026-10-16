@@ -674,19 +674,33 @@ a{ color:inherit; text-decoration:none; }
 .recipe-toggle .chev{ transition: transform .2s ease; }
 .recipe-toggle{ margin-top:0; }
 
-/* Café recomendado + kit en la tarjeta de receta */
-.recipe-pair{ display:flex; align-items:center; gap:10px; padding:10px; margin:0 0 14px; border:1px solid rgba(0,0,0,.12); border-radius:2px; background:var(--cream); }
-.recipe-pair img{ width:46px; height:46px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+/* Café recomendado + kit editable en la tarjeta de receta */
+.recipe-pair{ display:flex; flex-direction:column; gap:10px; padding:12px; margin:0 0 14px; border:1px solid rgba(0,0,0,.12); border-radius:4px; background:var(--cream); }
+.recipe-pair-top{ display:flex; align-items:center; gap:10px; }
+.recipe-pair-top img{ width:46px; height:46px; object-fit:cover; border-radius:3px; flex-shrink:0; }
 .recipe-pair-info{ display:flex; flex-direction:column; min-width:0; }
-.recipe-pair-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.45); }
+.recipe-pair-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.5); }
 .recipe-pair-info strong{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.recipe-pair-price{ font-size:12px; color:#A8864F; font-weight:600; }
-.recipe-actions{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.recipe-pair-price{ font-size:12px; color:#8a6a35; font-weight:600; }
+.recipe-pair-sizes{ display:flex; gap:5px; }
+.recipe-pair-sizes button{ flex:1; min-height:32px; border-radius:999px; border:1px solid rgba(30,30,30,.25); background:#fff; font-family:'JetBrains Mono', monospace; font-size:11px; cursor:pointer; }
+.recipe-pair-sizes button.active{ background:var(--near-black); border-color:var(--near-black); color:#fff; }
+.recipe-pair-extras{ display:flex; flex-direction:column; gap:2px; border-top:1px dashed rgba(0,0,0,.15); padding-top:6px; }
+.recipe-pair-extras label{ display:flex; align-items:center; gap:8px; min-height:32px; font-size:12.5px; color:var(--near-black); cursor:pointer; }
+.recipe-pair-extras input{ width:16px; height:16px; accent-color:var(--near-black); flex-shrink:0; }
+.recipe-pair-extras span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.recipe-pair-extras em{ font-style:normal; color:#8a6a35; font-weight:600; }
+.recipe-pair-extras label.is-off span, .recipe-pair-extras label.is-off em{ opacity:.45; }
+.recipe-pair-count{ font-family:'JetBrains Mono', monospace; font-size:10px; color:rgba(0,0,0,.5); text-align:center; margin-top:-4px; }
+.recipe-pair .recipe-kit-btn{ width:100%; min-height:40px; }
+.recipe-actions{ margin-top:auto; display:flex; align-items:center; justify-content:flex-start; gap:10px; flex-wrap:wrap; }
 .recipe-kit-btn{
   padding:8px 14px; border-radius:7px; border:1.5px solid var(--near-black); background:var(--near-black); color:#fff;
-  font-family:'Archivo', sans-serif; font-size:.82rem; font-weight:600; cursor:pointer;
+  font-family:'Archivo', sans-serif; font-size:.84rem; font-weight:600; cursor:pointer;
 }
 .recipe-kit-btn:hover{ background:#ff2e63; border-color:#ff2e63; }
+.recipe-kit-btn.added{ background:#25D366; border-color:#25D366; }
+.recipe-card > .recipe-kit-btn.is-barista{ width:100%; min-height:40px; margin-bottom:14px; }
 
 /* Kit dentro del modal de receta */
 .kit{ border:1.5px solid var(--ink); background:#fbf8f0; padding:16px; margin-bottom:1.6rem; position:relative; }
@@ -1232,63 +1246,123 @@ dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filt
 
 .product-section{ position:relative; }
 
-/* === Barista con IA (sección de recetas) === */
-.barista{
-  --b-navy:#141c33; --b-line:rgba(127,212,255,.22); --b-cyan:#7fd4ff; --b-text:#EDE6D3; --b-dim:rgba(237,230,211,.62);
-  margin:42px 0 10px; max-width:860px; color:var(--b-text); border:1px solid var(--b-line); border-radius:4px; overflow:hidden;
-  background:
-    linear-gradient(rgba(127,212,255,.05) 1px, transparent 1px) 0 0 / 22px 22px,
-    linear-gradient(90deg, rgba(127,212,255,.05) 1px, transparent 1px) 0 0 / 22px 22px,
-    var(--b-navy);
-  box-shadow:0 24px 48px -28px rgba(20,28,51,.8);
+/* === Barista con IA (sección de recetas): conversación + un solo campo === */
+.barista-wrap{ margin-top:46px; }
+.barista-heading{ max-width:760px; margin:0 auto 6px; text-align:center; }
+.barista-fig{ font-family:'JetBrains Mono', monospace; font-size:.66rem; letter-spacing:.14em; color:var(--ink-soft); }
+.barista-heading h3{ font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:clamp(1.3rem, 2.6vw, 1.7rem); color:var(--near-black); margin:.35rem 0; }
+.barista-heading p{ color:var(--ink-soft); font-size:.92rem; line-height:1.55; }
+.barista{ max-width:760px; margin:0 auto; }
+/* La página es el fondo: sin caja, solo globos. Ocupa ~¼ de pantalla y lo de arriba se difumina. */
+.barista-log{
+  height:clamp(200px, 25vh, 300px); overflow-y:auto; padding:48px 2px 10px; display:flex; flex-direction:column; gap:8px;
+  background:transparent; overscroll-behavior:contain; scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, rgba(0,0,0,.35) 36px, #000 88px);
+  mask-image:linear-gradient(to bottom, transparent 0, rgba(0,0,0,.35) 36px, #000 88px);
 }
-.barista-head{ padding:20px 22px 14px; border-bottom:1px dashed var(--b-line); }
-.barista-cota{ display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono', monospace; font-size:10.5px; letter-spacing:.14em; color:var(--b-dim); }
-.barista-live{ display:inline-flex; align-items:center; gap:6px; color:var(--b-cyan); }
-.barista-live i{ width:7px; height:7px; border-radius:50%; background:var(--b-cyan); box-shadow:0 0 8px var(--b-cyan); animation:barista-blink 1.6s ease-in-out infinite; }
-@keyframes barista-blink{ 50%{ opacity:.35; } }
-.barista-title{ font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:clamp(1.3rem, 2.6vw, 1.7rem); margin:10px 0 6px; color:#fff; }
-.barista-sub{ font-size:.9rem; line-height:1.55; color:var(--b-dim); max-width:62ch; }
-.barista-log{ max-height:440px; min-height:180px; overflow-y:auto; padding:18px 22px; display:flex; flex-direction:column; gap:14px; overscroll-behavior:contain; }
-.barista-empty p{ color:var(--b-text); margin-bottom:12px; }
-.barista-chips{ display:flex; flex-wrap:wrap; gap:8px; }
-.barista-chips button{ text-align:left; padding:8px 12px; border-radius:999px; border:1px solid var(--b-line); background:rgba(127,212,255,.06); color:var(--b-text); font-family:'Archivo', sans-serif; font-size:.84rem; cursor:pointer; }
-.barista-chips button:hover{ border-color:var(--b-cyan); color:#fff; }
-.barista-msg{ max-width:88%; display:flex; flex-direction:column; gap:8px; }
-.barista-msg p{ white-space:pre-line; font-size:.92rem; line-height:1.6; }
-.barista-msg.is-user{ align-self:flex-end; }
-.barista-msg.is-user p{ background:#EDE6D3; color:#1E1E1E; padding:10px 14px; border-radius:14px 14px 2px 14px; }
-.barista-msg.is-assistant{ align-self:flex-start; }
-.barista-msg.is-assistant p{ background:rgba(127,212,255,.07); border:1px solid var(--b-line); padding:12px 14px; border-radius:2px 14px 14px 14px; }
-.barista-who{ font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:.14em; color:var(--b-cyan); }
+.barista-log::-webkit-scrollbar{ display:none; }
+.barista-log > :first-child{ margin-top:auto; } /* los mensajes se apilan desde abajo, como en WhatsApp */
+.barista-msg{ display:flex; max-width:100%; }
+.barista-msg.is-user{ justify-content:flex-end; }
+.barista-msg.is-assistant{ justify-content:flex-start; }
+.barista-bubble{
+  position:relative; max-width:min(78%, 520px); padding:7px 12px 8px; border-radius:10px;
+  box-shadow:0 1px 1.5px rgba(11,20,26,.16); display:flex; flex-direction:column; gap:6px;
+}
+.barista-msg.is-assistant .barista-bubble{ background:#ffffff; border-top-left-radius:0; }
+.barista-msg.is-user .barista-bubble{ background:#d9fdd3; border-top-right-radius:0; }
+/* Colitas de globo */
+.barista-bubble::before{ content:''; position:absolute; top:0; width:10px; height:12px; }
+.barista-msg.is-assistant .barista-bubble::before{ left:-8px; background:#ffffff; clip-path:polygon(100% 0, 0 0, 100% 100%); }
+.barista-msg.is-user .barista-bubble::before{ right:-8px; background:#d9fdd3; clip-path:polygon(0 0, 100% 0, 0 100%); }
+.barista-bubble p{ white-space:pre-line; font-size:.93rem; line-height:1.5; color:#111b21; margin:0; }
+.barista-who{ font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:.14em; color:#fa2525; }
+.barista-bubble .is-typing{ color:#667781; }
 .barista-dots{ display:inline-flex; gap:4px; margin-right:6px; vertical-align:middle; }
-.barista-dots i{ width:6px; height:6px; border-radius:50%; background:var(--b-cyan); animation:barista-blink 1s ease-in-out infinite; }
+.barista-dots i{ width:6px; height:6px; border-radius:50%; background:#8696a0; animation:barista-blink 1s ease-in-out infinite; }
 .barista-dots i:nth-child(2){ animation-delay:.15s; } .barista-dots i:nth-child(3){ animation-delay:.3s; }
-.barista-products{ display:flex; flex-direction:column; gap:8px; }
-.barista-product{ display:flex; align-items:center; gap:12px; padding:10px; background:#F7F3E8; color:#1E1E1E; border-radius:4px; }
-.barista-product img{ width:52px; height:52px; object-fit:cover; border-radius:3px; flex-shrink:0; }
-.barista-product-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-.barista-product-info strong{ font-size:.9rem; }
-.barista-product-info em{ font-style:normal; font-weight:500; color:#6B7290; }
-.barista-product-why{ font-size:.78rem; color:#555; line-height:1.4; }
-.barista-product-price{ font-size:.8rem; color:#A8864F; font-weight:600; }
-.barista-product button{ padding:8px 14px; border-radius:7px; border:1.5px solid #1E1E1E; background:#1E1E1E; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap; }
-.barista-product button.added{ background:#25D366; border-color:#25D366; }
-.barista-recipe-link{ align-self:flex-start; background:none; border:none; padding:0; cursor:pointer; color:var(--b-cyan); font-family:'JetBrains Mono', monospace; font-size:.76rem; letter-spacing:.04em; text-decoration:underline; text-underline-offset:3px; }
-.barista-error{ margin:0 22px 8px; color:#ff9b9b; font-size:.85rem; }
-.barista-form{ display:flex; gap:8px; padding:14px 22px; border-top:1px dashed var(--b-line); background:rgba(10,14,28,.35); }
-.barista-form input{ flex:1; min-width:0; padding:12px 14px; border-radius:4px; border:1px solid var(--b-line); background:rgba(10,14,28,.6); color:#fff; font-family:'Archivo', sans-serif; font-size:.92rem; }
-.barista-form input:focus{ outline:none; border-color:var(--b-cyan); box-shadow:0 0 0 3px rgba(127,212,255,.15); }
-.barista-form button{ padding:0 18px; border-radius:4px; border:none; background:#fa2525; color:#fff; font-family:'JetBrains Mono', monospace; font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
-.barista-form button:disabled{ opacity:.45; cursor:default; }
-.barista-foot{ padding:0 22px 14px; font-family:'JetBrains Mono', monospace; font-size:.62rem; color:var(--b-dim); background:rgba(10,14,28,.35); }
-@media (max-width:600px){
-  .barista-head, .barista-log{ padding-left:14px; padding-right:14px; }
-  .barista-form{ padding:12px 14px; }
-  .barista-foot{ padding:0 14px 12px; }
-  .barista-msg{ max-width:100%; }
-  .barista-product{ flex-wrap:wrap; }
-  .barista-product button{ width:100%; }
-  .barista-log{ max-height:60vh; }
+@keyframes barista-blink{ 50%{ opacity:.3; } }
+.barista-products{ display:flex; flex-direction:column; gap:6px; }
+.barista-product{ display:flex; align-items:center; gap:10px; padding:8px; background:#f0f2f5; border-radius:8px; }
+.barista-product img{ width:46px; height:46px; object-fit:cover; border-radius:6px; flex-shrink:0; }
+.barista-product-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.barista-product-info strong{ font-size:.86rem; color:#111b21; }
+.barista-product-info em{ font-style:normal; font-weight:500; color:#667781; }
+.barista-product-why{ font-size:.76rem; color:#54656f; line-height:1.35; }
+.barista-product-price{ font-size:.78rem; color:#A8864F; font-weight:600; }
+.barista-product button{ padding:7px 12px; border-radius:999px; border:none; background:#1E1E1E; color:#fff; font-size:.8rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+.barista-product button.added{ background:#25D366; }
+.barista-recipe-link{ align-self:flex-start; background:none; border:none; padding:0; cursor:pointer; color:#027eb5; font-size:.82rem; text-decoration:none; }
+.barista-recipe-link:hover{ text-decoration:underline; }
+.barista-error{ margin:4px 4px 8px; color:#b3261e; font-size:.85rem; }
+
+/* Separador de día, hora y checks, como en WhatsApp */
+.barista-day{ display:flex; justify-content:center; margin:2px 0 4px; }
+.barista-day span{ padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.92); box-shadow:0 1px 1px rgba(11,20,26,.1); font-size:11px; letter-spacing:.04em; color:#54656f; }
+.barista-time{ align-self:flex-end; display:inline-flex; align-items:center; gap:3px; margin:-2px 0 -2px 10px; font-size:10.5px; color:#667781; line-height:1; }
+.barista-ticks{ color:#53bdeb; }
+
+/* Campo en píldora + un botón verde: micrófono con el campo vacío, enviar con texto */
+.barista-composer{ display:flex; align-items:flex-end; gap:8px; margin-top:6px; }
+.barista-field{
+  flex:1; min-width:0; display:flex; align-items:center; padding:0 18px; border-radius:24px; background:#ffffff;
+  box-shadow:0 1px 2px rgba(11,20,26,.18); transition:box-shadow .15s ease;
 }
-@media (prefers-reduced-motion:reduce){ .barista-live i, .barista-dots i{ animation:none; } }
+.barista-composer.is-listening .barista-field{ box-shadow:0 0 0 2px #fa2525; }
+.barista-field textarea{
+  flex:1; min-width:0; resize:none; border:none; outline:none; background:transparent; padding:11px 0;
+  font-family:'Archivo', sans-serif; font-size:1rem; line-height:1.45; color:#111b21; max-height:132px;
+}
+.barista-field textarea::placeholder{ color:#8696a0; }
+.barista-send{
+  flex-shrink:0; width:48px; height:48px; border-radius:50%; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; background:#00a884; color:#ffffff;
+  box-shadow:0 1px 2px rgba(11,20,26,.25);
+}
+.barista-send:disabled{ background:#00a884; opacity:.55; cursor:default; }
+.barista-mic[aria-pressed="true"]{ background:#fa2525; animation:barista-pulse 1.2s ease-in-out infinite; }
+@keyframes barista-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(250,37,37,.45); } 50%{ box-shadow:0 0 0 8px rgba(250,37,37,0); } }
+.barista-foot{ text-align:center; margin-top:8px; font-family:'JetBrains Mono', monospace; font-size:.6rem; color:var(--ink-soft); }
+.recipe-kit-btn.is-barista{ background:transparent; color:var(--near-black); }
+.recipe-kit-btn.is-barista:hover{ background:var(--near-black); color:#fff; border-color:var(--near-black); }
+@media (max-width:600px){
+    .barista-bubble{ max-width:88%; }
+  .barista-product{ flex-wrap:wrap; }
+  .barista-product button{ width:100%; padding:9px; }
+  .barista-field textarea{ font-size:16px; } /* evita el zoom de iOS al enfocar */
+}
+@media (prefers-reduced-motion:reduce){ .barista-dots i, .barista-mic[aria-pressed="true"]{ animation:none; } }
+
+/* === Meta de ventas como conversación de WhatsApp === */
+dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; padding:0; border-radius:14px; overflow:hidden; background:transparent; }
+.sales-wa-shell{ display:flex; flex-direction:column; max-height:88vh; background:#efeae2; }
+.sales-wa-head{ display:flex; align-items:center; gap:12px; padding:10px 12px 10px 14px; background:#f0f2f5; border-bottom:1px solid rgba(11,20,26,.08); }
+.sales-wa-avatar{
+  position:relative; width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  background:conic-gradient(var(--sales-bag) calc(var(--sales-pct) * 1%), rgba(120,120,120,.25) 0);
+}
+.sales-wa-avatar span{
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(145deg, #f4f5f7 0%, #b7bbc1 45%, #8b8f96 60%, #eef0f2 100%);
+  font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:#24262a;
+}
+.sales-wa-title{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.sales-wa-title strong{ font-size:1rem; color:#111b21; }
+.sales-wa-title span{ display:inline-flex; align-items:center; gap:6px; font-size:.78rem; color:#667781; }
+.sales-wa-live{ width:7px; height:7px; border-radius:50%; background:#25d366; }
+.sales-wa-close{ width:40px; height:40px; border-radius:50%; border:none; background:transparent; font-size:24px; line-height:1; color:#54656f; cursor:pointer; }
+.sales-wa-close:hover{ background:rgba(11,20,26,.06); }
+.sales-wa-log{ flex:1; min-height:0; overflow-y:auto; padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; overscroll-behavior:contain; }
+.sales-wa-bubble{ max-width:min(92%, 480px); }
+.sales-wa-bubble .sales-fig-label{ margin-top:4px; }
+.sales-wa-bubble .sales-odo-row{ margin-bottom:.6rem; }
+.sales-wa-bubble .sales-digit{ font-size:1.05rem; }
+.sales-wa-stats{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+.sales-wa-stats div{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:6px; background:#f0f2f5; }
+.sales-wa-stats span{ font-family:'JetBrains Mono', monospace; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:#667781; }
+.sales-wa-stats strong{ font-size:1.3rem; color:#111b21; }
+.sales-wa-stats em{ font-style:normal; font-size:.8rem; font-weight:600; color:#8a6a35; }
+.sales-wa-sale{ max-width:min(86%, 440px); }
+.sales-wa-sale-row{ display:flex; align-items:center; gap:8px; min-width:0; font-size:.88rem; }
+.sales-wa-foot{ padding:12px 16px; text-align:center; font-size:.78rem; color:#667781; background:#f0f2f5; border-top:1px solid rgba(11,20,26,.08); }
+@media (max-width:600px){ dialog.sales-modal-banner.sales-wa{ width:94vw; max-height:90vh; } }

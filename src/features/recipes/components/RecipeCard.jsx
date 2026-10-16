@@ -1,8 +1,50 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import { useKitState, money, firstSize } from './RecipeKit.jsx';
 
-const money = (n) => `$${Number(n).toLocaleString('es-CO')}`;
+const FALLBACK_IMG = '/image/bagsbeans.png';
 
-export default function RecipeCard({ recipe, pairing, onOpen }) {
+/** Kit editable en la propia tarjeta: tamaño, extras y "Añadir kit" con el total. */
+function CardKit({ pairing }) {
+  const { t } = useLanguage();
+  const { size, setSize, picked, toggle, chosen, total, added, addKit } = useKitState(pairing);
+  const { coffee, extras } = pairing;
+  return (
+    <div className="recipe-pair">
+      <div className="recipe-pair-top">
+        <img src={coffee.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
+        <div className="recipe-pair-info">
+          <span className="recipe-pair-label">{t('kit.brewWith')}</span>
+          <strong>{coffee.name}</strong>
+          <span className="recipe-pair-price">{money(coffee.prices[size])} · {size}</span>
+        </div>
+      </div>
+      {coffee.sizes.length > 1 && (
+        <div className="recipe-pair-sizes" role="group" aria-label={t('product.size')}>
+          {coffee.sizes.filter((s) => coffee.prices[s] != null).map((s) => (
+            <button key={s} type="button" className={s === size ? 'active' : ''} aria-pressed={s === size} onClick={() => setSize(s)}>{s}</button>
+          ))}
+        </div>
+      )}
+      {extras.length > 0 && (
+        <div className="recipe-pair-extras">
+          {extras.map((p) => (
+            <label key={p.uuid} className={picked[p.uuid] ? '' : 'is-off'}>
+              <input type="checkbox" checked={!!picked[p.uuid]} onChange={() => toggle(p.uuid)} />
+              <span>{p.name}</span>
+              <em>{money(p.prices[firstSize(p)])}</em>
+            </label>
+          ))}
+        </div>
+      )}
+      <button type="button" className={`recipe-kit-btn ${added ? 'added' : ''}`} onClick={addKit}>
+        {added ? t('product.added') : `${t('kit.add')} · ${money(total)}`}
+      </button>
+      {chosen.length > 0 && !added && <span className="recipe-pair-count">{1 + chosen.length} {t('kit.items')}</span>}
+    </div>
+  );
+}
+
+export default function RecipeCard({ recipe, pairing, onOpen, onAskBarista }) {
   const { lang, t } = useLanguage();
 
   return (
@@ -21,23 +63,15 @@ export default function RecipeCard({ recipe, pairing, onOpen }) {
         <div className="spec"><span className="spec-v">{t(`position.${recipe.position}`)}</span><span className="spec-l">{t('recipeCard.position')}</span></div>
       </div>
 
-      {pairing && (
-        <div className="recipe-pair">
-          <img src={pairing.coffee.image || '/image/bagsbeans.png'} alt="" onError={(e) => { e.currentTarget.src = '/image/bagsbeans.png'; }} />
-          <div className="recipe-pair-info">
-            <span className="recipe-pair-label">{t('kit.brewWith')}</span>
-            <strong>{pairing.coffee.name}</strong>
-            <span className="recipe-pair-price">{money(pairing.coffee.prices[pairing.size])} · {pairing.size}</span>
-          </div>
-        </div>
+      {pairing ? (
+        <CardKit key={`${pairing.coffee.uuid}-${pairing.size}`} pairing={pairing} />
+      ) : (
+        <button type="button" className="recipe-kit-btn is-barista" onClick={() => onAskBarista(recipe)}>
+          {t('barista.cardCta')}
+        </button>
       )}
 
       <div className="recipe-actions">
-        {pairing && (
-          <button type="button" className="recipe-kit-btn" onClick={() => onOpen(recipe, { kit: true })}>
-            {t('kit.add')}
-          </button>
-        )}
         <button className="recipe-toggle" aria-expanded="false" onClick={() => onOpen(recipe)}>
           {t('recipeCard.viewFull')} <span className="chev">▾</span>
         </button>

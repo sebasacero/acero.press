@@ -1,16 +1,30 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCart } from '../../cart/context/CartContext.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 
 const FALLBACK_IMG = '/image/bagsbeans.png';
 const money = (n) => `$${Number(n).toLocaleString('es-CO')}`;
+const clock = (ts, lang) => new Date(ts).toLocaleTimeString(lang === 'en' ? 'en-US' : lang === 'ja' ? 'ja-JP' : 'es-CO', { hour: 'numeric', minute: '2-digit' });
+
+// Doble check de leído, como en WhatsApp.
+function Ticks() {
+  return (
+    <svg className="barista-ticks" aria-hidden="true" width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="1 5.5 4 8.5 10 1.5" />
+      <polyline points="6 8.5 7 8.5 14 1.5" />
+    </svg>
+  );
+}
+const SPEECH_LANG = { es: 'es-CO', en: 'en-US', ja: 'ja-JP' };
+const SpeechRecognition = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 /**
- * "Pregúntale al barista": chat con el barista de IA (/api/barista).
- * Recomienda cafés y equipo del catálogo real (con botón para añadir),
- * adapta recetas campeonas o imagina nuevas.
+ * Chat con el barista de IA (/api/barista): la conversación arriba (se
+ * difumina hacia arriba al hacer scroll) y un solo campo para escribir o
+ * dictar por voz. `request` ({ text, id }) le hace una pregunta desde fuera,
+ * p. ej. desde una tarjeta de receta.
  */
-export default function BaristaChat({ onOpenRecipe }) {
+export default function BaristaChat({ onOpenRecipe, request }) {
   const { t, lang } = useLanguage();
   const { addItem } = useCart();
   const [messages, setMessages] = useState([]); // { role, content, products?, recipe_year? }
@@ -18,17 +32,33 @@ export default function BaristaChat({ onOpenRecipe }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [added, setAdded] = useState(null);
+  const [listening, setListening] = useState(false);
   const logRef = useRef(null);
+  const [openedAt] = useState(() => Date.now());
+  const boxRef = useRef(null);
+  const rootRef = useRef(null);
+  const recRef = useRef(null);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
   useEffect(() => {
     const el = logRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
-  const ask = async (text) => {
+  // El campo crece con el texto (hasta ~5 líneas).
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  }, [input]);
+
+  const ask = useCallback(async (text) => {
     const q = text.trim();
-    if (!q || busy) return;
-    const next = [...messages, { role: 'user', content: q }];
+    if (!q) return;
+    recRef.current?.stop();
+    const next = [...messagesRef.current, { role: 'user', content: q, at: Date.now() }];
     setMessages(next);
     setInput('');
     setBusy(true);
@@ -41,7 +71,7 @@ export default function BaristaChat({ onOpenRecipe }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || data.error || t('barista.error'));
-      setMessages((m) => [...m, { role: 'assistant', content: data.reply, products: data.products ?? [], recipe_year: data.recipe_year || 0 }]);
+      setMessages((m) => [...m, { role: 'assistant', content: data.reply, products: data.products ?? [], recipe_year: data.recipe_year || 0, at: Date.now() }]);
     } catch (err) {
       setError(err.message || t('barista.error'));
       setMessages((m) => m.slice(0, -1));
@@ -49,6 +79,36 @@ export default function BaristaChat({ onOpenRecipe }) {
     } finally {
       setBusy(false);
     }
+  }, [lang, t]);
+
+  // Pregunta enviada desde fuera (botón de una tarjeta de receta).
+  useEffect(() => {
+    if (!request?.text) return;
+    rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    ask(request.text);
+  }, [request, ask]);
+
+  useEffect(() => () => recRef.current?.abort(), []);
+
+  const toggleVoice = () => {
+    if (listening) return recRef.current?.stop();
+    const rec = new SpeechRecognition();
+    rec.lang = SPEECH_LANG[lang] ?? 'es-CO';
+    rec.interimResults = true;
+    rec.continuous = false;
+    const base = input ? `${input.trimEnd()} ` : '';
+    rec.onresult = (e) => {
+      const said = Array.from(e.results).map((r) => r[0].transcript).join('');
+      setInput(base + said);
+    };
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') setError(t('barista.micDenied'));
+    };
+    rec.onend = () => { setListening(false); boxRef.current?.focus(); };
+    recRef.current = rec;
+    setError(null);
+    setListening(true);
+    rec.start();
   };
 
   const add = (p, key) => {
@@ -57,80 +117,99 @@ export default function BaristaChat({ onOpenRecipe }) {
     setTimeout(() => setAdded((k) => (k === key ? null : k)), 1200);
   };
 
-  const suggestions = t('barista.suggestions');
+  const submit = (e) => { e.preventDefault(); if (!busy) ask(input); };
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) submit(e);
+  };
 
   return (
-    <section className="barista" aria-label={t('barista.title')}>
-      <div className="barista-head">
-        <div className="barista-cota"><span>{t('barista.fig')}</span><span className="barista-live"><i aria-hidden="true" />{t('barista.live')}</span></div>
-        <h3 className="barista-title">{t('barista.title')}</h3>
-        <p className="barista-sub">{t('barista.sub')}</p>
-      </div>
-
+    <section className="barista" ref={rootRef} aria-label={t('barista.title')}>
       <div className="barista-log" ref={logRef} aria-live="polite">
-        {messages.length === 0 && (
-          <div className="barista-empty">
+        <div className="barista-day"><span>{t('barista.today')}</span></div>
+        <div className="barista-msg is-assistant">
+          <div className="barista-bubble">
+            <span className="barista-who">{t('barista.who')}</span>
             <p>{t('barista.hello')}</p>
-            <div className="barista-chips">
-              {Array.isArray(suggestions) && suggestions.map((s) => (
-                <button key={s} type="button" onClick={() => ask(s)} disabled={busy}>{s}</button>
-              ))}
-            </div>
+            <span className="barista-time">{clock(openedAt, lang)}</span>
           </div>
-        )}
+        </div>
 
         {messages.map((m, i) => (
           <div key={i} className={`barista-msg is-${m.role}`}>
-            {m.role === 'assistant' && <span className="barista-who">{t('barista.who')}</span>}
-            <p>{m.content}</p>
-            {m.products?.length > 0 && (
-              <div className="barista-products">
-                {m.products.map((p) => {
-                  const key = `${i}-${p.slug}`;
-                  return (
-                    <div key={key} className="barista-product">
-                      <img src={p.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
-                      <div className="barista-product-info">
-                        <strong>{p.name}{p.brand ? <em> · {p.brand}</em> : null}</strong>
-                        <span className="barista-product-why">{p.why}</span>
-                        <span className="barista-product-price">{money(p.price)} · {p.size}</span>
+            <div className="barista-bubble">
+              {m.role === 'assistant' && <span className="barista-who">{t('barista.who')}</span>}
+              <p>{m.content}</p>
+              {m.products?.length > 0 && (
+                <div className="barista-products">
+                  {m.products.map((p) => {
+                    const key = `${i}-${p.slug}`;
+                    return (
+                      <div key={key} className="barista-product">
+                        <img src={p.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
+                        <div className="barista-product-info">
+                          <strong>{p.name}{p.brand ? <em> · {p.brand}</em> : null}</strong>
+                          <span className="barista-product-why">{p.why}</span>
+                          <span className="barista-product-price">{money(p.price)} · {p.size}</span>
+                        </div>
+                        <button type="button" className={added === key ? 'added' : ''} onClick={() => add(p, key)}>
+                          {added === key ? t('product.added') : t('barista.add')}
+                        </button>
                       </div>
-                      <button type="button" className={added === key ? 'added' : ''} onClick={() => add(p, key)}>
-                        {added === key ? t('product.added') : t('barista.add')}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {m.recipe_year > 0 && (
-              <button type="button" className="barista-recipe-link" onClick={() => onOpenRecipe(m.recipe_year)}>
-                {t('barista.openRecipe').replace('{year}', m.recipe_year)} →
-              </button>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+              {m.recipe_year > 0 && (
+                <button type="button" className="barista-recipe-link" onClick={() => onOpenRecipe(m.recipe_year)}>
+                  {t('barista.openRecipe').replace('{year}', m.recipe_year)} →
+                </button>
+              )}
+              <span className="barista-time">{clock(m.at, lang)}{m.role === 'user' && <Ticks />}</span>
+            </div>
           </div>
         ))}
 
         {busy && (
-          <div className="barista-msg is-assistant is-typing" aria-label={t('barista.thinking')}>
-            <span className="barista-who">{t('barista.who')}</span>
-            <p><span className="barista-dots"><i /><i /><i /></span> {t('barista.thinking')}</p>
+          <div className="barista-msg is-assistant">
+            <div className="barista-bubble">
+              <span className="barista-who">{t('barista.who')}</span>
+              <p className="is-typing"><span className="barista-dots"><i /><i /><i /></span> {t('barista.thinking')}</p>
+            </div>
           </div>
         )}
       </div>
 
-      {error && <p className="barista-error">{error}</p>}
+      {error && <p className="barista-error" role="alert">{error}</p>}
 
-      <form className="barista-form" onSubmit={(e) => { e.preventDefault(); ask(input); }}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          maxLength={600}
-          placeholder={t('barista.placeholder')}
-          aria-label={t('barista.placeholder')}
-          disabled={busy}
-        />
-        <button type="submit" disabled={busy || !input.trim()}>{t('barista.send')}</button>
+      <form className={`barista-composer ${listening ? 'is-listening' : ''}`} onSubmit={submit}>
+        <div className="barista-field">
+          <textarea
+            ref={boxRef}
+            rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            maxLength={600}
+            placeholder={listening ? t('barista.listening') : t('barista.placeholder')}
+            aria-label={t('barista.placeholder')}
+          />
+        </div>
+        {input.trim() || !SpeechRecognition ? (
+          <button type="submit" className="barista-send" disabled={busy || !input.trim()} aria-label={t('barista.send')} title={t('barista.send')}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+              <path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8z" />
+            </svg>
+          </button>
+        ) : (
+          <button type="button" className="barista-send barista-mic" onClick={toggleVoice} disabled={busy}
+            aria-pressed={listening} aria-label={listening ? t('barista.stopVoice') : t('barista.voice')} title={listening ? t('barista.stopVoice') : t('barista.voice')}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="9" y="3" width="6" height="11" rx="3" />
+              <path d="M5 11a7 7 0 0 0 14 0" />
+              <line x1="12" y1="18" x2="12" y2="21" />
+            </svg>
+          </button>
+        )}
       </form>
       <p className="barista-foot">{t('barista.foot')}</p>
     </section>
