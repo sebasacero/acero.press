@@ -30,6 +30,7 @@ export default function SalesFloatButton() {
   const [sales, setSales] = useState([]);
   const [goal, setGoal] = useState(FALLBACK_SALES_GOAL);
   const dialogRef = useRef(null);
+  const logRef = useRef(null);
 
   useEffect(() => {
     fetchAppConfig('sales_goal', String(FALLBACK_SALES_GOAL)).then((v) => setGoal(Number(v) || FALLBACK_SALES_GOAL));
@@ -54,7 +55,9 @@ export default function SalesFloatButton() {
     if (!dialog) return;
     if (isOpen && !dialog.open) dialog.showModal();
     if (!isOpen && dialog.open) dialog.close();
-  }, [isOpen]);
+    // Como un chat: se abre en el último mensaje.
+    if (isOpen) requestAnimationFrame(() => logRef.current?.scrollTo({ top: logRef.current.scrollHeight }));
+  }, [isOpen, sales.length]);
 
   const total = counts.total;
   const progress = Math.min(100, (total / goal) * 100);
@@ -78,73 +81,75 @@ export default function SalesFloatButton() {
         </span>
       </button>
 
-      <dialog ref={dialogRef} className="sales-modal-banner" onClose={() => setIsOpen(false)}>
-        <div className="modal-container">
-          <button className="modal-close" onClick={() => setIsOpen(false)} aria-label={t('sales.close')}>×</button>
+      <dialog ref={dialogRef} className="sales-modal-banner sales-wa" onClose={() => setIsOpen(false)} aria-label={t('sales.title')}>
+        <div className="sales-wa-shell">
+          <header className="sales-wa-head">
+            <span className="sales-wa-avatar" style={{ '--sales-pct': progress }} aria-hidden="true">
+              <span>{Math.round(progress)}%</span>
+            </span>
+            <div className="sales-wa-title">
+              <strong>{t('sales.title')}</strong>
+              <span><i className="sales-wa-live" aria-hidden="true" />{t('sales.live')}</span>
+            </div>
+            <button type="button" className="sales-wa-close" onClick={() => setIsOpen(false)} aria-label={t('sales.close')}>×</button>
+          </header>
 
-          <div className="sales-modal-header">
-            <span className="hero-badge sales-badge">{Math.round(progress)}%</span>
-            <h2 className="hero-title" style={{ color: 'var(--cream)' }}>{t('sales.title')}</h2>
-            <p className="hero-subtitle">{t('sales.subtitle')}</p>
-          </div>
+          <div className="sales-wa-log" ref={logRef}>
+            <div className="barista-day"><span>{t('barista.today')}</span></div>
 
-          <div className="modal-body">
-            <div className="sales-odo-panel">
-              <div className="sales-fig-label">{t('sales.goal')} · {money(goal)}</div>
-              <div className="sales-odo-row">
-                <div className="sales-odo">
-                  {digits.map((d, i) => (
-                    <span className="sales-digit" key={i}>{d}</span>
+            <div className="barista-msg is-assistant">
+              <div className="barista-bubble sales-wa-bubble">
+                <span className="barista-who">ACERO.PRESS</span>
+                <p>{t('sales.subtitle')}</p>
+                <div className="sales-fig-label">{t('sales.goal')} · {money(goal)}</div>
+                <div className="sales-odo-row">
+                  <div className="sales-odo">
+                    {digits.map((d, i) => (
+                      <span className="sales-digit" key={i}>{d}</span>
+                    ))}
+                  </div>
+                  <span className="sales-odo-sep">/</span>
+                  <span className="sales-odo-target">{money(goal)}</span>
+                </div>
+                <div className="sales-seg-bar">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <div key={i} className={`sales-seg ${i < filledSegments ? 'filled' : ''}`}></div>
                   ))}
                 </div>
-                <span className="sales-odo-sep">/</span>
-                <span className="sales-odo-target">{money(goal)}</span>
-              </div>
-              <div className="sales-seg-bar">
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <div key={i} className={`sales-seg ${i < filledSegments ? 'filled' : ''}`}></div>
-                ))}
-              </div>
-              <div className="sales-progress-caption">{t('sales.remaining')}: {money(remaining)}</div>
-            </div>
-
-            <div className="modal-specs-bar sales-specs-bar">
-              <div className="m-spec">
-                <span className="m-label">{t('sales.bagSales')}</span>
-                <span className="m-val">{counts.coffee_bag.qty}</span>
-              </div>
-              <div className="m-spec">
-                <span className="m-label">{t('sales.prepSales')}</span>
-                <span className="m-val">{counts.aeropress_equipment.qty}</span>
-              </div>
-              <div className="m-spec">
-                <span className="m-label">{t('sales.bagLabel')}</span>
-                <span className="m-val">{money(counts.coffee_bag.amount)}</span>
-              </div>
-              <div className="m-spec">
-                <span className="m-label">{t('sales.prepLabel')}</span>
-                <span className="m-val">{money(counts.aeropress_equipment.amount)}</span>
+                <div className="sales-progress-caption">{t('sales.remaining')}: {money(remaining)}</div>
               </div>
             </div>
 
-            <section className="modal-block sales-history">
-              <h4>{t('sales.historyTitle')}</h4>
-              {sales.length === 0 ? (
-                <p>{t('sales.empty')}</p>
-              ) : (
-                <ul className="sales-history-list">
-                  {sales.map((s) => (
-                    <li key={s.id} className={`sales-history-item sales-history-${s.type}`}>
-                      <span className="sales-history-dot" />
+            <div className="barista-msg is-assistant">
+              <div className="barista-bubble sales-wa-bubble">
+                <div className="sales-wa-stats">
+                  <div><span>{t('sales.bagSales')}</span><strong>{counts.coffee_bag.qty}</strong><em>{money(counts.coffee_bag.amount)}</em></div>
+                  <div><span>{t('sales.prepSales')}</span><strong>{counts.aeropress_equipment.qty}</strong><em>{money(counts.aeropress_equipment.amount)}</em></div>
+                </div>
+              </div>
+            </div>
+
+            {sales.length === 0 ? (
+              <div className="barista-msg is-assistant">
+                <div className="barista-bubble"><p>{t('sales.empty')}</p></div>
+              </div>
+            ) : (
+              [...sales].reverse().map((s) => (
+                <div key={s.id} className="barista-msg is-assistant">
+                  <div className={`barista-bubble sales-wa-sale sales-history-${s.type}`}>
+                    <span className="sales-wa-sale-row">
+                      <span className="sales-history-dot" aria-hidden="true" />
                       <span className="sales-history-label">{s.label}</span>
-                      <span className="sales-history-time">{timeAgo(s.at, lang)}</span>
-                      <span className="sales-history-amount">+{money(s.amount)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+                      <strong className="sales-history-amount">+{money(s.amount)}</strong>
+                    </span>
+                    <span className="barista-time">{timeAgo(s.at, lang)}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
+
+          <footer className="sales-wa-foot">{t('sales.readOnly')}</footer>
         </div>
       </dialog>
     </>

@@ -9,25 +9,20 @@ const cartName = (p) => (p.brand ? `${p.name} · ${p.brand}` : p.name);
 const firstSize = (p) => p.sizes.find((s) => p.prices[s] != null) ?? p.sizes[0];
 
 /**
- * "Prepárala en casa": el café recomendado para la receta + los extras del
- * kit (filtros, AeroPress…). El cliente elige tamaño y desmarca lo que ya tiene.
+ * Estado de un kit (tamaño, extras marcados, total) y la acción de añadirlo.
+ * Lo comparten la tarjeta de receta y el modal.
  */
-export default function RecipeKit({ pairing, recipe, autoFocus = false }) {
+export function useKitState(pairing) {
   const { addItem } = useCart();
-  const { t } = useLanguage();
   const [size, setSize] = useState(pairing.size);
   // La prensa va desmarcada (muchos ya la tienen); filtros y accesorios, marcados.
   const [picked, setPicked] = useState(() => Object.fromEntries(pairing.extras.map((p) => [p.uuid, !isDevice(p)])));
   const [added, setAdded] = useState(false);
-  const btnRef = useRef(null);
-
-  useEffect(() => { if (autoFocus) btnRef.current?.focus({ preventScroll: true }); }, [autoFocus]);
-
-  const { coffee, extras, note } = pairing;
-  const chosen = extras.filter((p) => picked[p.uuid]);
-  const total = coffee.prices[size] + chosen.reduce((s, p) => s + p.prices[firstSize(p)], 0);
-
+  const chosen = pairing.extras.filter((p) => picked[p.uuid]);
+  const total = pairing.coffee.prices[size] + chosen.reduce((s, p) => s + p.prices[firstSize(p)], 0);
+  const toggle = (uuid) => setPicked((m) => ({ ...m, [uuid]: !m[uuid] }));
   const addKit = () => {
+    const { coffee } = pairing;
     addItem({ name: cartName(coffee), price: coffee.prices[size], variant: size, qty: 1, image: coffee.image, variantId: coffee.variantIds[size] });
     for (const p of chosen) {
       const s = firstSize(p);
@@ -36,6 +31,23 @@ export default function RecipeKit({ pairing, recipe, autoFocus = false }) {
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   };
+  return { size, setSize, picked, toggle, chosen, total, added, addKit };
+}
+
+export { money, firstSize };
+
+/**
+ * "Prepárala en casa": el café recomendado para la receta + los extras del
+ * kit (filtros, AeroPress…). El cliente elige tamaño y desmarca lo que ya tiene.
+ */
+export default function RecipeKit({ pairing, recipe, autoFocus = false }) {
+  const { t } = useLanguage();
+  const { size, setSize, picked, toggle, chosen, total, added, addKit } = useKitState(pairing);
+  const btnRef = useRef(null);
+
+  useEffect(() => { if (autoFocus) btnRef.current?.focus({ preventScroll: true }); }, [autoFocus]);
+
+  const { coffee, extras, note } = pairing;
 
   return (
     <section className="kit" aria-label={t('kit.title')}>
@@ -67,7 +79,7 @@ export default function RecipeKit({ pairing, recipe, autoFocus = false }) {
           <p className="kit-sub">{t('kit.extrasHint')}</p>
           {extras.map((p) => (
             <label key={p.uuid} className={`kit-row kit-extra ${picked[p.uuid] ? '' : 'is-off'}`}>
-              <input type="checkbox" checked={!!picked[p.uuid]} onChange={() => setPicked((m) => ({ ...m, [p.uuid]: !m[p.uuid] }))} />
+              <input type="checkbox" checked={!!picked[p.uuid]} onChange={() => toggle(p.uuid)} />
               <img src={p.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
               <div className="kit-row-info">
                 <strong>{p.name}</strong>

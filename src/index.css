@@ -674,19 +674,33 @@ a{ color:inherit; text-decoration:none; }
 .recipe-toggle .chev{ transition: transform .2s ease; }
 .recipe-toggle{ margin-top:0; }
 
-/* Café recomendado + kit en la tarjeta de receta */
-.recipe-pair{ display:flex; align-items:center; gap:10px; padding:10px; margin:0 0 14px; border:1px solid rgba(0,0,0,.12); border-radius:2px; background:var(--cream); }
-.recipe-pair img{ width:46px; height:46px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+/* Café recomendado + kit editable en la tarjeta de receta */
+.recipe-pair{ display:flex; flex-direction:column; gap:10px; padding:12px; margin:0 0 14px; border:1px solid rgba(0,0,0,.12); border-radius:4px; background:var(--cream); }
+.recipe-pair-top{ display:flex; align-items:center; gap:10px; }
+.recipe-pair-top img{ width:46px; height:46px; object-fit:cover; border-radius:3px; flex-shrink:0; }
 .recipe-pair-info{ display:flex; flex-direction:column; min-width:0; }
-.recipe-pair-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.45); }
+.recipe-pair-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.5); }
 .recipe-pair-info strong{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.recipe-pair-price{ font-size:12px; color:#A8864F; font-weight:600; }
-.recipe-actions{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.recipe-pair-price{ font-size:12px; color:#8a6a35; font-weight:600; }
+.recipe-pair-sizes{ display:flex; gap:5px; }
+.recipe-pair-sizes button{ flex:1; min-height:32px; border-radius:999px; border:1px solid rgba(30,30,30,.25); background:#fff; font-family:'JetBrains Mono', monospace; font-size:11px; cursor:pointer; }
+.recipe-pair-sizes button.active{ background:var(--near-black); border-color:var(--near-black); color:#fff; }
+.recipe-pair-extras{ display:flex; flex-direction:column; gap:2px; border-top:1px dashed rgba(0,0,0,.15); padding-top:6px; }
+.recipe-pair-extras label{ display:flex; align-items:center; gap:8px; min-height:32px; font-size:12.5px; color:var(--near-black); cursor:pointer; }
+.recipe-pair-extras input{ width:16px; height:16px; accent-color:var(--near-black); flex-shrink:0; }
+.recipe-pair-extras span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.recipe-pair-extras em{ font-style:normal; color:#8a6a35; font-weight:600; }
+.recipe-pair-extras label.is-off span, .recipe-pair-extras label.is-off em{ opacity:.45; }
+.recipe-pair-count{ font-family:'JetBrains Mono', monospace; font-size:10px; color:rgba(0,0,0,.5); text-align:center; margin-top:-4px; }
+.recipe-pair .recipe-kit-btn{ width:100%; min-height:40px; }
+.recipe-actions{ margin-top:auto; display:flex; align-items:center; justify-content:flex-start; gap:10px; flex-wrap:wrap; }
 .recipe-kit-btn{
   padding:8px 14px; border-radius:7px; border:1.5px solid var(--near-black); background:var(--near-black); color:#fff;
-  font-family:'Archivo', sans-serif; font-size:.82rem; font-weight:600; cursor:pointer;
+  font-family:'Archivo', sans-serif; font-size:.84rem; font-weight:600; cursor:pointer;
 }
 .recipe-kit-btn:hover{ background:#ff2e63; border-color:#ff2e63; }
+.recipe-kit-btn.added{ background:#25D366; border-color:#25D366; }
+.recipe-card > .recipe-kit-btn.is-barista{ width:100%; min-height:40px; margin-bottom:14px; }
 
 /* Kit dentro del modal de receta */
 .kit{ border:1.5px solid var(--ink); background:#fbf8f0; padding:16px; margin-bottom:1.6rem; position:relative; }
@@ -1282,29 +1296,32 @@ dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filt
 .barista-recipe-link:hover{ text-decoration:underline; }
 .barista-error{ margin:4px 4px 8px; color:#b3261e; font-size:.85rem; }
 
-/* El campo: texto + micrófono + enviar, como un chat */
-.barista-composer{
-  display:flex; align-items:flex-end; gap:6px; padding:8px 8px 8px 18px; margin-top:6px;
-  background:#fff; border:1px solid rgba(30,30,30,.16); border-radius:26px;
-  box-shadow:0 10px 30px -18px rgba(30,30,30,.45); transition:border-color .15s ease, box-shadow .15s ease;
+/* Separador de día, hora y checks, como en WhatsApp */
+.barista-day{ display:flex; justify-content:center; margin:2px 0 4px; }
+.barista-day span{ padding:4px 12px; border-radius:8px; background:rgba(255,255,255,.92); box-shadow:0 1px 1px rgba(11,20,26,.1); font-size:11px; letter-spacing:.04em; color:#54656f; }
+.barista-time{ align-self:flex-end; display:inline-flex; align-items:center; gap:3px; margin:-2px 0 -2px 10px; font-size:10.5px; color:#667781; line-height:1; }
+.barista-ticks{ color:#53bdeb; }
+
+/* Campo en píldora + un botón verde: micrófono con el campo vacío, enviar con texto */
+.barista-composer{ display:flex; align-items:flex-end; gap:8px; margin-top:6px; }
+.barista-field{
+  flex:1; min-width:0; display:flex; align-items:center; padding:0 18px; border-radius:24px; background:#ffffff;
+  box-shadow:0 1px 2px rgba(11,20,26,.18); transition:box-shadow .15s ease;
 }
-.barista-composer:focus-within{ border-color:rgba(30,30,30,.4); box-shadow:0 12px 34px -16px rgba(30,30,30,.5); }
-.barista-composer.is-listening{ border-color:#fa2525; box-shadow:0 0 0 4px rgba(250,37,37,.12); }
-.barista-composer textarea{
-  flex:1; min-width:0; resize:none; border:none; outline:none; background:transparent; padding:9px 0;
-  font-family:'Archivo', sans-serif; font-size:1rem; line-height:1.45; color:var(--near-black); max-height:132px;
+.barista-composer.is-listening .barista-field{ box-shadow:0 0 0 2px #fa2525; }
+.barista-field textarea{
+  flex:1; min-width:0; resize:none; border:none; outline:none; background:transparent; padding:11px 0;
+  font-family:'Archivo', sans-serif; font-size:1rem; line-height:1.45; color:#111b21; max-height:132px;
 }
-.barista-composer textarea::placeholder{ color:rgba(30,30,30,.45); }
-.barista-mic, .barista-send{
-  flex-shrink:0; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:none;
+.barista-field textarea::placeholder{ color:#8696a0; }
+.barista-send{
+  flex-shrink:0; width:48px; height:48px; border-radius:50%; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; background:#00a884; color:#ffffff;
+  box-shadow:0 1px 2px rgba(11,20,26,.25);
 }
-.barista-mic{ background:transparent; color:var(--near-black); }
-.barista-mic:hover:not(:disabled){ background:rgba(30,30,30,.07); }
-.barista-mic[aria-pressed="true"]{ background:#fa2525; color:#fff; animation:barista-pulse 1.2s ease-in-out infinite; }
+.barista-send:disabled{ background:#00a884; opacity:.55; cursor:default; }
+.barista-mic[aria-pressed="true"]{ background:#fa2525; animation:barista-pulse 1.2s ease-in-out infinite; }
 @keyframes barista-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(250,37,37,.45); } 50%{ box-shadow:0 0 0 8px rgba(250,37,37,0); } }
-.barista-send{ background:var(--near-black); color:#fff; }
-.barista-send:disabled{ background:rgba(30,30,30,.18); cursor:default; }
-.barista-mic:disabled{ opacity:.4; cursor:default; }
 .barista-foot{ text-align:center; margin-top:8px; font-family:'JetBrains Mono', monospace; font-size:.6rem; color:var(--ink-soft); }
 .recipe-kit-btn.is-barista{ background:transparent; color:var(--near-black); }
 .recipe-kit-btn.is-barista:hover{ background:var(--near-black); color:#fff; border-color:var(--near-black); }
@@ -1312,6 +1329,40 @@ dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filt
     .barista-bubble{ max-width:88%; }
   .barista-product{ flex-wrap:wrap; }
   .barista-product button{ width:100%; padding:9px; }
-  .barista-composer textarea{ font-size:16px; } /* evita el zoom de iOS al enfocar */
+  .barista-field textarea{ font-size:16px; } /* evita el zoom de iOS al enfocar */
 }
 @media (prefers-reduced-motion:reduce){ .barista-dots i, .barista-mic[aria-pressed="true"]{ animation:none; } }
+
+/* === Meta de ventas como conversación de WhatsApp === */
+dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; padding:0; border-radius:14px; overflow:hidden; background:transparent; }
+.sales-wa-shell{ display:flex; flex-direction:column; max-height:88vh; background:#efeae2; }
+.sales-wa-head{ display:flex; align-items:center; gap:12px; padding:10px 12px 10px 14px; background:#f0f2f5; border-bottom:1px solid rgba(11,20,26,.08); }
+.sales-wa-avatar{
+  position:relative; width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  background:conic-gradient(var(--sales-bag) calc(var(--sales-pct) * 1%), rgba(120,120,120,.25) 0);
+}
+.sales-wa-avatar span{
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(145deg, #f4f5f7 0%, #b7bbc1 45%, #8b8f96 60%, #eef0f2 100%);
+  font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; color:#24262a;
+}
+.sales-wa-title{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.sales-wa-title strong{ font-size:1rem; color:#111b21; }
+.sales-wa-title span{ display:inline-flex; align-items:center; gap:6px; font-size:.78rem; color:#667781; }
+.sales-wa-live{ width:7px; height:7px; border-radius:50%; background:#25d366; }
+.sales-wa-close{ width:40px; height:40px; border-radius:50%; border:none; background:transparent; font-size:24px; line-height:1; color:#54656f; cursor:pointer; }
+.sales-wa-close:hover{ background:rgba(11,20,26,.06); }
+.sales-wa-log{ flex:1; min-height:0; overflow-y:auto; padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; overscroll-behavior:contain; }
+.sales-wa-bubble{ max-width:min(92%, 480px); }
+.sales-wa-bubble .sales-fig-label{ margin-top:4px; }
+.sales-wa-bubble .sales-odo-row{ margin-bottom:.6rem; }
+.sales-wa-bubble .sales-digit{ font-size:1.05rem; }
+.sales-wa-stats{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+.sales-wa-stats div{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:6px; background:#f0f2f5; }
+.sales-wa-stats span{ font-family:'JetBrains Mono', monospace; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:#667781; }
+.sales-wa-stats strong{ font-size:1.3rem; color:#111b21; }
+.sales-wa-stats em{ font-style:normal; font-size:.8rem; font-weight:600; color:#8a6a35; }
+.sales-wa-sale{ max-width:min(86%, 440px); }
+.sales-wa-sale-row{ display:flex; align-items:center; gap:8px; min-width:0; font-size:.88rem; }
+.sales-wa-foot{ padding:12px 16px; text-align:center; font-size:.78rem; color:#667781; background:#f0f2f5; border-top:1px solid rgba(11,20,26,.08); }
+@media (max-width:600px){ dialog.sales-modal-banner.sales-wa{ width:94vw; max-height:90vh; } }
