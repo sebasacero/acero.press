@@ -8,6 +8,7 @@ import PublicationsPage from './pages/PublicationsPage.jsx';
 import InstagramPage from './pages/InstagramPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import TablesPage from './pages/TablesPage.jsx';
+import RecipesPage from './pages/RecipesPage.jsx';
 
 // Grupos por flujo de trabajo: primero lo que se usa en el día a día.
 export const ADMIN_GROUPS = [
@@ -25,9 +26,10 @@ export const ADMIN_TOOLS = [
   { id: 'tables', label: 'Mesas / POS', group: 'ops', desc: 'Cuentas abiertas por mesa', signal: 'occupied', Component: TablesPage },
   { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
   { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
-  { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, precios y recetas', Component: CatalogPage },
+  { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, marcas y precios', Component: CatalogPage },
   { id: 'publications', label: 'Publicaciones', group: 'brand', desc: 'Contenido listo para redes', Component: PublicationsPage },
   { id: 'instagram', label: 'Instagram', group: 'brand', desc: 'Conexión, token y métricas', Component: InstagramPage },
+  { id: 'recipes', label: 'Recetas', group: 'brand', desc: 'Café y kit de cada receta campeona', Component: RecipesPage },
   { id: 'sections', label: 'Secciones', group: 'brand', desc: 'Contenido del sitio', Component: SectionsPage },
   { id: 'settings', label: 'Configuración', group: 'sys', desc: 'WhatsApp, redes, metas', Component: SettingsPage },
 ];

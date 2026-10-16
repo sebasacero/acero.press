@@ -672,6 +672,52 @@ a{ color:inherit; text-decoration:none; }
   padding: 0; margin-top: auto;
 }
 .recipe-toggle .chev{ transition: transform .2s ease; }
+.recipe-toggle{ margin-top:0; }
+
+/* Café recomendado + kit en la tarjeta de receta */
+.recipe-pair{ display:flex; align-items:center; gap:10px; padding:10px; margin:0 0 14px; border:1px solid rgba(0,0,0,.12); border-radius:2px; background:var(--cream); }
+.recipe-pair img{ width:46px; height:46px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+.recipe-pair-info{ display:flex; flex-direction:column; min-width:0; }
+.recipe-pair-label{ font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:rgba(0,0,0,.45); }
+.recipe-pair-info strong{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.recipe-pair-price{ font-size:12px; color:#A8864F; font-weight:600; }
+.recipe-actions{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.recipe-kit-btn{
+  padding:8px 14px; border-radius:7px; border:1.5px solid var(--near-black); background:var(--near-black); color:#fff;
+  font-family:'Archivo', sans-serif; font-size:.82rem; font-weight:600; cursor:pointer;
+}
+.recipe-kit-btn:hover{ background:#ff2e63; border-color:#ff2e63; }
+
+/* Kit dentro del modal de receta */
+.kit{ border:1.5px solid var(--ink); background:#fbf8f0; padding:16px; margin-bottom:1.6rem; position:relative; }
+.kit-head{ margin-bottom:12px; }
+.kit-fig{ font-family:'JetBrains Mono', monospace; font-size:.64rem; letter-spacing:.12em; color:var(--ink-soft); }
+.kit-head h4{ font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:1.05rem; color:var(--ink); margin:.2rem 0 0; }
+.kit-note{ font-size:.85rem; color:var(--ink-soft); margin-top:.3rem; line-height:1.5; }
+.kit-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px dashed rgba(42,53,80,.25); }
+.kit-row img{ width:52px; height:52px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+.kit-row-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.kit-row-info strong{ font-size:.92rem; color:var(--near-black); }
+.kit-row-label{ font-family:'JetBrains Mono', monospace; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); }
+.kit-row-meta{ font-size:.75rem; color:var(--ink-soft); }
+.kit-price{ font-weight:600; color:#A8864F; font-size:.9rem; white-space:nowrap; }
+.kit-sizes{ display:flex; gap:5px; margin-top:4px; }
+.kit-sizes button{ padding:3px 8px; border-radius:999px; border:1px solid rgba(30,30,30,.25); background:transparent; font-family:'JetBrains Mono', monospace; font-size:.64rem; cursor:pointer; }
+.kit-sizes button.active{ background:var(--near-black); border-color:var(--near-black); color:#fff; }
+.kit-sub{ font-size:.78rem; color:var(--ink-soft); padding-top:8px; border-top:1px dashed rgba(42,53,80,.25); }
+.kit-sub + .kit-row{ border-top:none; }
+.kit-extra{ cursor:pointer; }
+.kit-extra input{ width:18px; height:18px; accent-color:var(--near-black); flex-shrink:0; }
+.kit-extra.is-off img, .kit-extra.is-off .kit-row-info, .kit-extra.is-off .kit-price{ opacity:.4; }
+.kit-extra.is-off .kit-price{ text-decoration:line-through; }
+.kit-add{
+  width:100%; margin-top:12px; padding:13px 16px; border:none; border-radius:8px; cursor:pointer;
+  background:var(--near-black); color:#fff; font-family:'Archivo', sans-serif; font-size:.95rem; font-weight:600;
+}
+.kit-add:hover{ background:#000; }
+.kit-add:focus-visible{ outline:3px solid #ff2e63; outline-offset:2px; }
+.kit-add.added{ background:#25D366; }
+.kit-foot{ font-family:'JetBrains Mono', monospace; font-size:.62rem; color:var(--ink-soft); text-align:center; margin-top:8px; }
 .recipe-toggle[aria-expanded="true"] .chev{ transform: rotate(180deg); }
 
 /* === Recipe detail modal === */
@@ -1185,3 +1231,64 @@ dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filt
 }
 
 .product-section{ position:relative; }
+
+/* === Barista con IA (sección de recetas) === */
+.barista{
+  --b-navy:#141c33; --b-line:rgba(127,212,255,.22); --b-cyan:#7fd4ff; --b-text:#EDE6D3; --b-dim:rgba(237,230,211,.62);
+  margin:42px 0 10px; max-width:860px; color:var(--b-text); border:1px solid var(--b-line); border-radius:4px; overflow:hidden;
+  background:
+    linear-gradient(rgba(127,212,255,.05) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(90deg, rgba(127,212,255,.05) 1px, transparent 1px) 0 0 / 22px 22px,
+    var(--b-navy);
+  box-shadow:0 24px 48px -28px rgba(20,28,51,.8);
+}
+.barista-head{ padding:20px 22px 14px; border-bottom:1px dashed var(--b-line); }
+.barista-cota{ display:flex; justify-content:space-between; align-items:center; font-family:'JetBrains Mono', monospace; font-size:10.5px; letter-spacing:.14em; color:var(--b-dim); }
+.barista-live{ display:inline-flex; align-items:center; gap:6px; color:var(--b-cyan); }
+.barista-live i{ width:7px; height:7px; border-radius:50%; background:var(--b-cyan); box-shadow:0 0 8px var(--b-cyan); animation:barista-blink 1.6s ease-in-out infinite; }
+@keyframes barista-blink{ 50%{ opacity:.35; } }
+.barista-title{ font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:clamp(1.3rem, 2.6vw, 1.7rem); margin:10px 0 6px; color:#fff; }
+.barista-sub{ font-size:.9rem; line-height:1.55; color:var(--b-dim); max-width:62ch; }
+.barista-log{ max-height:440px; min-height:180px; overflow-y:auto; padding:18px 22px; display:flex; flex-direction:column; gap:14px; overscroll-behavior:contain; }
+.barista-empty p{ color:var(--b-text); margin-bottom:12px; }
+.barista-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.barista-chips button{ text-align:left; padding:8px 12px; border-radius:999px; border:1px solid var(--b-line); background:rgba(127,212,255,.06); color:var(--b-text); font-family:'Archivo', sans-serif; font-size:.84rem; cursor:pointer; }
+.barista-chips button:hover{ border-color:var(--b-cyan); color:#fff; }
+.barista-msg{ max-width:88%; display:flex; flex-direction:column; gap:8px; }
+.barista-msg p{ white-space:pre-line; font-size:.92rem; line-height:1.6; }
+.barista-msg.is-user{ align-self:flex-end; }
+.barista-msg.is-user p{ background:#EDE6D3; color:#1E1E1E; padding:10px 14px; border-radius:14px 14px 2px 14px; }
+.barista-msg.is-assistant{ align-self:flex-start; }
+.barista-msg.is-assistant p{ background:rgba(127,212,255,.07); border:1px solid var(--b-line); padding:12px 14px; border-radius:2px 14px 14px 14px; }
+.barista-who{ font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:.14em; color:var(--b-cyan); }
+.barista-dots{ display:inline-flex; gap:4px; margin-right:6px; vertical-align:middle; }
+.barista-dots i{ width:6px; height:6px; border-radius:50%; background:var(--b-cyan); animation:barista-blink 1s ease-in-out infinite; }
+.barista-dots i:nth-child(2){ animation-delay:.15s; } .barista-dots i:nth-child(3){ animation-delay:.3s; }
+.barista-products{ display:flex; flex-direction:column; gap:8px; }
+.barista-product{ display:flex; align-items:center; gap:12px; padding:10px; background:#F7F3E8; color:#1E1E1E; border-radius:4px; }
+.barista-product img{ width:52px; height:52px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+.barista-product-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.barista-product-info strong{ font-size:.9rem; }
+.barista-product-info em{ font-style:normal; font-weight:500; color:#6B7290; }
+.barista-product-why{ font-size:.78rem; color:#555; line-height:1.4; }
+.barista-product-price{ font-size:.8rem; color:#A8864F; font-weight:600; }
+.barista-product button{ padding:8px 14px; border-radius:7px; border:1.5px solid #1E1E1E; background:#1E1E1E; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+.barista-product button.added{ background:#25D366; border-color:#25D366; }
+.barista-recipe-link{ align-self:flex-start; background:none; border:none; padding:0; cursor:pointer; color:var(--b-cyan); font-family:'JetBrains Mono', monospace; font-size:.76rem; letter-spacing:.04em; text-decoration:underline; text-underline-offset:3px; }
+.barista-error{ margin:0 22px 8px; color:#ff9b9b; font-size:.85rem; }
+.barista-form{ display:flex; gap:8px; padding:14px 22px; border-top:1px dashed var(--b-line); background:rgba(10,14,28,.35); }
+.barista-form input{ flex:1; min-width:0; padding:12px 14px; border-radius:4px; border:1px solid var(--b-line); background:rgba(10,14,28,.6); color:#fff; font-family:'Archivo', sans-serif; font-size:.92rem; }
+.barista-form input:focus{ outline:none; border-color:var(--b-cyan); box-shadow:0 0 0 3px rgba(127,212,255,.15); }
+.barista-form button{ padding:0 18px; border-radius:4px; border:none; background:#fa2525; color:#fff; font-family:'JetBrains Mono', monospace; font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+.barista-form button:disabled{ opacity:.45; cursor:default; }
+.barista-foot{ padding:0 22px 14px; font-family:'JetBrains Mono', monospace; font-size:.62rem; color:var(--b-dim); background:rgba(10,14,28,.35); }
+@media (max-width:600px){
+  .barista-head, .barista-log{ padding-left:14px; padding-right:14px; }
+  .barista-form{ padding:12px 14px; }
+  .barista-foot{ padding:0 14px 12px; }
+  .barista-msg{ max-width:100%; }
+  .barista-product{ flex-wrap:wrap; }
+  .barista-product button{ width:100%; }
+  .barista-log{ max-height:60vh; }
+}
+@media (prefers-reduced-motion:reduce){ .barista-live i, .barista-dots i{ animation:none; } }

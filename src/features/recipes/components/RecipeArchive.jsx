@@ -2,11 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import recipes from '../data/recipes.js';
 import RecipeCard from './RecipeCard.jsx';
 import RecipeModal from './RecipeModal.jsx';
+import BaristaChat from './BaristaChat.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import useRecipePairings from '../hooks/useRecipePairings.js';
 
 export default function RecipeArchive() {
   const { t } = useLanguage();
   const [openRecipe, setOpenRecipe] = useState(null);
+  const [focusKit, setFocusKit] = useState(false);
+  const pairings = useRecipePairings();
+  const open = (recipe, opts = {}) => { setFocusKit(!!opts.kit); setOpenRecipe(recipe); };
   const [activeIndex, setActiveIndex] = useState(0);
   const trackRef = useRef(null);
 
@@ -84,13 +89,22 @@ export default function RecipeArchive() {
         <button className="recipe-arrow prev" aria-label="Prev" onClick={() => scrollByCards(-1)}>‹</button>
         <div className="recipe-blog" ref={trackRef}>
           {visibleRecipes.map((recipe) => (
-            <RecipeCard key={recipe.year} recipe={recipe} onOpen={setOpenRecipe} />
+            <RecipeCard key={recipe.year} recipe={recipe} pairing={pairings[recipe.year]} onOpen={open} />
           ))}
         </div>
         <button className="recipe-arrow next" aria-label="Next" onClick={() => scrollByCards(1)}>›</button>
       </div>
 
-      <RecipeModal recipe={openRecipe} onClose={() => setOpenRecipe(null)} />
+      <div className="sp">
+        <BaristaChat onOpenRecipe={(year) => { const r = recipes.find((x) => x.year === year); if (r) open(r); }} />
+      </div>
+
+      <RecipeModal
+        recipe={openRecipe}
+        pairing={openRecipe ? pairings[openRecipe.year] : null}
+        focusKit={focusKit}
+        onClose={() => setOpenRecipe(null)}
+      />
     </>
   );
 }

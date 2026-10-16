@@ -14,7 +14,7 @@ const COFFEE_ORDER = ['250G', '500G', '1KG'];
 export async function fetchProductsByCategory(category) {
   const { data, error } = await supabase
     .from('products')
-    .select('id, slug, name, brand, description, variety, region, image_url, product_variants(id, label, price, active)')
+    .select(PRODUCT_FIELDS)
     .eq('category', category)
     .eq('active', true)
     .order('name');
@@ -24,6 +24,23 @@ export async function fetchProductsByCategory(category) {
     return [];
   }
 
+  return shapeProducts(data);
+}
+
+const PRODUCT_FIELDS = 'id, slug, name, brand, description, variety, region, category, image_url, product_variants(id, label, price, active)';
+
+/** Productos activos por id (para recetas y el barista), con la misma forma que fetchProductsByCategory. */
+export async function fetchProductsByIds(ids) {
+  if (!ids?.length) return [];
+  const { data, error } = await supabase.from('products').select(PRODUCT_FIELDS).in('id', ids).eq('active', true);
+  if (error) {
+    console.error('Error cargando productos:', error.message);
+    return [];
+  }
+  return shapeProducts(data);
+}
+
+function shapeProducts(data) {
   return (data ?? [])
     .filter((p) => p.product_variants?.some((v) => v.active))
     .map((p) => {
@@ -41,6 +58,8 @@ export async function fetchProductsByCategory(category) {
       });
       return {
         id: p.slug,
+        uuid: p.id,
+        category: p.category,
         name: p.name,
         brand: p.brand ?? null,
         description: p.description ?? null,
