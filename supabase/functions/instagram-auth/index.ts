@@ -8,7 +8,7 @@
 // Solo tu cuenta owner puede llamarla (se verifica el JWT de la sesión).
 import {
   adminClient, connectToken, corsHeaders, getConnection, graph, HttpError, json,
-  refreshInstagramToken, requireOwner,
+  refreshInstagramToken, requireOwner, secretsPresent,
 } from "../_shared/instagram.ts";
 
 Deno.serve(async (req) => {
@@ -38,6 +38,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "refresh") {
+      // Si aún no hay fila, se crea desde los Secrets (INSTAGRAM_TOKEN / INSTAGRAM_USER_ID).
+      await getConnection(admin).catch(() => null);
       const { data: row } = await admin.from("integration_tokens").select("*").eq("provider", "instagram").maybeSingle();
       if (!row) throw new HttpError(409, "Primero conecta Instagram.");
       if (row.token_kind !== "instagram_login") {
@@ -55,29 +57,27 @@ Deno.serve(async (req) => {
       return json({ ok: true, status: publicStatus({ ...row, expires_at: fresh.expires_at, refreshed_at: now, last_error: null }) });
     }
 
-    // status: prueba el token contra Meta para saber si de verdad funciona.
-    const { data: row } = await admin.from("integration_tokens").select("*").eq("provider", "instagram").maybeSingle();
+    // status: toma la conexión (la crea desde los Secrets si hace falta) y la
+    // prueba contra Meta para saber si de verdad funciona.
     let live: { ok: boolean; error?: string; username?: string; followers_count?: number } = { ok: false };
-    let legacy = false;
     try {
       const conn = await getConnection(admin);
-      legacy = !row;
       const target = conn.kind === "facebook_login" ? conn.accountId : "me";
       const me = await graph(`${conn.base}/${target}?fields=username,followers_count&access_token=${encodeURIComponent(conn.token)}`);
       live = { ok: true, username: me.username, followers_count: me.followers_count };
+      if (me.username) {
+        await admin.from("integration_tokens").update({ username: me.username }).eq("provider", "instagram").is("username", null);
+      }
     } catch (err) {
       live = { ok: false, error: (err as Error).message };
     }
+    const { data: row } = await admin.from("integration_tokens").select("*").eq("provider", "instagram").maybeSingle();
     return json({
       ok: true,
-      status: row ? publicStatus(row) : null,
-      legacy_secrets: legacy,
+      status: row ? publicStatus({ ...row, username: row.username ?? live.username ?? null }) : null,
       live,
-      app_configured: {
-        meta_app_id: !!Deno.env.get("META_APP_ID"),
-        meta_app_secret: !!Deno.env.get("META_APP_SECRET"),
-        ig_app_secret: !!Deno.env.get("IG_APP_SECRET"),
-      },
+      // Solo nombres de los Secrets encontrados, nunca sus valores.
+      secrets: secretsPresent(),
     });
   } catch (err) {
     const status = err instanceof HttpError ? err.status : 500;

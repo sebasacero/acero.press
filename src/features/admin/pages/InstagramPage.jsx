@@ -110,9 +110,9 @@ export default function InstagramPage() {
                 ? 'Token de Página de Facebook: no vence mientras sigas siendo admin de la Página.'
                 : 'Se renueva solo cada semana mientras se use. Si pasan 60 días sin uso, vuelve a conectarlo abajo.'}
             </p>
-            {state?.legacy_secrets && (
-              <p className="esp-notice err">
-                Está usando el token viejo guardado en Secrets. Conéctalo abajo para que se renueve solo.
+            {state?.secrets?.token && (
+              <p className="esp-step-hint">
+                Token tomado de los Secrets de Supabase: <code>{state.secrets.token}</code> · <code>{state.secrets.userId ?? 'sin user id'}</code>. Las renovaciones se guardan en la base para que no venza.
               </p>
             )}
             {s?.last_error && <p className="esp-notice err">{s.last_error}</p>}
@@ -132,7 +132,7 @@ export default function InstagramPage() {
               <span className="esp-step-num">02</span>
               <div>
                 <h3 className="esp-step-title">Conectar o cambiar token</h3>
-                <p className="esp-step-hint">Solo hace falta la primera vez, o si Meta revoca el acceso.</p>
+                <p className="esp-step-hint">Opcional: ya se usa el token de tus Secrets. Pega uno nuevo solo si Meta revoca el acceso.</p>
               </div>
             </div>
             <ol className="ig-guide">
@@ -175,10 +175,18 @@ export default function InstagramPage() {
                 {busy === 'connect' ? 'Validando con Meta…' : 'Conectar'}
               </button>
             </div>
-            {state?.app_configured && (
+            {state?.secrets && (
               <p className="esp-step-hint">
-                Secrets de la app en Supabase: META_APP_ID {state.app_configured.meta_app_id ? '✓' : '✗'} · META_APP_SECRET {state.app_configured.meta_app_secret ? '✓' : '✗'}
-                {' '}(solo obligatorios para tokens EAA de Facebook).
+                Secrets encontrados en Supabase:{' '}
+                {[
+                  ['Token', state.secrets.token],
+                  ['User ID', state.secrets.userId],
+                  ['App ID', state.secrets.appId],
+                  ['App Secret', state.secrets.appSecret],
+                ].map(([label, name], i) => (
+                  <span key={label}>{i ? ' · ' : ''}{label} {name ? <code>{name} ✓</code> : '✗'}</span>
+                ))}
+                {' '}(App ID y App Secret solo son obligatorios para tokens EAA de Facebook).
               </p>
             )}
           </section>

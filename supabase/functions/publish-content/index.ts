@@ -11,7 +11,7 @@
 //
 // Solo tu cuenta owner puede publicar (antes bastaba la anon key pública).
 // Instagram usa la conexión del asistente (integration_tokens) y cae a los
-// Secrets IG_ACCESS_TOKEN / IG_USER_ID mientras no se conecte.
+// Secrets INSTAGRAM_TOKEN / INSTAGRAM_USER_ID (los que ya usa instagram-proxy).
 import {
   adminClient, corsHeaders, getConnection, HttpError, json, publishMedia, requireOwner,
 } from "../_shared/instagram.ts";

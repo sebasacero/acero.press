@@ -41,6 +41,27 @@ export const baseOf = (kind: TokenKind) =>
     ? `https://graph.facebook.com/${GRAPH_VERSION}`
     : `https://graph.instagram.com/${GRAPH_VERSION}`;
 
+/** Primer Secret definido de la lista (se aceptan los nombres que ya existen en el proyecto). */
+export const envAny = (...names: string[]) => names.map((n) => Deno.env.get(n)).find((v) => !!v) ?? null;
+
+// Nombres de Secrets que ya usa el proyecto (instagram-proxy) primero, luego alias.
+export const SECRET_NAMES = {
+  token: ["INSTAGRAM_TOKEN", "IG_ACCESS_TOKEN", "INSTAGRAM_ACCESS_TOKEN"],
+  userId: ["INSTAGRAM_USER_ID", "IG_USER_ID", "INSTAGRAM_ID"],
+  appId: ["META_APP_ID", "INSTAGRAM_APP_ID", "FACEBOOK_APP_ID"],
+  appSecret: ["META_APP_SECRET", "INSTAGRAM_APP_SECRET", "FACEBOOK_APP_SECRET"],
+  igAppSecret: ["IG_APP_SECRET", "INSTAGRAM_APP_SECRET"],
+};
+
+/** Qué Secrets están definidos (solo nombres, nunca valores). */
+export function secretsPresent() {
+  const out: Record<string, string | null> = {};
+  for (const [key, names] of Object.entries(SECRET_NAMES)) {
+    out[key] = names.find((n) => !!Deno.env.get(n)) ?? null;
+  }
+  return out;
+}
+
 export function adminClient(): SupabaseClient {
   return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false },
@@ -98,7 +119,7 @@ export async function connectToken(rawToken: string) {
     // corto (de un login OAuth), se cambia por uno largo con el App Secret.
     // Ojo: en "Instagram API with Instagram Login" el secreto es el
     // "Instagram app secret" (Instagram → Configuración de la API), no el de la app de Meta.
-    const secret = Deno.env.get("IG_APP_SECRET") ?? Deno.env.get("META_APP_SECRET");
+    const secret = envAny(...SECRET_NAMES.igAppSecret, ...SECRET_NAMES.appSecret);
     if (secret) {
       try {
         const ex = await graph(
@@ -132,8 +153,8 @@ export async function connectToken(rawToken: string) {
   }
 
   // Facebook Login: token de usuario → token largo → token de la Página con la cuenta de IG.
-  const appId = Deno.env.get("META_APP_ID");
-  const appSecret = Deno.env.get("META_APP_SECRET");
+  const appId = envAny(...SECRET_NAMES.appId);
+  const appSecret = envAny(...SECRET_NAMES.appSecret);
   if (!appId || !appSecret) {
     throw new HttpError(400, "Este token es de Facebook Login: faltan META_APP_ID y META_APP_SECRET en los Secrets de Supabase.");
   }
@@ -169,19 +190,33 @@ export async function refreshInstagramToken(token: string) {
 
 /**
  * Devuelve la conexión activa. Si el token es de Instagram Login y lleva más
- * de 7 días sin renovarse, lo renueva antes de usarlo. Si la tabla está
- * vacía, usa los Secrets viejos (IG_ACCESS_TOKEN / IG_USER_ID) para no
- * romper nada mientras se conecta desde el asistente.
+ * de 7 días sin renovarse, lo renueva antes de usarlo.
+ *
+ * Si la tabla está vacía, toma el token de los Secrets que ya existen
+ * (INSTAGRAM_TOKEN / INSTAGRAM_USER_ID) y lo copia a integration_tokens: así
+ * las renovaciones quedan guardadas y el token no vence a los 60 días (un
+ * Secret no se puede reescribir desde una función).
  */
 export async function getConnection(admin: SupabaseClient): Promise<IgConnection> {
-  const { data: row } = await admin.from("integration_tokens").select("*").eq("provider", "instagram").maybeSingle();
+  let { data: row } = await admin.from("integration_tokens").select("*").eq("provider", "instagram").maybeSingle();
 
   if (!row) {
-    const token = Deno.env.get("IG_ACCESS_TOKEN") ?? Deno.env.get("INSTAGRAM_TOKEN");
-    const accountId = Deno.env.get("IG_USER_ID") ?? Deno.env.get("INSTAGRAM_USER_ID");
-    if (!token || !accountId) throw new HttpError(409, "Instagram no está conectado. Abre el asistente de Instagram en el panel.");
+    const token = envAny(...SECRET_NAMES.token);
+    const accountId = envAny(...SECRET_NAMES.userId);
+    if (!token || !accountId) throw new HttpError(409, "Instagram no está conectado: faltan INSTAGRAM_TOKEN e INSTAGRAM_USER_ID en los Secrets.");
     const kind = kindOf(token);
-    return { token, accountId, kind, base: baseOf(kind) };
+    const seed = {
+      provider: "instagram",
+      access_token: token,
+      account_id: accountId,
+      token_kind: kind,
+      // Fecha vieja a propósito: se renueva en este mismo uso.
+      refreshed_at: new Date(0).toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = await admin.from("integration_tokens").insert(seed);
+    if (error) return { token, accountId, kind, base: baseOf(kind) };
+    row = seed as typeof row;
   }
 
   const kind = row.token_kind as TokenKind;
