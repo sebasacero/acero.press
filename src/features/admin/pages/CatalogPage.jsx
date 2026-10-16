@@ -1,16 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import ProductEditor, { CATEGORIES, HOUSE_BRAND } from '../ProductEditor.jsx';
+
+const norm = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export default function CatalogPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
+  const [editing, setEditing] = useState(null); // null | 'new' | producto
+  const [cat, setCat] = useState('all');
+  const [brand, setBrand] = useState('all');
+  const [q, setQ] = useState('');
 
   const load = useCallback(async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, slug, category, image_url, active, product_variants(id, label, price, active)')
+      .select('id, name, slug, brand, description, variety, region, category, image_url, active, product_variants(id, label, price, active)')
       .order('name');
     if (error) console.error(error.message);
     setProducts(data ?? []);
@@ -20,6 +26,19 @@ export default function CatalogPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const brands = useMemo(
+    () => [...new Set(products.map((p) => p.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
+    [products]
+  );
+
+  const listOf = (k) => [...new Set(products.map((p) => p[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+  const visible = products.filter((p) =>
+    (cat === 'all' || p.category === cat) &&
+    (brand === 'all' || (brand === HOUSE_BRAND ? !p.brand : p.brand === brand)) &&
+    (!q.trim() || norm(`${p.name} ${p.brand ?? HOUSE_BRAND} ${p.variety ?? ''} ${p.region ?? ''}`).includes(norm(q.trim())))
+  );
 
   const updateVariantPrice = async (variantId, price) => {
     setSavingId(variantId);
@@ -43,14 +62,54 @@ export default function CatalogPage() {
 
   return (
     <div className="admin-page">
-      <h1 className="admin-page-title">Catálogo</h1>
-      <p className="admin-page-sub">Precios y disponibilidad de cada variedad. Los cambios se guardan al salir del campo.</p>
+      <div className="cat-head">
+        <div>
+          <h1 className="admin-page-title">Catálogo</h1>
+          <p className="admin-page-sub">Productos propios y de marcas aliadas. Los precios se guardan al salir del campo.</p>
+        </div>
+        <button type="button" className="cat-new" onClick={() => setEditing('new')}>+ Nuevo producto</button>
+      </div>
+
+      <div className="cat-filters">
+        <div className="cat-chips" role="group" aria-label="Categoría">
+          {[{ id: 'all', label: 'Todo' }, ...CATEGORIES].map((c) => (
+            <button key={c.id} type="button" className={cat === c.id ? 'is-on' : ''} aria-pressed={cat === c.id} onClick={() => setCat(c.id)}>
+              {c.label}
+              <span>{c.id === 'all' ? products.length : products.filter((p) => p.category === c.id).length}</span>
+            </button>
+          ))}
+        </div>
+        <select className="cat-select" value={brand} onChange={(e) => setBrand(e.target.value)} aria-label="Marca">
+          <option value="all">Todas las marcas</option>
+          <option value={HOUSE_BRAND}>{HOUSE_BRAND} (propia)</option>
+          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <input className="cat-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar producto o marca…" aria-label="Buscar" />
+      </div>
+
+      {visible.length === 0 && (
+        <p className="admin-page-sub">
+          {products.length === 0 ? 'Aún no hay productos.' : 'Nada coincide con el filtro.'}{' '}
+          <button type="button" className="admin-btn-ghost" onClick={() => setEditing('new')}>Crear uno</button>
+        </p>
+      )}
 
       <div className="admin-catalog-grid">
-        {products.map((p) => (
+        {visible.map((p) => (
           <div key={p.id} className={`admin-card ${!p.active ? 'is-inactive' : ''}`}>
+            <div className="cat-card-top">
+              <div className="cat-thumb">{p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}</div>
+              <div className="cat-card-meta">
+                <span className={`cat-brand ${p.brand ? 'is-ally' : ''}`}>{p.brand ?? HOUSE_BRAND}</span>
+                <h3>{p.name}</h3>
+                <span className="cat-tag">
+                  {CATEGORIES.find((c) => c.id === p.category)?.label ?? p.category}
+                  {p.category === 'coffee_bag' && (p.variety || p.region) ? ` · ${[p.variety, p.region].filter(Boolean).join(' · ')}` : ''}
+                </span>
+              </div>
+            </div>
             <div className="admin-card-header">
-              <h3>{p.name}</h3>
+              <button type="button" className="admin-btn-ghost" onClick={() => setEditing(p)}>Editar</button>
               <label className="admin-switch">
                 <input
                   type="checkbox"
@@ -70,8 +129,8 @@ export default function CatalogPage() {
                 </tr>
               </thead>
               <tbody>
-                {p.product_variants
-                  .sort((a, b) => a.label.localeCompare(b.label))
+                {[...p.product_variants]
+                  .sort((a, b) => Number(a.price) - Number(b.price))
                   .map((v) => (
                     <tr key={v.id} className={!v.active ? 'is-inactive' : ''}>
                       <td>{v.label}</td>
@@ -102,6 +161,17 @@ export default function CatalogPage() {
           </div>
         ))}
       </div>
+
+      {editing && (
+        <ProductEditor
+          product={editing === 'new' ? null : editing}
+          brands={brands}
+          varieties={listOf('variety')}
+          regions={listOf('region')}
+          onClose={() => setEditing(null)}
+          onSaved={async () => { setEditing(null); await load(); }}
+        />
+      )}
     </div>
   );
 }
