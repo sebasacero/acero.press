@@ -1023,7 +1023,7 @@
 .ax-exit:hover{ border-color:var(--ax-cyan); color:#ffffff; }
 
 /* Cuerpo: barra superior + contenido */
-.ax-body{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.ax-body{ flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
 .ax-top{
   display:flex; align-items:center; gap:14px; padding:12px 22px; min-height:58px;
   background:var(--ax-bg-2); border-bottom:1px solid var(--ax-line); color:var(--ax-text);
@@ -1050,7 +1050,9 @@
 
 /* Contenido: papel de plano para todas las secciones */
 .ax-main{
-  flex:1; overflow-y:auto; padding:28px 32px 40px; color:var(--ink);
+  /* min-height:0: sin esto el contenido estira el panel flotante en vez de hacer scroll dentro. */
+  flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+  padding:28px 32px 40px; color:var(--ink);
   background:
     linear-gradient(rgba(42,53,80,.045) 1px, transparent 1px) 0 0 / 24px 24px,
     linear-gradient(90deg, rgba(42,53,80,.045) 1px, transparent 1px) 0 0 / 24px 24px,
@@ -1061,7 +1063,9 @@
 
 @media (max-width:900px){
   .admin-overlay-shell{ width:100vw; height:100vh; height:100dvh; max-width:none; border-radius:0; border:none; }
-  .ax-side{ position:fixed; z-index:40; top:0; bottom:0; left:0; width:min(300px, 86vw); transform:translateX(-102%); transition:transform .25s ease; box-shadow:20px 0 50px rgba(0,0,0,.5); }
+  /* Cerrado: fuera de pantalla y oculto (si no, su sombra se ve en el borde izquierdo). */
+  .ax-side{ position:fixed; z-index:40; top:0; bottom:0; left:0; width:min(300px, 86vw); transform:translateX(-102%); visibility:hidden; transition:transform .25s ease, visibility 0s linear .25s; }
+  .ax-side.is-open{ visibility:visible; box-shadow:20px 0 50px rgba(0,0,0,.5); transition:transform .25s ease; }
   .ax-overlay .ax-side{ position:absolute; }
   .ax-side.is-open{ transform:none; }
   .ax-scrim{ display:block; position:fixed; inset:0; z-index:39; background:rgba(4,8,16,.55); }
@@ -1072,6 +1076,8 @@
   .ax-crumb-desc, .ax-crumb-group, .ax-crumb-sep{ display:none; }
   .ax-alert{ padding:7px 8px; }
   .ax-main{ padding:20px 16px 32px; }
+  /* Tablas anchas: se desplazan de lado dentro de su caja, no empujan la página. */
+  .ax-main .admin-table{ display:block; max-width:100%; overflow-x:auto; }
 }
 @media (max-width:560px){ .ax-alert{ font-size:0; gap:0; } .ax-alert i{ width:9px; height:9px; } }
 @media (prefers-reduced-motion:reduce){ .ax-main, .ax-live, .ax-alert i{ animation:none; } .ax-side{ transition:none; } }
