@@ -2,7 +2,7 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 
 const money = (n) => `$${Number(n).toLocaleString('es-CO')}`;
 
-export default function RecipeCard({ recipe, pairing, onOpen }) {
+export default function RecipeCard({ recipe, pairing, onOpen, onAskBarista }) {
   const { lang, t } = useLanguage();
 
   return (
@@ -33,9 +33,13 @@ export default function RecipeCard({ recipe, pairing, onOpen }) {
       )}
 
       <div className="recipe-actions">
-        {pairing && (
+        {pairing ? (
           <button type="button" className="recipe-kit-btn" onClick={() => onOpen(recipe, { kit: true })}>
             {t('kit.add')}
+          </button>
+        ) : (
+          <button type="button" className="recipe-kit-btn is-barista" onClick={() => onAskBarista(recipe)}>
+            {t('barista.cardCta')}
           </button>
         )}
         <button className="recipe-toggle" aria-expanded="false" onClick={() => onOpen(recipe)}>
