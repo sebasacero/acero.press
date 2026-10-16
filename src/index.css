@@ -490,6 +490,7 @@ a{ color:inherit; text-decoration:none; }
 .shop-card-media img{ width:100%; height:100%; object-fit:cover; display:block; }
 .shop-card-name{ font-family:'Archivo', sans-serif; font-weight:600; font-size:.92rem; text-transform:uppercase; letter-spacing:.01em; color:var(--near-black); margin-bottom:4px; }
 .shop-card-name span{ font-weight:500; }
+.shop-card-brand{ font-family:'JetBrains Mono', monospace; font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:3px; }
 .shop-card-price{ font-size:.85rem; color:var(--shop-gold); font-weight:600; margin-bottom:12px; }
 .shop-card-price.is-na{ color:var(--ink-soft); font-weight:400; font-size:.78rem; }
 .shop-card-sizes{ display:flex; gap:6px; margin-bottom:12px; }

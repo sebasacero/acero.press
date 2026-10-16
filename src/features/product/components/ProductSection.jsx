@@ -42,7 +42,7 @@ export default function ProductSection() {
   const itemFor = (p, quantity) => {
     const size = sizeOf(p);
     return {
-      name: p.name,
+      name: p.brand ? `${p.name} · ${p.brand}` : p.name,
       price: p.prices[size],
       variant: size,
       qty: quantity,
@@ -88,7 +88,8 @@ export default function ProductSection() {
             onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }}
           />
         </div>
-        <h3 className="shop-card-name">
+        {p.brand && <span className="shop-card-brand">{p.brand}</span>}
+        <h3 className="shop-card-name" title={p.description ?? undefined}>
           {p.name}{showSizes || size ? <span> ({size})</span> : null}
         </h3>
         <p className={`shop-card-price ${price == null ? 'is-na' : ''}`}>{money(price) ?? t('shop.unavailable')}</p>
