@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '../../cart/context/CartContext.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import { isDevice } from '../../../shared/lib/pairing.js';
 
 const FALLBACK_IMG = '/image/bagsbeans.png';
 const money = (n) => `$${Number(n).toLocaleString('es-CO')}`;
@@ -15,7 +16,8 @@ export default function RecipeKit({ pairing, recipe, autoFocus = false }) {
   const { addItem } = useCart();
   const { t } = useLanguage();
   const [size, setSize] = useState(pairing.size);
-  const [picked, setPicked] = useState(() => Object.fromEntries(pairing.extras.map((p) => [p.uuid, true])));
+  // La prensa va desmarcada (muchos ya la tienen); filtros y accesorios, marcados.
+  const [picked, setPicked] = useState(() => Object.fromEntries(pairing.extras.map((p) => [p.uuid, !isDevice(p)])));
   const [added, setAdded] = useState(false);
   const btnRef = useRef(null);
 

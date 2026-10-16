@@ -114,46 +114,52 @@ export default function BaristaChat({ onOpenRecipe, request }) {
     <section className="barista" ref={rootRef} aria-label={t('barista.title')}>
       <div className="barista-log" ref={logRef} aria-live="polite">
         <div className="barista-msg is-assistant">
-          <span className="barista-who">{t('barista.who')}</span>
-          <p>{t('barista.hello')}</p>
+          <div className="barista-bubble">
+            <span className="barista-who">{t('barista.who')}</span>
+            <p>{t('barista.hello')}</p>
+          </div>
         </div>
 
         {messages.map((m, i) => (
           <div key={i} className={`barista-msg is-${m.role}`}>
-            {m.role === 'assistant' && <span className="barista-who">{t('barista.who')}</span>}
-            <p>{m.content}</p>
-            {m.products?.length > 0 && (
-              <div className="barista-products">
-                {m.products.map((p) => {
-                  const key = `${i}-${p.slug}`;
-                  return (
-                    <div key={key} className="barista-product">
-                      <img src={p.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
-                      <div className="barista-product-info">
-                        <strong>{p.name}{p.brand ? <em> · {p.brand}</em> : null}</strong>
-                        <span className="barista-product-why">{p.why}</span>
-                        <span className="barista-product-price">{money(p.price)} · {p.size}</span>
+            <div className="barista-bubble">
+              {m.role === 'assistant' && <span className="barista-who">{t('barista.who')}</span>}
+              <p>{m.content}</p>
+              {m.products?.length > 0 && (
+                <div className="barista-products">
+                  {m.products.map((p) => {
+                    const key = `${i}-${p.slug}`;
+                    return (
+                      <div key={key} className="barista-product">
+                        <img src={p.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
+                        <div className="barista-product-info">
+                          <strong>{p.name}{p.brand ? <em> · {p.brand}</em> : null}</strong>
+                          <span className="barista-product-why">{p.why}</span>
+                          <span className="barista-product-price">{money(p.price)} · {p.size}</span>
+                        </div>
+                        <button type="button" className={added === key ? 'added' : ''} onClick={() => add(p, key)}>
+                          {added === key ? t('product.added') : t('barista.add')}
+                        </button>
                       </div>
-                      <button type="button" className={added === key ? 'added' : ''} onClick={() => add(p, key)}>
-                        {added === key ? t('product.added') : t('barista.add')}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {m.recipe_year > 0 && (
-              <button type="button" className="barista-recipe-link" onClick={() => onOpenRecipe(m.recipe_year)}>
-                {t('barista.openRecipe').replace('{year}', m.recipe_year)} →
-              </button>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+              {m.recipe_year > 0 && (
+                <button type="button" className="barista-recipe-link" onClick={() => onOpenRecipe(m.recipe_year)}>
+                  {t('barista.openRecipe').replace('{year}', m.recipe_year)} →
+                </button>
+              )}
+            </div>
           </div>
         ))}
 
         {busy && (
           <div className="barista-msg is-assistant">
-            <span className="barista-who">{t('barista.who')}</span>
-            <p className="is-typing"><span className="barista-dots"><i /><i /><i /></span> {t('barista.thinking')}</p>
+            <div className="barista-bubble">
+              <span className="barista-who">{t('barista.who')}</span>
+              <p className="is-typing"><span className="barista-dots"><i /><i /><i /></span> {t('barista.thinking')}</p>
+            </div>
           </div>
         )}
       </div>
