@@ -464,6 +464,98 @@ a{ color:inherit; text-decoration:none; }
 .store-info-link{ font-size: 0.8rem; color: #555; text-decoration: none; margin-left: 20px; }
 .store-info-link:hover{ text-decoration: underline; }
 
+/* === Tienda: bolsas de café + equipo AeroPress (rejilla minimal) === */
+.shop{ --shop-gold:#A8864F; background:var(--cream); }
+.shop-inner{ max-width:1120px; margin:0 auto; padding:28px 20px 56px; }
+.shop-rule{ height:2px; background:rgba(42,53,80,.12); margin:0 0 18px; }
+.shop-rule span{ display:block; width:42%; height:100%; background:var(--shop-gold); }
+.shop-kicker{ text-align:center; font-family:'JetBrains Mono', monospace; font-size:.72rem; letter-spacing:.14em; color:var(--ink-soft); margin-bottom:44px; }
+.shop-title{
+  text-align:center; font-family:'Archivo', sans-serif; font-weight:600; text-transform:uppercase;
+  font-size:clamp(1.15rem, 2.2vw, 1.5rem); letter-spacing:.04em; color:var(--near-black); margin-bottom:34px;
+}
+.shop-sub{ text-align:center; color:var(--ink-soft); font-size:.92rem; margin:-22px auto 30px; max-width:52ch; }
+.shop-empty{ text-align:center; color:var(--ink-soft); padding:20px 0 40px; }
+
+.shop-grid{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:44px 32px; }
+.shop-card{ display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; padding:14px 10px 18px; border-radius:10px; border:1px solid transparent; transition:border-color .2s ease, background-color .2s ease; }
+.shop-card:hover{ background:rgba(255,255,255,.45); }
+.shop-card.is-selected{ border-color:rgba(42,53,80,.22); background:rgba(255,255,255,.6); }
+.shop-card-media{
+  width:min(100%, 220px); aspect-ratio:1; border-radius:8px; overflow:hidden; margin-bottom:18px;
+  background:#EFE9DB; box-shadow:0 18px 26px -18px rgba(30,30,30,.55), 0 2px 6px rgba(30,30,30,.08);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.shop-card:hover .shop-card-media{ transform:translateY(-4px); box-shadow:0 24px 30px -18px rgba(30,30,30,.6), 0 2px 6px rgba(30,30,30,.08); }
+.shop-card-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+.shop-card-name{ font-family:'Archivo', sans-serif; font-weight:600; font-size:.92rem; text-transform:uppercase; letter-spacing:.01em; color:var(--near-black); margin-bottom:4px; }
+.shop-card-name span{ font-weight:500; }
+.shop-card-price{ font-size:.85rem; color:var(--shop-gold); font-weight:600; margin-bottom:12px; }
+.shop-card-price.is-na{ color:var(--ink-soft); font-weight:400; font-size:.78rem; }
+.shop-card-sizes{ display:flex; gap:6px; margin-bottom:12px; }
+.shop-size{
+  min-width:48px; padding:5px 8px; border-radius:999px; border:1px solid rgba(30,30,30,.25); background:transparent;
+  font-family:'JetBrains Mono', monospace; font-size:.68rem; color:var(--near-black); cursor:pointer; transition:all .15s ease;
+}
+.shop-size:hover{ border-color:var(--near-black); }
+.shop-size.active{ background:var(--near-black); border-color:var(--near-black); color:#fff; }
+.shop-add{
+  min-width:150px; padding:8px 18px; border-radius:7px; border:1.5px solid var(--near-black); background:transparent;
+  font-family:'Archivo', sans-serif; font-size:.82rem; font-weight:500; color:var(--near-black); cursor:pointer;
+  transition:background-color .15s ease, color .15s ease;
+}
+.shop-add:hover:not(:disabled){ background:var(--near-black); color:#fff; }
+.shop-add:disabled{ opacity:.4; cursor:default; }
+.shop-add.added, .shop-add.added:hover:not(:disabled){ background:#25D366; border-color:#25D366; color:#fff; }
+.shop-card :focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
+.shop-gear{ margin-top:72px; padding-top:48px; border-top:1px dashed rgba(42,53,80,.2); }
+.shop-soon{
+  display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; color:var(--ink-soft);
+  padding:34px 20px; border:1px dashed rgba(42,53,80,.28); border-radius:10px; max-width:520px; margin:0 auto;
+  background:linear-gradient(rgba(42,53,80,.04) 1px, transparent 1px) 0 0/18px 18px, linear-gradient(90deg, rgba(42,53,80,.04) 1px, transparent 1px) 0 0/18px 18px;
+}
+.shop-soon svg{ color:var(--ink); }
+
+/* Barra de compra del seleccionado: se queda abajo mientras se recorre la tienda */
+.shop-buybar{
+  position:sticky; bottom:14px; z-index:5; margin:56px auto 18px; max-width:860px;
+  display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px;
+  background:rgba(247,243,232,.94); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(42,53,80,.18); border-radius:12px; box-shadow:0 14px 34px -16px rgba(30,30,30,.45);
+}
+.shop-buybar-item{ display:flex; align-items:center; gap:12px; min-width:0; }
+.shop-buybar-item img{ width:48px; height:48px; border-radius:6px; object-fit:cover; flex-shrink:0; }
+.shop-buybar-item div{ display:flex; flex-direction:column; min-width:0; }
+.shop-buybar-label{ font-family:'JetBrains Mono', monospace; font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); }
+.shop-buybar-item strong{ font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.shop-buybar-price{ font-size:.82rem; color:var(--shop-gold); font-weight:600; }
+.shop-buybar-actions{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.shop-buybar .quantity-selector{ width:108px; background:#fff; }
+.shop-buybar .buy-now-row{ margin:0; }
+.shop-buybar .btn-buy-shop{ padding:12px 16px; font-size:.88rem; white-space:nowrap; }
+.shop-buybar .btn-buy-shop:disabled{ opacity:.5; cursor:default; }
+.shop-links{ display:flex; justify-content:center; flex-wrap:wrap; gap:6px 22px; }
+.shop-links a{ font-size:.82rem; color:#555; text-decoration:underline; text-underline-offset:3px; }
+.shop-links .store-info-link{ margin-left:0; }
+
+@media (max-width: 900px){ .shop-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:36px 14px; } }
+@media (max-width: 700px){
+  .shop-inner{ padding:22px 14px 40px; }
+  .shop-kicker{ margin-bottom:30px; font-size:.64rem; }
+  .shop-card{ padding:8px 4px 14px; }
+  .shop-card-name{ font-size:.8rem; min-height:2.5em; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; column-gap:.25em; }
+  .shop-size{ min-width:0; padding:5px 7px; font-size:.62rem; }
+  .shop-add{ min-width:0; width:100%; font-size:.78rem; padding:8px 10px; }
+  .shop-buybar{ bottom:10px; padding:10px; gap:10px; }
+  .shop-buybar-item img{ width:40px; height:40px; }
+  .shop-buybar-item strong{ font-size:.8rem; }
+  .shop-buybar .quantity-selector{ width:92px; }
+  .shop-buybar .btn-buy-shop{ padding:11px 12px; }
+}
+@media (max-width: 380px){ .shop-buybar-label{ display:none; } }
+@media (prefers-reduced-motion: reduce){ .shop-card-media{ transition:none; } .shop-card:hover .shop-card-media{ transform:none; } }
+
 /* === Recipe archive === */
 .recipe-index{
   display: flex; align-items: baseline; gap: 10px; margin: 0 0 28px; padding: 0 5vw;
