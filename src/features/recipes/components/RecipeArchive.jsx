@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import recipes from '../data/recipes.js';
 import RecipeCard from './RecipeCard.jsx';
 import RecipeModal from './RecipeModal.jsx';
+import BaristaChat from './BaristaChat.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import useRecipePairings from '../hooks/useRecipePairings.js';
 
@@ -92,6 +93,10 @@ export default function RecipeArchive() {
           ))}
         </div>
         <button className="recipe-arrow next" aria-label="Next" onClick={() => scrollByCards(1)}>›</button>
+      </div>
+
+      <div className="sp">
+        <BaristaChat onOpenRecipe={(year) => { const r = recipes.find((x) => x.year === year); if (r) open(r); }} />
       </div>
 
       <RecipeModal
