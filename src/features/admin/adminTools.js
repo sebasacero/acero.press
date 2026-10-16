@@ -5,17 +5,31 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import SectionsPage from './pages/SectionsPage.jsx';
 import EspresalePage from './pages/EspresalePage.jsx';
 import PublicationsPage from './pages/PublicationsPage.jsx';
+import InstagramPage from './pages/InstagramPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import TablesPage from './pages/TablesPage.jsx';
 
-export const ADMIN_TOOLS = [
-  { id: 'dashboard', label: 'Dashboard', Component: DashboardPage },
-  { id: 'orders', label: 'Pedidos', Component: OrdersPage },
-  { id: 'tables', label: 'Mesas / POS', Component: TablesPage },
-  { id: 'inventory', label: 'Inventario', Component: InventoryPage },
-  { id: 'catalog', label: 'Catálogo', Component: CatalogPage },
-  { id: 'settings', label: 'Configuración', Component: SettingsPage },
-  { id: 'sections', label: 'Secciones', Component: SectionsPage },
-  { id: 'espresale', label: 'Espresale', Component: EspresalePage },
-  { id: 'publications', label: 'Publicaciones', Component: PublicationsPage },
+// Grupos por flujo de trabajo: primero lo que se usa en el día a día.
+export const ADMIN_GROUPS = [
+  { id: 'ops', label: 'Operación', hint: 'Vender y atender' },
+  { id: 'biz', label: 'Negocio', hint: 'Medir y abastecer' },
+  { id: 'brand', label: 'Marca', hint: 'Sitio y redes' },
+  { id: 'sys', label: 'Sistema', hint: 'Ajustes' },
 ];
+
+// id: estable (lo usan otros componentes, p. ej. openTool('espresale')).
+// signal: contador en vivo que se muestra en la navegación (useAdminSignals).
+export const ADMIN_TOOLS = [
+  { id: 'espresale', label: 'Esspresale', group: 'ops', desc: 'Venta rápida en barra y tarjeta para redes', Component: EspresalePage },
+  { id: 'orders', label: 'Pedidos', group: 'ops', desc: 'Confirmar y completar pedidos', signal: 'pending', Component: OrdersPage },
+  { id: 'tables', label: 'Mesas / POS', group: 'ops', desc: 'Cuentas abiertas por mesa', signal: 'occupied', Component: TablesPage },
+  { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
+  { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
+  { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, precios y recetas', Component: CatalogPage },
+  { id: 'publications', label: 'Publicaciones', group: 'brand', desc: 'Contenido listo para redes', Component: PublicationsPage },
+  { id: 'instagram', label: 'Instagram', group: 'brand', desc: 'Conexión, token y métricas', Component: InstagramPage },
+  { id: 'sections', label: 'Secciones', group: 'brand', desc: 'Contenido del sitio', Component: SectionsPage },
+  { id: 'settings', label: 'Configuración', group: 'sys', desc: 'WhatsApp, redes, metas', Component: SettingsPage },
+];
+
+export const toolById = (id) => ADMIN_TOOLS.find((t) => t.id === id) ?? ADMIN_TOOLS[0];

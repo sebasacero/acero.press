@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import { publishToInstagram as igPublish } from '../../../shared/lib/instagram.js';
 
 const isVideoUrl = (url) => /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url || '');
+// Instagram solo acepta JPEG para imágenes (las tarjetas viejas se guardaban en PNG).
+const isJpegUrl = (url) => /\.(jpe?g)(\?|$)/i.test(url || '');
 
 export default function PublicationsPage() {
   const [items, setItems] = useState([]);
@@ -13,7 +16,7 @@ export default function PublicationsPage() {
     setLoading(true);
     const { data } = await supabase
       .from('publications')
-      .select('id, video_url, caption, published, created_at, scheduled_at, results')
+      .select('id, video_url, caption, published, created_at, scheduled_at, results, media_kind')
       .order('created_at', { ascending: false });
     setItems(data ?? []);
     setLoading(false);
@@ -50,25 +53,22 @@ export default function PublicationsPage() {
     }
   };
 
-  // Publica en Instagram (Reels) usando la función publish-content ya
-  // desplegada en este proyecto de Supabase.
+  // Publica en Instagram: videos como Reel, imágenes JPEG como post o historia.
   const publishToInstagram = async (item) => {
     setIgBusyId(item.id);
-    const { data, error } = await supabase.functions.invoke('publish-content', {
-      body: { video_url: item.video_url, caption: item.caption, platforms: { ig: true } },
-    });
-    setIgBusyId(null);
-    const igOutcome = data?.results?.instagram;
-    if (!error && igOutcome?.success) {
-      setIgResults((r) => ({ ...r, [item.id]: { ok: true, message: '✓ Publicado en Instagram.' } }));
-      await supabase.from('publications').update({ published: true }).eq('id', item.id);
-      await load();
-    } else {
+    const isStory = item.media_kind === 'story';
+    const kind = isVideoUrl(item.video_url) ? (isStory ? 'story_video' : 'reel') : isStory ? 'story' : 'image';
+    try {
+      const ig = await igPublish({ mediaUrl: item.video_url, kind, caption: item.caption, publicationId: item.id });
       setIgResults((r) => ({
         ...r,
-        [item.id]: { ok: false, message: error?.message || igOutcome?.error || 'No se pudo publicar en Instagram.' },
+        [item.id]: ig.success ? { ok: true, message: '✓ Publicado en Instagram.' } : { ok: false, message: ig.error || 'No se pudo publicar en Instagram.' },
       }));
+      if (ig.success) await load();
+    } catch (err) {
+      setIgResults((r) => ({ ...r, [item.id]: { ok: false, message: err.message } }));
     }
+    setIgBusyId(null);
   };
 
   if (loading) return <p className="admin-loading">Cargando publicaciones…</p>;
@@ -77,12 +77,12 @@ export default function PublicationsPage() {
     <div className="admin-page">
       <h1 className="admin-page-title">Publicaciones</h1>
       <p className="admin-page-sub">
-        Contenido generado (desde Espresale y otras fuentes) listo para publicar en redes sociales.
-        Solo los videos se pueden publicar directo en Instagram (Reels no acepta fotos).
+        Contenido generado (desde Esspresale y otras fuentes) listo para publicar en redes sociales.
+        Los videos se publican como Reel y las tarjetas JPEG como post o historia, según su formato.
       </p>
 
       {items.length === 0 ? (
-        <p className="admin-loading">Todavía no hay nada aquí — genera una tarjeta desde Espresale.</p>
+        <p className="admin-loading">Todavía no hay nada aquí — genera una tarjeta desde Esspresale.</p>
       ) : (
         <div className="admin-pub-grid">
           {items.map((it) => {
@@ -104,7 +104,7 @@ export default function PublicationsPage() {
                 </div>
                 <div className="admin-pub-actions">
                   <button className="admin-btn-primary admin-btn-sm" onClick={() => share(it)}>Compartir</button>
-                  {video && (
+                  {(video || isJpegUrl(it.video_url)) && (
                     <button
                       className="admin-btn-primary admin-btn-sm"
                       disabled={igBusyId === it.id}

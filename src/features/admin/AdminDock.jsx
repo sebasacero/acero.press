@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useIsOwner } from './useAdminAuth.js';
 import { useAdminUI } from './AdminUIContext.jsx';
-import { ADMIN_TOOLS } from './adminTools.js';
+import { ADMIN_GROUPS, ADMIN_TOOLS } from './adminTools.js';
 import './admin.css';
 
 export default function AdminDock() {
@@ -51,17 +51,22 @@ export default function AdminDock() {
           </button>
 
           <div className="admin-dock-sep" />
-          {ADMIN_TOOLS.map((t, i) => (
-            <button
-              key={t.id}
-              type="button"
-              role="menuitem"
-              className="admin-dock-item"
-              onClick={() => { openTool(t.id); setExpanded(false); }}
-            >
-              <span className="admin-dock-num">{String(i + 1).padStart(2, '0')}</span>
-              {t.label}
-            </button>
+          {ADMIN_GROUPS.map((g) => (
+            <div key={g.id} className="admin-dock-group">
+              <span className="admin-dock-group-label">{g.label}</span>
+              {ADMIN_TOOLS.filter((t) => t.group === g.id).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="menuitem"
+                  className="admin-dock-item"
+                  onClick={() => { openTool(t.id); setExpanded(false); }}
+                >
+                  <span className="admin-dock-num">{String(ADMIN_TOOLS.indexOf(t) + 1).padStart(2, '0')}</span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       )}

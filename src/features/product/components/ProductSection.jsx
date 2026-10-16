@@ -144,7 +144,9 @@ export default function ProductSection() {
 
         <div className="product-info">
           <h1 className="product-title">{product.name}</h1>
-          <p className="product-price">{product.price.toLocaleString('es-CO')}</p>
+          <p className="product-price">
+            {product.price != null ? Number(product.price).toLocaleString('es-CO') : 'No disponible en este tamaño'}
+          </p>
 
           <div className="selector-group">
             <p className="selector-label">{t('product.size')}</p>

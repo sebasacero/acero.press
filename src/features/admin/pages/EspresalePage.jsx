@@ -1,7 +1,18 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { fetchBogotaWeather } from '../../../shared/lib/weather.js';
-import { drawEspresaleCard, parseRecipe, FORMATS } from '../espresaleCard.js';
+import { drawEspresaleCard, parseRecipe, FORMATS, composeVideoFrame, recordCardVideo, pickVideoType } from '../espresaleCard.js';
+import { publishToInstagram as igPublish, recordEspresaleSale } from '../../../shared/lib/instagram.js';
+
+const PAY_METHODS = [
+  { id: 'cash', label: 'Efectivo' },
+  { id: 'nequi', label: 'Nequi' },
+  { id: 'daviplata', label: 'Daviplata' },
+  { id: 'card', label: 'Tarjeta' },
+];
+const money = (n) => '$' + Math.round(n).toLocaleString('es-CO');
+// Formato de la tarjeta → tipo de publicación en Instagram
+const IG_KIND = { feed: 'image', story: 'story' };
 
 const slug = (s) => String(s || 'tarjeta').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
 
@@ -38,21 +49,32 @@ export default function EspresalePage() {
   const [savedUrl, setSavedUrl] = useState(null);
   const [notice, setNotice] = useState(null);
 
-  // Cámara: foto (fondo de la tarjeta) o video (para Reels)
-  const [captured, setCaptured] = useState(null); // { file, type, url }
+  // Fondo: foto o video (de la cámara o de la galería del celular)
+  const [captured, setCaptured] = useState(null); // { file, type: 'image'|'video', url }
   const [photoImg, setPhotoImg] = useState(null);
+  const [videoEl, setVideoEl] = useState(null);
   const [usePhoto, setUsePhoto] = useState(true);
-  const [capturedSaving, setCapturedSaving] = useState(false);
-  const [capturedSavedUrl, setCapturedSavedUrl] = useState(null);
-  const [igPublishing, setIgPublishing] = useState(false);
-  const [igResult, setIgResult] = useState(null);
   const photoInputRef = useRef(null);
   const videoInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const overlayRef = useRef(null); // capa de la tarjeta que va encima del video
+
+  // Video final de la tarjeta (grabado en el navegador)
+  const [cardVideo, setCardVideo] = useState(null); // { blob, url, ext, type }
+  const [recording, setRecording] = useState(null); // progreso 0..1 mientras graba
+
+  // Venta (paso 05) y publicación de la tarjeta en Instagram
+  const [variantId, setVariantId] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [payMethod, setPayMethod] = useState('cash');
+  const [sale, setSale] = useState(null); // { orderId, total }
+  const [saleBusy, setSaleBusy] = useState(null); // 'sale' | 'publish'
+  const [cardPost, setCardPost] = useState(null); // { ok, text }
 
   useEffect(() => {
     supabase
       .from('products')
-      .select('id, name, recipe_text')
+      .select('id, name, recipe_text, product_variants(id, label, price, active)')
       .eq('category', 'coffee_bag')
       .eq('active', true)
       .then(({ data, error }) => {
@@ -75,37 +97,153 @@ export default function EspresalePage() {
 
   useEffect(() => () => { if (captured?.url) URL.revokeObjectURL(captured.url); }, [captured]);
 
+  // Video elegido → elemento <video> (fuera de pantalla) para dibujarlo en la tarjeta
+  useEffect(() => {
+    if (captured?.type !== 'video') { setVideoEl(null); return undefined; }
+    const v = document.createElement('video');
+    v.src = captured.url;
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    v.preload = 'auto';
+    const ready = () => setVideoEl(v);
+    v.addEventListener('loadeddata', ready, { once: true });
+    v.load();
+    return () => { v.pause(); v.removeAttribute('src'); v.load(); };
+  }, [captured]);
+
+  useEffect(() => () => { if (cardVideo?.url) URL.revokeObjectURL(cardVideo.url); }, [cardVideo]);
+
+  const videoMode = !!(usePhoto && videoEl);
   const minuteKey = `${now.getHours()}:${now.getMinutes()}`;
   useEffect(() => {
-    if (!selected || !canvasRef.current) return;
-    drawEspresaleCard(canvasRef.current, {
-      variety: selected,
-      weather,
-      date: new Date(),
-      format,
-      photo: usePhoto ? photoImg : null,
+    if (!selected || !canvasRef.current) return undefined;
+    const canvas = canvasRef.current;
+    if (!videoMode) {
+      drawEspresaleCard(canvas, {
+        variety: selected,
+        weather,
+        date: new Date(),
+        format,
+        photo: usePhoto ? photoImg : null,
+      });
+      setSavedUrl(null);
+      return undefined;
+    }
+    // Video de fondo: la tarjeta es una capa transparente encima, y la vista
+    // previa se compone cuadro a cuadro mientras el video corre en bucle.
+    if (!overlayRef.current) overlayRef.current = document.createElement('canvas');
+    const overlay = overlayRef.current;
+    let raf = 0;
+    let alive = true;
+    drawEspresaleCard(overlay, { variety: selected, weather, date: new Date(), format, videoOverlay: true }).then(() => {
+      if (!alive) return;
+      canvas.width = overlay.width;
+      canvas.height = overlay.height;
+      const ctx = canvas.getContext('2d');
+      const loop = () => {
+        composeVideoFrame(ctx, videoEl, overlay);
+        raf = requestAnimationFrame(loop);
+      };
+      videoEl.muted = true;
+      videoEl.loop = true;
+      videoEl.play().catch(() => {});
+      loop();
     });
     setSavedUrl(null);
-  }, [selected, weather, format, photoImg, usePhoto, minuteKey]);
+    return () => { alive = false; cancelAnimationFrame(raf); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, weather, format, photoImg, usePhoto, videoMode, videoEl, minuteKey]);
+
+  // El video grabado deja de valer si cambia lo que se ve en la tarjeta
+  useEffect(() => { setCardVideo(null); }, [selected, format, videoEl, usePhoto]);
 
   const recipe = useMemo(() => parseRecipe(selected?.recipe_text || ''), [selected]);
+  const variants = useMemo(
+    () => (selected?.product_variants ?? []).filter((v) => v.active).sort((a, b) => Number(a.price) - Number(b.price)),
+    [selected]
+  );
+  const variant = variants.find((v) => v.id === variantId) ?? null;
+
+  // Al cambiar de variedad: primera presentación y venta nueva
+  useEffect(() => {
+    setVariantId(variants[0]?.id ?? null);
+    setQty(1);
+    setSale(null);
+    setCardPost(null);
+  }, [variants]);
   const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const tempStr = weather.tempC !== null ? `${weather.tempC}°C` : '—';
-  const fileName = `espresale-${slug(selected?.name)}.png`;
+  const fileName = `esspresale-${slug(selected?.name)}.png`;
 
   const buildCaption = () =>
     `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${tempStr} en Bogotá · ${timeStr}`;
 
-  const toBlob = () => new Promise((resolve) => canvasRef.current.toBlob(resolve, 'image/png'));
+  // Graba (si hace falta) el video de la tarjeta con el video de fondo.
+  const ensureCardVideo = async () => {
+    if (cardVideo) return cardVideo;
+    setRecording(0);
+    setNotice(null);
+    // Copias propias del video y de la capa: la vista previa sigue corriendo
+    // (y redibujándose cada minuto) sin afectar lo que se graba.
+    const recVideo = document.createElement('video');
+    recVideo.src = captured.url;
+    recVideo.playsInline = true;
+    recVideo.setAttribute('playsinline', '');
+    recVideo.preload = 'auto';
+    const overlaySnap = document.createElement('canvas');
+    overlaySnap.width = overlayRef.current.width;
+    overlaySnap.height = overlayRef.current.height;
+    overlaySnap.getContext('2d').drawImage(overlayRef.current, 0, 0);
+    try {
+      await new Promise((resolve, reject) => {
+        recVideo.addEventListener('loadeddata', resolve, { once: true });
+        recVideo.addEventListener('error', () => reject(new Error('No se pudo leer el video.')), { once: true });
+        recVideo.load();
+      });
+      const r = await recordCardVideo({
+        video: recVideo,
+        overlay: overlaySnap,
+        width: FORMATS[format].w,
+        height: FORMATS[format].h,
+        maxSeconds: 60,
+        onProgress: (p) => setRecording(p),
+      });
+      const result = { ...r, url: URL.createObjectURL(r.blob) };
+      setCardVideo(result);
+      return result;
+    } finally {
+      setRecording(null);
+      recVideo.pause();
+      recVideo.removeAttribute('src');
+      recVideo.load();
+    }
+  };
+
+  // Lo que se descarga/comparte/publica: video si el fondo es video, imagen si no.
+  const cardMedia = async ({ jpeg = false } = {}) => {
+    if (videoMode) {
+      const v = await ensureCardVideo();
+      return { blob: v.blob, ext: v.ext, type: v.type, isVideo: true, igReady: v.igReady };
+    }
+    const type = jpeg ? 'image/jpeg' : 'image/png';
+    const blob = await new Promise((resolve) => canvasRef.current.toBlob(resolve, type, 0.92));
+    return { blob, ext: jpeg ? 'jpg' : 'png', type, isVideo: false };
+  };
 
   const download = async () => {
-    const blob = await toBlob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const m = await cardMedia();
+      const url = URL.createObjectURL(m.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName.replace(/\.png$/, `.${m.ext}`);
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (err) {
+      setNotice({ ok: false, text: err.message });
+    }
   };
 
   const canShareFiles = typeof navigator !== 'undefined' && !!navigator.canShare
@@ -114,9 +252,9 @@ export default function EspresalePage() {
   // En el celular, el menú de compartir sí adjunta la imagen (a WhatsApp,
   // Instagram, etc.) — wa.me solo puede llevar texto.
   const share = async () => {
-    const blob = await toBlob();
-    const file = new File([blob], fileName, { type: 'image/png' });
     try {
+      const m = await cardMedia();
+      const file = new File([m.blob], fileName.replace(/\.png$/, `.${m.ext}`), { type: m.type });
       await navigator.share({ files: [file], text: buildCaption() });
     } catch (err) {
       if (err?.name !== 'AbortError') setNotice({ ok: false, text: 'No se pudo abrir el menú de compartir.' });
@@ -134,22 +272,29 @@ export default function EspresalePage() {
     setNotice({ ok: true, text: 'Se abrió el chat — adjunta la imagen que descargaste.' });
   };
 
-  const uploadPublication = async (blobOrFile, ext, contentType) => {
-    const path = `espresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
+  // Sube el archivo a Storage y crea su fila en Publicaciones. Devuelve { url, id }.
+  const uploadPublication = async (blobOrFile, ext, contentType, extra = {}) => {
+    const path = `esspresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
     const { error } = await supabase.storage.from('marketing').upload(path, blobOrFile, { contentType });
     if (error) throw error;
     const { data: pub } = supabase.storage.from('marketing').getPublicUrl(path);
     const caption = buildCaption();
-    const { error: insertError } = await supabase.from('publications').insert({ video_url: pub.publicUrl, caption, caption_es: caption });
+    const { data: row, error: insertError } = await supabase
+      .from('publications')
+      .insert({ video_url: pub.publicUrl, caption, caption_es: caption, created_at: new Date().toISOString(), ...extra })
+      .select('id')
+      .single();
     if (insertError) throw insertError;
-    return pub.publicUrl;
+    return { url: pub.publicUrl, id: row.id };
   };
 
   const saveToPublications = async () => {
     setSaving(true);
     setNotice(null);
     try {
-      setSavedUrl(await uploadPublication(await toBlob(), 'png', 'image/png'));
+      const m = await cardMedia({ jpeg: true });
+      const kind = m.isVideo ? (format === 'story' ? 'story' : 'reel') : IG_KIND[format];
+      setSavedUrl((await uploadPublication(m.blob, m.ext, m.type, { media_kind: kind })).url);
       setNotice({ ok: true, text: 'Guardada — ya aparece en Publicaciones.' });
     } catch (err) {
       console.error(err);
@@ -158,46 +303,61 @@ export default function EspresalePage() {
     setSaving(false);
   };
 
-  const handleCapture = (e, type) => {
+  // Cámara o galería: el tipo se deduce del archivo elegido.
+  const handleCapture = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    const type = file.type.startsWith('video/') ? 'video' : 'image';
     setCaptured({ file, type, url: URL.createObjectURL(file) });
     setUsePhoto(true);
-    setCapturedSavedUrl(null);
-    setIgResult(null);
   };
 
-  const saveCaptured = async () => {
-    setCapturedSaving(true);
+  // Tarjeta → post del feed (4:5) o historia (9:16). Instagram solo acepta JPEG.
+  const publishCard = async (orderId = sale?.orderId) => {
+    setSaleBusy('publish');
+    setCardPost(null);
     try {
-      const ext = captured.type === 'video' ? 'mp4' : 'jpg';
-      setCapturedSavedUrl(await uploadPublication(captured.file, ext, captured.file.type));
+      const m = await cardMedia({ jpeg: true });
+      if (m.isVideo && !m.igReady) {
+        throw new Error('Este navegador no grabó el video en H.264, el único formato que acepta Instagram. Descárgalo y súbelo desde la app, o usa Safari/Chrome actualizado.');
+      }
+      // Video: Reel (4:5 o 9:16) o historia en video. Imagen: post o historia.
+      const kind = m.isVideo ? (format === 'story' ? 'story_video' : 'reel') : IG_KIND[format];
+      const saved = await uploadPublication(m.blob, m.ext, m.type, {
+        media_kind: kind === 'story_video' ? 'story' : kind,
+        ...(orderId ? { order_id: orderId } : {}),
+      });
+      const ig = await igPublish({ mediaUrl: saved.url, kind, caption: buildCaption(), publicationId: saved.id });
+      const label = { image: 'Post publicado en el feed', story: 'Historia publicada', reel: 'Reel publicado', story_video: 'Historia en video publicada' }[kind];
+      setCardPost(ig.success
+        ? { ok: true, text: `${label} en Instagram.` }
+        : { ok: false, text: ig.pending ? 'Instagram sigue procesando el video: revisa en unos minutos en Publicaciones.' : ig.error || 'Instagram no confirmó la publicación.' });
     } catch (err) {
-      console.error(err);
-      setIgResult({ ok: false, message: `No se pudo guardar: ${err.message || 'error desconocido'}` });
+      setCardPost({ ok: false, text: `No se publicó: ${err.message}` });
     }
-    setCapturedSaving(false);
+    setSaleBusy(null);
   };
 
-  // Instagram (Reels) solo acepta video — usa la función publish-content que
-  // ya está desplegada en este proyecto de Supabase.
-  const publishToInstagram = async () => {
-    if (!capturedSavedUrl) return;
-    setIgPublishing(true);
-    setIgResult(null);
-    const { data, error } = await supabase.functions.invoke('publish-content', {
-      body: { video_url: capturedSavedUrl, caption: buildCaption(), platforms: { ig: true } },
-    });
-    setIgPublishing(false);
-    if (error) {
-      setIgResult({ ok: false, message: error.message || 'No se pudo publicar.' });
-      return;
+  const registerSale = async (alsoPublish) => {
+    if (!variant) return;
+    setSaleBusy('sale');
+    setCardPost(null);
+    try {
+      const r = await recordEspresaleSale({
+        variant,
+        productName: selected.name,
+        qty,
+        paymentMethod: payMethod,
+        phone: waDigits(phone),
+      });
+      setSale(r);
+      setSaleBusy(null);
+      if (alsoPublish) await publishCard(r.orderId);
+    } catch (err) {
+      setCardPost({ ok: false, text: `No se registró la venta: ${err.message}` });
+      setSaleBusy(null);
     }
-    const ig = data?.results?.instagram;
-    setIgResult(ig?.success
-      ? { ok: true, message: 'Publicado en Instagram.' }
-      : { ok: false, message: ig?.error || 'Instagram no confirmó la publicación (revisa las credenciales de la función).' });
   };
 
   const { w, h, safe } = FORMATS[format];
@@ -214,10 +374,10 @@ export default function EspresalePage() {
     <div className="admin-page esp">
       <header className="esp-head">
         <div className="esp-cota">
-          <span>FIG. 06 — ESPRESALE / VENTA RÁPIDA</span>
+          <span>FIG. 06 — ESSPRESALE / VENTA RÁPIDA</span>
           <span className="esp-badge">{weather.icon} {tempStr} · {timeStr}</span>
         </div>
-        <h1 className="esp-title">Espresale.</h1>
+        <h1 className="esp-title">Esspresale.</h1>
         <p className="esp-sub">
           Elige la variedad y la tarjeta se dibuja sola como un plano de la receta — con clima y hora
           de Bogotá. Mándasela al cliente o guárdala para redes.
@@ -264,17 +424,22 @@ export default function EspresalePage() {
               n="02"
               title="Fondo"
               done={!!captured}
-              hint="Plano de papel, o una foto real de la preparación detrás de la hoja."
+              hint="Plano de papel, o una foto o video real detrás de la hoja (de la cámara o de tu galería)."
             />
             <div className="esp-chips">
-              <button type="button" className={`esp-chip ${!(usePhoto && photoImg) ? 'active' : ''}`} onClick={() => setUsePhoto(false)}>
+              <button type="button" className={`esp-chip ${!(usePhoto && (photoImg || videoEl)) ? 'active' : ''}`} onClick={() => setUsePhoto(false)}>
                 Plano
               </button>
-              {photoImg && (
+              {(photoImg || videoEl) && (
                 <button type="button" className={`esp-chip ${usePhoto ? 'active' : ''}`} onClick={() => setUsePhoto(true)}>
-                  Foto
+                  {videoEl ? 'Video' : 'Foto'}
                 </button>
               )}
+            </div>
+            <div className="esp-chips">
+              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => galleryInputRef.current?.click()}>
+                🖼 Elegir de la galería
+              </button>
               <button type="button" className="esp-chip esp-chip-ghost" onClick={() => photoInputRef.current?.click()}>
                 📷 Tomar foto
               </button>
@@ -282,23 +447,20 @@ export default function EspresalePage() {
                 🎥 Grabar video
               </button>
             </div>
-            <input ref={photoInputRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => handleCapture(e, 'image')} />
-            <input ref={videoInputRef} type="file" accept="video/*" capture="environment" hidden onChange={(e) => handleCapture(e, 'video')} />
+            {/* Sin "capture" el celular ofrece la galería/fototeca; con "capture" abre la cámara directo */}
+            <input ref={galleryInputRef} type="file" accept="image/*,video/*" hidden onChange={handleCapture} />
+            <input ref={photoInputRef} type="file" accept="image/*" capture="environment" hidden onChange={handleCapture} />
+            <input ref={videoInputRef} type="file" accept="video/*" capture="environment" hidden onChange={handleCapture} />
 
-            {captured?.type === 'video' && (
-              <div className="esp-capture">
-                <video src={captured.url} controls playsInline />
-                <p className="esp-muted">El video no va en la tarjeta: guárdalo y publícalo como Reel.</p>
-                <div className="esp-actions-row">
-                  <button type="button" className="esp-btn esp-btn-ghost" disabled={capturedSaving || !!capturedSavedUrl} onClick={saveCaptured}>
-                    {capturedSavedUrl ? '✓ Guardado' : capturedSaving ? 'Guardando…' : 'Guardar en Publicaciones'}
-                  </button>
-                  <button type="button" className="esp-btn esp-btn-primary" disabled={igPublishing || !capturedSavedUrl} onClick={publishToInstagram}>
-                    {igPublishing ? 'Publicando…' : 'Publicar en Instagram'}
-                  </button>
-                </div>
-                {igResult && <p className={`esp-notice ${igResult.ok ? 'ok' : 'err'}`}>{igResult.message}</p>}
-              </div>
+            {captured && (
+              <p className="esp-muted">
+                {captured.type === 'video'
+                  ? `Video: ${captured.file.name}${videoEl && Number.isFinite(videoEl.duration) ? ` · ${Math.round(videoEl.duration)} s` : ''}. La tarjeta se monta encima; al descargar o publicar se graba un video nuevo${videoEl?.duration > 60 ? ' (primeros 60 s)' : ''}.`
+                  : `Foto: ${captured.file.name}.`}
+              </p>
+            )}
+            {captured?.type === 'video' && !pickVideoType() && (
+              <p className="esp-notice err">Este navegador no puede grabar video. Usa Safari o Chrome actualizados.</p>
             )}
           </section>
 
@@ -332,6 +494,57 @@ export default function EspresalePage() {
               onChange={(e) => setPhone(e.target.value)}
             />
           </section>
+
+          <section className="esp-step">
+            <StepHead
+              n="05"
+              title="Venta"
+              done={!!sale}
+              hint="Suma al contador de ventas, al dashboard y descuenta inventario."
+            />
+            {!selected ? (
+              <p className="esp-muted">Elige primero la variedad.</p>
+            ) : variants.length === 0 ? (
+              <p className="esp-muted">Esta variedad no tiene presentaciones con precio activas (Catálogo).</p>
+            ) : (
+              <>
+                <div className="esp-chips">
+                  {variants.map((v) => (
+                    <button key={v.id} type="button" className={`esp-chip ${variantId === v.id ? 'active' : ''}`} onClick={() => setVariantId(v.id)}>
+                      {v.label} · {money(v.price)}
+                    </button>
+                  ))}
+                </div>
+                <div className="esp-sale-row">
+                  <div className="esp-qty" role="group" aria-label="Cantidad">
+                    <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">−</button>
+                    <span>{qty}</span>
+                    <button type="button" onClick={() => setQty((q) => Math.min(99, q + 1))} aria-label="Más">+</button>
+                  </div>
+                  <strong className="esp-sale-total">{variant ? money(Number(variant.price) * qty) : '—'}</strong>
+                </div>
+                <div className="esp-chips">
+                  {PAY_METHODS.map((m) => (
+                    <button key={m.id} type="button" className={`esp-chip esp-chip-ghost ${payMethod === m.id ? 'active' : ''}`} onClick={() => setPayMethod(m.id)}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+                {sale ? (
+                  <p className="esp-notice ok">✓ Venta registrada: {money(sale.total)}.</p>
+                ) : (
+                  <div className="esp-actions-row">
+                    <button type="button" className="esp-btn esp-btn-ghost" disabled={!!saleBusy || !variant} onClick={() => registerSale(false)}>
+                      {saleBusy === 'sale' ? 'Registrando…' : 'Registrar venta'}
+                    </button>
+                    <button type="button" className="esp-btn esp-btn-primary" disabled={!!saleBusy || !variant} onClick={() => registerSale(true)}>
+                      Registrar y publicar
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
         </div>
 
         <div className="esp-preview">
@@ -343,6 +556,13 @@ export default function EspresalePage() {
           <div className={`esp-canvas-wrap esp-canvas-${format}`}>
             <div className="esp-canvas-frame" hidden={!selected}>
               <canvas ref={canvasRef} className="esp-canvas" />
+              {recording !== null && (
+                <div className="esp-recording" role="status">
+                  <span>● GRABANDO VIDEO</span>
+                  <div className="esp-recording-bar"><span style={{ width: `${Math.round(recording * 100)}%` }} /></div>
+                  <small>{Math.round(recording * 100)}% · no cierres esta ventana</small>
+                </div>
+              )}
               {showZones && (
                 <div className="esp-zones" aria-hidden="true">
                   {shades.map((st, i) => <span key={i} className="esp-zone-shade" style={st} />)}
@@ -363,22 +583,41 @@ export default function EspresalePage() {
             )}
           </div>
 
+          {cardVideo && videoMode && (
+            <div className="esp-video-result">
+              <video src={cardVideo.url} controls playsInline />
+              <p className="esp-fineprint">
+                Video listo · {cardVideo.ext.toUpperCase()}
+                {!cardVideo.igReady && ' · Este navegador no grabó en H.264: para Instagram descárgalo y súbelo desde la app.'}
+              </p>
+            </div>
+          )}
+
           <div className="esp-actions">
-            {canShareFiles && (
-              <button type="button" className="esp-btn esp-btn-primary" disabled={!selected} onClick={share}>
-                Compartir imagen
+            {videoMode && !cardVideo && (
+              <button type="button" className="esp-btn esp-btn-primary" disabled={!selected || recording !== null} onClick={() => ensureCardVideo().catch((err) => setNotice({ ok: false, text: err.message }))}>
+                {recording !== null ? 'Grabando…' : 'Generar video de la tarjeta'}
               </button>
             )}
-            <button type="button" className={`esp-btn ${canShareFiles ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!selected} onClick={download}>
-              Descargar PNG
+            {canShareFiles && (
+              <button type="button" className={`esp-btn ${videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!selected || recording !== null || (videoMode && !cardVideo)} onClick={share}>
+                {videoMode ? 'Compartir video' : 'Compartir imagen'}
+              </button>
+            )}
+            <button type="button" className={`esp-btn ${canShareFiles || videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!selected || recording !== null} onClick={download}>
+              {videoMode ? `Descargar ${cardVideo ? cardVideo.ext.toUpperCase() : 'video'}` : 'Descargar PNG'}
             </button>
             <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>
               Abrir WhatsApp
             </button>
-            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || saving || !!savedUrl} onClick={saveToPublications}>
+            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || !!saleBusy || recording !== null} onClick={() => publishCard()}>
+              {saleBusy === 'publish' ? 'Publicando…' : videoMode ? `Publicar ${format === 'story' ? 'historia en video' : 'Reel'}` : `Publicar ${format === 'story' ? 'historia' : 'en el feed'}`}
+            </button>
+            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || saving || !!savedUrl || recording !== null} onClick={saveToPublications}>
               {savedUrl ? '✓ En Publicaciones' : saving ? 'Guardando…' : 'Guardar en Publicaciones'}
             </button>
           </div>
+          {cardPost && <p className={`esp-notice ${cardPost.ok ? 'ok' : 'err'}`}>{cardPost.text}</p>}
           {notice && <p className={`esp-notice ${notice.ok ? 'ok' : 'err'}`}>{notice.text}</p>}
           <p className="esp-fineprint">
             {canShareFiles
