@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import RecipeKit from './RecipeKit.jsx';
 
-export default function RecipeModal({ recipe, onClose }) {
+export default function RecipeModal({ recipe, pairing, focusKit = false, onClose }) {
   const dialogRef = useRef(null);
   const { lang, t } = useLanguage();
 
@@ -33,6 +34,8 @@ export default function RecipeModal({ recipe, onClose }) {
         </header>
 
         <div className="modal-body">
+          {pairing && <RecipeKit key={recipe.year} pairing={pairing} recipe={recipe} autoFocus={focusKit} />}
+
           <div className="modal-specs-bar">
             <div className="m-spec"><span className="m-label">{t('modal.dose')}</span><span className="m-val">{recipe.dose}</span></div>
             <div className="m-spec"><span className="m-label">{t('modal.temp')}</span><span className="m-val">{recipe.temp}</span></div>

@@ -1,6 +1,8 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 
-export default function RecipeCard({ recipe, onOpen }) {
+const money = (n) => `$${Number(n).toLocaleString('es-CO')}`;
+
+export default function RecipeCard({ recipe, pairing, onOpen }) {
   const { lang, t } = useLanguage();
 
   return (
@@ -19,9 +21,27 @@ export default function RecipeCard({ recipe, onOpen }) {
         <div className="spec"><span className="spec-v">{t(`position.${recipe.position}`)}</span><span className="spec-l">{t('recipeCard.position')}</span></div>
       </div>
 
-      <button className="recipe-toggle" aria-expanded="false" onClick={() => onOpen(recipe)}>
-        {t('recipeCard.viewFull')} <span className="chev">▾</span>
-      </button>
+      {pairing && (
+        <div className="recipe-pair">
+          <img src={pairing.coffee.image || '/image/bagsbeans.png'} alt="" onError={(e) => { e.currentTarget.src = '/image/bagsbeans.png'; }} />
+          <div className="recipe-pair-info">
+            <span className="recipe-pair-label">{t('kit.brewWith')}</span>
+            <strong>{pairing.coffee.name}</strong>
+            <span className="recipe-pair-price">{money(pairing.coffee.prices[pairing.size])} · {pairing.size}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="recipe-actions">
+        {pairing && (
+          <button type="button" className="recipe-kit-btn" onClick={() => onOpen(recipe, { kit: true })}>
+            {t('kit.add')}
+          </button>
+        )}
+        <button className="recipe-toggle" aria-expanded="false" onClick={() => onOpen(recipe)}>
+          {t('recipeCard.viewFull')} <span className="chev">▾</span>
+        </button>
+      </div>
     </article>
   );
 }
