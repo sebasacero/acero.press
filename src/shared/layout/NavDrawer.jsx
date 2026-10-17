@@ -48,6 +48,7 @@ export default function NavDrawer({ isOpen, onClose }) {
           <a href="#beans" onClick={onClose}>{t('nav.beans')}</a>
           <a href="#championship" onClick={onClose}>{t('nav.championship')}</a>
           <a href="#contact" onClick={onClose}>{t('nav.contact')}</a>
+          <a href="#app" onClick={onClose}>{t('nav.app')}</a>
         </nav>
 
         <div className="nav-drawer-footer">

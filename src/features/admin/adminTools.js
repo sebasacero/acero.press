@@ -9,6 +9,7 @@ import InstagramPage from './pages/InstagramPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import TablesPage from './pages/TablesPage.jsx';
 import RecipesPage from './pages/RecipesPage.jsx';
+import AppWaitlistPage from './pages/AppWaitlistPage.jsx';
 
 // Grupos por flujo de trabajo: primero lo que se usa en el día a día.
 export const ADMIN_GROUPS = [
@@ -24,6 +25,7 @@ export const ADMIN_TOOLS = [
   { id: 'espresale', label: 'Esspresale', group: 'ops', desc: 'Venta rápida en barra y tarjeta para redes', Component: EspresalePage },
   { id: 'orders', label: 'Pedidos', group: 'ops', desc: 'Confirmar y completar pedidos', signal: 'pending', Component: OrdersPage },
   { id: 'tables', label: 'Mesas / POS', group: 'ops', desc: 'Cuentas abiertas por mesa', signal: 'occupied', Component: TablesPage },
+  { id: 'waitlist', label: 'Lista de espera', group: 'ops', desc: 'Quienes se apuntaron a la app Esspresale', Component: AppWaitlistPage },
   { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
   { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
   { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, marcas y precios', Component: CatalogPage },
