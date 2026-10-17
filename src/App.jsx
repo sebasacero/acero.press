@@ -6,7 +6,6 @@ import { AdminUIProvider } from './features/admin/AdminUIContext.jsx';
 import AdminDock from './features/admin/AdminDock.jsx';
 import AdminOverlayHost from './features/admin/AdminOverlayHost.jsx';
 import ActiveFloatWidget from './features/admin/ActiveFloatWidget.jsx';
-import Navbar from './shared/layout/Navbar.jsx';
 import NavDrawer from './shared/layout/NavDrawer.jsx';
 import Footer from './shared/layout/Footer.jsx';
 import CartDrawer from './features/cart/components/CartDrawer.jsx';
@@ -14,11 +13,12 @@ import CheckoutModal from './features/payment/CheckoutModal.jsx';
 import AccountDrawer from './features/account/AccountDrawer.jsx';
 import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
-import CafeHero from './features/home/sections/CafeHero.jsx';
 import Marquee from './features/home/sections/Marquee.jsx';
 import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
 import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
+import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
+import AppSection from './features/esspresale/AppSection.jsx';
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -32,12 +32,13 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <AdminUIProvider>
-            <header className="hero-container">
-              <Navbar navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
-              <CafeHero />
-            </header>
+            <EsspresaleHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
 
             <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
+
+            <Marquee />
+
+            <AppSection />
 
             <ProductSection />
 
