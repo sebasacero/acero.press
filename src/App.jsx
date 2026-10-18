@@ -18,7 +18,6 @@ import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
 import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
-import AppSection from './features/esspresale/AppSection.jsx';
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -35,10 +34,6 @@ export default function App() {
             <EsspresaleHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
 
             <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
-
-            <Marquee />
-
-            <AppSection />
 
             <ProductSection />
 

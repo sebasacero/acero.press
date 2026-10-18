@@ -5,9 +5,21 @@ import RecipeModal from './RecipeModal.jsx';
 import BaristaChat from './BaristaChat.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import useRecipePairings from '../hooks/useRecipePairings.js';
+import SectionEditButton from '../../admin/SectionEditButton.jsx';
+import { useEditableTexts } from '../../../shared/lib/editableTexts.js';
+
+const HEAD_FIELDS = [
+  { key: 'recipes_title', label: 'Título de la sección' },
+  { key: 'recipes_desc', label: 'Descripción', multiline: true },
+];
+const BARISTA_FIELDS = [
+  { key: 'barista_title', label: 'Título del barista' },
+  { key: 'barista_sub', label: 'Texto del barista', multiline: true },
+];
 
 export default function RecipeArchive() {
   const { t } = useLanguage();
+  const [text, reloadTexts] = useEditableTexts(['recipes_title', 'recipes_desc', 'barista_title', 'barista_sub']);
   const [openRecipe, setOpenRecipe] = useState(null);
   const [focusKit, setFocusKit] = useState(false);
   const pairings = useRecipePairings();
@@ -72,10 +84,11 @@ export default function RecipeArchive() {
         <span className="sub">{t('section.sub')}</span>
       </div>
 
-      <div className="sp">
-        <h2 className="sec-h2">{t('section.title')}</h2>
+      <div className="sp" style={{ position: 'relative' }}>
+        <SectionEditButton section="Recetas · textos" fig="FIG. 03 — ARCHIVO" onSaved={reloadTexts} fields={HEAD_FIELDS} />
+        <h2 className="sec-h2">{text('recipes_title', t('section.title'))}</h2>
         <p className="sec-desc">
-          {t('section.desc')}
+          {text('recipes_desc', t('section.desc'))}
           <span className="jp" style={{ display: 'block', marginTop: '.4rem' }}>
             {t('section.descJp')}
           </span>
@@ -90,6 +103,7 @@ export default function RecipeArchive() {
       </div>
 
       <div className="recipe-carousel-wrap">
+        <SectionEditButton section="Recetas · café y kit" toolId="recipes" />
         <button className="recipe-arrow prev" aria-label="Prev" onClick={() => scrollByCards(-1)}>‹</button>
         <div className="recipe-blog" ref={trackRef}>
           {visibleRecipes.map((recipe) => (
@@ -100,10 +114,11 @@ export default function RecipeArchive() {
       </div>
 
       <div className="sp barista-wrap" id="barista">
-        <div className="barista-heading">
+        <div className="barista-heading" style={{ position: 'relative' }}>
+          <SectionEditButton section="Barista · textos" fig="FIG. 03.2 — BARRA ABIERTA" onSaved={reloadTexts} fields={BARISTA_FIELDS} />
           <span className="barista-fig">{t('barista.fig')}</span>
-          <h3>{t('barista.title')}</h3>
-          <p>{t('barista.sub')}</p>
+          <h3>{text('barista_title', t('barista.title'))}</h3>
+          <p>{text('barista_sub', t('barista.sub'))}</p>
         </div>
         <BaristaChat
           request={baristaAsk}

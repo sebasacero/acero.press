@@ -3,13 +3,34 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
 import MapCanvas from './MapCanvas.jsx';
 import { ClientPhone, BaristaPhone } from './AppPhones.jsx';
-import { SheetFrame, Segs, Odometer, useClock, selectAppRole } from './parts.jsx';
+import { SheetFrame, Segs, Odometer, useClock } from './parts.jsx';
+import StoreButtons from './StoreButtons.jsx';
+import SectionEditButton from '../admin/SectionEditButton.jsx';
+import { fetchAppConfig } from '../../shared/lib/appConfig.js';
+import { useEditableTexts } from '../../shared/lib/editableTexts.js';
 import './esspresale.css';
 
 // Primera sección del sitio: dos banners de Esspresale (pedir café / ser
 // barista) dibujados como las tarjetas de redes. Rotan solos cada 8 s y se
 // detienen mientras el cursor o el foco están encima.
 const AUTO_MS = 8000;
+
+const STORE_FIELDS = [
+  { key: 'app_store_url', label: 'App Store (URL)', i18n: false, type: 'url', hint: 'Vacío = la insignia dice "Muy pronto".' },
+  { key: 'play_store_url', label: 'Google Play (URL)', i18n: false, type: 'url', hint: 'Vacío = la insignia dice "Muy pronto".' },
+];
+
+// Textos de cada banner que se cambian con su lápiz (app_config essp_<banner>_<campo>_<idioma>).
+const TEXT_KEYS = ['title1', 'title2', 'script', 'loc', 'lede', 'panelText'];
+const textFields = (kind) => [
+  { key: `essp_${kind}_title1`, label: 'Título · línea 1' },
+  { key: `essp_${kind}_title2`, label: 'Título · línea 2' },
+  { key: `essp_${kind}_script`, label: 'Frase roja (marcador)' },
+  { key: `essp_${kind}_loc`, label: 'Línea de ubicación' },
+  { key: `essp_${kind}_lede`, label: 'Texto', multiline: true },
+  { key: `essp_${kind}_panelText`, label: 'Texto del panel oscuro', multiline: true },
+  ...STORE_FIELDS,
+];
 
 const BG_VIEW = (w) =>
   w < 760
@@ -43,13 +64,15 @@ function TitleBlock({ maker, makerIsYou, index, onSelect }) {
   );
 }
 
-function Slide({ kind, active, index, onSelect }) {
+function Slide({ kind, active, index, onSelect, stores, onStoresSaved }) {
   const { t } = useLanguage();
   const ref = useRef(null);
-  const k = (key) => t(`essp.${kind}.${key}`);
+  const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
+  const base = (key) => t(`essp.${kind}.${key}`);
+  const k = (key) => text(`essp_${kind}_${key}`, base(key));
   const isOrder = kind === 'order';
-  const title = k('title');
-  const specs = k('specs');
+  const title = [text(`essp_${kind}_title1`, base('title')[0]), text(`essp_${kind}_title2`, base('title')[1])];
+  const specs = base('specs');
 
   // La diapositiva oculta no debe recibir foco ni lectores de pantalla.
   useEffect(() => {
@@ -78,6 +101,13 @@ function Slide({ kind, active, index, onSelect }) {
         )}
       </div>
       <SheetFrame />
+      <SectionEditButton
+        section={t(`essp.tabs.${kind}`)}
+        fig={base('tag')}
+        placement="hero"
+        fields={textFields(kind)}
+        onSaved={() => { reloadTexts(); onStoresSaved(); }}
+      />
 
       <div className="essp-in">
         <hr className="essp-dash" />
@@ -90,12 +120,7 @@ function Slide({ kind, active, index, onSelect }) {
             </h1>
             <div className="essp-loc">{k('loc')}</div>
             <p className="essp-lede">{k('lede')}</p>
-            <div className="essp-ctas">
-              <a className="essp-btn" href="#app" onClick={() => selectAppRole(isOrder ? 'cliente' : 'barista')}>
-                {k('cta')} <span aria-hidden="true">→</span>
-              </a>
-              <a className="essp-link" href="#app" onClick={() => selectAppRole(isOrder ? 'cliente' : 'barista')}>{k('link')}</a>
-            </div>
+            <StoreButtons {...stores} />
           </div>
 
           {isOrder ? <ClientPhone className="essp-hero-phone" /> : <BaristaPhone className="essp-hero-phone" />}
@@ -139,6 +164,15 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     return () => clearInterval(id);
   }, [paused, tick]);
 
+  // Enlaces de las tiendas (se editan con el lápiz del banner).
+  const [stores, setStores] = useState({ appStoreUrl: null, playStoreUrl: null });
+  const loadStores = useCallback(() => {
+    Promise.all([fetchAppConfig('app_store_url', null), fetchAppConfig('play_store_url', null)]).then(([a, p]) =>
+      setStores({ appStoreUrl: a || null, playStoreUrl: p || null })
+    );
+  }, []);
+  useEffect(() => { loadStores(); }, [loadStores]);
+
   const tone = index === 0 ? 'paper' : 'photo';
 
   return (
@@ -151,8 +185,8 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     >
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} index={index} onSelect={select} />
-        <Slide kind="barista" active={index === 1} index={index} onSelect={select} />
+        <Slide kind="order" active={index === 0} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />
+        <Slide kind="barista" active={index === 1} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />
       </div>
     </header>
   );
