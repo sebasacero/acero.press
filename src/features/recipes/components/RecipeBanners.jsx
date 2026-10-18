@@ -58,6 +58,7 @@ function RecipeVideo({ recipe, index, custom, active }) {
       playsInline
       autoPlay
       preload="metadata"
+      poster="/image/local.jpg"
       aria-hidden="true"
       onError={() => setI((n) => Math.min(n + 1, sources.length - 1))}
     />
