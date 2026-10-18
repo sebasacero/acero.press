@@ -14,7 +14,7 @@ const translations = {
       order: {
         tag: 'FIG. 01 — PEDIR CAFÉ',
         badge: 'NUEVA APP',
-        title: ['Pide café', 'de barra.'],
+        title: ['Pide café', 'en AeroPress'],
         script: 'a domicilio',
         loc: 'BOGOTÁ, 2.600 MSNM · RECETA AEROPRESS',
         lede: 'Un barista cerca de ti prepara tu AeroPress con el grano y la receta campeona de Acero.press, y te la lleva a la puerta.',
@@ -234,7 +234,7 @@ const translations = {
       order: {
         tag: 'FIG. 01 — ORDER COFFEE',
         badge: 'NEW APP',
-        title: ['Bar coffee,', 'delivered.'],
+        title: ['AeroPress coffee,', 'delivered'],
         script: 'to your door',
         loc: 'BOGOTÁ, 2,600 MASL · AEROPRESS RECIPE',
         lede: 'A barista near you brews your AeroPress with Acero.press beans and a championship recipe, and brings it to your door.',
@@ -453,7 +453,7 @@ const translations = {
       order: {
         tag: '図01 — コーヒーを注文',
         badge: '新アプリ',
-        title: ['バーの一杯を、', 'あなたの家へ。'],
+        title: ['エアロプレスの一杯を', 'お届け'],
         script: 'デリバリー',
         loc: 'ボゴタ · 標高2,600m · エアロプレスレシピ',
         lede: '近くのバリスタが、Acero.pressの豆とチャンピオンレシピでエアロプレスを淹れ、玄関まで届けます。',

@@ -99,7 +99,7 @@
 .essp-new, .essp-badge { background: var(--magenta-bright); color: #fff; padding: 2px 7px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-weight: 700; white-space: nowrap; }
 .essp-title {
   margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-  font-size: clamp(2.8rem, 6.4cqi, 6.1rem); line-height: .96; letter-spacing: -.01em;
+  font-size: clamp(2.4rem, 5.2cqi, 5.2rem); line-height: .96; letter-spacing: -.01em;
   text-transform: uppercase; text-wrap: balance; color: var(--essp-fg);
 }
 .essp-script {
