@@ -7,6 +7,11 @@ import './esspresale.css';
 
 const digits = (s) => String(s).replace(/\D/g, '');
 
+const PATHS = [
+  { role: 'cliente', tab: 'order', Phone: ClientPhone },
+  { role: 'barista', tab: 'barista', Phone: BaristaPhone },
+];
+
 /** Sección #app: los dos caminos de Esspresale y la lista de espera. */
 export default function AppSection() {
   const { t, lang } = useLanguage();
@@ -61,8 +66,18 @@ export default function AppSection() {
     }
   };
 
-  const orderSteps = t('essp.app.orderSteps');
-  const baristaSteps = t('essp.app.baristaSteps');
+  // Carrusel de los dos caminos: la diapositiva visible es el camino elegido
+  // (también en el formulario), así no hay dos estados que se contradigan.
+  const slide = Math.max(0, PATHS.findIndex((p) => p.role === role));
+  const step = (d) => setRole(PATHS[(slide + d + PATHS.length) % PATHS.length].role);
+  const touchX = useRef(null);
+  const onTouchStart = (e) => { touchX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (touchX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+  };
 
   return (
     <section className="essp-app" id="app" aria-labelledby="essp-app-title">
@@ -79,25 +94,48 @@ export default function AppSection() {
         </p>
       </div>
 
-      <div className="essp-paths">
-        <article className={`essp-path ${role === 'cliente' ? 'is-picked' : ''}`}>
-          <div className="essp-path-fig"><span>{t('essp.app.orderFig')}</span><span className="essp-badge">{t('essp.tabs.order')}</span></div>
-          <div className="essp-path-body">
-            <ClientPhone className="essp-path-phone" />
-            <ol className="essp-steps">
-              {orderSteps.map((s, i) => <li key={i}><b>{String(i + 1).padStart(2, '0')}</b><span>{s}</span></li>)}
-            </ol>
+      <div className="essp-app-body">
+      <div className="essp-paths" aria-roledescription="carousel" aria-label={t('essp.tabsLabel')}>
+        <div className="essp-paths-head">
+          <div className="essp-paths-tabs" role="tablist">
+            {PATHS.map((p) => (
+              <button key={p.role} type="button" role="tab" aria-selected={role === p.role} onClick={() => setRole(p.role)}>
+                {t(`essp.tabs.${p.tab}`)}
+              </button>
+            ))}
           </div>
-        </article>
-        <article className={`essp-path ${role === 'barista' ? 'is-picked' : ''}`}>
-          <div className="essp-path-fig"><span>{t('essp.app.baristaFig')}</span><span className="essp-badge">{t('essp.tabs.barista')}</span></div>
-          <div className="essp-path-body">
-            <BaristaPhone className="essp-path-phone" />
-            <ol className="essp-steps">
-              {baristaSteps.map((s, i) => <li key={i}><b>{String(i + 1).padStart(2, '0')}</b><span>{s}</span></li>)}
-            </ol>
+          <span className="essp-paths-count" aria-hidden="true">{String(slide + 1).padStart(2, '0')} / {String(PATHS.length).padStart(2, '0')}</span>
+          <div className="essp-paths-arrows">
+            <button type="button" aria-label="‹" onClick={() => step(-1)}>‹</button>
+            <button type="button" aria-label="›" onClick={() => step(1)}>›</button>
           </div>
-        </article>
+        </div>
+        <div className="essp-paths-viewport" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          <div className="essp-paths-track" style={{ transform: `translateX(-${slide * 100}%)` }}>
+            {PATHS.map((p, i) => {
+              const steps = t(`essp.app.${p.tab}Steps`);
+              const Phone = p.Phone;
+              return (
+                <article
+                  key={p.role}
+                  ref={(el) => { if (el) el.inert = i !== slide; }}
+                  className="essp-path"
+                  aria-roledescription="slide"
+                  aria-label={t(`essp.tabs.${p.tab}`)}
+                  aria-hidden={i !== slide}
+                >
+                  <div className="essp-path-fig"><span>{t(`essp.app.${p.tab}Fig`)}</span><span className="essp-badge">{t(`essp.tabs.${p.tab}`)}</span></div>
+                  <div className="essp-path-body">
+                    <Phone className="essp-path-phone" />
+                    <ol className="essp-steps">
+                      {steps.map((s, n) => <li key={n}><b>{String(n + 1).padStart(2, '0')}</b><span>{s}</span></li>)}
+                    </ol>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <form className="essp-wait" onSubmit={submit} noValidate>
@@ -152,6 +190,7 @@ export default function AppSection() {
         </div>
         <p className={`essp-wait-status is-${status.kind}`} role="status" aria-live="polite">{status.message}</p>
       </form>
+      </div>
     </section>
   );
 }
