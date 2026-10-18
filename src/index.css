@@ -1436,3 +1436,49 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 @media (max-width:900px){ .hero > .bar-panel-col{ justify-self:stretch; max-width:100%; } }
 @media (max-width:700px){ .bar-actions{ margin-top:-12px; } }
 @media (prefers-reduced-motion: reduce){ .bar-order-btn{ transition:none; } }
+
+/* === Recetas campeonas como banners (RecipeBanners) ===
+   Mismo esquema que los banners de la barra: video de fondo, cuadro oscuro del
+   odómetro y botón crema; encima, la hoja de plano de los formatos de redes. */
+.rb{ position:relative; margin:0 5vw; display:grid; gap:12px; }
+.rb-viewport{ position:relative; overflow:hidden; border-radius:2px; background:#0c0c0e; }
+.rb-track{ display:flex; transition:transform .7s cubic-bezier(.4,0,.2,1); }
+.rb-slide{
+  flex:0 0 100%; min-width:0; position:relative; min-height:min(78vh, 680px); color:#fff;
+  --essp-line:rgba(247,243,232,.75); --essp-soft:rgba(247,243,232,.7);
+  display:flex; align-items:center;
+}
+.rb-video, .rb-video--idle{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; background:#141518; }
+.rb-overlay{ position:absolute; inset:0; z-index:1; background:linear-gradient(90deg, rgba(10,10,12,.78) 0%, rgba(10,10,12,.35) 55%, rgba(10,10,12,.55) 100%), linear-gradient(180deg, rgba(10,10,12,.45) 0%, rgba(10,10,12,.1) 45%, rgba(10,10,12,.7) 100%); }
+.rb-slide > .essp-sheet{ z-index:2; inset:14px; }
+.rb-slide > .essp-sheet::after{ inset:12px; }
+.rb-in{ position:relative; z-index:3; width:100%; display:grid; grid-template-columns:1.1fr .9fr; align-items:center; gap:clamp(24px,4vw,56px); padding:clamp(56px,7vw,90px) clamp(44px,6vw,90px); }
+.rb-copy{ min-width:0; }
+.rb-tag{ display:flex; align-items:center; gap:.6rem; font-family:'JetBrains Mono', monospace; font-size:.72rem; letter-spacing:.1em; color:rgba(255,255,255,.78); margin-bottom:1rem; }
+.rb-dot{ width:7px; height:7px; border-radius:50%; background:var(--magenta-bright); }
+.rb-flag{ font-size:1rem; }
+.rb-name{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:1.02; text-transform:uppercase; color:var(--cream); margin:0; text-wrap:balance; }
+.rb-place{ margin-top:.9rem; font-family:'JetBrains Mono', monospace; font-size:.8rem; letter-spacing:.04em; color:rgba(255,255,255,.82); }
+.rb-jp{ margin-top:.3rem; font-size:.82rem; color:#c9a0a0; }
+.rb-col{ position:relative; justify-self:end; width:100%; max-width:420px; display:grid; gap:12px; }
+.rb-panel{ justify-self:stretch; max-width:none; }
+.rb-panel .progress-caption{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.rb-coffee{ font-size:16px !important; text-align:right; }
+.rb-kit-btn{ justify-content:space-between; width:100%; cursor:pointer; }
+.rb-full{ justify-self:start; background:none; border:none; color:rgba(255,255,255,.85); font-family:'JetBrains Mono', monospace; font-size:.74rem; letter-spacing:.04em; text-decoration:underline; text-underline-offset:4px; cursor:pointer; padding:2px 0; }
+.rb-full:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+.rb-years{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.rb-count{ flex:none; white-space:nowrap; font-family:'JetBrains Mono', monospace; font-size:.75rem; color:var(--ink-soft); margin-right:6px; font-variant-numeric:tabular-nums; }
+.rb-years button{ font-family:'JetBrains Mono', monospace; font-size:.72rem; font-weight:700; padding:5px 9px; border:1.5px solid var(--ink); background:transparent; color:var(--ink); border-radius:2px; cursor:pointer; }
+.rb-years button[aria-selected="true"]{ background:var(--magenta-bright); border-color:var(--magenta-bright); color:#fff; }
+.rb-years button:focus-visible{ outline:2px solid var(--magenta-bright); outline-offset:2px; }
+@media (max-width:900px){
+  .rb{ margin:0 16px; }
+  .rb-in{ grid-template-columns:1fr; padding:56px 30px 64px; gap:26px; }
+  .rb-col{ justify-self:stretch; max-width:100%; }
+  .rb-years{ flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+  .rb-years button{ flex:none; }
+  .rb .coldbrew-carousel-arrow{ top:auto; bottom:22px; transform:none; z-index:4; }
+  .rb-in{ padding-bottom:84px; }
+}
+@media (prefers-reduced-motion: reduce){ .rb-track{ transition:none; } }

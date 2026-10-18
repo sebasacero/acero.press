@@ -112,6 +112,7 @@ const translations = {
       descJp: '世界チャンピオンのレシピ・アーカイブ',
       allChip: 'Todos',
     },
+    recipesBanner: { fig: 'FIG. 03 — CAMPEÓN WAC {year}', panel: 'RECETA WAC {year}', doseLabel: 'DOSIS CAFÉ MOLIDO / TEMPERATURA DEL AGUA', brewWith: 'PREPÁRALA CON', kitCta: 'Kit recomendado' },
     kit: {
       fig: 'FIG. 03.1 — PREPÁRALA EN CASA',
       title: 'Prepárala en casa',
@@ -344,6 +345,7 @@ const translations = {
       descJp: '世界チャンピオンのレシピ・アーカイブ',
       allChip: 'All',
     },
+    recipesBanner: { fig: 'FIG. 03 — WAC CHAMPION {year}', panel: 'WAC RECIPE {year}', doseLabel: 'GROUND COFFEE DOSE / WATER TEMPERATURE', brewWith: 'BREW IT WITH', kitCta: 'Recommended kit' },
     kit: {
       fig: 'FIG. 03.1 — BREW IT AT HOME',
       title: 'Brew it at home',
@@ -576,6 +578,7 @@ const translations = {
       descJp: '世界チャンピオンのレシピ・アーカイブ',
       allChip: 'すべて',
     },
+    recipesBanner: { fig: '図03 — WACチャンピオン {year}', panel: 'WACレシピ {year}', doseLabel: 'コーヒー粉量 / 湯温', brewWith: 'おすすめのコーヒー', kitCta: 'おすすめキット' },
     kit: {
       fig: 'FIG. 03.1 — おうちで淹れる',
       title: 'おうちで淹れる',
