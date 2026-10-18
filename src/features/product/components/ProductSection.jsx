@@ -3,6 +3,7 @@ import { useCart } from '../../cart/context/CartContext.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchCoffeeVarieties, fetchAeropressProducts } from '../../../shared/lib/catalog.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
+import KitBuilder from './KitBuilder.jsx';
 
 const FALLBACK_IMG = '/image/bagsbeans.png';
 const sizeName = (s, t) => (s === '18G' ? t('shop.sachet') : s);
@@ -179,13 +180,13 @@ export default function ProductSection() {
         <div className="shop-rule" aria-hidden="true"><span /></div>
         <p className="shop-kicker">{t('shop.kicker')}</p>
 
-        <h2 className="shop-title">{tab === 'gear' ? t('shop.gearTitle') : t('shop.coffeeTitle')}</h2>
+        <h2 className="shop-title">{tab === 'gear' ? t('shop.gearTitle') : tab === 'kit' ? t('shop.kitTitle') : t('shop.coffeeTitle')}</h2>
 
         <div className="shop-tabs" role="tablist" aria-label={t('shop.coffeeTitle')}>
-          {[['coffee', t('shop.tabCoffee'), coffee.length], ['gear', t('shop.tabGear'), gear.length]].map(([id, label, n]) => (
+          {[['coffee', t('shop.tabCoffee'), coffee.length], ['gear', t('shop.tabGear'), gear.length], ['kit', t('shop.tabKit'), null]].map(([id, label, n]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} aria-controls="shop-track"
               className={tab === id ? 'is-on' : ''} onClick={() => setTab(id)}>
-              {label}{!loading && <span>{n}</span>}
+              {label}{!loading && n != null && <span>{n}</span>}
             </button>
           ))}
         </div>
@@ -218,9 +219,12 @@ export default function ProductSection() {
           </div>
         )}
         {tab === 'gear' && <p className="shop-sub">{t('shop.gearSub')}</p>}
+        {tab === 'kit' && <p className="shop-sub">{t('shop.kitSub')}</p>}
 
         {loading ? (
           <p className="shop-empty">{t('shop.loading')}</p>
+        ) : tab === 'kit' ? (
+          <KitBuilder coffee={coffee} gear={gear} />
         ) : tab === 'gear' && gear.length === 0 ? (
           <div className="shop-soon">
             <svg viewBox="0 0 64 96" width="40" height="60" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
@@ -254,7 +258,7 @@ export default function ProductSection() {
         )}
 
         {/* Barra de compra del producto seleccionado: los mismos botones de siempre. */}
-        {selected && (
+        {selected && tab !== 'kit' && (
           <div className="shop-buybar" aria-live="polite">
             <div className="shop-buybar-item">
               <img src={selected.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
