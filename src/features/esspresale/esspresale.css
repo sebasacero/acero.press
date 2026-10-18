@@ -113,7 +113,6 @@
 }
 .essp-loc::before { content: ''; width: 11px; height: 11px; border-radius: 50%; background: var(--magenta-bright); flex: none; }
 .essp-lede { margin: 0; max-width: 40ch; font-size: clamp(15px, 1.25cqi, 18px); line-height: 1.55; font-weight: 500; }
-.essp-ctas { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 .essp-btn {
   font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase;
   padding: 15px 22px; border: 2px solid var(--magenta-bright); background: var(--magenta-bright); color: #fff;
@@ -122,8 +121,22 @@
 }
 .essp-btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--essp-line, var(--ink)); }
 .essp-btn:disabled { opacity: .6; cursor: wait; }
-.essp-link { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: currentColor; text-decoration: underline; text-underline-offset: 4px; }
-.essp-btn:focus-visible, .essp-link:focus-visible, .essp-tabs button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
+.essp-btn:focus-visible, .essp-store:focus-visible, .essp-tabs button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
+
+/* Insignias App Store / Google Play */
+.essp-stores { display: flex; gap: 12px; flex-wrap: wrap; }
+.essp-store {
+  display: inline-flex; align-items: center; gap: 10px; min-width: 170px;
+  padding: 9px 16px 9px 12px; background: #050506; color: #fff; text-decoration: none;
+  border: 2px solid var(--essp-line, var(--ink)); box-shadow: 4px 4px 0 var(--essp-line, var(--ink));
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--magenta-bright); }
+.essp-store span { display: grid; line-height: 1.1; }
+.essp-store small { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+.essp-store b { font-family: 'Archivo', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.essp-store.is-soon { cursor: default; opacity: .92; }
+.essp-store.is-soon small { color: var(--magenta-bright); opacity: 1; font-weight: 700; }
 
 /* Panel oscuro del odómetro */
 .essp-panel {
@@ -233,55 +246,12 @@
   .essp-block > .essp-tabs button { flex: 1; }
   .essp-block > .essp-tabs button + button { border-top: 1.5px solid var(--essp-line); border-left: none; }
   .essp-block b { font-size: 18px; }
-  .essp-ctas .essp-btn { flex: 1 1 100%; justify-content: space-between; }
+  .essp-stores { flex-wrap: nowrap; gap: 10px; }
+  .essp-store { flex: 1 1 0; min-width: 0; padding: 8px 10px; gap: 8px; }
+  .essp-store b { font-size: 15px; }
 }
 
-/* === Sección App (#app) === */
-.essp-app { padding-bottom: 4rem; }
-.essp-paths { display: grid; gap: 12px; min-width: 0; padding: 0 5vw; }
-.essp-paths-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.essp-paths-tabs { display: flex; }
-.essp-paths-tabs button, .essp-paths-arrows button {
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  background: var(--cream); border: 2px solid var(--ink); color: var(--ink); padding: 8px 14px; cursor: pointer;
-}
-.essp-paths-tabs button + button { border-left: none; }
-.essp-paths-tabs button[aria-selected='true'] { background: var(--magenta-bright); border-color: var(--magenta-bright); color: #fff; }
-.essp-paths-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); margin-left: auto; font-variant-numeric: tabular-nums; }
-.essp-paths-arrows { display: flex; gap: 6px; }
-.essp-paths-arrows button { width: 38px; height: 38px; padding: 0; font-size: 18px; line-height: 1; }
-.essp-paths-tabs button:focus-visible, .essp-paths-arrows button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 2px; }
-.essp-paths-viewport { overflow: hidden; }
-.essp-paths-track { display: flex; transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
-.essp-path {
-  flex: 0 0 100%; min-width: 0;
-  position: relative; border: 2.5px solid var(--ink); background: var(--paper);
-  background-image:
-    repeating-linear-gradient(0deg, rgba(42, 53, 80, .07) 0 1px, transparent 1px 27px),
-    repeating-linear-gradient(90deg, rgba(42, 53, 80, .07) 0 1px, transparent 1px 27px);
-  padding: 18px 20px 22px; display: grid; gap: 16px; align-content: start;
-}
-.essp-path-fig {
-  display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: var(--ink);
-  padding-bottom: 12px; border-bottom: 1.5px dashed var(--ink);
-}
-.essp-path-fig .essp-badge { font-size: 11px; }
-.essp-path-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; max-width: 900px; }
-.essp-path-phone { width: 210px; }
-.essp-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border: 2px solid var(--ink); background: rgba(237, 230, 211, .94); }
-.essp-steps li { display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 12px 14px; font-size: .95rem; line-height: 1.45; color: var(--near-black); }
-.essp-steps li + li { border-top: 1.5px solid var(--ink); }
-.essp-steps b { font-family: 'JetBrains Mono', monospace; color: var(--magenta-bright); font-weight: 700; }
-
-@media (max-width: 560px) {
-  .essp-paths-count { display: none; }
-  .essp-paths-arrows { margin-left: auto; }
-  .essp-paths-tabs button { padding: 8px 10px; }
-  .essp-path-body { grid-template-columns: 1fr; justify-items: center; }
-  .essp-path-phone { width: 180px; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .essp-track, .essp-paths-track { transition: none; }
+  .essp-track { transition: none; }
   .essp-btn { transition: none; }
 }

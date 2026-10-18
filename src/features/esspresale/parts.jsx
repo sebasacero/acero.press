@@ -3,13 +3,6 @@ import { useEffect, useState } from 'react';
 // Piezas del lenguaje de los formatos de redes (ver admin/espresaleCard.js):
 // hoja con marco y zonas, odómetro, barra segmentada y cajetín.
 
-export const APP_ROLE_EVENT = 'essp:role';
-
-/** Lleva a la sección App con el camino ya elegido ('cliente' | 'barista'). */
-export function selectAppRole(role) {
-  window.dispatchEvent(new CustomEvent(APP_ROLE_EVENT, { detail: role }));
-}
-
 /** Hora y fecha de Bogotá que avanzan solas (como el cajetín de las tarjetas). */
 export function useClock() {
   const [now, setNow] = useState(() => new Date());
