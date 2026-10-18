@@ -5,6 +5,12 @@ const translations = {
   es: {
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2.600 msnm',
+    sheet: {
+      shop: { label: 'Tienda · café de especialidad', maker: 'Acero.press' },
+      coldbrew: { label: 'La barra · bebidas de la casa', maker: 'La barra' },
+      recipes: { label: 'Archivo de campeones WAC', maker: 'Campeones WAC' },
+      footer: { label: 'Redes · más café', maker: 'Acero.press' },
+    },
     essp: {
       tabsLabel: 'Banners de Esspresale',
       tabs: { order: 'Pedir café', barista: 'Ser barista' },
@@ -86,6 +92,8 @@ const translations = {
       gearSub: 'Prensas, filtros y accesorios para preparar en casa como en la barra.',
       gearSoon: 'Muy pronto: el equipo AeroPress que usamos en la barra.',
       selected: 'Seleccionado',
+      sachet: 'SACHET 18G',
+      sachetHint: 'Sachet de 18 g: una preparación de AeroPress',
       choose: 'Toca un producto para elegirlo',
       unavailable: 'No disponible en este tamaño',
       loading: 'Cargando productos…',
@@ -246,6 +254,12 @@ const translations = {
   en: {
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2,600 masl',
+    sheet: {
+      shop: { label: 'Shop · specialty coffee', maker: 'Acero.press' },
+      coldbrew: { label: 'The bar · house drinks', maker: 'The bar' },
+      recipes: { label: 'WAC champions archive', maker: 'WAC champions' },
+      footer: { label: 'Social · more coffee', maker: 'Acero.press' },
+    },
     essp: {
       tabsLabel: 'Esspresale banners',
       tabs: { order: 'Order coffee', barista: 'Be a barista' },
@@ -327,6 +341,8 @@ const translations = {
       gearSub: 'Presses, filters and accessories to brew at home like at the bar.',
       gearSoon: 'Coming soon: the AeroPress gear we use at the bar.',
       selected: 'Selected',
+      sachet: 'SACHET 18G',
+      sachetHint: '18 g sachet: one AeroPress brew',
       choose: 'Tap a product to choose it',
       unavailable: 'Not available in this size',
       loading: 'Loading products…',
@@ -486,6 +502,12 @@ const translations = {
 
   ja: {
     nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', contact: 'お問い合わせ', app: 'アプリ' },
+    sheet: {
+      shop: { label: 'ショップ · スペシャルティコーヒー', maker: 'Acero.press' },
+      coldbrew: { label: 'バー · ハウスドリンク', maker: 'バー' },
+      recipes: { label: 'WACチャンピオン・アーカイブ', maker: 'WACチャンピオン' },
+      footer: { label: 'SNS · もっとコーヒーを', maker: 'Acero.press' },
+    },
     essp: {
       tabsLabel: 'エスプレセールのバナー',
       tabs: { order: 'コーヒーを注文', barista: 'バリスタになる' },
@@ -568,6 +590,8 @@ const translations = {
       gearSub: 'プレス、フィルター、アクセサリー。',
       gearSoon: '近日公開：バーで使っているエアロプレス器具。',
       selected: '選択中',
+      sachet: 'サシェ 18G',
+      sachetHint: '18gサシェ：エアロプレス1杯分',
       choose: '商品をタップして選択',
       unavailable: 'このサイズは取り扱いなし',
       loading: '読み込み中…',

@@ -5,6 +5,7 @@ import { fetchCoffeeVarieties, fetchAeropressProducts } from '../../../shared/li
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
 
 const FALLBACK_IMG = '/image/bagsbeans.png';
+const sizeName = (s, t) => (s === '18G' ? t('shop.sachet') : s);
 const money = (n) => (n != null ? `$${Number(n).toLocaleString('es-CO')}` : null);
 
 /**
@@ -79,7 +80,8 @@ export default function ProductSection() {
     setVariety(v);
     if (region && !coffee.some((p) => (!v || p.variety === v) && p.region === region)) setRegion('');
   };
-  const sizeOf = (p) => sizes[p.id] ?? p.sizes.find((s) => p.prices[s] != null) ?? p.sizes[0];
+  // Por defecto la bolsa de 250G; el sachet de 18G queda como opción.
+  const sizeOf = (p) => sizes[p.id] ?? (p.prices['250G'] != null ? '250G' : p.sizes.find((s) => p.prices[s] != null) ?? p.sizes[0]);
   const itemFor = (p, quantity) => {
     const size = sizeOf(p);
     return {
@@ -133,7 +135,7 @@ export default function ProductSection() {
           <span className="shop-card-brand">{[p.brand, p.region].filter(Boolean).join(' · ')}</span>
         )}
         <h3 className="shop-card-name" title={p.description ?? undefined}>
-          {p.name}{showSizes || size ? <span> ({size})</span> : null}
+          {p.name}{showSizes || size ? <span> ({sizeName(size, t)})</span> : null}
         </h3>
         <p className={`shop-card-price ${price == null ? 'is-na' : ''}`}>{money(price) ?? t('shop.unavailable')}</p>
 
@@ -146,8 +148,9 @@ export default function ProductSection() {
                 className={`shop-size ${size === s ? 'active' : ''}`}
                 aria-pressed={size === s}
                 onClick={(e) => { e.stopPropagation(); setSizes((m) => ({ ...m, [p.id]: s })); choose(p); }}
+                title={s === '18G' ? t('shop.sachetHint') : undefined}
               >
-                {s}
+                {sizeName(s, t)}
               </button>
             ))}
           </div>
@@ -257,7 +260,7 @@ export default function ProductSection() {
               <img src={selected.image || FALLBACK_IMG} alt="" onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }} />
               <div>
                 <span className="shop-buybar-label">{t('shop.selected')}</span>
-                <strong>{selected.name} · {sizeOf(selected)}</strong>
+                <strong>{selected.name} · {sizeName(sizeOf(selected), t)}</strong>
                 <span className="shop-buybar-price">{money(selectedItem.price && selectedItem.price * qty) ?? t('shop.unavailable')}</span>
               </div>
             </div>

@@ -3,7 +3,8 @@
 
 export const PRODUCT_FIELDS = 'id, slug, name, brand, description, variety, region, category, image_url, product_variants(id, label, price, active)';
 
-const COFFEE_ORDER = ['250G', '500G', '1KG'];
+// 18G = sachet de una preparación de AeroPress.
+const COFFEE_ORDER = ['18G', '250G', '500G', '1KG'];
 
 /**
  * [{ id: slug, uuid, category, name, brand, description, variety, region, image,

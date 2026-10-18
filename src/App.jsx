@@ -19,6 +19,7 @@ import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
 import AppSection from './features/esspresale/AppSection.jsx';
+import SheetSection from './shared/layout/SheetSection.jsx';
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -40,21 +41,21 @@ export default function App() {
 
             <AppSection />
 
-            <ProductSection />
+            <SheetSection fig="FIG. 05" name="shop"><ProductSection /></SheetSection>
 
             <Marquee />
 
-            <ColdBrewHero />
+            <SheetSection fig="FIG. 06" name="coldbrew" tone="photo"><ColdBrewHero /></SheetSection>
 
             <Marquee />
 
             <WacBanner />
 
-            <RecipeArchive />
+            <SheetSection fig="FIG. 07" name="recipes"><RecipeArchive /></SheetSection>
 
             <Marquee />
 
-            <Footer />
+            <SheetSection fig="FIG. 08" name="footer" tone="photo"><Footer /></SheetSection>
 
             <CartDrawer />
             <CheckoutModal />
