@@ -2,14 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
-import { SheetFrame } from '../../esspresale/parts.jsx';
 import { money, firstSize } from './RecipeKit.jsx';
 import { isDevice } from '../../../shared/lib/pairing.js';
 import '../../esspresale/esspresale.css';
 
 // Cada receta campeona es un banner como los de la barra (cold brew, latte…):
-// video de fondo, hoja de plano con zonas (formato de redes), el cuadro
-// oscuro del odómetro con la receta y el botón del kit recomendado.
+// video de fondo, el cuadro de vidrio con la receta y el botón del kit recomendado.
 //
 // Video de fondo, en orden: URL guardada con el lápiz (app_config
 // recipe_video_<año>) → /image/video-<año>.mp4 → video de la casa.
@@ -78,7 +76,6 @@ function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onO
     <section ref={ref} className="rb-slide" aria-roledescription="slide" aria-label={`${recipe.year} · ${recipe.name}`} aria-hidden={!active}>
       <RecipeVideo recipe={recipe} index={index} custom={video} active={active} />
       <div className="rb-overlay" aria-hidden="true" />
-      <SheetFrame />
       <SectionEditButton
         section={`Video receta ${recipe.year}`}
         fig={`FIG. 03 — WAC ${recipe.year}`}
