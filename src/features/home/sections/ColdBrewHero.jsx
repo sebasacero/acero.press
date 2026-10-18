@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchSection } from '../../../shared/lib/pageSections.js';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
+import LocationBadge from '../../../shared/layout/LocationBadge.jsx';
 
 const TOTAL_SEGMENTS = 20;
 const AUTO_MS = 6000;
@@ -67,7 +68,7 @@ function ColdBrewSlide({ t, lang, videoRef, slide }) {
       </div>
 
       <div className="hero-copy">
-        <div className="schematic-tag"><span className="dot"></span> {t('location')}</div>
+        <LocationBadge />
         <h1>
           {slide.title1[lang]}<br />
           <div className="logo-unit">

@@ -1023,16 +1023,7 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.6); backdrop-fi
   font-family:'Permanent Marker', cursive; color:var(--magenta-bright); font-size:1.3rem;
   transform:rotate(-6deg); margin-left:-.2rem; text-shadow: 1px 1px 0 rgba(224, 56, 56, 0.25); white-space:nowrap;
 }
-.schematic-tag{
-  font-family:'JetBrains Mono', monospace; font-size:.72rem; color:rgba(255,255,255,.75); letter-spacing:.1em;
-  margin-bottom:1.2rem; display:flex; align-items:center; gap:.6rem;
-}
-.schematic-tag .dot{
-  width:7px; height:7px; border-radius:50%; background:var(--magenta-bright); display:inline-block;
-  animation:pulse 1.6s ease-in-out infinite;
-}
 @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
-@media (prefers-reduced-motion: reduce){ .schematic-tag .dot{ animation:none; } }
 
 /* === Language switcher === */
 .lang-switcher{ display:flex; gap:.3rem; align-items:center; }
@@ -1402,3 +1393,24 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
   .kitb-summary{ position:static; }
   .kitb-options{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }
+
+/* === Botón de ubicación (LocationBadge): en los banners de la barra === */
+.loc-badge-wrap{ position:relative; display:inline-flex; margin-bottom:1.2rem; max-width:100%; }
+.loc-badge{
+  display:inline-flex; align-items:center; gap:10px; max-width:100%;
+  padding:10px 16px 10px 10px; border-radius:10px 16px 10px 16px;
+  background:rgba(12,12,14,.5); backdrop-filter:blur(10px) saturate(120%); -webkit-backdrop-filter:blur(10px) saturate(120%);
+  border:1px solid rgba(255,255,255,.22); color:#fff; text-decoration:none;
+  transition:background .2s ease, transform .2s ease, border-color .2s ease;
+}
+.loc-badge:hover{ background:rgba(222,27,27,.55); border-color:rgba(255,255,255,.4); transform:translateY(-2px); }
+.loc-badge:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+.loc-badge-icon{
+  width:30px; height:30px; flex-shrink:0; border-radius:50%; display:grid; place-items:center;
+  background:var(--magenta-bright); color:#fff; animation:loc-pulse 1.8s ease-in-out infinite;
+}
+@keyframes loc-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,0,0,.55); } 50%{ box-shadow:0 0 0 7px rgba(255,0,0,0); } }
+.loc-badge-text{ display:flex; flex-direction:column; gap:2px; line-height:1.2; min-width:0; }
+.loc-badge-address{ font-family:'JetBrains Mono', monospace; font-size:.74rem; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.loc-badge-cta{ font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.75); font-weight:700; }
+@media (prefers-reduced-motion: reduce){ .loc-badge-icon{ animation:none; } .loc-badge{ transition:none; } }

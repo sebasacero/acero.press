@@ -39,7 +39,7 @@ const translations = {
         panelText: 'Kit, certificación de la receta en la barra de Chapinero y pedidos de tu barrio en la app Esspresale.',
       },
     },
-    hero: { title1: 'COLD BREW.', address: 'Cra. 13 #85-32, Chapinero, Bogotá', addressCta: 'Conoce nuestros granos' },
+    hero: { title1: 'COLD BREW.', address: 'Cra. 13 #85-32, Chapinero, Bogotá', addressCta: 'Conoce nuestros granos', mapsCta: 'Cómo llegar' },
     odometer: {
       figLabel: 'FIG. 02 — RECETA COLD BREW (LATA 355 ML)',
       ratio: 'RATIO 1:6.5',
@@ -270,7 +270,7 @@ const translations = {
         panelText: 'Kit, recipe certification at our Chapinero bar and orders from your neighborhood in the Esspresale app.',
       },
     },
-    hero: { title1: 'COLD BREW.', address: 'Cra. 13 #85-32, Chapinero, Bogotá', addressCta: 'Discover our beans' },
+    hero: { title1: 'COLD BREW.', address: 'Cra. 13 #85-32, Chapinero, Bogotá', addressCta: 'Discover our beans', mapsCta: 'Get directions' },
     odometer: {
       figLabel: 'FIG. 02 — COLD BREW RECIPE (355 ML CAN)',
       ratio: 'RATIO 1:6.5',
@@ -501,7 +501,7 @@ const translations = {
       },
     },
     location: 'ボゴタ · 標高2,600m',
-    hero: { title1: 'コールドブリュー.', address: 'カラ13番 #85-32, チャピネロ, ボゴタ', addressCta: '豆を見る' },
+    hero: { title1: 'コールドブリュー.', address: 'カラ13番 #85-32, チャピネロ, ボゴタ', addressCta: '豆を見る', mapsCta: '道順' },
     odometer: {
       figLabel: '図02 — コールドブリューレシピ（355ml缶）',
       ratio: '比率 1:6.5',
