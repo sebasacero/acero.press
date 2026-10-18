@@ -5,12 +5,6 @@ const translations = {
   es: {
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2.600 msnm',
-    sheet: {
-      shop: { label: 'Tienda · café de especialidad', maker: 'Acero.press' },
-      coldbrew: { label: 'La barra · bebidas de la casa', maker: 'La barra' },
-      recipes: { label: 'Archivo de campeones WAC', maker: 'Campeones WAC' },
-      footer: { label: 'Redes · más café', maker: 'Acero.press' },
-    },
     essp: {
       tabsLabel: 'Banners de Esspresale',
       tabs: { order: 'Pedir café', barista: 'Ser barista' },
@@ -254,12 +248,6 @@ const translations = {
   en: {
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2,600 masl',
-    sheet: {
-      shop: { label: 'Shop · specialty coffee', maker: 'Acero.press' },
-      coldbrew: { label: 'The bar · house drinks', maker: 'The bar' },
-      recipes: { label: 'WAC champions archive', maker: 'WAC champions' },
-      footer: { label: 'Social · more coffee', maker: 'Acero.press' },
-    },
     essp: {
       tabsLabel: 'Esspresale banners',
       tabs: { order: 'Order coffee', barista: 'Be a barista' },
@@ -502,12 +490,6 @@ const translations = {
 
   ja: {
     nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', contact: 'お問い合わせ', app: 'アプリ' },
-    sheet: {
-      shop: { label: 'ショップ · スペシャルティコーヒー', maker: 'Acero.press' },
-      coldbrew: { label: 'バー · ハウスドリンク', maker: 'バー' },
-      recipes: { label: 'WACチャンピオン・アーカイブ', maker: 'WACチャンピオン' },
-      footer: { label: 'SNS · もっとコーヒーを', maker: 'Acero.press' },
-    },
     essp: {
       tabsLabel: 'エスプレセールのバナー',
       tabs: { order: 'コーヒーを注文', barista: 'バリスタになる' },
