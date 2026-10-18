@@ -198,6 +198,7 @@ const translations = {
     },
     footer: { cta: 'Tap for more cafe content!', terms: 'Terms and Policies', copyright: '© 2026 aceropress' },
     whatsapp: { greeting: '¡Hola! Tengo una pregunta sobre acero.press' },
+    coldbrew: { orderCta: 'Pídelo en nuestra tienda', orderMsg: '¡Hola! Quiero pedir un {drink} en la tienda de Acero.press en Chapinero.' },
     account: {
       title: 'Mi cuenta',
       loading: 'Cargando…',
@@ -429,6 +430,7 @@ const translations = {
     },
     footer: { cta: 'Tap for more cafe content!', terms: 'Terms and Policies', copyright: '© 2026 aceropress' },
     whatsapp: { greeting: "Hi! I have a question about acero.press" },
+    coldbrew: { orderCta: 'Order it at our shop', orderMsg: 'Hi! I would like to order a {drink} at the Acero.press shop in Chapinero.' },
     account: {
       title: 'My account',
       loading: 'Loading…',
@@ -660,6 +662,7 @@ const translations = {
     },
     footer: { cta: 'もっとカフェのコンテンツを見る！', terms: '利用規約とポリシー', copyright: '© 2026 aceropress' },
     whatsapp: { greeting: 'こんにちは！acero.pressについて質問があります' },
+    coldbrew: { orderCta: '店舗で注文する', orderMsg: 'こんにちは！チャピネロのAcero.press店舗で{drink}を注文したいです。' },
     account: {
       title: 'マイアカウント',
       loading: '読み込み中…',
