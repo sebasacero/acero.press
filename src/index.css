@@ -1421,6 +1421,10 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 /* Banners de la barra: ubicación + "Pídelo en nuestra tienda" en una fila */
 .bar-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:-28px 0 1.6rem; }
 .bar-actions .loc-badge-wrap{ margin-bottom:0; }
+/* Columna derecha: cuadro de la receta y, debajo, "Pídelo en nuestra tienda" */
+.hero > .bar-panel-col{ position:relative; z-index:2; justify-self:end; width:100%; max-width:420px; display:grid; gap:14px; }
+.bar-panel-col .odometer-panel{ justify-self:stretch; max-width:none; }
+.bar-panel-col .bar-order-btn{ justify-content:space-between; }
 .bar-order-btn{
   display:inline-flex; align-items:center; gap:10px; padding:14px 20px; min-height:52px;
   font-family:'Archivo', sans-serif; font-weight:800; font-size:.74rem; letter-spacing:.14em; text-transform:uppercase;
@@ -1429,5 +1433,6 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 }
 .bar-order-btn:hover{ transform:translate(-1px,-2px); background:var(--ink); border-color:var(--ink); color:var(--cream); }
 .bar-order-btn:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+@media (max-width:900px){ .hero > .bar-panel-col{ justify-self:stretch; max-width:100%; } }
 @media (max-width:700px){ .bar-actions{ margin-top:-12px; } }
 @media (prefers-reduced-motion: reduce){ .bar-order-btn{ transition:none; } }
