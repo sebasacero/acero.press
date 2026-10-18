@@ -1407,22 +1407,27 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 .loc-badge:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
 .loc-badge-icon{
   width:30px; height:30px; flex-shrink:0; border-radius:50%; display:grid; place-items:center;
-  background:var(--magenta-bright); color:#fff; animation:loc-pulse 1.8s ease-in-out infinite;
+  /* Colores del ícono de Google Maps */
+  background:conic-gradient(from 210deg, #4285F4 0 25%, #34A853 0 50%, #FBBC04 0 75%, #EA4335 0 100%);
+  color:#fff; animation:loc-pulse 1.8s ease-in-out infinite;
 }
-@keyframes loc-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,0,0,.55); } 50%{ box-shadow:0 0 0 7px rgba(255,0,0,0); } }
+.loc-badge-icon svg{ filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+@keyframes loc-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(66,133,244,.6); } 50%{ box-shadow:0 0 0 7px rgba(66,133,244,0); } }
 .loc-badge-text{ display:flex; flex-direction:column; gap:2px; line-height:1.2; min-width:0; }
 .loc-badge-address{ font-family:'JetBrains Mono', monospace; font-size:.74rem; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .loc-badge-cta{ font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.75); font-weight:700; }
 @media (prefers-reduced-motion: reduce){ .loc-badge-icon{ animation:none; } .loc-badge{ transition:none; } }
 
-/* Banners de la barra: "Pídelo en nuestra tienda" (abre WhatsApp con la bebida) */
-.fp-links{ margin-top:1.4rem; }
+/* Banners de la barra: ubicación + "Pídelo en nuestra tienda" en una fila */
+.bar-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:-28px 0 1.6rem; }
+.bar-actions .loc-badge-wrap{ margin-bottom:0; }
 .bar-order-btn{
-  display:inline-flex; align-items:center; gap:10px; padding:14px 22px;
-  font-family:'Archivo', sans-serif; font-weight:800; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
-  color:#fff; background:var(--magenta-bright); border:2px solid var(--magenta-bright); border-radius:8px 14px 8px 14px;
-  text-decoration:none; box-shadow:3px 4px 0 rgba(0,0,0,.35); transition:transform .15s ease, background .15s ease;
+  display:inline-flex; align-items:center; gap:10px; padding:14px 20px; min-height:52px;
+  font-family:'Archivo', sans-serif; font-weight:800; font-size:.74rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink); background:var(--cream); border:2px solid var(--cream); border-radius:8px 14px 8px 14px;
+  text-decoration:none; box-shadow:3px 4px 0 rgba(0,0,0,.35); transition:transform .15s ease, background .15s ease, color .15s ease;
 }
-.bar-order-btn:hover{ transform:translate(-1px,-2px); background:#d81414; border-color:#d81414; }
+.bar-order-btn:hover{ transform:translate(-1px,-2px); background:var(--ink); border-color:var(--ink); color:var(--cream); }
 .bar-order-btn:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+@media (max-width:700px){ .bar-actions{ margin-top:-12px; } }
 @media (prefers-reduced-motion: reduce){ .bar-order-btn{ transition:none; } }
