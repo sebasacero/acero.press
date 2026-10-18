@@ -1,73 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-import { supabase } from '../../shared/lib/supabaseClient.js';
 import { ClientPhone, BaristaPhone } from './AppPhones.jsx';
 import { APP_ROLE_EVENT } from './parts.jsx';
 import './esspresale.css';
-
-const digits = (s) => String(s).replace(/\D/g, '');
 
 const PATHS = [
   { role: 'cliente', tab: 'order', Phone: ClientPhone },
   { role: 'barista', tab: 'barista', Phone: BaristaPhone },
 ];
 
-/** Sección #app: los dos caminos de Esspresale y la lista de espera. */
+/** Sección #app: los dos caminos de Esspresale en un carrusel. */
 export default function AppSection() {
-  const { t, lang } = useLanguage();
-  const f = (key) => t(`essp.app.form.${key}`);
+  const { t } = useLanguage();
   const [role, setRole] = useState('cliente');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [zone, setZone] = useState('');
-  const [hasAeropress, setHasAeropress] = useState(null);
-  const [status, setStatus] = useState({ kind: 'idle', message: '' });
-  const nameRef = useRef(null);
 
   // Los botones del banner llegan aquí con el camino ya elegido.
   useEffect(() => {
     const onRole = (e) => {
       if (e.detail === 'cliente' || e.detail === 'barista') setRole(e.detail);
-      setTimeout(() => nameRef.current?.focus({ preventScroll: true }), 600);
     };
     window.addEventListener(APP_ROLE_EVENT, onRole);
     return () => window.removeEventListener(APP_ROLE_EVENT, onRole);
   }, []);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    const cleanName = name.trim();
-    const phoneDigits = digits(phone);
-    if (cleanName.length < 2) return setStatus({ kind: 'error', message: f('invalidName') });
-    if (phoneDigits.length < 7 || phoneDigits.length > 15) return setStatus({ kind: 'error', message: f('invalidPhone') });
-
-    setStatus({ kind: 'sending', message: '' });
-    const { error } = await supabase.from('app_waitlist').insert({
-      role,
-      name: cleanName.slice(0, 80),
-      phone: phoneDigits,
-      zone: zone.trim().slice(0, 80) || null,
-      has_aeropress: role === 'barista' ? hasAeropress : null,
-      lang,
-    });
-    if (error && error.code !== '23505') {
-      console.error(error);
-      return setStatus({ kind: 'error', message: f('error') });
-    }
-    setStatus({
-      kind: 'done',
-      message: error ? f('dup') : f('done').replace('{name}', cleanName.split(' ')[0]).replace('{phone}', phone.trim()),
-    });
-    if (!error) {
-      setName('');
-      setPhone('');
-      setZone('');
-      setHasAeropress(null);
-    }
-  };
-
-  // Carrusel de los dos caminos: la diapositiva visible es el camino elegido
-  // (también en el formulario), así no hay dos estados que se contradigan.
+  // La diapositiva visible es el camino elegido (pestañas, flechas o banner).
   const slide = Math.max(0, PATHS.findIndex((p) => p.role === role));
   const step = (d) => setRole(PATHS[(slide + d + PATHS.length) % PATHS.length].role);
   const touchX = useRef(null);
@@ -94,7 +50,6 @@ export default function AppSection() {
         </p>
       </div>
 
-      <div className="essp-app-body">
       <div className="essp-paths" aria-roledescription="carousel" aria-label={t('essp.tabsLabel')}>
         <div className="essp-paths-head">
           <div className="essp-paths-tabs" role="tablist">
@@ -138,59 +93,6 @@ export default function AppSection() {
         </div>
       </div>
 
-      <form className="essp-wait" onSubmit={submit} noValidate>
-        <div className="essp-wait-head">
-          <span className="essp-wait-fig">{f('fig')}</span>
-          <h3>{f('title')}</h3>
-          <p>{f('sub')}</p>
-        </div>
-
-        <div className="essp-wait-grid">
-          <fieldset className="essp-wait-role">
-            <legend>{f('role')}</legend>
-            {[['cliente', t('essp.tabs.order')], ['barista', t('essp.tabs.barista')]].map(([value, label]) => (
-              <label key={value} className={role === value ? 'is-on' : ''}>
-                <input type="radio" name="essp-role" value={value} checked={role === value} onChange={() => setRole(value)} />
-                {label}
-              </label>
-            ))}
-          </fieldset>
-
-          <label className="essp-field">
-            <span>{f('name')}</span>
-            <input id="essp-name" ref={nameRef} value={name} onChange={(e) => setName(e.target.value)} autoComplete="given-name" maxLength={80} required />
-          </label>
-          <label className="essp-field">
-            <span>{f('phone')}</span>
-            <input id="essp-phone" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder={f('phoneHint')} maxLength={22} required />
-          </label>
-          <label className="essp-field">
-            <span>{f('zone')}</span>
-            <input id="essp-zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder={f('zoneHint')} maxLength={80} />
-          </label>
-
-          {role === 'barista' && (
-            <fieldset className="essp-wait-yn">
-              <legend>{f('aeropress')}</legend>
-              {[[true, f('yes')], [false, f('no')]].map(([value, label]) => (
-                <label key={String(value)} className={hasAeropress === value ? 'is-on' : ''}>
-                  <input type="radio" name="essp-aeropress" checked={hasAeropress === value} onChange={() => setHasAeropress(value)} />
-                  {label}
-                </label>
-              ))}
-            </fieldset>
-          )}
-        </div>
-
-        <div className="essp-wait-foot">
-          <button type="submit" className="essp-btn" disabled={status.kind === 'sending'}>
-            {status.kind === 'sending' ? f('sending') : f('submit')} <span aria-hidden="true">→</span>
-          </button>
-          <p className="essp-wait-privacy">{f('privacy')}</p>
-        </div>
-        <p className={`essp-wait-status is-${status.kind}`} role="status" aria-live="polite">{status.message}</p>
-      </form>
-      </div>
     </section>
   );
 }
