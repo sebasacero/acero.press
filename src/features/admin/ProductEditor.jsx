@@ -7,7 +7,8 @@ export const CATEGORIES = [
   { id: 'aeropress_equipment', label: 'Equipo AeroPress', hint: 'Sale en "Equipo AeroPress".' },
 ];
 export const HOUSE_BRAND = 'Acero.press';
-const COFFEE_SIZES = ['250G', '500G', '1KG'];
+// 18G = sachet de una preparación de AeroPress.
+const COFFEE_SIZES = ['18G', '250G', '500G', '1KG'];
 
 const slugify = (s) =>
   s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
@@ -35,6 +36,8 @@ export default function ProductEditor({ product, brands = [], varieties = [], re
       ? [...product.product_variants]
           .sort((a, b) => Number(a.price) - Number(b.price))
           .map((v) => ({ key: v.id, id: v.id, label: v.label, price: String(v.price), active: v.active }))
+          // Café sin sachet: se ofrece la fila 18G vacía; solo se crea si le pones precio.
+          .concat(product.category === 'coffee_bag' && !product.product_variants.some((v) => v.label.toUpperCase() === '18G') ? [newRow('18G')] : [])
       : COFFEE_SIZES.map((s) => newRow(s))
   );
   const [uploading, setUploading] = useState(false);
@@ -69,7 +72,8 @@ export default function ProductEditor({ product, brands = [], varieties = [], re
     set('image_url', supabase.storage.from('marketing').getPublicUrl(path).data.publicUrl);
   };
 
-  const live = variants.filter((v) => v.label.trim() || v.price !== '');
+  // Una presentación nueva sin precio (p. ej. la fila 18G sugerida) no cuenta: no se crea.
+  const live = variants.filter((v) => v.price !== '' || (v.id && v.label.trim()));
   const problems = [
     !form.name.trim() && 'Falta el nombre.',
     live.length === 0 && 'Agrega al menos una presentación con precio.',

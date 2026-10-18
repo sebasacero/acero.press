@@ -4,8 +4,8 @@ import { shapeProducts } from '../../../shared/lib/productShape.js';
 import { autoPairAll } from '../../../shared/lib/pairing.js';
 import recipes from '../../recipes/data/recipes.js';
 
-const COFFEE_ORDER = ['250G', '500G', '1KG'];
-// 250G, 500G, 1KG primero; el resto, por precio.
+const COFFEE_ORDER = ['18G', '250G', '500G', '1KG'];
+// 18G (sachet), 250G, 500G, 1KG primero; el resto, por precio.
 const rank = (v) => (COFFEE_ORDER.includes(v.label) ? COFFEE_ORDER.indexOf(v.label) : COFFEE_ORDER.length);
 const sizesOf = (p) =>
   [...(p?.product_variants ?? [])]

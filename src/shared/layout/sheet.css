@@ -1,0 +1,128 @@
+/* === Hoja de plano para las secciones del sitio (SheetSection) ===
+   El mismo lenguaje de los formatos de redes y del banner de portada:
+   papel cuadriculado, marco doble con zonas, cota FIG., panel oscuro y cajetín.
+   Las reglas de abajo ajustan cada sección solo cuando va dentro de la hoja. */
+
+.sheet-sec {
+  position: relative;
+  container-type: inline-size;
+  --essp-fg: var(--ink);
+  --essp-soft: var(--ink-soft);
+  --essp-line: var(--ink);
+  --essp-block: rgba(237, 230, 211, .95);
+  color: var(--essp-fg);
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(42, 53, 80, .16) 0 1px, transparent 1px 135px),
+    repeating-linear-gradient(90deg, rgba(42, 53, 80, .16) 0 1px, transparent 1px 135px),
+    repeating-linear-gradient(0deg, rgba(42, 53, 80, .07) 0 1px, transparent 1px 27px),
+    repeating-linear-gradient(90deg, rgba(42, 53, 80, .07) 0 1px, transparent 1px 27px);
+  padding: 46px 58px 46px;
+  display: grid;
+  gap: 14px;
+}
+.sheet-sec--photo {
+  --essp-fg: var(--cream);
+  --essp-soft: rgba(247, 243, 232, .75);
+  --essp-line: rgba(247, 243, 232, .8);
+  --essp-block: rgba(14, 15, 19, .72);
+  background-color: #0c0c0e;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 135px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 135px);
+}
+.sheet-sec > .essp-sheet { z-index: 3; }
+.sheet-sec-head, .sheet-sec-dash, .sheet-sec-body, .sheet-sec-block { position: relative; z-index: 2; }
+.sheet-sec-head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .06em;
+}
+.sheet-sec-fig { font-weight: 700; border: 2px solid var(--essp-line); padding: 3px 8px; }
+.sheet-sec-label { font-weight: 700; text-transform: uppercase; }
+.sheet-sec-loc { margin-left: auto; color: var(--essp-soft); display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+.sheet-sec-loc::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--magenta-bright); }
+.sheet-sec-body { min-width: 0; }
+.sheet-sec-block { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@container (max-width: 760px) {
+  .sheet-sec { padding: 28px 22px 28px; }
+  .sheet-sec > .essp-sheet { inset: 8px; }
+  .sheet-sec > .essp-sheet::after { inset: 7px; }
+  .sheet-sec-loc { display: none; }
+  .sheet-sec-block { grid-template-columns: 1fr 1fr; }
+  .sheet-sec-block > div:nth-child(3) { border-left: none; border-top: 1.5px solid var(--essp-line); }
+  .sheet-sec-block > div:nth-child(4) { border-top: 1.5px solid var(--essp-line); }
+  .sheet-sec-block b { font-size: 16px; }
+}
+
+/* --- Tienda --- */
+.sheet-sec .product-section .product-banner { display: none; }
+.sheet-sec .shop-inner { max-width: none; padding: 8px 0 12px; }
+.sheet-sec .shop-rule { display: none; }
+.sheet-sec .shop-kicker { text-align: left; margin-bottom: 10px; color: var(--essp-soft); }
+.sheet-sec .shop-title {
+  text-align: left; font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+  font-size: clamp(2rem, 4.6cqi, 3.6rem); line-height: 1; letter-spacing: -.01em; color: var(--ink); margin-bottom: 22px;
+}
+.sheet-sec .shop-tabs { justify-content: flex-start; gap: 0; margin: 0 0 18px; }
+.sheet-sec .shop-tabs button { border-radius: 0; border: 2px solid var(--ink); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .08em; }
+.sheet-sec .shop-tabs button + button { border-left: none; }
+.sheet-sec .shop-tabs button.is-on { background: var(--magenta-bright); border-color: var(--magenta-bright); color: #fff; }
+.sheet-sec .shop-filters { justify-content: flex-start; }
+.sheet-sec .shop-filter select { border-radius: 0; border: 2px solid var(--ink); background-color: var(--cream); }
+.sheet-sec .shop-sub { text-align: left; margin-left: 0; }
+.sheet-sec .shop-card {
+  border-radius: 0; border: 2px solid var(--ink); background: rgba(247, 243, 232, .96);
+}
+.sheet-sec .shop-card.is-selected { box-shadow: 5px 5px 0 var(--magenta-bright); border-color: var(--ink); }
+.sheet-sec .shop-card-media img { border-radius: 0; }
+.sheet-sec .shop-card-name { font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; }
+.sheet-sec .shop-card-price { font-family: 'JetBrains Mono', monospace; color: var(--magenta-bright); font-weight: 700; }
+.sheet-sec .shop-size { border-radius: 0; border: 1.5px solid var(--ink); font-family: 'JetBrains Mono', monospace; }
+.sheet-sec .shop-size.active { background: var(--ink); border-color: var(--ink); }
+.sheet-sec .shop-add { border-radius: 0; border: 2px solid var(--magenta-bright); background: var(--magenta-bright); color: #fff; font-family: 'Archivo', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; }
+.sheet-sec .shop-add:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
+.sheet-sec .shop-arrow { border-radius: 0; border: 2px solid var(--ink); background: var(--cream); }
+/* Barra de compra = panel oscuro del odómetro */
+.sheet-sec .shop-buybar {
+  border-radius: 0; background: rgba(14, 15, 19, .94); color: #F2F2F0; border: 1.5px solid rgba(255, 255, 255, .18);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .35); max-width: none;
+}
+.sheet-sec .shop-buybar-label { color: rgba(255, 255, 255, .55); }
+.sheet-sec .shop-buybar-price { color: var(--magenta-bright); font-family: 'JetBrains Mono', monospace; }
+.sheet-sec .shop-buybar-item img { border-radius: 0; }
+.sheet-sec .shop-buybar .quantity-selector { border-radius: 0; }
+.sheet-sec .shop-buybar .btn-buy-shop { border-radius: 0; }
+.sheet-sec .payment-worldwide-note, .sheet-sec .shop-links { text-align: left; justify-content: flex-start; }
+
+/* --- Cold brew (hoja oscura sobre el video) --- */
+.sheet-sec--photo .coldbrew-carousel { border: 2px solid var(--essp-line); }
+.sheet-sec--photo .hero { min-height: min(78vh, 720px); }
+.sheet-sec--photo .odometer-panel { border-radius: 0; }
+
+/* --- Recetas --- */
+.sheet-sec .section-label { margin: 6px 0 18px; padding: 0; }
+.sheet-sec .section-label .num { border-radius: 0; }
+.sheet-sec .sp { padding: 0 0 1rem; }
+.sheet-sec .sec-h2 { font-size: clamp(2rem, 4.6cqi, 3.6rem); line-height: 1; letter-spacing: -.01em; color: var(--ink); }
+.sheet-sec .recipe-card { border: 2px solid var(--ink); border-radius: 0; background: rgba(247, 243, 232, .97); }
+.sheet-sec .recipe-card:hover { border-color: var(--magenta-bright); }
+.sheet-sec .recipe-pair { border-radius: 0; border: 1.5px solid var(--ink); background: rgba(237, 230, 211, .9); }
+.sheet-sec .recipe-pair-sizes button { border-radius: 0; border-color: var(--ink); }
+.sheet-sec .recipe-pair-sizes button.active { background: var(--ink); border-color: var(--ink); }
+.sheet-sec .recipe-pair-price { color: var(--magenta-bright); font-family: 'JetBrains Mono', monospace; }
+.sheet-sec .recipe-kit-btn { border-radius: 0; }
+.sheet-sec .recipe-arrow { border-radius: 0; border: 2px solid var(--ink); }
+
+/* Franjas grandes (BEANS / WAC): tinta y crema, como una cota del plano */
+div.product-banner { background-color: var(--ink); border-top: 3px solid var(--magenta-bright); border-bottom: 3px solid var(--magenta-bright); }
+div.product-banner .banner-text, div.product-banner .banner-text-wac {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--cream); letter-spacing: -.01em;
+}
+
+/* --- Pie de página (hoja oscura sobre el video) --- */
+.sheet-sec--photo .hero-footer { border: 2px solid var(--essp-line); }
+.sheet-sec--photo .footer-hero-content h2 { font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; }
+.sheet-sec--photo .social-icons a { border-radius: 0; }
+.sheet-sec--photo .footer-bottom { background: none; padding-left: 0; padding-right: 0; }
+.sheet-sec--photo .footer-bottom p, .sheet-sec--photo .footer-bottom a { color: var(--essp-soft); font-family: 'JetBrains Mono', monospace; }
