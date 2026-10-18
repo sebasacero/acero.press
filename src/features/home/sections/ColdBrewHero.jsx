@@ -3,6 +3,19 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchSection } from '../../../shared/lib/pageSections.js';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
 import LocationBadge from '../../../shared/layout/LocationBadge.jsx';
+import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
+
+const FALLBACK_WHATSAPP_NUMBER = '573152125327';
+
+// "COLD BREW." → "Cold brew" para el mensaje.
+const drinkName = (title = '') => {
+  const s = String(title).replace(/\.\s*$/, '').toLocaleLowerCase('es');
+  return s.charAt(0).toLocaleUpperCase('es') + s.slice(1);
+};
+
+/** Mensaje de WhatsApp para pedir la bebida del banner en la barra de Chapinero. */
+const orderHref = (number, t, drink) =>
+  `https://wa.me/${number}?text=${encodeURIComponent(t('coldbrew.orderMsg').replace('{drink}', drink))}`;
 
 const TOTAL_SEGMENTS = 20;
 const AUTO_MS = 6000;
@@ -55,7 +68,7 @@ const FALLBACK_SLIDES = [
   },
 ];
 
-function ColdBrewSlide({ t, lang, videoRef, slide }) {
+function ColdBrewSlide({ t, lang, videoRef, slide, whatsapp }) {
   const filledCount = Math.round((slide.ratioPercent / 100) * TOTAL_SEGMENTS);
 
   return (
@@ -76,7 +89,11 @@ function ColdBrewSlide({ t, lang, videoRef, slide }) {
             <span className="logo-press">.press</span>
           </div>
         </h1>
-        <div className="fp-links"></div>
+        <div className="fp-links">
+          <a className="bar-order-btn" href={orderHref(whatsapp, t, drinkName(slide.title1?.[lang] ?? slide.title1?.es))} target="_blank" rel="noopener noreferrer">
+            {t('coldbrew.orderCta')} <span aria-hidden="true">→</span>
+          </a>
+        </div>
       </div>
 
       <div className="odometer-panel">
@@ -120,6 +137,11 @@ export default function ColdBrewHero() {
   const [index, setIndex] = useState(0);
   const timerRef = useRef(null);
   const videoRefs = useRef([]);
+  const [whatsapp, setWhatsapp] = useState(FALLBACK_WHATSAPP_NUMBER);
+
+  useEffect(() => {
+    fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setWhatsapp(n || FALLBACK_WHATSAPP_NUMBER));
+  }, []);
 
   const load = useCallback(() => {
     fetchSection('cold_brew').then((section) => {
@@ -158,7 +180,7 @@ export default function ColdBrewHero() {
       <div className="coldbrew-carousel-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         {slides.map((s, i) => (
           <div className="coldbrew-slide" key={i}>
-            <ColdBrewSlide t={t} lang={lang} videoRef={(el) => (videoRefs.current[i] = el)} slide={s} />
+            <ColdBrewSlide t={t} lang={lang} videoRef={(el) => (videoRefs.current[i] = el)} slide={s} whatsapp={whatsapp} />
           </div>
         ))}
       </div>
