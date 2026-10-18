@@ -83,9 +83,6 @@ function ColdBrewSlide({ t, lang, videoRef, slide, whatsapp }) {
       <div className="hero-copy">
         <div className="bar-actions">
           <LocationBadge />
-          <a className="bar-order-btn" href={orderHref(whatsapp, t, drinkName(slide.title1?.[lang] ?? slide.title1?.es))} target="_blank" rel="noopener noreferrer">
-            {t('coldbrew.orderCta')} <span aria-hidden="true">→</span>
-          </a>
         </div>
         <h1>
           {slide.title1[lang]}<br />
@@ -96,6 +93,7 @@ function ColdBrewSlide({ t, lang, videoRef, slide, whatsapp }) {
         </h1>
       </div>
 
+      <div className="bar-panel-col">
       <div className="odometer-panel">
         <div className="cota cota-top">
           <span className="annot">{slide.figLabel[lang]}</span>
@@ -126,6 +124,10 @@ function ColdBrewSlide({ t, lang, videoRef, slide, whatsapp }) {
             <span className="price-value">{money(slide.price)} <small>COP</small></span>
           </div>
         )}
+      </div>
+        <a className="bar-order-btn" href={orderHref(whatsapp, t, drinkName(slide.title1?.[lang] ?? slide.title1?.es))} target="_blank" rel="noopener noreferrer">
+          {t('coldbrew.orderCta')} <span aria-hidden="true">→</span>
+        </a>
       </div>
     </div>
   );
