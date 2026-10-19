@@ -1,12 +1,12 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import translations from '../../i18n/translations.js';
 
-// Hoja de instrucciones copiada del folleto impreso de AeroPress: título en
-// negrita con la temperatura en rojo y la posición en azul, pasos numerados
-// con dibujos de línea (manos, cámara con ①②③, taza acanalada), columna de
-// datos a la derecha separada por una raya y, abajo, el doblez con el título
-// en los otros idiomas. El dibujo se elige por el tipo de paso (leído del
-// texto en español; los 3 idiomas tienen los mismos pasos).
+// Hoja de instrucciones con la estructura del folleto impreso de AeroPress y
+// el estilo de la página — "plano técnico térmico": línea fina sobre papel
+// con cuadrícula (blueprint), piezas metálicas en cromo y el agua pintada con
+// el color de un sensor térmico según la temperatura de la receta. El dibujo
+// se elige por el tipo de paso (leído del texto en español; los 3 idiomas
+// tienen los mismos pasos).
 
 const KINDS = [
   ['serve', /^(servir|enfriar|probar)/i],
@@ -26,6 +26,18 @@ const kindOf = (es = '') => (KINDS.find(([, re]) => re.test(es)) ?? ['serve'])[0
 const artOf = (recipe, i) => {
   const kind = kindOf(recipe.steps.es[i]);
   return kind === 'setup' && recipe.position === 'Upright' ? 'upright' : kind;
+};
+
+// Rampa de sensor térmico: 20 °C (ambiente, azul) → 100 °C (hirviendo, rojo).
+const HEAT = [[43, 89, 195], [0, 166, 200], [63, 196, 122], [255, 210, 63], [255, 138, 31], [249, 31, 31]];
+const HEAT_MIN = 20;
+const HEAT_MAX = 100;
+const heatPos = (temp) => Math.max(0, Math.min(1, (parseFloat(temp) - HEAT_MIN) / (HEAT_MAX - HEAT_MIN)));
+const heatColor = (temp) => {
+  const x = heatPos(temp) * (HEAT.length - 1);
+  const i = Math.min(HEAT.length - 2, Math.floor(x));
+  const f = x - i;
+  return `rgb(${HEAT[i].map((c, k) => Math.round(c + (HEAT[i + 1][k] - c) * f)).join(',')})`;
 };
 
 // Temperatura (rojo), tiempo (azul) y gramos (negrita), en es/en/ja.
@@ -75,7 +87,7 @@ const Chamber = ({ x = 50, y, w = 40, h, flip = false }) => {
 };
 const Cap = ({ x = 46, y, w = 48 }) => (
   <g>
-    <path d={`M${x} ${y}h${w}v6a3 3 0 0 1-3 3H${x + 3}a3 3 0 0 1-3-3Z`} />
+    <path className="rs-chrome" d={`M${x} ${y}h${w}v6a3 3 0 0 1-3 3H${x + 3}a3 3 0 0 1-3-3Z`} />
     <path d={`M${x + 6} ${y + 2}v5M${x + 12} ${y + 2}v5M${x + 18} ${y + 2}v5M${x + 24} ${y + 2}v5M${x + 30} ${y + 2}v5M${x + 36} ${y + 2}v5M${x + 42} ${y + 2}v5`} className="rs-thin" />
   </g>
 );
@@ -108,7 +120,7 @@ const Pinch = () => (
 );
 const Jug = () => (
   <g>
-    <path d="M84 6h32l-5 30H89Z" className="rs-hand" />
+    <path d="M84 6h32l-5 30H89Z" className="rs-chrome" />
     <path d="M116 12c11 0 11 17-3 17" />
     <path d="M84 6l-6 5 7 2" />
     <path className="rs-thin" d="M92 16h8M92 22h6M92 28h8" />
@@ -120,7 +132,7 @@ const ART = {
     <>
       <Chamber y={10} h={74} flip />
       <rect x="54" y="58" width="32" height="44" rx="2" />
-      <path d="M46 102h48v7H46Z" />
+      <path d="M46 102h48v7H46Z" className="rs-chrome" />
       <Arrow d="M110 30a30 30 0 0 1 0 50" head="M110 80l-7-1m7 1 0-7" />
     </>
   ),
@@ -144,8 +156,8 @@ const ART = {
   ),
   grind: (
     <>
-      <rect x="54" y="36" width="32" height="56" rx="5" />
-      <path d="M58 36v-7h24v7M70 29V16h34" />
+      <rect x="54" y="36" width="32" height="56" rx="5" className="rs-chrome" />
+      <path d="M58 36v-7h24v7M70 29V16h34" className="rs-chrome" />
       <circle cx="108" cy="16" r="5" />
       <path className="rs-thin" d="M58 52h24M58 58h24" />
       <path className="rs-dots" d="M64 98v4m6-2v4m6-6v4m-9 8v3m6-2v3" />
@@ -202,7 +214,7 @@ const ART = {
   ),
   press: (
     <>
-      <path d="M46 22h48v6H46Z" />
+      <path d="M46 22h48v6H46Z" className="rs-chrome" />
       <rect x="54" y="28" width="32" height="20" rx="2" />
       <PalmDown />
       <Chamber y={40} h={40} />
@@ -235,9 +247,26 @@ export default function RecipeSheet({ recipe }) {
   const steps = recipe.steps[lang] ?? recipe.steps.es;
   const pos = t(`position.${recipe.position}`);
   const others = ['es', 'en', 'ja'].filter((l) => l !== lang);
+  const heat = heatColor(recipe.temp);
 
   return (
-    <section className="rs" lang={lang} aria-labelledby={`rs-${recipe.year}`}>
+    <section className="rs" lang={lang} aria-labelledby={`rs-${recipe.year}`} style={{ '--rs-heat': heat }}>
+      {/* Degradados compartidos por los dibujos: cromo y agua a la temperatura de la receta. */}
+      <svg width="0" height="0" className="rs-defs" aria-hidden="true">
+        <defs>
+          <linearGradient id="rs-chrome" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#8d939a" />
+            <stop offset=".22" stopColor="#f4f5f6" />
+            <stop offset=".45" stopColor="#b9bec4" />
+            <stop offset=".62" stopColor="#ffffff" />
+            <stop offset="1" stopColor="#7d838a" />
+          </linearGradient>
+          <linearGradient id="rs-heat" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={heat} stopOpacity=".95" />
+            <stop offset="1" stopColor={heat} stopOpacity=".35" />
+          </linearGradient>
+        </defs>
+      </svg>
       <div className="rs-sheet">
         <div className="rs-main">
           <h4 id={`rs-${recipe.year}`} className="rs-title">
@@ -246,8 +275,11 @@ export default function RecipeSheet({ recipe }) {
           <ol className="rs-steps">
             {steps.map((step, i) => (
               <li key={i} className="rs-step">
-                <svg className="rs-art" viewBox="0 0 140 120" aria-hidden="true">{ART[artOf(recipe, i)]}</svg>
-                <span className="rs-n">{i + 1}</span>
+                <div className="rs-cell">
+                  <span className="rs-fig">FIG. {String(i + 1).padStart(2, '0')} — {t(`sheet.kind.${artOf(recipe, i)}`)}</span>
+                  <svg className="rs-art" viewBox="0 0 140 120" aria-hidden="true">{ART[artOf(recipe, i)]}</svg>
+                </div>
+                <span className="rs-n">{String(i + 1).padStart(2, '0')}</span>
                 <p><Marked text={step} /></p>
               </li>
             ))}
@@ -264,6 +296,11 @@ export default function RecipeSheet({ recipe }) {
             <p key={e.label}><b>{t(`equipmentLabels.${e.label}`)}:</b> {e.value[lang]}</p>
           ))}
           <p className="rs-pos"><b>{t('modal.position')}:</b> <span className="rs-time">{pos}</span></p>
+          <div className="rs-sensor" role="img" aria-label={`${t('modal.temp')} ${recipe.temp}`}>
+            <span className="rs-sensor-label">{t('sheet.sensor')}</span>
+            <div className="rs-sensor-bar"><i style={{ left: `${heatPos(recipe.temp) * 100}%` }} /></div>
+            <div className="rs-sensor-scale"><span>{HEAT_MIN}°C</span><b style={{ color: heat }}>{recipe.temp}</b><span>{HEAT_MAX}°C</span></div>
+          </div>
           <hr />
           <p className="rs-coffee-note"><b><i>{t('sheet.coffee')}:</i></b> {recipe.coffee[lang]}</p>
           <hr />

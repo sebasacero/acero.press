@@ -1507,53 +1507,74 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
   .rb-slide .rb-panel, .rb-tag, .rb-full{ background:rgba(20,20,24,.6); }
 }
 
-/* Hoja de instrucciones de la receta: copia del folleto impreso de AeroPress */
-.rs{ --rs-red:#9b2f45; --rs-blue:#2f4475; --rs-ink:#1b1b1d; margin-top:.4rem; border-radius:2px; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.08), 0 10px 30px rgba(0,0,0,.18); background:#ececea;
-  font-family:'Myriad Pro','Segoe UI','Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif; color:var(--rs-ink); }
-.rs-sheet{ display:grid; grid-template-columns:minmax(0,1fr) 230px; padding:1.6rem 0 1.4rem 1.6rem; background:linear-gradient(180deg,#f1f1ef,#e9e9e6); }
-.rs-main{ padding-right:1.3rem; border-right:1.5px solid var(--rs-ink); min-width:0; }
-.rs-title{ font:inherit; font-size:1.35rem; font-weight:800; line-height:1.25; letter-spacing:-.01em; text-transform:none; margin:0 0 1.2rem; color:var(--rs-ink); }
+/* Hoja de instrucciones de la receta — "plano técnico térmico":
+   estructura del folleto de AeroPress, papel con cuadrícula, cromo y sensor. */
+.rs{ --rs-red:#f91f1f; --rs-blue:#2b59c3; --rs-ink:#14161a; --rs-line:rgba(20,22,26,.1); margin-top:.4rem; border:1.5px solid var(--rs-ink); border-radius:2px; overflow:hidden; color:var(--rs-ink);
+  font-family:'Space Grotesk','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background-color:#f3f1ec; background-image:linear-gradient(var(--rs-line) 1px, transparent 1px), linear-gradient(90deg, var(--rs-line) 1px, transparent 1px); background-size:20px 20px; }
+.rs-defs{ position:absolute; }
+.rs-sheet{ display:grid; grid-template-columns:minmax(0,1fr) 240px; padding:1.5rem 0 1.3rem 1.5rem; }
+.rs-main{ padding-right:1.3rem; border-right:1.5px dashed var(--rs-ink); min-width:0; }
+.rs-title{ font:inherit; font-size:1.3rem; font-weight:700; line-height:1.2; text-transform:uppercase; letter-spacing:-.005em; margin:0 0 1.2rem; color:var(--rs-ink); }
 .rs-title sup{ font-size:.5em; vertical-align:super; }
-.rs-hot{ color:var(--rs-red); font-weight:800; }
-.rs-time{ color:var(--rs-blue); font-weight:800; }
-.rs-dose{ font-weight:800; }
-.rs-steps{ list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:1.4rem 1.3rem; }
+.rs-hot{ color:var(--rs-red); font-weight:700; }
+.rs-time{ color:var(--rs-blue); font-weight:700; }
+.rs-dose{ font-weight:700; }
+.rs-steps{ list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:1.3rem 1.1rem; }
 .rs-step{ display:grid; grid-template-rows:auto auto 1fr; align-content:start; }
-.rs-art{ width:100%; max-width:150px; height:auto; aspect-ratio:7/6; fill:none; stroke:#2b2b2d; stroke-width:1.3; stroke-linecap:round; stroke-linejoin:round; justify-self:center; }
-.rs-art .rs-thin{ stroke-width:.7; stroke:#555; }
-.rs-art .rs-fill{ fill:#3a3532; stroke:#2b2b2d; }
-.rs-art .rs-coffee{ fill:#2f2a28; stroke:none; }
-.rs-art .rs-water{ fill:rgba(60,55,52,.14); stroke:none; }
-.rs-art .rs-paper{ fill:#6f625c; stroke:#2b2b2d; }
-.rs-art .rs-hand{ fill:#f1f1ef; }
-.rs-art .rs-arrow{ stroke:#2b2b2d; stroke-width:1.2; }
-.rs-art .rs-head{ stroke-width:1.4; }
-.rs-art .rs-stream{ stroke:#5c514c; stroke-width:2.6; }
-.rs-art .rs-dots{ stroke:#3a3532; stroke-width:2.6; stroke-dasharray:1 4; }
-.rs-art .rs-steam{ stroke:#9a9a9a; }
-.rs-art text{ stroke:none; fill:#2b2b2d; font-family:Arial, sans-serif; }
-.rs-art .rs-svg-num{ font-size:4.6px; font-weight:700; text-anchor:middle; }
-.rs-art .rs-svg-brand{ font-size:5px; font-weight:700; letter-spacing:.06em; text-anchor:middle; dominant-baseline:middle; }
-.rs-n{ font-weight:800; font-size:1.05rem; margin-top:.35rem; line-height:1.2; }
-.rs-step p{ margin:.15rem 0 0; font-size:.84rem; font-weight:700; line-height:1.4; color:var(--rs-ink); }
-.rs-side{ padding:0 1.3rem 0 1.2rem; font-size:.74rem; line-height:1.5; color:#3a3a3c; display:grid; align-content:start; gap:.55rem; }
-.rs-side h4{ font:inherit; font-size:1.3rem; font-weight:800; margin:0 0 .3rem; text-transform:none; letter-spacing:0; color:var(--rs-ink); }
+/* Celda de plano: marcas de esquina y etiqueta FIG. */
+.rs-cell{ position:relative; padding:1.35rem .5rem .4rem; background:rgba(255,255,255,.55);
+  background-image:
+    linear-gradient(var(--rs-ink),var(--rs-ink)), linear-gradient(var(--rs-ink),var(--rs-ink)),
+    linear-gradient(var(--rs-ink),var(--rs-ink)), linear-gradient(var(--rs-ink),var(--rs-ink)),
+    linear-gradient(var(--rs-ink),var(--rs-ink)), linear-gradient(var(--rs-ink),var(--rs-ink)),
+    linear-gradient(var(--rs-ink),var(--rs-ink)), linear-gradient(var(--rs-ink),var(--rs-ink));
+  background-repeat:no-repeat;
+  background-size:10px 1.5px,1.5px 10px,10px 1.5px,1.5px 10px,10px 1.5px,1.5px 10px,10px 1.5px,1.5px 10px;
+  background-position:0 0,0 0,100% 0,100% 0,0 100%,0 100%,100% 100%,100% 100%; }
+.rs-fig{ position:absolute; top:.35rem; left:.55rem; right:.55rem; font-family:'JetBrains Mono',monospace; font-size:.58rem; letter-spacing:.08em; color:#5b5f66; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rs-art{ display:block; width:100%; max-width:150px; height:auto; aspect-ratio:7/6; margin:0 auto; fill:none; stroke:var(--rs-ink); stroke-width:1.1; stroke-linecap:round; stroke-linejoin:round; }
+.rs-art .rs-thin{ stroke-width:.6; stroke:#6b7078; }
+.rs-art .rs-chrome{ fill:url(#rs-chrome); }
+.rs-art .rs-fill{ fill:#2a2522; stroke:var(--rs-ink); }
+.rs-art .rs-coffee{ fill:#2a2522; stroke:none; }
+.rs-art .rs-water{ fill:url(#rs-heat); stroke:none; }
+.rs-art .rs-paper{ fill:#fff; stroke:var(--rs-ink); stroke-dasharray:2 2; }
+.rs-art .rs-hand{ fill:#fff; }
+.rs-art .rs-arrow{ stroke:var(--rs-blue); stroke-width:1.1; stroke-dasharray:3 2; }
+.rs-art .rs-head{ stroke-dasharray:none; stroke-width:1.3; }
+.rs-art .rs-stream{ stroke:var(--rs-heat); stroke-width:2.4; }
+.rs-art .rs-dots{ stroke:#2a2522; stroke-width:2.4; stroke-dasharray:1 4; }
+.rs-art .rs-steam{ stroke:var(--rs-heat); stroke-dasharray:2 3; }
+.rs-art text{ stroke:none; fill:var(--rs-ink); font-family:'JetBrains Mono',monospace; }
+.rs-art .rs-svg-num{ font-size:4.4px; font-weight:700; text-anchor:middle; }
+.rs-art .rs-svg-brand{ font-size:4.6px; font-weight:700; letter-spacing:.08em; text-anchor:middle; dominant-baseline:middle; }
+.rs-n{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1rem; margin-top:.45rem; line-height:1.2; color:var(--rs-ink); }
+.rs-step p{ margin:.15rem 0 0; font-size:.82rem; font-weight:600; line-height:1.42; color:var(--rs-ink); }
+.rs-side{ padding:0 1.3rem 0 1.2rem; font-size:.74rem; line-height:1.5; color:#3a3d42; display:grid; align-content:start; gap:.55rem; }
+.rs-side h4{ font:inherit; font-size:1.05rem; font-weight:700; text-transform:uppercase; margin:0 0 .2rem; letter-spacing:.01em; color:var(--rs-ink); }
 .rs-side p{ margin:0; }
-.rs-side b{ color:var(--rs-ink); font-weight:800; }
-.rs-lead{ font-weight:800; font-style:italic; color:var(--rs-ink) !important; font-size:.8rem; }
-.rs-side hr{ border:none; border-top:1.2px solid var(--rs-ink); margin:.4rem 0; width:100%; }
-.rs-coffee-note i{ font-style:italic; }
-.rs-site{ font-weight:800; font-size:.9rem; color:var(--rs-ink) !important; text-align:center; padding:.3rem 0; }
-.rs-legal{ font-size:.66rem; text-align:right; color:#444 !important; }
-.rs-copy{ font-size:.66rem; font-weight:800; text-align:right; color:var(--rs-ink) !important; }
-/* Doblez: la siguiente cara del folleto, cortada. */
-.rs-fold{ display:flex; gap:2.4rem; padding:.55rem 1.6rem .4rem; border-top:1px solid rgba(0,0,0,.18); box-shadow:inset 0 6px 8px -6px rgba(0,0,0,.25); background:#e4e4e1; font-weight:800; font-size:.95rem; letter-spacing:.02em; color:#3a3a3c; white-space:nowrap; overflow:hidden; height:2.1rem; }
+.rs-side b{ color:var(--rs-ink); font-weight:700; }
+.rs-lead{ font-family:'JetBrains Mono',monospace; font-size:.7rem; letter-spacing:.02em; color:var(--rs-ink) !important; }
+.rs-side hr{ border:none; border-top:1.5px dashed var(--rs-ink); margin:.35rem 0; width:100%; }
+/* Sensor térmico */
+.rs-sensor{ padding:.6rem .65rem .55rem; border-radius:12px; background:linear-gradient(180deg,#1c1f24,#0f1114); color:#f2f2f0; box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px rgba(0,0,0,.18); border:1px solid #9aa0a7; }
+.rs-sensor-label{ display:block; font-family:'JetBrains Mono',monospace; font-size:.56rem; letter-spacing:.1em; color:rgba(255,255,255,.6); margin-bottom:.45rem; }
+.rs-sensor-bar{ position:relative; height:8px; border-radius:99px; background:linear-gradient(90deg,#2b59c3,#00a6c8,#3fc47a,#ffd23f,#ff8a1f,#f91f1f); }
+.rs-sensor-bar i{ position:absolute; top:50%; width:14px; height:14px; border-radius:50%; transform:translate(-50%,-50%); background:linear-gradient(135deg,#fff,#aeb3b9 55%,#fff); border:1.5px solid #0f1114; box-shadow:0 0 0 2px rgba(255,255,255,.6); }
+.rs-sensor-scale{ display:flex; justify-content:space-between; align-items:baseline; margin-top:.4rem; font-family:'JetBrains Mono',monospace; font-size:.58rem; color:rgba(255,255,255,.55); }
+.rs-sensor-scale b{ font-size:.95rem; }
+.rs-site{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.8rem; color:var(--rs-ink) !important; text-align:center; padding:.2rem 0; }
+.rs-legal{ font-size:.64rem; text-align:right; color:#555a61 !important; }
+.rs-copy{ font-family:'JetBrains Mono',monospace; font-size:.62rem; font-weight:700; text-align:right; color:var(--rs-ink) !important; }
+/* Doblez: la siguiente cara de la hoja, cortada. */
+.rs-fold{ display:flex; gap:2.4rem; padding:.55rem 1.5rem .4rem; border-top:1.5px dashed var(--rs-ink); background:rgba(255,255,255,.45); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.78rem; letter-spacing:.08em; color:#5b5f66; white-space:nowrap; overflow:hidden; height:2rem; }
 .rs-fold span:first-child{ color:var(--rs-red); }
 .rs-fold span:nth-child(2){ color:var(--rs-blue); }
 @media (max-width: 720px){
   .rs-sheet{ grid-template-columns:1fr; padding:1.1rem 1rem; }
-  .rs-main{ padding-right:0; border-right:none; border-bottom:1.5px solid var(--rs-ink); padding-bottom:1.2rem; }
+  .rs-main{ padding-right:0; border-right:none; border-bottom:1.5px dashed var(--rs-ink); padding-bottom:1.2rem; }
   .rs-side{ padding:1.1rem 0 0; }
-  .rs-steps{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:1.1rem .9rem; }
-  .rs-title{ font-size:1.1rem; }
+  .rs-steps{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:1.1rem .8rem; }
+  .rs-title{ font-size:1.05rem; }
 }

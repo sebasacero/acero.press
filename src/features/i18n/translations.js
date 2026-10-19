@@ -112,7 +112,7 @@ const translations = {
       descJp: '世界チャンピオンのレシピ・アーカイブ',
       allChip: 'Todos',
     },
-    sheet: { title: 'Preparación con {brand} a {temp} en posición {pos}', foldTitle: 'PREPARACIÓN CON AEROPRESS®', lead: 'Receta campeona de {name} en el World AeroPress Championship {year}.', data: 'Datos de la receta', coffee: 'Café de la receta', legal: 'AeroPress® es una marca registrada de AeroPress, Inc. Receta publicada por el WAC; adaptada por Acero.press.' },
+    sheet: { title: 'Preparación con {brand} a {temp} en posición {pos}', foldTitle: 'PREPARACIÓN CON AEROPRESS®', lead: 'Receta campeona de {name} en el World AeroPress Championship {year}.', data: 'Datos de la receta', coffee: 'Café de la receta', legal: 'AeroPress® es una marca registrada de AeroPress, Inc. Receta publicada por el WAC; adaptada por Acero.press.', kind: { setup: 'MONTAJE', upright: 'MONTAJE', coffee: 'CAFÉ', grind: 'MOLIENDA', pour: 'VERTER', stir: 'REMOVER', wait: 'REPOSO', cap: 'TAPA Y FILTRO', flip: 'VOLTEAR', press: 'PRESIONAR', dilute: 'DILUIR', serve: 'SERVIR' }, sensor: 'SENSOR TÉRMICO · AGUA' },
     recipesBanner: { fig: 'FIG. 03 — CAMPEÓN WAC {year}', panel: 'RECETA WAC {year}', doseLabel: 'DOSIS CAFÉ MOLIDO / TEMPERATURA DEL AGUA', brewWith: 'PREPÁRALA CON', kitCta: 'Kit recomendado' },
     kit: {
       fig: 'FIG. 03.1 — PREPÁRALA EN CASA',
@@ -346,7 +346,7 @@ const translations = {
       descJp: '世界チャンピオンのレシピ・アーカイブ',
       allChip: 'All',
     },
-    sheet: { title: 'Brewing with {brand} at {temp}, {pos} position', foldTitle: 'BREWING WITH AEROPRESS®', lead: 'Championship recipe by {name} at the {year} World AeroPress Championship.', data: 'Recipe data', coffee: 'Recipe coffee', legal: 'AeroPress® is a registered trademark of AeroPress, Inc. Recipe published by the WAC; adapted by Acero.press.' },
+    sheet: { title: 'Brewing with {brand} at {temp}, {pos} position', foldTitle: 'BREWING WITH AEROPRESS®', lead: 'Championship recipe by {name} at the {year} World AeroPress Championship.', data: 'Recipe data', coffee: 'Recipe coffee', legal: 'AeroPress® is a registered trademark of AeroPress, Inc. Recipe published by the WAC; adapted by Acero.press.', kind: { setup: 'SETUP', upright: 'SETUP', coffee: 'COFFEE', grind: 'GRIND', pour: 'POUR', stir: 'STIR', wait: 'STEEP', cap: 'CAP & FILTER', flip: 'FLIP', press: 'PRESS', dilute: 'DILUTE', serve: 'SERVE' }, sensor: 'THERMAL SENSOR · WATER' },
     recipesBanner: { fig: 'FIG. 03 — WAC CHAMPION {year}', panel: 'WAC RECIPE {year}', doseLabel: 'GROUND COFFEE DOSE / WATER TEMPERATURE', brewWith: 'BREW IT WITH', kitCta: 'Recommended kit' },
     kit: {
       fig: 'FIG. 03.1 — BREW IT AT HOME',
@@ -580,7 +580,7 @@ const translations = {
       descJp: '世界チャンピオンのレシピ・アーカイブ',
       allChip: 'すべて',
     },
-    sheet: { title: '{brand}を使った{temp}での{pos}抽出', foldTitle: 'AEROPRESS®を使った抽出', lead: '{name}の{year}年ワールド・エアロプレス・チャンピオンシップ優勝レシピ。', data: 'レシピデータ', coffee: '使用したコーヒー', legal: 'AeroPress®はAeroPress, Inc.の登録商標です。レシピはWAC公開のもの、Acero.pressが編集。' },
+    sheet: { title: '{brand}を使った{temp}での{pos}抽出', foldTitle: 'AEROPRESS®を使った抽出', lead: '{name}の{year}年ワールド・エアロプレス・チャンピオンシップ優勝レシピ。', data: 'レシピデータ', coffee: '使用したコーヒー', legal: 'AeroPress®はAeroPress, Inc.の登録商標です。レシピはWAC公開のもの、Acero.pressが編集。', kind: { setup: 'セット', upright: 'セット', coffee: 'コーヒー', grind: '挽く', pour: '注ぐ', stir: '混ぜる', wait: '蒸らし', cap: 'キャップ', flip: '反転', press: 'プレス', dilute: '希釈', serve: '提供' }, sensor: '温度センサー · 湯' },
     recipesBanner: { fig: '図03 — WACチャンピオン {year}', panel: 'WACレシピ {year}', doseLabel: 'コーヒー粉量 / 湯温', brewWith: 'おすすめのコーヒー', kitCta: 'おすすめキット' },
     kit: {
       fig: 'FIG. 03.1 — おうちで淹れる',
