@@ -69,7 +69,7 @@ export default function InstagramPage() {
         </div>
         <h1 className="esp-title">Instagram.</h1>
         <p className="esp-sub">
-          Mantén viva la conexión con Instagram para publicar las ventas de Esspresale y traer las
+          Mantén viva la conexión con Instagram para publicar las ventas de Micra y traer las
           métricas que usa el asistente de crecimiento.
         </p>
       </header>

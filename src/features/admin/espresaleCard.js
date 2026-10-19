@@ -1,4 +1,4 @@
-// Tarjeta de Esspresale dibujada en canvas con el lenguaje de los banners:
+// Tarjeta de Micra dibujada en canvas con el lenguaje de los banners:
 // hoja de plano técnico (papel cuadriculado, marco con zonas, cotas en
 // JetBrains Mono), un dibujo acotado de la AeroPress con la receta y el
 // panel oscuro del odómetro, igual al de los banners de video.
@@ -394,7 +394,7 @@ function drawPanel(ctx, x, y, w, r, textLines) {
   ctx.font = `500 16px ${MONO}`;
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.fillText('FIG. 01 — RECETA AEROPRESS', x + pad, cy);
-  const badge = r.ratio ? `RATIO 1:${fmt(Math.round(r.ratio * 10) / 10)}` : 'ESSPRESALE';
+  const badge = r.ratio ? `RATIO 1:${fmt(Math.round(r.ratio * 10) / 10)}` : 'MICRA';
   ctx.font = `700 16px ${MONO}`;
   const bw = ctx.measureText(badge).width + 18;
   ctx.fillStyle = C.red;
@@ -604,7 +604,7 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   ctx.textBaseline = 'alphabetic';
   ctx.font = `700 19px ${MONO}`;
   ctx.fillStyle = theme.ink;
-  ctx.fillText('FIG. 03 — ESSPRESALE', X1, y + 26);
+  ctx.fillText('FIG. 03 — MICRA', X1, y + 26);
   ctx.font = `500 15px ${MONO}`;
   ctx.fillStyle = theme.soft;
   ctx.fillText(`${F.label.toUpperCase()} · ${w}×${h}`, X1, y + 52);

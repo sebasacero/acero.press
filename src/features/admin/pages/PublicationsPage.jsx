@@ -77,12 +77,12 @@ export default function PublicationsPage() {
     <div className="admin-page">
       <h1 className="admin-page-title">Publicaciones</h1>
       <p className="admin-page-sub">
-        Contenido generado (desde Esspresale y otras fuentes) listo para publicar en redes sociales.
+        Contenido generado (desde Micra y otras fuentes) listo para publicar en redes sociales.
         Los videos se publican como Reel y las tarjetas JPEG como post o historia, según su formato.
       </p>
 
       {items.length === 0 ? (
-        <p className="admin-loading">Todavía no hay nada aquí — genera una tarjeta desde Esspresale.</p>
+        <p className="admin-loading">Todavía no hay nada aquí — genera una tarjeta desde Micra.</p>
       ) : (
         <div className="admin-pub-grid">
           {items.map((it) => {

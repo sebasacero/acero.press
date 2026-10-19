@@ -153,7 +153,7 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
       key: `go-${t.id}`, kind: 'IR A', label: t.label, hint: t.desc,
       group: ADMIN_GROUPS.find((g) => g.id === t.group)?.label, run: () => select(t.id),
     })),
-    { key: 'act-sale', kind: 'ACCIÓN', label: 'Registrar una venta', hint: 'Esspresale · paso 05', run: () => select('espresale') },
+    { key: 'act-sale', kind: 'ACCIÓN', label: 'Registrar una venta', hint: 'Micra · venta en barra', run: () => select('espresale') },
     { key: 'act-pending', kind: 'ACCIÓN', label: 'Confirmar pedidos pendientes', hint: 'Pedidos', run: () => select('orders') },
     { key: 'act-stock', kind: 'ACCIÓN', label: 'Reponer stock bajo', hint: 'Inventario', run: () => select('inventory') },
     { key: 'act-agent', kind: 'ACCIÓN', label: 'Preguntarle al agente', hint: 'Agente · canal directo', run: () => select('dashboard') },

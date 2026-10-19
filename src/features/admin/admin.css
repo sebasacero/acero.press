@@ -309,7 +309,7 @@
 
 .admin-fineprint{ font-size:.7rem; color:var(--ink-soft); text-align:center; }
 
-/* === Esspresale (hoja de plano: pasos acotados + vista previa oscura) === */
+/* === Micra (hoja de plano + vista previa oscura) === */
 .esp{ --esp-ink:#2A3550; --esp-soft:#6B7290; --esp-paper:#EDE6D3; --esp-red:#fa2525; --esp-mono:'JetBrains Mono', ui-monospace, monospace; }
 .esp-head{ margin-bottom:1.4rem; }
 .esp-cota{
@@ -466,7 +466,7 @@
   .admin-sidebar.is-collapsed{ display:none; }
 }
 
-/* === Botón flotante de acceso rápido a Esspresale (reemplaza al de WhatsApp) === */
+/* === Botón flotante de acceso rápido a Micra (reemplaza al de WhatsApp) === */
 .espresale-float{ background:var(--near-black,#1E1E1E); border:none; cursor:pointer; padding:0; position:fixed; }
 .espresale-float svg{ width:26px; height:26px; }
 .espresale-float-pulse{ background:var(--magenta-bright, #de1b1b) !important; }
@@ -751,7 +751,7 @@
 .ig-post-stats strong{ color:#fa2525; }
 .ig-post-body a{ font-family:var(--esp-mono); font-size:10.5px; color:#F2EEE2; }
 
-/* Esspresale · paso 05 (venta) */
+/* Micra · venta */
 .esp-sale-row{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .esp-qty{ display:inline-flex; align-items:center; border:1.5px solid var(--esp-ink); background:#fff; }
 .esp-qty button{ width:40px; height:40px; border:none; background:transparent; font-size:1.1rem; cursor:pointer; color:var(--esp-ink); }
@@ -769,7 +769,7 @@
 .admin-ai-sources{ margin-top:.8rem; font-size:.78rem; color:var(--a-ink-soft); }
 .admin-ai-sources ul{ padding-left:1.1rem; margin-top:.4rem; }
 
-/* Esspresale · video de la tarjeta */
+/* Micra · video de la tarjeta */
 .esp-recording{
   position:absolute; left:8%; right:8%; bottom:8%; padding:12px 14px; background:rgba(14,15,19,.88);
   border:1px solid rgba(255,255,255,.2); color:#F2EEE2; display:flex; flex-direction:column; gap:8px;
@@ -1314,3 +1314,69 @@
 .rp-agent-out ul{ margin:6px 0 0 18px; }
 .rp-agent-out li{ margin:2px 0; }
 @media (max-width:820px){ .rp-algo{ grid-template-columns:1fr; } .rp-algo-actions{ align-items:flex-start; } }
+
+/* =====================================================================
+   MICRA · consola de venta en una sola pantalla
+   Venta | Tarjeta | Vista previa, lado a lado y del alto de la ventana:
+   nada queda por debajo del pliegue. Cada columna hace scroll por dentro
+   solo si la pantalla es muy baja.
+   ===================================================================== */
+.esp--console{ display:flex; flex-direction:column; gap:12px; height:calc(100dvh - 4rem); min-height:540px; }
+/* Dentro del panel la consola toma justo el alto que deja la barra superior. */
+.admin-main:has(.esp--console){ display:flex; flex-direction:column; }
+.admin-main:has(.esp--console) > *{ flex:1; min-height:0; }
+.admin-main .esp--console{ height:auto; flex:1; }
+.esp-bar{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px dashed rgba(42,53,80,.35); }
+.esp--console .esp-title{ margin:0; font-family:'Archivo', sans-serif; font-weight:800; text-transform:lowercase; letter-spacing:-.03em; font-size:2rem; }
+.esp--console .esp-title span{ color:var(--esp-red); }
+.esp-bar-sub{ flex:1; font-family:var(--esp-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--esp-soft); }
+
+.esp-console{ flex:1; min-height:0; display:grid; grid-template-columns:minmax(270px, 1fr) minmax(250px, .9fr) minmax(300px, 1.2fr); gap:12px; }
+.esp-panel{
+  min-height:0; overflow:auto; display:flex; flex-direction:column; gap:.6rem; padding:.8rem .9rem .9rem;
+  border:1.5px solid var(--esp-ink);
+  background:
+    linear-gradient(rgba(42,53,80,.05) 1px, transparent 1px) 0 0 / 18px 18px,
+    linear-gradient(90deg, rgba(42,53,80,.05) 1px, transparent 1px) 0 0 / 18px 18px,
+    var(--esp-paper);
+}
+.esp-panel-title{ display:flex; align-items:center; gap:.55rem; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:.95rem; letter-spacing:.03em; color:var(--esp-ink); margin:0; }
+.esp-panel-title span{ font-family:var(--esp-mono); font-size:10px; background:var(--esp-ink); color:#fff; padding:2px 6px; }
+.esp-field{ display:flex; flex-direction:column; gap:.4rem; }
+.esp-field-label{ display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; font-family:var(--esp-mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--esp-soft); }
+.esp-field-label small{ font-size:9.5px; letter-spacing:0; text-transform:none; }
+.esp--console .esp-chips{ gap:.35rem; }
+.esp--console .esp-chip{ padding:.36rem .6rem; font-size:.78rem; }
+.esp-chips-pay{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); }
+.esp--console .esp-chips-pay .esp-chip{ padding:.36rem .2rem; text-align:center; font-size:.68rem; letter-spacing:0; }
+.esp--console .esp-specs{ padding:.3rem 0; }
+.esp--console .esp-input{ padding:.5rem .65rem; font-size:.9rem; }
+.esp--console .esp-sale-total{ font-size:1.35rem; }
+.esp--console .esp-qty button{ width:36px; height:36px; }
+.esp-panel-foot{ margin-top:auto; display:flex; flex-direction:column; gap:.45rem; }
+.esp-panel .esp-btn-ghost{ color:var(--esp-ink); }
+.esp-panel .esp-actions-row .esp-btn{ flex:1 1 140px; }
+.esp-grid-actions{ display:grid; grid-template-columns:1fr 1fr; gap:.4rem; }
+.esp-grid-actions .esp-btn{ padding:9px 8px; white-space:normal; font-size:10px; line-height:1.25; }
+.esp-panel .esp-fineprint{ color:var(--esp-soft); }
+
+.esp--console .esp-preview{ position:static; min-height:0; padding:12px 14px; gap:10px; }
+.esp--console .esp-canvas-wrap{ flex:1; min-height:0; container-type:size; }
+.esp--console .esp-canvas-frame{ width:min(100cqw, calc(100cqh * var(--esp-ar, .8))); max-width:none; }
+.esp--console .esp-video-result video{ max-height:140px; }
+
+/* Pantallas medianas: venta y tarjeta arriba, vista previa abajo */
+@media (max-width:1100px){
+  .esp--console, .admin-main .esp--console{ height:auto; min-height:0; }
+  .admin-main:has(.esp--console){ display:block; }
+  .esp-console{ grid-template-columns:1fr 1fr; }
+  .esp--console .esp-preview{ grid-column:1 / -1; }
+  .esp--console .esp-canvas-wrap{ flex:none; height:62vh; }
+  .esp-panel{ overflow:visible; }
+}
+@media (max-width:700px){
+  .esp-console{ grid-template-columns:1fr; }
+  .esp-bar-sub{ flex-basis:100%; order:3; }
+}
+/* Ventanas bajas: la nota de ayuda sobra para que todo quepa. */
+@media (min-width:1101px) and (max-height:820px){ .esp-panel .esp-fineprint{ display:none; } }

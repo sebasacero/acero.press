@@ -67,7 +67,7 @@ export function useAdminAuth() {
   return { ...snap, signIn, signOut };
 }
 
-/** true solo para tu cuenta (role: owner) — quien ve lápices, dock y Esspresale. */
+/** true solo para tu cuenta (role: owner) — quien ve lápices, dock y Micra. */
 export function useIsOwner() {
   const { isAdmin, adminInfo } = useSyncExternalStore(subscribe, getSnapshot);
   return isAdmin && adminInfo?.role === 'owner';
