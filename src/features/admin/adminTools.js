@@ -1,4 +1,5 @@
 import DashboardPage from './pages/DashboardPage.jsx';
+import AlgorithmPage from './pages/AlgorithmPage.jsx';
 import CatalogPage from './pages/CatalogPage.jsx';
 import InventoryPage from './pages/InventoryPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
@@ -27,6 +28,7 @@ export const ADMIN_TOOLS = [
   { id: 'tables', label: 'Mesas / POS', group: 'ops', desc: 'Cuentas abiertas por mesa', signal: 'occupied', Component: TablesPage },
   { id: 'waitlist', label: 'Lista de espera', group: 'ops', desc: 'Quienes se apuntaron a la app Micra', Component: AppWaitlistPage },
   { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
+  { id: 'algorithm', label: 'Algoritmo', group: 'biz', desc: 'Plan Micra: qué hacer hoy y red de tinteros', Component: AlgorithmPage },
   { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
   { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, marcas y precios', Component: CatalogPage },
   { id: 'publications', label: 'Publicaciones', group: 'brand', desc: 'Contenido listo para redes', Component: PublicationsPage },

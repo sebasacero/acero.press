@@ -37,11 +37,11 @@ export default function App() {
 
             <ProductSection />
 
-            <Marquee />
+            <Marquee channel="market" />
 
             <ColdBrewHero />
 
-            <Marquee />
+            <Marquee channel="city" />
 
             <WacBanner />
 
