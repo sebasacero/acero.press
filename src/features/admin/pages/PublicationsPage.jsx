@@ -1,16 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { publishToInstagram as igPublish } from '../../../shared/lib/instagram.js';
+import { FORMATS } from '../espresaleCard.js';
 
 const isVideoUrl = (url) => /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url || '');
 // Instagram solo acepta JPEG para imágenes (las tarjetas viejas se guardaban en PNG).
 const isJpegUrl = (url) => /\.(jpe?g)(\?|$)/i.test(url || '');
+
+// Formato de cada pieza según su tamaño real: la proporción y para qué
+// formatos de Micra sirve (9:16 vale para historia, reel, TikTok y Shorts).
+const RATIO_NAMES = { '0.563': '9:16', '0.750': '3:4', '0.800': '4:5', '1.000': '1:1', '1.778': '16:9' };
+function formatOf([w, h]) {
+  const r = w / h;
+  const fits = Object.values(FORMATS).filter((f) => Math.abs(f.w / f.h - r) / r < 0.03);
+  if (!fits.length) return { ratio: `${w}×${h}`, title: 'No coincide con ningún formato de Micra' };
+  const key = (fits[0].w / fits[0].h).toFixed(3);
+  return { ratio: RATIO_NAMES[key] ?? `${w}×${h}`, title: `${w}×${h} · sirve para ${fits.map((f) => f.label).join(', ')}` };
+}
 
 export default function PublicationsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [igBusyId, setIgBusyId] = useState(null);
   const [igResults, setIgResults] = useState({});
+  const [dims, setDims] = useState({}); // id → [ancho, alto] de la imagen o el video
+  const measure = (id, w, h) => { if (w && h) setDims((d) => (d[id] ? d : { ...d, [id]: [w, h] })); };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,6 +93,7 @@ export default function PublicationsPage() {
       <p className="admin-page-sub">
         Contenido generado (desde Micra y otras fuentes) listo para publicar en redes sociales.
         Los videos se publican como Reel y las tarjetas JPEG como post o historia, según su formato.
+        Cada pieza muestra su proporción: 9:16 sirve para historias, Reels, TikTok y Shorts; 4:5, 3:4 y 1:1 para el feed; 16:9 para YouTube.
       </p>
 
       {items.length === 0 ? (
@@ -88,16 +103,18 @@ export default function PublicationsPage() {
           {items.map((it) => {
             const video = isVideoUrl(it.video_url);
             const igRes = igResults[it.id];
+            const fmt = dims[it.id] ? formatOf(dims[it.id]) : null;
             return (
               <div key={it.id} className={`admin-card admin-pub-card ${it.published ? 'is-published' : ''}`}>
                 {video ? (
-                  <video src={it.video_url} controls className="admin-pub-thumb" />
+                  <video src={it.video_url} controls className="admin-pub-thumb" onLoadedMetadata={(e) => measure(it.id, e.currentTarget.videoWidth, e.currentTarget.videoHeight)} />
                 ) : (
-                  <img src={it.video_url} alt="" className="admin-pub-thumb" />
+                  <img src={it.video_url} alt="" className="admin-pub-thumb" onLoad={(e) => measure(it.id, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)} />
                 )}
                 <p className="admin-pub-caption">{it.caption}</p>
                 <div className="admin-pub-meta">
                   <span>{new Date(it.created_at).toLocaleString('es-CO')}</span>
+                  {fmt && <span className="admin-chip" title={fmt.title}>{fmt.ratio}</span>}
                   <span className={`admin-chip ${it.published ? 'chip-green' : 'chip-red'}`}>
                     {it.published ? 'Publicado' : 'Pendiente'}
                   </span>

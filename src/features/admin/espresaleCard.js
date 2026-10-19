@@ -18,21 +18,38 @@ const MARKER = '"Permanent Marker", cursive';
 // Formatos del sistema de publicaciones (lienzo "Formato de redes"):
 // `safe` es la zona que ninguna app tapa; logo, título, panel y cajetín
 // viven dentro de ella. El fondo (papel, cuadrícula, marco) sí llega al borde.
-//  - feed: Instagram 4:5, margen 96 (cabe en el recorte 3:4 del perfil).
-//  - reel: 9:16 de Reels y TikTok: libre 270 arriba, 440 abajo (texto y
-//    audio) y 180 a la derecha (botones de me gusta, comentar, compartir).
-//  - story: 9:16 de Historias: solo tapan la barra del perfil arriba (250) y
-//    la de responder abajo (250), así que el ancho es casi completo y el
-//    panel de la receta baja y se corre a la derecha.
+// `vertical` marca los 9:16 (una foto en ese formato va a Instagram como historia).
+//  - feed: Instagram/Facebook 4:5, margen 96.
+//  - portrait: 3:4, la cuadrícula del perfil de Instagram desde 2025 (se ve completo).
+//  - square: 1:1 para Facebook, WhatsApp y LinkedIn.
+//  - story: Historias de Instagram y Facebook y estados de WhatsApp: solo tapan
+//    la barra del perfil arriba (250) y la de responder abajo (250), así que el
+//    ancho es casi completo y el panel de la receta baja y se corre a la derecha.
+//  - reel: Reels: libre 270 arriba, 440 abajo (texto y audio) y 180 a la
+//    derecha (me gusta, comentar, compartir).
+//  - tiktok: las pestañas tapan arriba, la descripción y el audio bajan más
+//    que en Reels (≈ 540) y la columna de botones es más ancha (≈ 160).
+//  - shorts: YouTube Shorts: título y canal abajo (≈ 480), botones a la derecha.
+//  - landscape: 16:9 para YouTube, X y la web.
+// Las zonas de cada app cambian con sus versiones: son márgenes prudentes,
+// no cifras oficiales.
 export const FORMATS = {
-  feed: { w: 1080, h: 1350, label: 'Feed 4:5', apps: 'Instagram feed', safe: { x0: 96, y0: 96, x1: 984, y1: 1254 }, logoH: 72 },
-  reel: { w: 1080, h: 1920, label: 'Reel 9:16', apps: 'Reels · TikTok', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80 },
-  story: { w: 1080, h: 1920, label: 'Historia 9:16', apps: 'Instagram stories', safe: { x0: 64, y0: 250, x1: 1016, y1: 1670 }, logoH: 80, lowPanel: true },
+  feed: { w: 1080, h: 1350, label: 'Feed 4:5', short: '4:5', apps: 'Instagram · Facebook', safe: { x0: 96, y0: 96, x1: 984, y1: 1254 }, logoH: 72 },
+  portrait: { w: 1080, h: 1440, label: 'Feed 3:4', short: '3:4', apps: 'Cuadrícula de Instagram', safe: { x0: 96, y0: 96, x1: 984, y1: 1344 }, logoH: 72 },
+  square: { w: 1080, h: 1080, label: 'Cuadrado 1:1', short: '1:1', apps: 'Facebook · WhatsApp · LinkedIn', safe: { x0: 80, y0: 80, x1: 1000, y1: 1000 }, logoH: 60 },
+  story: { w: 1080, h: 1920, label: 'Historia 9:16', short: 'Historia', apps: 'Instagram · Facebook · WhatsApp', safe: { x0: 64, y0: 250, x1: 1016, y1: 1670 }, logoH: 80, lowPanel: true, vertical: true },
+  reel: { w: 1080, h: 1920, label: 'Reel 9:16', short: 'Reel', apps: 'Instagram · Facebook Reels', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80, vertical: true },
+  tiktok: { w: 1080, h: 1920, label: 'TikTok 9:16', short: 'TikTok', apps: 'TikTok', safe: { x0: 64, y0: 240, x1: 920, y1: 1380 }, logoH: 80, vertical: true },
+  shorts: { w: 1080, h: 1920, label: 'Shorts 9:16', short: 'Shorts', apps: 'YouTube Shorts', safe: { x0: 64, y0: 250, x1: 900, y1: 1440 }, logoH: 80, vertical: true },
+  landscape: { w: 1920, h: 1080, label: 'Horizontal 16:9', short: '16:9', apps: 'YouTube · X · web', safe: { x0: 96, y0: 72, x1: 1824, y1: 1008 }, logoH: 64 },
 };
 
 /** Tipo de publicación en Instagram según el formato y si es video. */
-export const igKind = (format, isVideo) =>
-  format === 'story' ? (isVideo ? 'story_video' : 'story') : isVideo ? 'reel' : format === 'reel' ? 'story' : 'image';
+export const igKind = (format, isVideo) => {
+  if (format === 'story') return isVideo ? 'story_video' : 'story';
+  if (isVideo) return 'reel';
+  return FORMATS[format]?.vertical ? 'story' : 'image';
+};
 
 /** Saca dosis, agua, temperatura y tiempo del texto libre de la receta. */
 export function parseRecipe(text = '') {

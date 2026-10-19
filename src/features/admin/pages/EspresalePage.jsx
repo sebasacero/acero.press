@@ -565,9 +565,9 @@ export default function EspresalePage() {
           <Field label="Formato">
             <div className="esp-chips">
               {Object.entries(FORMATS).map(([id, f]) => (
-                <button key={id} type="button" className={`esp-chip esp-chip-format ${format === id ? 'active' : ''}`} onClick={() => setFormat(id)}>
-                  <span className={`esp-ratio esp-ratio-${id}`} aria-hidden="true" />
-                  <span className="esp-chip-text">{f.label}<small>{f.apps}</small></span>
+                <button key={id} type="button" className={`esp-chip esp-chip-format ${format === id ? 'active' : ''}`} title={`${f.label} · ${f.apps} · ${f.w}×${f.h}`} aria-pressed={format === id} onClick={() => setFormat(id)}>
+                  <span className="esp-ratio" style={{ '--r': f.w / f.h }} aria-hidden="true" />
+                  <span className="esp-chip-text">{f.short}<small>{f.apps}</small></span>
                 </button>
               ))}
             </div>

@@ -5,8 +5,8 @@ import { CARD_KINDS, PRESETS, presetOf } from '../micraFilters.js';
 // Cámara de Micra, como la de una red social: se abre ya encendida y la
 // tarjeta es el filtro. Abajo, un carrusel de filtros redondos (cada uno con
 // el nombre que va en la tarjeta) con el disparador en el centro, y debajo
-// las secciones: Receta, Invitación y Anuncio. Arriba, el formato
-// (feed, reel, historia), foto o video y el cambio de cámara.
+// las secciones: Receta, Invitación y Anuncio. Arriba, el formato (una hoja
+// con todos los de las redes), foto o video y el cambio de cámara.
 //
 // Pensada para gastar poco: el video lo pinta el navegador (hardware, sin
 // filtros CSS), la tarjeta se dibuja UNA vez por cambio de filtro, la foto se
@@ -15,8 +15,6 @@ import { CARD_KINDS, PRESETS, presetOf } from '../micraFilters.js';
 // va a segundo plano. Si no hay acceso, el disparador usa la del celular.
 
 const MAX_SECONDS = 60;
-const FORMAT_ORDER = ['feed', 'reel', 'story'];
-const FORMAT_SHORT = { feed: '4:5', reel: 'Reel', story: 'Historia' };
 const clock = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 const stopStream = (s) => s?.getTracks().forEach((t) => t.stop());
 const canLive = () => typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
@@ -97,6 +95,7 @@ export default function MicraCamera({
   const [seconds, setSeconds] = useState(null); // grabando
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(null); // texto que se está escribiendo
+  const [formatOpen, setFormatOpen] = useState(false);
 
   // Cámara: encendida de una, solo video y a 30 cuadros como máximo (el micrófono se pide al grabar)
   useEffect(() => {
@@ -133,17 +132,18 @@ export default function MicraCamera({
     return () => { document.removeEventListener('visibilitychange', onHide); off(); };
   }, []);
 
-  // Esc: cierra el editor de texto o la cámara
+  // Esc: cierra el editor de texto, la hoja de formatos o la cámara
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
       e.stopPropagation();
       if (editing !== null) setEditing(null);
+      else if (formatOpen) setFormatOpen(false);
       else if (!recRef.current) onCloseRef.current();
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [editing]);
+  }, [editing, formatOpen]);
 
   // El filtro: la tarjeta se dibuja una vez por cambio (transparente sobre el video)
   const preset = kind === 'recipe' ? null : presetOf(kind, presetId);
@@ -239,7 +239,6 @@ export default function MicraCamera({
     if (file) onFile(file);
   };
 
-  const nextFormat = FORMAT_ORDER[(FORMAT_ORDER.indexOf(format) + 1) % FORMAT_ORDER.length];
   const { w, h } = FORMATS[format];
   const shutterClass = `${mode === 'video' ? 'is-video' : ''} ${recording ? 'is-rec' : ''}`;
 
@@ -259,8 +258,8 @@ export default function MicraCamera({
       <header className="mc-top">
         <button type="button" className="mc-round" onClick={onClose} disabled={recording} aria-label="Cerrar la cámara">×</button>
         <div className="mc-top-mid">
-          <button type="button" className="mc-pill" onClick={() => onFormat(nextFormat)} disabled={recording} aria-label={`Formato ${FORMATS[format].label}; cambiar a ${FORMATS[nextFormat].label}`}>
-            <i className={`mc-ratio mc-ratio-${format}`} aria-hidden="true" />{FORMAT_SHORT[format]}
+          <button type="button" className="mc-pill" onClick={() => setFormatOpen((v) => !v)} disabled={recording} aria-expanded={formatOpen} aria-label={`Formato: ${FORMATS[format].label}. Cambiar`}>
+            <i className="mc-ratio" style={{ '--r': w / h }} aria-hidden="true" />{FORMATS[format].short}
           </button>
           <div className="mc-seg" role="group" aria-label="Foto o video">
             {[['photo', 'Foto'], ['video', 'Video']].map(([id, label]) => (
@@ -270,6 +269,25 @@ export default function MicraCamera({
         </div>
         <button type="button" className="mc-round" onClick={() => setFacing((f) => (f === 'environment' ? 'user' : 'environment'))} disabled={recording || status === 'error'} aria-label="Cambiar de cámara">⟲</button>
       </header>
+
+      {formatOpen && (
+        <div className="mc-formats" role="listbox" aria-label="Formato de la publicación">
+          {Object.entries(FORMATS).map(([id, f]) => (
+            <button
+              key={id}
+              type="button"
+              role="option"
+              aria-selected={id === format}
+              className={id === format ? 'on' : ''}
+              onClick={() => { onFormat(id); setFormatOpen(false); }}
+            >
+              <i className="mc-ratio" style={{ '--r': f.w / f.h }} aria-hidden="true" />
+              <b>{f.short}</b>
+              <small>{f.apps}</small>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="mc-under">
         {status === 'error' && <p className="mc-note">Sin cámara en vivo aquí: el disparador abre la cámara del celular.</p>}
