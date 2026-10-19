@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import RecipeKit from './RecipeKit.jsx';
+import RecipeSheet from './RecipeSheet.jsx';
 
 export default function RecipeModal({ recipe, pairing, focusKit = false, onClose }) {
   const dialogRef = useRef(null);
@@ -60,14 +61,7 @@ export default function RecipeModal({ recipe, pairing, focusKit = false, onClose
             </section>
           </div>
 
-          <section className="modal-block steps-info">
-            <h4>{t('modal.steps')}</h4>
-            <ol className="steps-list">
-              {recipe.steps[lang].map((step, i) => (
-                <li key={i}>{step}</li>
-              ))}
-            </ol>
-          </section>
+          <RecipeSheet recipe={recipe} />
         </div>
       </div>
     </dialog>
