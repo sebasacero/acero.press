@@ -738,8 +738,8 @@ a{ color:inherit; text-decoration:none; }
 dialog.recipe-modal-banner{
   border: none;
   padding: 0;
-  width: min(940px, 94vw);
-  max-height: 88vh;
+  width: min(1280px, 96vw);
+  max-height: 90vh;
   border-radius: 14px;
   overflow: hidden;
   background: var(--cream);
@@ -1577,4 +1577,15 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
   .rs-side{ padding:1.1rem 0 0; }
   .rs-steps{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:1.1rem .8rem; }
   .rs-title{ font-size:1.05rem; }
+}
+
+/* Modal de receta: hoja ilustrada + kit recomendado al lado */
+.modal-split{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:1.2rem; padding:3.4rem 1.4rem 1.4rem; align-items:start; }
+.modal-split.is-solo{ grid-template-columns:minmax(0,1fr); }
+.modal-split .rs{ margin-top:0; }
+.modal-kit-col{ position:sticky; top:0; }
+.modal-kit-col .kit{ margin-bottom:0; }
+@media (max-width: 1080px){
+  .modal-split{ grid-template-columns:minmax(0,1fr); padding:3.4rem .9rem 1rem; }
+  .modal-kit-col{ position:static; order:-1; }
 }

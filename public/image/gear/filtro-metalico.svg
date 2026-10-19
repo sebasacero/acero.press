@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" font-family="JetBrains Mono, monospace">
+<defs>
+<pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(20,22,26,.09)"/></pattern>
+<linearGradient id="c" x1="0" x2="1"><stop offset="0" stop-color="#8d939a"/><stop offset=".22" stop-color="#f4f5f6"/><stop offset=".45" stop-color="#b9bec4"/><stop offset=".62" stop-color="#fff"/><stop offset="1" stop-color="#7d838a"/></linearGradient>
+<linearGradient id="h" x1="0" x2="1"><stop offset="0" stop-color="#2b59c3"/><stop offset=".25" stop-color="#00a6c8"/><stop offset=".5" stop-color="#3fc47a"/><stop offset=".7" stop-color="#ffd23f"/><stop offset=".85" stop-color="#ff8a1f"/><stop offset="1" stop-color="#f91f1f"/></linearGradient>
+<style>g.a{fill:none;stroke:#14161a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round} .ch{fill:url(#c)} .t{stroke:#6b7078;stroke-width:1.2} text{stroke:none;fill:#14161a} .n{font-size:10px;font-weight:700;text-anchor:middle} .b{font-size:11px;font-weight:700;letter-spacing:2px;text-anchor:middle;dominant-baseline:middle} .lbl{font-size:16px;font-weight:700;text-anchor:middle}</style>
+</defs>
+<rect width="400" height="400" fill="#f3f1ec"/><rect width="400" height="400" fill="url(#g)"/>
+<path d="M16 16h22M16 16v22M384 16h-22M384 16v22M16 384h22M16 384v-22M384 384h-22M384 384v-22" stroke="#14161a" stroke-width="2.5" fill="none"/>
+<text x="30" y="44" font-size="13" letter-spacing="1.5" fill="#5b5f66">FIG. — FILTRO METÁLICO</text>
+<g class="a"><ellipse cx="200" cy="210" rx="110" ry="34" class="ch"/><ellipse cx="200" cy="200" rx="110" ry="34" class="ch"/><path class="t" d="M300 200l0 10"/><path class="t" d="M287 215l0 10"/><path class="t" d="M250 226l0 10"/><path class="t" d="M200 230l0 10"/><path class="t" d="M150 226l0 10"/><path class="t" d="M113 215l0 10"/><path class="t" d="M100 200l0 10"/><path class="t" d="M113 185l0 10"/><path class="t" d="M150 174l0 10"/><path class="t" d="M200 170l0 10"/><path class="t" d="M250 174l0 10"/><path class="t" d="M287 185l0 10"/><ellipse cx="200" cy="200" rx="30" ry="9" class="t" stroke-dasharray="2 3"/><ellipse cx="200" cy="200" rx="55" ry="16" class="t" stroke-dasharray="2 3"/><ellipse cx="200" cy="200" rx="80" ry="24" class="t" stroke-dasharray="2 3"/></g>
+<rect x="30" y="352" width="340" height="4" rx="2" fill="url(#h)"/>
+<text x="200" y="378" font-size="12" font-weight="700" letter-spacing="2" text-anchor="middle" fill="#5b5f66">FOTO PRÓXIMAMENTE · ACERO.PRESS</text>
+</svg>
