@@ -199,8 +199,16 @@ proyecto tiene una API en **FastAPI** (Python) para datos e integraciones:
 | Ruta | Qué hace |
 |---|---|
 | `GET /api/v1/pulse` | Carga FNC, Bolsa NY, TRM y clima de Bogotá para las cintas. `status` dice qué fuente respondió y cuál falló. |
+| `GET /api/v1/bi/brief?kind=daily\|weekly` | **Algoritmo Micra** (solo owner): tablero por nivel (norte, red, negocio, redes, mercado), acciones en orden, plan de contenido y el texto listo para WhatsApp. |
+| `GET/POST /api/v1/bi/tinteros` · `PATCH /api/v1/bi/tinteros/{id}` | Red de tinteros: registrar, cambiar etapa o línea base. |
+| `PUT /api/v1/bi/tinteros/{id}/days/{día}` | Registrar (o corregir) el día de un tintero: tazas, precio, ingreso neto, horas. |
 
-No necesita llaves. En local:
+Las rutas de `/bi` usan la sesión del panel (`Authorization: Bearer <token>`)
+y las reglas RLS de Supabase: solo la cuenta owner las ve. El algoritmo vive en
+`api/_acero/bi/` (`metrics.py` = indicadores, `rules.py` = reglas → acciones,
+`brief.py` = resumen y contenido). En el Panel: **Negocio → Algoritmo**.
+
+El pulso no necesita llaves. En local:
 
 ```
 pip install -r requirements.txt uvicorn

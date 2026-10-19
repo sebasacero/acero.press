@@ -12,6 +12,7 @@ from urllib.parse import parse_qsl, urlencode
 
 from fastapi import FastAPI, Response
 
+from .bi.routes import router as bi_router
 from .pulse import Pulse, read_pulse
 
 PREFIX = "/api/v1"
@@ -19,7 +20,7 @@ PREFIX = "/api/v1"
 app = FastAPI(
     title="Acero API",
     version="1.0.0",
-    summary="Datos e integraciones de ACERO.press: pulso del café, Micra y asistente.",
+    summary="Datos e integraciones de ACERO.press: pulso del café, algoritmo de negocio (BI), Micra y asistente.",
     docs_url=f"{PREFIX}/docs",
     openapi_url=f"{PREFIX}/openapi.json",
     redoc_url=None,
@@ -49,6 +50,7 @@ class RestoreVercelPath:
 
 
 app.add_middleware(RestoreVercelPath)
+app.include_router(bi_router, prefix=PREFIX)
 
 
 @app.get(PREFIX, include_in_schema=False)
