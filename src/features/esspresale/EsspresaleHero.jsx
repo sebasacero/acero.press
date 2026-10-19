@@ -10,7 +10,7 @@ import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { useEditableTexts } from '../../shared/lib/editableTexts.js';
 import './esspresale.css';
 
-// Primera sección del sitio: dos banners de Esspresale (pedir café / ser
+// Primera sección del sitio: dos banners de la app Micra (pedir café / ser
 // barista) dibujados como las tarjetas de redes. Rotan solos cada 8 s y se
 // detienen mientras el cursor o el foco están encima.
 const AUTO_MS = 8000;

@@ -1,11 +1,16 @@
 import MapCanvas from './MapCanvas.jsx';
 import { Segs, useClock } from './parts.jsx';
 
-// Pantallas de la app Esspresale dentro de un celular, para el banner y la
-// sección App. Los textos de la app van en español: abre primero en Bogotá.
+// Pantallas de la app Micra dentro de un celular, para el banner. En el
+// celular el banner muestra la pantalla a sangre, como si fuera la app (ver
+// esspresale.css). Los textos de la app van en español: abre primero en Bogotá.
 
 const CLIENT_VIEW = { style: 'oscuro', c: 11, k: 81, ax: 0.55, ay: 0.36, s: 8.5, heat: 0.9, pins: true, route: true, labels: 0.9 };
 const BARISTA_VIEW = { style: 'oscuro', c: 12, k: 80, ax: 0.55, ay: 0.4, s: 4.2, heat: 1, labels: 0.9 };
+// A pantalla completa (celular) el pedido baja al hueco entre el texto y la tarjeta.
+const FULL = 320;
+const clientView = (w) => (w >= FULL ? { ...CLIENT_VIEW, ay: 0.64, s: 9.5 } : CLIENT_VIEW);
+const baristaView = (w) => (w >= FULL ? { ...BARISTA_VIEW, ay: 0.66, s: 4.8 } : BARISTA_VIEW);
 
 function StatusBar() {
   const { time } = useClock();
@@ -17,12 +22,22 @@ function StatusBar() {
   );
 }
 
+function AppBar({ zone }) {
+  return (
+    <div className="essp-phone-appbar">
+      <b className="essp-micra">micra<i>.</i></b>
+      <span>{zone}</span>
+    </div>
+  );
+}
+
 export function ClientPhone({ className = '' }) {
   return (
-    <div className={`essp-phone ${className}`} role="img" aria-label="App Esspresale: pedido en camino en el mapa de Chapinero">
-      <MapCanvas view={CLIENT_VIEW} />
+    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra: pedido en camino en el mapa de Chapinero">
+      <MapCanvas view={clientView} />
       <div className="essp-phone-screen" aria-hidden="true">
         <StatusBar />
+        <AppBar zone="CHAPINERO" />
         <div className="essp-phone-pill">
           <div><span>ENTREGAR EN</span>Cra. 11 #79-20 ▾</div>
           <span className="essp-phone-chip">SA</span>
@@ -46,10 +61,11 @@ export function ClientPhone({ className = '' }) {
 
 export function BaristaPhone({ className = '' }) {
   return (
-    <div className={`essp-phone ${className}`} role="img" aria-label="App Esspresale para baristas: mapa de calor de la demanda y avance del registro">
-      <MapCanvas view={BARISTA_VIEW} />
+    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra para baristas: mapa de calor de la demanda y avance del registro">
+      <MapCanvas view={baristaView} />
       <div className="essp-phone-screen" aria-hidden="true">
         <StatusBar />
+        <AppBar zone="BARISTA" />
         <div className="essp-phone-pill">
           <div><span>DEMANDA DE CAFÉ</span>Ahora en tu zona</div>
           <span className="essp-phone-chip is-red">BARISTA</span>
