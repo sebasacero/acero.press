@@ -7,7 +7,8 @@
     "dev": "vite",
     "api": "uvicorn --app-dir api v1:app --reload --port 8000",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test \"src/features/admin/micra/*.test.js\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.134.0",

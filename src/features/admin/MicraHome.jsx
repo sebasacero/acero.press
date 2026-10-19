@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { ADMIN_TOOLS } from './adminTools.js';
 import { fetchPulse, weatherKind } from '../../shared/lib/pulse.js';
 import AppIcon from './micraIcons.jsx';
-import { requestCamera } from './micraFilters.js';
 
 // Inicio de Micra: el panel como la pantalla de inicio de un celular. Cada
 // ventana es una app; las que se usan todo el día van en el dock, las del
@@ -92,8 +91,6 @@ export default function MicraHome({ signals, clock, onOpen, onSearch, onSite, on
   const open = (id) => {
     setFolderOpen(false);
     if (id === 'site') { onSite(); return; }
-    // "m." abre Micra con la cámara ya encendida
-    if (id === 'espresale') requestCamera();
     onOpen(id);
   };
   const app = (id, dock = false) => <App key={id} id={id} dock={dock} overlay={overlay} signals={signals} onOpen={open} />;
