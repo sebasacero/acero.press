@@ -148,7 +148,7 @@ function Slide({ kind, active, index, onSelect, stores, onStoresSaved }) {
   );
 }
 
-export default function EsspresaleHero({ navOpen, onOpenNavDrawer, withNav = true }) {
+export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [tick, setTick] = useState(0);
@@ -183,7 +183,7 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer, withNav = tru
       onFocus={() => setPaused(true)}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}
     >
-      {withNav && <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />}
+      <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         <Slide kind="order" active={index === 0} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />
         <Slide kind="barista" active={index === 1} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />

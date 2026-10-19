@@ -18,7 +18,6 @@ import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
 import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
-import LaunchHero from './features/home/sections/LaunchHero.jsx';
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -32,9 +31,7 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <AdminUIProvider>
-            <LaunchHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
-
-            <EsspresaleHero withNav={false} />
+            <EsspresaleHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
 
             <NavDrawer isOpen={navOpen} onClose={() => setNavOpen(false)} />
 
