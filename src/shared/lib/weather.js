@@ -1,7 +1,7 @@
 // Open-Meteo es una API pública y gratuita de clima que no requiere API key.
 // https://open-meteo.com
-export const BOGOTA_LAT = 4.711;
-export const BOGOTA_LON = -74.0721;
+const BOGOTA_LAT = 4.711;
+const BOGOTA_LON = -74.0721;
 
 const WEATHER_CODES = {
   0: { es: 'Despejado', icon: '☀️' },

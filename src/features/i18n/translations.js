@@ -104,7 +104,7 @@ const translations = {
       'AeroPress Go™',
       ' · Pink Bourbon · ',
     ],
-    // Cintas con datos reales (mercado y clima, de /api/pulse)
+    // Cintas con datos reales (mercado y clima, de /api/v1/pulse)
     pulse: {
       market: 'Mercado',
       city: 'Bogotá hoy',
@@ -358,7 +358,7 @@ const translations = {
       'AeroPress Go™',
       ' · Pink Bourbon · ',
     ],
-    // Live-data tapes (market and weather, from /api/pulse)
+    // Live-data tapes (market and weather, from /api/v1/pulse)
     pulse: {
       market: 'Market',
       city: 'Bogotá today',
@@ -612,7 +612,7 @@ const translations = {
       'AeroPress Go™',
       ' · ピンクブルボン · ',
     ],
-    // 実データのテープ（相場と天気、/api/pulse）
+    // 実データのテープ（相場と天気、/api/v1/pulse）
     pulse: {
       market: '相場',
       city: '今日のボゴタ',

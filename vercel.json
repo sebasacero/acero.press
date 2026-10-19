@@ -1,5 +1,12 @@
 {
+  "functions": {
+    "api/v1.py": {
+      "maxDuration": 20,
+      "excludeFiles": "{node_modules,public,src,dist,image,CSS,JS,supabase,reports,research_notes}/**"
+    }
+  },
   "rewrites": [
+    { "source": "/api/v1/(.*)", "destination": "/api/v1?__path=$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

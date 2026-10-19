@@ -1,13 +1,13 @@
 // Pulso del café: mercado (FNC, Bolsa NY, TRM) y clima de Bogotá, servidos
-// por /api/pulse. Las tres cintas de la página comparten una sola consulta.
-// Si no hay datos (sin conexión, en desarrollo) devuelve null y las cintas
-// quedan solo con sus frases.
+// por la API de Acero (FastAPI, /api/v1/pulse). Las tres cintas de la página
+// comparten una sola consulta. Si no hay datos (sin conexión, o en desarrollo
+// sin la API corriendo) devuelve null y las cintas quedan solo con sus frases.
 
 let pending = null;
 
 export function fetchPulse() {
   if (!pending) {
-    pending = fetch('/api/pulse')
+    pending = fetch('/api/v1/pulse')
       .then((r) => (r.ok && r.headers.get('content-type')?.includes('json') ? r.json() : null))
       .catch(() => null);
   }

@@ -182,3 +182,28 @@ debe poder tocarla, te armo la política correcta.
 - **Suscripción mensual de café:** guarda la preferencia del cliente, pero no
   cobra recurrentemente todavía. Eso requiere Stripe Subscriptions (o el
   equivalente en Wompi) — es una pieza aparte si la quieres.
+
+---
+
+## 9. API de Acero (FastAPI)
+
+Además de las funciones de Node (`api/*.js`: pagos, barista, asistente), el
+proyecto tiene una API en **FastAPI** (Python) para datos e integraciones:
+
+- Entrada: `api/v1.py` · código: `api/_acero/` · dependencias: `requirements.txt`.
+- Todo lo que llegue a `/api/v1/*` lo atiende FastAPI (regla en `vercel.json`).
+- Documentación interactiva: `https://acero.press/api/v1/docs`.
+  El contrato `https://acero.press/api/v1/openapi.json` sirve para generar el
+  cliente de la app Android de Micra (openapi-generator, Kotlin).
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/v1/pulse` | Carga FNC, Bolsa NY, TRM y clima de Bogotá para las cintas. `status` dice qué fuente respondió y cuál falló. |
+
+No necesita llaves. En local:
+
+```
+pip install -r requirements.txt uvicorn
+npm run api    # FastAPI en el puerto 8000
+npm run dev    # el sitio; /api/v1 pasa a FastAPI
+```
