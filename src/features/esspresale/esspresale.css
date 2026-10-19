@@ -327,7 +327,7 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
   }
   .essp-slide .essp-bg, .essp-slide .essp-sheet, .essp-slide .essp-dash { display: none; }
   .essp-slide .essp-in {
-    min-height: 100svh; padding: 104px 18px 196px; gap: 14px; background: #0d0e11;
+    min-height: 100svh; padding: 160px 18px 196px; gap: 14px; background: #0d0e11;
     display: flex; flex-direction: column; justify-content: flex-start;
   }
   .essp-slide .essp-main { display: block; }
@@ -341,7 +341,10 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
     content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background: linear-gradient(180deg, rgba(10, 10, 12, .7) 0%, rgba(10, 10, 12, .82) 22%, rgba(10, 10, 12, .62) 52%, rgba(10, 10, 12, .08) 72%, rgba(10, 10, 12, 0) 100%);
   }
-  .essp-hero-phone .essp-phone-screen { z-index: 2; padding: 12px 12px 0; }
+  .essp-hero-phone .essp-phone-screen { z-index: 2; padding: 66px 12px 0; }
+  /* El menú del sitio va encima de la pantalla de la app, en crema */
+  .navbar.navbar--sheet, .navbar--sheet.navbar--paper { color: var(--cream); }
+  .navbar--sheet .lang-switcher--ink .lang-btn { color: var(--cream); }
   .essp-hero-phone .essp-phone-status { display: none; }
   .essp-hero-phone .essp-phone-appbar { padding: 0 4px 8px; font-size: 9.5px; }
   .essp-hero-phone .essp-micra { font-size: 22px; }
@@ -386,6 +389,6 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
 @container (max-width: 760px) {
   @media (max-height: 700px) {
     .essp-slide .essp-lede { display: none; }
-    .essp-slide .essp-in { padding-top: 96px; padding-bottom: 184px; }
+    .essp-slide .essp-in { padding-top: 152px; padding-bottom: 184px; }
   }
 }
