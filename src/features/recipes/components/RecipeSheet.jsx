@@ -1,9 +1,12 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import translations from '../../i18n/translations.js';
 
-// Hoja de instrucciones al estilo del folleto de AeroPress: cada paso de la
-// receta con su número, un dibujo de línea y el texto, resaltando en rojo la
-// temperatura y en azul los tiempos. El dibujo se elige por el tipo de paso
-// (leído del texto en español; los 3 idiomas tienen los mismos pasos).
+// Hoja de instrucciones copiada del folleto impreso de AeroPress: título en
+// negrita con la temperatura en rojo y la posición en azul, pasos numerados
+// con dibujos de línea (manos, cámara con ①②③, taza acanalada), columna de
+// datos a la derecha separada por una raya y, abajo, el doblez con el título
+// en los otros idiomas. El dibujo se elige por el tipo de paso (leído del
+// texto en español; los 3 idiomas tienen los mismos pasos).
 
 const KINDS = [
   ['serve', /^(servir|enfriar|probar)/i],
@@ -41,114 +44,188 @@ function Marked({ text }) {
   return out;
 }
 
-// Piezas del AeroPress en línea (viewBox 0 0 120 100).
-const Chamber = ({ y = 22, h = 52 }) => (
-  <>
-    <rect x="44" y={y} width="32" height={h} rx="3" />
-    <path d={`M48 ${y + 10}h6M48 ${y + 20}h6M48 ${y + 30}h6`} />
-  </>
+// "Preparación con {brand} a {temp} en posición {pos}" → piezas con color.
+function Title({ template, temp, pos }) {
+  return template.split(/(\{brand\}|\{temp\}|\{pos\})/).map((part, i) => {
+    if (part === '{brand}') return <span key={i}>AEROPRESS<sup>®</sup></span>;
+    if (part === '{temp}') return <span key={i} className="rs-hot">{temp}</span>;
+    if (part === '{pos}') return <span key={i} className="rs-time">{pos}</span>;
+    return part;
+  });
+}
+
+// ── Piezas del dibujo (viewBox 0 0 140 120) ──────────────────────────────
+const Chamber = ({ x = 50, y, w = 40, h, flip = false }) => {
+  const marks = flip ? ['1', '2', '3'] : ['3', '2', '1'];
+  return (
+    <g>
+      <rect x={x} y={y} width={w} height={h} rx="3" />
+      {marks.map((n, i) => {
+        const cy = y + h * (0.22 + i * 0.18);
+        return (
+          <g key={n}>
+            <circle cx={x + w - 9} cy={cy} r="3.4" />
+            <text x={x + w - 9} y={cy + 1.9} className="rs-svg-num">{n}</text>
+          </g>
+        );
+      })}
+      <text className="rs-svg-brand" transform={`translate(${x + 9} ${y + h / 2}) rotate(${flip ? 90 : -90})`}>AEROPRESS</text>
+    </g>
+  );
+};
+const Cap = ({ x = 46, y, w = 48 }) => (
+  <g>
+    <path d={`M${x} ${y}h${w}v6a3 3 0 0 1-3 3H${x + 3}a3 3 0 0 1-3-3Z`} />
+    <path d={`M${x + 6} ${y + 2}v5M${x + 12} ${y + 2}v5M${x + 18} ${y + 2}v5M${x + 24} ${y + 2}v5M${x + 30} ${y + 2}v5M${x + 36} ${y + 2}v5M${x + 42} ${y + 2}v5`} className="rs-thin" />
+  </g>
 );
-const Cap = ({ y }) => <path d={`M40 ${y}h40v5a3 3 0 0 1-3 3H43a3 3 0 0 1-3-3Z`} />;
-const Mug = () => <path d="M38 80h44v14a4 4 0 0 1-4 4H42a4 4 0 0 1-4-4ZM82 84h5a4 4 0 0 1 0 8h-5" />;
-const Grounds = ({ y }) => <path className="rs-fill" d={`M47 ${y}q13 -5 26 0v6H47Z`} />;
-const Water = ({ y, h }) => <rect className="rs-water" x="46" y={y} width="28" height={h} rx="1" />;
+const Mug = ({ x = 44, y = 92, w = 52, h = 26, fill = true }) => (
+  <g>
+    <path d={`M${x} ${y}h${w}v${h - 3}a3 3 0 0 1-3 3H${x + 3}a3 3 0 0 1-3-3Z`} />
+    {fill && <rect className="rs-coffee" x={x + 3} y={y + 8} width={w - 6} height={h - 11} />}
+    {Array.from({ length: 7 }).map((_, i) => (
+      <path key={i} className="rs-thin" d={`M${x + 5 + i * ((w - 10) / 6)} ${y + 3}v${h - 6}`} />
+    ))}
+  </g>
+);
+const Grounds = ({ x = 52, y, w = 36 }) => <path className="rs-fill" d={`M${x} ${y}q${w / 2} -6 ${w} 0v7H${x}Z`} />;
+const Water = ({ x = 52, y, w = 36, h }) => <rect className="rs-water" x={x} y={y} width={w} height={h} />;
+const Arrow = ({ d, head }) => (
+  <g className="rs-arrow">
+    <path d={d} />
+    <path d={head} className="rs-head" />
+  </g>
+);
+// Manos de línea, como en el folleto.
+const PalmDown = () => (
+  <g>
+    <path d="M30 14c0-5 4-8 10-8h40c8 0 14-3 22-5l22-1c5 0 6 6 1 7l-16 3c5 1 8 3 8 6 0 3-3 5-7 5H38c-5 0-8-3-8-7Z" className="rs-hand" />
+    <path className="rs-thin" d="M36 11h40M36 16h42" />
+  </g>
+);
+const Pinch = () => (
+  <path className="rs-hand" d="M74 20c-5-4-3-11 3-11l10 1 22-8c5-1 7 5 2 7l-16 7c3 2 3 6-1 7l-12 1c-3 0-6-1-8-4Z" />
+);
+const Jug = () => (
+  <g>
+    <path d="M84 6h32l-5 30H89Z" className="rs-hand" />
+    <path d="M116 12c11 0 11 17-3 17" />
+    <path d="M84 6l-6 5 7 2" />
+    <path className="rs-thin" d="M92 16h8M92 22h6M92 28h8" />
+  </g>
+);
 
 const ART = {
   setup: (
     <>
-      <Chamber y={12} h={48} />
-      <rect x="47" y="56" width="26" height="30" rx="2" />
-      <path d="M40 86h40v6H40Z" />
-      <path className="rs-arrow" d="M98 30a22 22 0 0 1 0 36m0 0-6-2m6 2 1-6" />
+      <Chamber y={10} h={74} flip />
+      <rect x="54" y="58" width="32" height="44" rx="2" />
+      <path d="M46 102h48v7H46Z" />
+      <Arrow d="M110 30a30 30 0 0 1 0 50" head="M110 80l-7-1m7 1 0-7" />
     </>
   ),
   upright: (
     <>
-      <Chamber y={26} h={48} />
-      <Cap y={74} />
-      <Mug />
-      <path className="rs-arrow" d="M98 34v30m0 0-3-4m3 4 3-4" />
+      <Chamber y={18} h={62} />
+      <Cap y={80} />
+      <Mug y={90} fill={false} />
+      <Arrow d="M114 22v40" head="M114 62l-4-6m4 6 4-6" />
     </>
   ),
   coffee: (
     <>
-      <Chamber y={34} h={44} />
-      <Grounds y={70} />
-      <path d="M64 6l26-6 3 9-26 7Z" />
-      <path className="rs-dots" d="M66 18v4m-2 4v4m4 2v4m-3 4v4m2 4v4" />
+      <Chamber y={36} h={56} />
+      <Grounds y={84} />
+      <Cap y={92} />
+      <path d="M86 6h22v4a11 11 0 0 1-22 0Z" className="rs-hand" />
+      <path d="M108 8h24" />
+      <path className="rs-dots" d="M88 22l-5 5m-3 5-3 5m-3 5-2 5m-2 6-1 5m-1 6v4" />
     </>
   ),
   grind: (
     <>
-      <rect x="46" y="30" width="28" height="50" rx="4" />
-      <path d="M50 30v-6h20v6M60 24V12h22" />
-      <circle cx="84" cy="12" r="4" />
-      <path d="M50 46h20M50 52h20" />
-      <path className="rs-dots" d="M56 86v3m8-3v3m-4 3v3" />
+      <rect x="54" y="36" width="32" height="56" rx="5" />
+      <path d="M58 36v-7h24v7M70 29V16h34" />
+      <circle cx="108" cy="16" r="5" />
+      <path className="rs-thin" d="M58 52h24M58 58h24" />
+      <path className="rs-dots" d="M64 98v4m6-2v4m6-6v4m-9 8v3m6-2v3" />
     </>
   ),
   pour: (
     <>
-      <Chamber y={34} h={44} />
-      <Water y={48} h={26} />
-      <Grounds y={68} />
-      <path d="M70 4h22a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H74M70 4l-10 10 10 2" />
-      <path className="rs-stream" d="M60 14q-2 14 0 34" />
+      <Chamber y={40} h={52} />
+      <Water y={56} h={30} />
+      <Grounds y={84} />
+      <Cap y={92} />
+      <Jug />
+      <path className="rs-stream" d="M80 10q-10 16-8 46" />
     </>
   ),
   stir: (
     <>
-      <Chamber y={34} h={44} />
-      <Water y={44} h={30} />
-      <path d="M62 6l-4 58M54 64h8" />
-      <path className="rs-arrow" d="M40 58c8 6 32 6 40 0m0 0-6 0m6 0-2 6M40 58l6 0m-6 0 2 6" />
+      <Chamber y={40} h={52} />
+      <Water y={50} h={36} />
+      <Grounds y={84} />
+      <Cap y={92} />
+      <path d="M80 18l-8 60M68 78h8" />
+      <Pinch />
+      <Arrow d="M20 70h22" head="M42 70l-5-4m5 4-5 4" />
+      <Arrow d="M120 70H98" head="M98 70l5-4m-5 4 5 4" />
     </>
   ),
   wait: (
     <>
-      <Chamber y={34} h={44} />
-      <Water y={44} h={30} />
-      <circle cx="92" cy="28" r="14" />
-      <path d="M92 20v8l6 4M88 10h8" />
+      <Chamber y={40} h={52} />
+      <Water y={50} h={36} />
+      <Grounds y={84} />
+      <Cap y={92} />
+      <circle cx="112" cy="30" r="16" />
+      <path d="M112 20v10l7 5M106 10h12M112 10v4" />
     </>
   ),
   cap: (
     <>
-      <Chamber y={40} h={46} />
+      <Chamber y={44} h={64} />
       <Cap y={30} />
-      <ellipse className="rs-fill" cx="60" cy="12" rx="14" ry="4" />
-      <path className="rs-arrow" d="M60 18v8m0 0-3-3m3 3 3-3" />
+      <ellipse className="rs-paper" cx="70" cy="10" rx="20" ry="5" />
+      <Arrow d="M70 16v10" head="M70 26l-4-4m4 4 4-4" />
+      <Arrow d="M36 36c10 8 58 8 68 0" head="M104 36l-7 1m7-1-2 7" />
     </>
   ),
   flip: (
     <>
-      <Chamber y={26} h={46} />
-      <Cap y={72} />
-      <path className="rs-arrow" d="M30 24a34 34 0 0 1 60 0m0 0-7 0m7 0-1-7M30 80a34 34 0 0 0 60 0" />
+      <Chamber y={22} h={58} />
+      <Cap y={80} />
+      <Arrow d="M28 34a46 46 0 0 1 84 0" head="M112 34l-8-1m8 1 1-8" />
+      <Arrow d="M112 96a46 46 0 0 1-84 0" head="M28 96l8 1m-8-1-1 8" />
     </>
   ),
   press: (
     <>
-      <path d="M40 6h40v6H40ZM47 12h26v24H47Z" />
-      <Chamber y={30} h={40} />
-      <Cap y={70} />
-      <Mug />
-      <path className="rs-arrow" d="M34 10v26m0 0-3-4m3 4 3-4M86 10v26m0 0-3-4m3 4 3-4" />
+      <path d="M46 22h48v6H46Z" />
+      <rect x="54" y="28" width="32" height="20" rx="2" />
+      <PalmDown />
+      <Chamber y={40} h={40} />
+      <Cap y={80} />
+      <Mug y={90} />
+      <Arrow d="M30 30v44" head="M30 74l-4-6m4 6 4-6" />
+      <Arrow d="M110 30v44" head="M110 74l-4-6m4 6 4-6" />
     </>
   ),
   dilute: (
     <>
-      <path d="M30 40h40v50a4 4 0 0 1-4 4H34a4 4 0 0 1-4-4Z" />
-      <Water y={70} h={22} />
-      <path d="M66 6h22a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H70M66 6l-10 10 10 2" />
-      <path className="rs-stream" d="M56 16q-2 20 0 50" />
+      <path d="M34 50h52v56a4 4 0 0 1-4 4H38a4 4 0 0 1-4-4Z" />
+      <rect className="rs-coffee" x="37" y="80" width="46" height="27" />
+      <Water x={37} y={66} w={46} h={14} />
+      <Jug />
+      <path className="rs-stream" d="M80 10q-14 20-12 56" />
     </>
   ),
   serve: (
     <>
-      <path d="M22 44h34v44a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4ZM64 44h34v44a4 4 0 0 1-4 4H68a4 4 0 0 1-4-4Z" />
-      <path className="rs-fill" d="M24 54h30v6H24ZM66 54h30v6H66Z" />
-      <path className="rs-steam" d="M32 36q-4-6 0-12t0-12M44 36q-4-6 0-12M76 36q-4-6 0-12t0-12M88 36q-4-6 0-12" />
+      <Mug x={20} y={50} w={46} h={62} />
+      <Mug x={76} y={50} w={46} h={62} />
+      <path className="rs-steam" d="M34 42q-5-7 0-14t0-14M50 42q-5-7 0-14M90 42q-5-7 0-14t0-14M106 42q-5-7 0-14" />
     </>
   ),
 };
@@ -156,40 +233,53 @@ const ART = {
 export default function RecipeSheet({ recipe }) {
   const { lang, t } = useLanguage();
   const steps = recipe.steps[lang] ?? recipe.steps.es;
-  const grind = recipe.equipment.find((e) => e.label === 'grind');
-  const filter = recipe.equipment.find((e) => e.label === 'filter');
+  const pos = t(`position.${recipe.position}`);
+  const others = ['es', 'en', 'ja'].filter((l) => l !== lang);
 
   return (
-    <section className="rs" aria-labelledby={`rs-${recipe.year}`}>
-      <div className="rs-main">
-        <h4 id={`rs-${recipe.year}`} className="rs-title">
-          AEROPRESS<sup>®</sup> {t('sheet.title')} <span className="rs-hot">{recipe.temp}</span> · <span className="rs-time">{t(`position.${recipe.position}`)}</span>
-        </h4>
-        <p className="rs-sub">{t('sheet.recipeOf').replace('{name}', recipe.name).replace('{year}', recipe.year)}</p>
-        <ol className="rs-steps">
-          {steps.map((step, i) => (
-            <li key={i} className="rs-step">
-              <svg className="rs-art" viewBox="0 0 120 100" aria-hidden="true">{ART[artOf(recipe, i)]}</svg>
-              <span className="rs-n">{i + 1}</span>
-              <p><Marked text={step} /></p>
-            </li>
+    <section className="rs" lang={lang} aria-labelledby={`rs-${recipe.year}`}>
+      <div className="rs-sheet">
+        <div className="rs-main">
+          <h4 id={`rs-${recipe.year}`} className="rs-title">
+            <Title template={t('sheet.title')} temp={recipe.temp} pos={pos} />
+          </h4>
+          <ol className="rs-steps">
+            {steps.map((step, i) => (
+              <li key={i} className="rs-step">
+                <svg className="rs-art" viewBox="0 0 140 120" aria-hidden="true">{ART[artOf(recipe, i)]}</svg>
+                <span className="rs-n">{i + 1}</span>
+                <p><Marked text={step} /></p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <aside className="rs-side" aria-label={t('sheet.data')}>
+          <h4>{t('sheet.data')}</h4>
+          <p className="rs-lead">{t('sheet.lead').replace('{name}', recipe.name).replace('{year}', recipe.year)}</p>
+          <p>
+            <b>{t('modal.dose')}:</b> {recipe.dose} · <b>{t('modal.temp')}:</b> <span className="rs-hot">{recipe.temp}</span> · <b>{t('modal.water')}:</b> {recipe.water}
+          </p>
+          {recipe.equipment.map((e) => (
+            <p key={e.label}><b>{t(`equipmentLabels.${e.label}`)}:</b> {e.value[lang]}</p>
           ))}
-        </ol>
+          <p className="rs-pos"><b>{t('modal.position')}:</b> <span className="rs-time">{pos}</span></p>
+          <hr />
+          <p className="rs-coffee-note"><b><i>{t('sheet.coffee')}:</i></b> {recipe.coffee[lang]}</p>
+          <hr />
+          <p className="rs-site">www.aceropress.com</p>
+          <hr />
+          <p className="rs-legal">{t('sheet.legal')}</p>
+          <p className="rs-copy">© {new Date().getFullYear()} Acero.press</p>
+        </aside>
       </div>
 
-      <aside className="rs-side" aria-label={t('sheet.data')}>
-        <h4>{t('sheet.data')}</h4>
-        <dl>
-          <dt>{t('modal.dose')}</dt><dd>{recipe.dose}</dd>
-          <dt>{t('modal.temp')}</dt><dd className="rs-hot">{recipe.temp}</dd>
-          <dt>{t('modal.position')}</dt><dd>{t(`position.${recipe.position}`)}</dd>
-          <dt>{t('modal.water')}</dt><dd>{recipe.water}</dd>
-        </dl>
-        {grind && <p><b>{t('equipmentLabels.grind')}:</b> {grind.value[lang]}</p>}
-        {filter && <p><b>{t('equipmentLabels.filter')}:</b> {filter.value[lang]}</p>}
-        <p className="rs-legend"><b className="rs-hot">°C</b> {t('sheet.legendTemp')} · <b className="rs-time">0:00</b> {t('sheet.legendTime')}</p>
-        <p className="rs-site">www.aceropress.com</p>
-      </aside>
+      {/* El doblez del folleto: la siguiente cara empieza en otro idioma. */}
+      <div className="rs-fold" aria-hidden="true">
+        {others.map((l) => (
+          <span key={l}>{l.toUpperCase()} · {translations[l].sheet.foldTitle}</span>
+        ))}
+      </div>
     </section>
   );
 }
