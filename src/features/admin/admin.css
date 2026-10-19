@@ -1444,3 +1444,5 @@
 .mc-modes button{ border:0; background:none; color:rgba(244,242,236,.75); font-family:var(--esp-mono, monospace); font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding:7px 10px; border-radius:999px; cursor:pointer; }
 .mc-modes button.on{ background:#F4F2EC; color:#14161a; }
 @media (prefers-reduced-motion: reduce){ .mc-video{ transition:none; } .esp-logo-cam{ animation:none; } }
+/* Vidrio del panel de la receta en el visor (igual que en la foto final) */
+.mc-frost{ position:absolute; pointer-events:none; backdrop-filter:blur(10px) saturate(140%); -webkit-backdrop-filter:blur(10px) saturate(140%); }

@@ -28,6 +28,7 @@ export default function MicraCamera({ varieties, initialVariety, initialFormat =
   const [configuring, setConfiguring] = useState(true);
   const [elapsed, setElapsed] = useState(null); // segundos mientras graba
   const [busy, setBusy] = useState(false);
+  const [glass, setGlass] = useState([]); // zonas de vidrio de la tarjeta, en % del visor
 
   // Cámara (y micrófono para los videos, si lo dan)
   useEffect(() => {
@@ -82,10 +83,20 @@ export default function MicraCamera({ varieties, initialVariety, initialFormat =
       const { w, h } = FORMATS[format];
       canvas.width = w;
       canvas.height = h;
+      canvas.__glass = [];
       canvas.getContext('2d').clearRect(0, 0, w, h);
+      setGlass([]);
       return;
     }
-    drawEspresaleCard(canvas, { variety, weather, date: new Date(), format, videoOverlay: true });
+    drawEspresaleCard(canvas, { variety, weather, date: new Date(), format, videoOverlay: true }).then(() => {
+      setGlass((canvas.__glass ?? []).map((g) => ({
+        left: `${(g.x / canvas.width) * 100}%`,
+        top: `${(g.y / canvas.height) * 100}%`,
+        width: `${(g.w / canvas.width) * 100}%`,
+        height: `${(g.h / canvas.height) * 100}%`,
+        borderRadius: `${(g.r / g.w) * 100}% / ${(g.r / g.h) * 100}%`,
+      })));
+    });
   }, [variety, format, weather]);
 
   useEffect(() => {
@@ -168,6 +179,7 @@ export default function MicraCamera({ varieties, initialVariety, initialFormat =
       <div className="mc-stage">
         <div className="mc-frame" style={{ '--mc-ar': w / h }}>
           <video ref={videoRef} className="mc-video" playsInline muted style={{ filter: `blur(${blur}px) brightness(${configuring ? 0.72 : 1})` }} />
+          {glass.map((st, i) => <span key={i} className="mc-frost" style={st} aria-hidden="true" />)}
           <canvas ref={cardRef} className="mc-card" aria-hidden="true" />
           {status === 'starting' && <p className="mc-status">Abriendo la cámara…</p>}
           {recording && <span className="mc-rec">● REC {clock(elapsed)} / {clock(MAX_SECONDS)}</span>}

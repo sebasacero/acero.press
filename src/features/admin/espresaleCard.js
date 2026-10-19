@@ -108,6 +108,21 @@ function drawCover(ctx, img, w, h) {
   ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
 }
 
+/** Rectángulo redondeado (con respaldo para navegadores sin ctx.roundRect). */
+function roundPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+const FROST = 24; // px de desenfoque detrás del vidrio (a tamaño real de la tarjeta)
+const canFilter = (ctx) => 'filter' in ctx;
+
 function grid(ctx, w, h, step, minor, major) {
   ctx.lineWidth = 1;
   for (let i = 0, x = 0; x <= w; i++, x += step) {
@@ -366,7 +381,10 @@ function sheetFrame(ctx, w, h, color, soft) {
   }
 }
 
-/** Panel oscuro idéntico al odómetro de los banners de video. */
+/** Panel de la receta en vidrio esmerilado (glassmorphism): desenfoca lo que
+ *  hay detrás, tinte oscuro para que se lea, brillo arriba y bordes claros.
+ *  tone: 'paper' (sobre el plano), 'photo' (sobre la foto) u 'overlay'
+ *  (capa sobre video: el desenfoque lo pone composeVideoFrame). */
 const PANEL_BASE = 384;
 const PANEL_LINE = 26;
 
@@ -376,16 +394,44 @@ function panelLines(ctx, text, w, maxLines) {
   return wrapLines(ctx, text, w - 60, maxLines);
 }
 
-function drawPanel(ctx, x, y, w, r, textLines) {
+function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   const pad = 30;
   const inner = w - pad * 2;
   const h = PANEL_BASE + textLines.length * PANEL_LINE;
+  const R = 28;
 
-  ctx.fillStyle = 'rgba(14,15,19,0.9)';
-  ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  // Vidrio: lo que ya está pintado detrás (papel o foto) se desenfoca
+  if (tone !== 'overlay' && canFilter(ctx)) {
+    ctx.save();
+    roundPath(ctx, x, y, w, h, R);
+    ctx.clip();
+    ctx.filter = `blur(${FROST}px)`;
+    ctx.drawImage(ctx.canvas, 0, 0);
+    ctx.restore();
+  }
+  ctx.save();
+  roundPath(ctx, x, y, w, h, R);
+  ctx.fillStyle = tone === 'paper' ? 'rgba(22,28,48,0.9)' : tone === 'photo' ? 'rgba(14,15,19,0.4)' : 'rgba(14,15,19,0.46)';
+  ctx.fill();
+  const sheen = ctx.createLinearGradient(x, y, x + w, y + h);
+  sheen.addColorStop(0, `rgba(255,255,255,${tone === 'paper' ? 0.14 : 0.22})`);
+  sheen.addColorStop(0.55, 'rgba(255,255,255,0.05)');
+  sheen.addColorStop(1, 'rgba(255,255,255,0.03)');
+  ctx.fillStyle = sheen;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.42)';
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.stroke();
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + R, y + 1.5);
+  ctx.lineTo(x + w - R, y + 1.5);
+  ctx.stroke();
+  ctx.restore();
+  // Zona de vidrio, para que el video y la cámara la desenfoquen debajo
+  (ctx.canvas.__glass ||= []).push({ x, y, w, h, r: R });
 
   let cy = y + pad + 10;
   // Cota superior: FIG. + insignia roja
@@ -398,7 +444,8 @@ function drawPanel(ctx, x, y, w, r, textLines) {
   ctx.font = `700 16px ${MONO}`;
   const bw = ctx.measureText(badge).width + 18;
   ctx.fillStyle = C.red;
-  ctx.fillRect(x + w - pad - bw, cy - 14, bw, 28);
+  roundPath(ctx, x + w - pad - bw, cy - 14, bw, 28, 14);
+  ctx.fill();
   ctx.fillStyle = '#fff';
   ctx.fillText(badge, x + w - pad - bw + 9, cy + 1);
   cy += 26;
@@ -426,11 +473,12 @@ function drawPanel(ctx, x, y, w, r, textLines) {
   ctx.textAlign = 'center';
   digits.forEach((d, i) => {
     const dx = x + pad + i * (dw + 6);
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
-    ctx.fillRect(dx, cy, dw, dh);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    roundPath(ctx, dx + 0.5, cy + 0.5, dw - 1, dh - 1, 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(dx + 0.5, cy + 0.5, dw - 1, dh - 1);
+    ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.fillText(d, dx + dw / 2, cy + dh / 2 + 2);
   });
@@ -450,8 +498,9 @@ function drawPanel(ctx, x, y, w, r, textLines) {
   const segW = (inner - gap * (segs - 1)) / segs;
   const filled = r.ratio ? Math.max(2, Math.min(segs, Math.round(((20 - r.ratio) / 10) * segs))) : 10;
   for (let i = 0; i < segs; i++) {
-    ctx.fillStyle = i < filled ? '#f91f1f' : 'rgba(255,255,255,0.12)';
-    ctx.fillRect(x + pad + i * (segW + gap), cy, segW, 12);
+    ctx.fillStyle = i < filled ? '#f91f1f' : 'rgba(255,255,255,0.2)';
+    roundPath(ctx, x + pad + i * (segW + gap), cy, segW, 12, 6);
+    ctx.fill();
   }
 
   // Especificaciones (como las tarjetas de recetas del campeonato)
@@ -550,6 +599,7 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   const { w, h, safe, logoH } = F;
   canvas.width = w;
   canvas.height = h;
+  canvas.__glass = [];
   const ctx = canvas.getContext('2d');
   const r = parseRecipe(variety.recipe_text || '');
 
@@ -670,7 +720,7 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   const panelH = PANEL_BASE + lines.length * PANEL_LINE;
   if (photo || videoOverlay) {
     // Con foto o video: el panel abajo, para que la foto respire arriba
-    drawPanel(ctx, panelX, Math.max(zoneTop, zoneBottom - panelH), panelW, r, lines);
+    drawPanel(ctx, panelX, Math.max(zoneTop, zoneBottom - panelH), panelW, r, lines, photo ? 'photo' : 'overlay');
   } else {
     const drawW = panelX - X0 - 20;
     // 430 = ancho del dibujo con sus etiquetas de cota (unidades locales)
@@ -684,7 +734,7 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
     ctx.scale(scale, scale);
     drawAeropress(ctx, r, theme.ink, theme.bg);
     ctx.restore();
-    drawPanel(ctx, panelX, groupTop + (groupH - panelH) / 2, panelW, r, lines);
+    drawPanel(ctx, panelX, groupTop + (groupH - panelH) / 2, panelW, r, lines, 'paper');
   }
 
   return r;
@@ -696,6 +746,20 @@ export function composeVideoFrame(ctx, video, overlay) {
   ctx.fillStyle = '#0b0c0f';
   ctx.fillRect(0, 0, w, h);
   drawCover(ctx, video, w, h);
+  // Vidrio esmerilado: el video se desenfoca detrás del panel de la receta
+  const glass = overlay.__glass;
+  if (glass?.length && canFilter(ctx)) {
+    const sx = w / overlay.width;
+    const sy = h / overlay.height;
+    glass.forEach((g) => {
+      ctx.save();
+      roundPath(ctx, g.x * sx, g.y * sy, g.w * sx, g.h * sy, g.r * sx);
+      ctx.clip();
+      ctx.filter = `blur(${FROST * sx}px)`;
+      drawCover(ctx, video, w, h);
+      ctx.restore();
+    });
+  }
   ctx.drawImage(overlay, 0, 0, w, h);
 }
 

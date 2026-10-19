@@ -202,6 +202,7 @@ export default function EspresalePage() {
     overlaySnap.width = overlayRef.current.width;
     overlaySnap.height = overlayRef.current.height;
     overlaySnap.getContext('2d').drawImage(overlayRef.current, 0, 0);
+    overlaySnap.__glass = overlayRef.current.__glass;
     try {
       await new Promise((resolve, reject) => {
         recVideo.addEventListener('loadeddata', resolve, { once: true });
