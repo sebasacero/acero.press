@@ -4,6 +4,7 @@ import { fetchBogotaWeather } from '../../../shared/lib/weather.js';
 import { drawEspresaleCard, parseRecipe, FORMATS, igKind, composeVideoFrame, recordCardVideo, pickVideoType } from '../espresaleCard.js';
 import { publishToInstagram as igPublish, recordEspresaleSale } from '../../../shared/lib/instagram.js';
 import MicraCamera from '../components/MicraCamera.jsx';
+import { CARD_KINDS, PRESETS, presetOf, hasCameraIntent, clearCameraIntent } from '../micraFilters.js';
 
 const PAY_METHODS = [
   { id: 'cash', label: 'Efectivo' },
@@ -68,18 +69,29 @@ export default function EspresalePage() {
   const [saleBusy, setSaleBusy] = useState(null); // 'sale' | 'publish'
   const [cardPost, setCardPost] = useState(null); // { ok, text }
 
-  // Cámara Micra (se abre con el logo): opciones del filtro + cámara del celular
-  const [cameraOpen, setCameraOpen] = useState(false);
+  // Cámara Micra: se abre de una desde el ícono "m." del inicio (o con el logo)
+  const [cameraOpen, setCameraOpen] = useState(hasCameraIntent);
+  useEffect(() => { clearCameraIntent(); }, []);
+
+  // Tipo de tarjeta (sección de la cámara), filtro y texto de cada sección
+  const [kind, setKind] = useState('recipe');
+  const [presetIds, setPresetIds] = useState({ invite: PRESETS.invite[0].id, announce: PRESETS.announce[0].id });
+  const [texts, setTexts] = useState({ invite: '', announce: '' });
+  const preset = kind === 'recipe' ? null : presetOf(kind, presetIds[kind]);
+  const cardText = kind === 'recipe' ? '' : texts[kind];
+  const cardReady = kind !== 'recipe' || !!selected;
 
   useEffect(() => {
     supabase
       .from('products')
-      .select('id, name, recipe_text, product_variants(id, label, price, active)')
+      .select('id, name, recipe_text, image_url, product_variants(id, label, price, active)')
       .eq('category', 'coffee_bag')
       .eq('active', true)
       .then(({ data, error }) => {
         if (error) console.error('Error cargando variedades:', error.message);
         setVarieties(data ?? []);
+        // La cámara abre con un filtro puesto: la primera variedad
+        setSelected((cur) => cur ?? data?.[0] ?? null);
       });
     fetchBogotaWeather().then(setWeather);
     const id = setInterval(() => setNow(new Date()), 30000);
@@ -118,11 +130,12 @@ export default function EspresalePage() {
   const videoMode = !!(usePhoto && videoEl);
   const minuteKey = `${now.getHours()}:${now.getMinutes()}`;
   useEffect(() => {
-    if (!selected || !canvasRef.current) return undefined;
+    if (!cardReady || !canvasRef.current) return undefined;
     const canvas = canvasRef.current;
+    const content = { variety: selected, kind, preset, text: cardText };
     if (!videoMode) {
       drawEspresaleCard(canvas, {
-        variety: selected,
+        ...content,
         weather,
         date: new Date(),
         format,
@@ -140,7 +153,7 @@ export default function EspresalePage() {
     // Un dibujo por cuadro nuevo del video (no 60 por segundo) cuando el
     // navegador lo permite.
     const perFrame = typeof videoEl.requestVideoFrameCallback === 'function';
-    drawEspresaleCard(overlay, { variety: selected, weather, date: new Date(), format, videoOverlay: true }).then(() => {
+    drawEspresaleCard(overlay, { ...content, weather, date: new Date(), format, videoOverlay: true }).then(() => {
       if (!alive) return;
       // La vista previa se ve a ~400 px: se compone a la mitad de resolución
       // (el video final se graba aparte a tamaño completo).
@@ -164,10 +177,10 @@ export default function EspresalePage() {
       else cancelAnimationFrame(raf);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected, weather, format, photoImg, usePhoto, videoMode, videoEl, minuteKey]);
+  }, [selected, kind, preset, cardText, cardReady, weather, format, photoImg, usePhoto, videoMode, videoEl, minuteKey]);
 
   // El video grabado deja de valer si cambia lo que se ve en la tarjeta
-  useEffect(() => { setCardVideo(null); }, [selected, format, videoEl, usePhoto]);
+  useEffect(() => { setCardVideo(null); }, [selected, kind, preset, cardText, format, videoEl, usePhoto]);
 
   const recipe = useMemo(() => parseRecipe(selected?.recipe_text || ''), [selected]);
   const variants = useMemo(
@@ -185,10 +198,19 @@ export default function EspresalePage() {
   }, [variants]);
   const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const tempStr = weather.tempC !== null ? `${weather.tempC}°C` : '—';
-  const fileName = `micra-${slug(selected?.name)}.png`;
+  const fileName = `micra-${slug(preset?.name ?? selected?.name)}.png`;
 
-  const buildCaption = () =>
-    `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${tempStr} en Bogotá · ${timeStr}`;
+  const buildCaption = () => {
+    const where = `${weather.icon} ${tempStr} en Bogotá · ${timeStr}`;
+    if (kind === 'invite') {
+      return `☕ ${preset.name}${cardText ? ` — ${preset.textLabel.toLowerCase()}: ${cardText}` : ''} · AceroPress\n\n${preset.note}\n\n📍 Chapinero, Bogotá · ${where}`;
+    }
+    if (kind === 'announce') {
+      const coffee = preset.usesVariety && selected ? `: ${selected.name}` : '';
+      return `📣 ${preset.name}${coffee} — AceroPress\n\n${cardText || 'Más información en la barra o por WhatsApp.'}\n\n${where}`;
+    }
+    return `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${where}`;
+  };
 
   // Graba (si hace falta) el video de la tarjeta con el video de fondo.
   const ensureCardVideo = async () => {
@@ -285,7 +307,7 @@ export default function EspresalePage() {
 
   // Sube el archivo a Storage y crea su fila en Publicaciones. Devuelve { url, id }.
   const uploadPublication = async (blobOrFile, ext, contentType, extra = {}) => {
-    const path = `esspresale/${Date.now()}-${slug(selected?.name || 'captura')}.${ext}`;
+    const path = `esspresale/${Date.now()}-${slug(preset?.name || selected?.name || 'captura')}.${ext}`;
     const { error } = await supabase.storage.from('marketing').upload(path, blobOrFile, { contentType });
     if (error) throw error;
     const { data: pub } = supabase.storage.from('marketing').getPublicUrl(path);
@@ -383,7 +405,7 @@ export default function EspresalePage() {
     { left: pct(safe.x1, w), top: pct(safe.y0, h), width: pct(w - safe.x1, w), height: pct(safe.y1 - safe.y0, h) },
   ];
 
-  const ready = !!selected && recording === null;
+  const ready = cardReady && recording === null;
   const publishLabel = saleBusy === 'publish'
     ? 'Publicando…'
     : `Publicar ${PUBLISH_LABEL[igKind(format, videoMode)]}`;
@@ -485,6 +507,31 @@ export default function EspresalePage() {
         <section className="esp-panel" aria-labelledby="esp-card-title">
           <h2 className="esp-panel-title" id="esp-card-title"><span>02</span> Tarjeta</h2>
 
+          <Field label="Tipo de tarjeta">
+            <div className="esp-chips esp-chips-kind">
+              {CARD_KINDS.map((k) => (
+                <button key={k.id} type="button" className={`esp-chip ${kind === k.id ? 'active' : ''}`} aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
+                  {k.label}
+                </button>
+              ))}
+            </div>
+            {preset && (
+              <div className="esp-kind-row">
+                <select className="esp-input" aria-label="Modelo" value={preset.id} onChange={(e) => setPresetIds((p) => ({ ...p, [kind]: e.target.value }))}>
+                  {PRESETS[kind].map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <input
+                  className="esp-input"
+                  aria-label={preset.textLabel}
+                  placeholder={`${preset.textLabel}: ${preset.placeholder}`}
+                  maxLength={kind === 'announce' ? 140 : 40}
+                  value={cardText}
+                  onChange={(e) => setTexts((t) => ({ ...t, [kind]: e.target.value }))}
+                />
+              </div>
+            )}
+          </Field>
+
           <Field label="Fondo">
             <div className="esp-chips">
               <button type="button" className={`esp-chip ${!(usePhoto && (photoImg || videoEl)) ? 'active' : ''}`} onClick={() => setUsePhoto(false)}>
@@ -549,7 +596,7 @@ export default function EspresalePage() {
               <button type="button" className={`esp-btn ${canShareFiles || videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!ready} onClick={download}>
                 {videoMode ? `Descargar ${cardVideo ? cardVideo.ext.toUpperCase() : 'video'}` : 'Descargar PNG'}
               </button>
-              <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>Abrir WhatsApp</button>
+              <button type="button" className="esp-btn esp-btn-ghost" disabled={!cardReady} onClick={openWhatsApp}>Abrir WhatsApp</button>
               <button type="button" className="esp-btn esp-btn-ghost" disabled={!ready || !!saleBusy} onClick={() => publishCard()}>{publishLabel}</button>
               <button type="button" className="esp-btn esp-btn-ghost" disabled={!ready || saving || !!savedUrl} onClick={saveToPublications}>
                 {savedUrl ? '✓ En Publicaciones' : saving ? 'Guardando…' : 'Guardar en Publicaciones'}
@@ -576,7 +623,7 @@ export default function EspresalePage() {
           </div>
 
           <div className={`esp-canvas-wrap esp-canvas-${format}`} style={{ '--esp-ar': w / h }}>
-            <div className="esp-canvas-frame" hidden={!selected}>
+            <div className="esp-canvas-frame" hidden={!cardReady}>
               <canvas ref={canvasRef} className="esp-canvas" />
               {recording !== null && (
                 <div className="esp-recording" role="status">
@@ -594,7 +641,7 @@ export default function EspresalePage() {
                 </div>
               )}
             </div>
-            {!selected && (
+            {!cardReady && (
               <div className="esp-empty">
                 <span className="esp-empty-fig">FIG. 01</span>
                 <p>Elige una variedad para dibujar la tarjeta.</p>
@@ -618,9 +665,15 @@ export default function EspresalePage() {
         <MicraCamera
           varieties={varieties}
           variety={selected}
+          onVariety={setSelected}
+          kind={kind}
+          onKind={setKind}
+          presetId={preset?.id}
+          onPreset={(id) => setPresetIds((p) => ({ ...p, [kind]: id }))}
+          text={cardText}
+          onText={(t) => setTexts((x) => ({ ...x, [kind]: t }))}
           format={format}
           weather={weather}
-          onVariety={setSelected}
           onFormat={setFormat}
           onFile={(file) => { takeFile(file); setCameraOpen(false); }}
           onClose={() => setCameraOpen(false)}

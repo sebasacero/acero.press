@@ -425,12 +425,9 @@ function panelLines(ctx, text, w, maxLines) {
   return wrapLines(ctx, text, w - 60, maxLines);
 }
 
-function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
-  const pad = 30;
-  const inner = w - pad * 2;
-  const h = PANEL_BASE + textLines.length * PANEL_LINE;
+/** Caja de vidrio: desenfoca lo que hay detrás y la marca para el video. */
+function glassBox(ctx, x, y, w, h, tone) {
   const R = 28;
-
   // Vidrio: lo que ya está pintado detrás (papel o foto) se desenfoca
   if (tone !== 'overlay') frost(ctx, x, y, w, h, R);
   ctx.save();
@@ -456,15 +453,15 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   ctx.restore();
   // Zona de vidrio, para que el video y la cámara la desenfoquen debajo
   (ctx.canvas.__glass ||= []).push({ x, y, w, h, r: R });
+}
 
-  let cy = y + pad + 10;
-  // Cota superior: FIG. + insignia roja
+/** Cota del panel: FIG. a la izquierda y la insignia roja a la derecha. Devuelve la y siguiente. */
+function panelHeader(ctx, x, w, cy, pad, fig, badge) {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
   ctx.font = `500 16px ${MONO}`;
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.fillText('FIG. 01 — RECETA AEROPRESS', x + pad, cy);
-  const badge = r.ratio ? `RATIO 1:${fmt(Math.round(r.ratio * 10) / 10)}` : 'MICRA';
+  ctx.fillText(fig, x + pad, cy);
   ctx.font = `700 16px ${MONO}`;
   const bw = ctx.measureText(badge).width + 18;
   ctx.fillStyle = C.red;
@@ -480,6 +477,19 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   ctx.lineTo(x + w - pad, cy);
   ctx.stroke();
   ctx.setLineDash([]);
+  return cy;
+}
+
+function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
+  const pad = 30;
+  const inner = w - pad * 2;
+  const h = PANEL_BASE + textLines.length * PANEL_LINE;
+  glassBox(ctx, x, y, w, h, tone);
+
+  let cy = y + pad + 10;
+  // Cota superior: FIG. + insignia roja
+  const badge = r.ratio ? `RATIO 1:${fmt(Math.round(r.ratio * 10) / 10)}` : 'MICRA';
+  cy = panelHeader(ctx, x, w, cy, pad, 'FIG. 01 — RECETA AEROPRESS', badge);
 
   // Etiqueta de dosis
   cy += 34;
@@ -564,6 +574,66 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   return h;
 }
 
+// Panel de mensaje (invitación y anuncio): cota, el mensaje en grande y
+// datos en dos columnas.
+const NOTE_LINE = 44;
+const NOTE_ROW = 72;
+
+function noteLines(ctx, text, w, maxLines) {
+  if (!text || maxLines <= 0) return [];
+  ctx.font = `600 34px ${GROTESK}`;
+  return wrapLines(ctx, text, w - 60, maxLines);
+}
+
+function noteHeight(lines, rows) {
+  return 96 + lines.length * NOTE_LINE + (rows.length ? 24 + Math.ceil(rows.length / 2) * NOTE_ROW : 0) + 10;
+}
+
+function drawNotePanel(ctx, x, y, w, { fig, badge, lines, rows }, tone) {
+  const pad = 30;
+  const h = noteHeight(lines, rows);
+  glassBox(ctx, x, y, w, h, tone);
+  let cy = panelHeader(ctx, x, w, y + pad + 10, pad, fig, badge);
+
+  cy += 26;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = `600 34px ${GROTESK}`;
+  ctx.fillStyle = '#fff';
+  lines.forEach((line, i) => ctx.fillText(line, x + pad, cy + i * NOTE_LINE));
+  cy += lines.length * NOTE_LINE;
+
+  if (rows.length) {
+    cy += 14;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x + pad, cy);
+    ctx.lineTo(x + w - pad, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    cy += 16;
+    const colW = (w - pad * 2) / 2;
+    rows.forEach(([label, value], i) => {
+      const rx = x + pad + (i % 2) * colW;
+      const ry = cy + Math.floor(i / 2) * NOTE_ROW;
+      ctx.font = `500 13px ${MONO}`;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText(label, rx, ry);
+      ctx.font = `700 24px ${MONO}`;
+      ctx.fillStyle = i === 0 ? C.red : 'rgba(255,255,255,0.9)';
+      let size = 24;
+      while (ctx.measureText(value).width > colW - 16 && size > 14) {
+        size -= 1;
+        ctx.font = `700 ${size}px ${MONO}`;
+      }
+      ctx.fillText(value, rx, ry + 22);
+    });
+  }
+  ctx.textBaseline = 'alphabetic';
+  return h;
+}
+
 /** Cajetín (title block) del plano: clima, hora, fecha, lugar. */
 function drawTitleBlock(ctx, x, y, w, h, cells, theme) {
   ctx.fillStyle = theme.blockBg;
@@ -609,14 +679,25 @@ function fitTitle(ctx, text, maxWidth, maxLines, start, min) {
   return { size: min, lines: wrapLines(ctx, text, maxWidth, maxLines) };
 }
 
+// Cada tipo de tarjeta (sección de la cámara de Micra)
+const KIND = {
+  recipe: { fig: 'FIG. 03 — MICRA', who: 'PREPARÓ' },
+  invite: { fig: 'FIG. 04 — INVITACIÓN', who: 'INVITA' },
+  announce: { fig: 'FIG. 05 — ANUNCIO', who: 'PUBLICA' },
+};
+const UP = (t) => String(t || '').toLocaleUpperCase('es-CO');
+
 /**
- * Dibuja la tarjeta. `photo` (Image) es opcional: si existe, la hoja se
+ * Dibuja la tarjeta. `kind` es la sección: 'recipe' (la variedad y su receta),
+ * 'invite' (invitación a un café) o 'announce' (anuncio); en las dos últimas
+ * `preset` es el filtro elegido (ver micraFilters.js) y `text` lo que se
+ * escribió encima. `photo` (Image) es opcional: si existe, la hoja se
  * monta sobre la foto (como el video de fondo de los banners).
  * Con `videoOverlay: true` dibuja solo la capa de encima (degradado,
  * cuadrícula, marco y contenido) sobre fondo transparente, para
  * componerla cuadro a cuadro encima de un video (ver recordCardVideo).
  */
-export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'feed', photo = null, videoOverlay = false }) {
+export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'feed', photo = null, videoOverlay = false, kind = 'recipe', preset = null, text = '' }) {
   await ensureFonts();
   const logo = await loadImage('/image/logo.png');
   const F = FORMATS[format] || FORMATS.feed;
@@ -625,7 +706,9 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   canvas.height = h;
   canvas.__glass = [];
   const ctx = canvas.getContext('2d');
-  const r = parseRecipe(variety.recipe_text || '');
+  const r = parseRecipe(variety?.recipe_text || '');
+  const K = KIND[kind] || KIND.recipe;
+  const note = kind !== 'recipe' && preset;
 
   const theme = photo || videoOverlay
     ? { ink: C.cream, soft: 'rgba(247,243,232,0.75)', line: 'rgba(247,243,232,0.75)', bg: 'rgba(14,15,19,0.85)', blockBg: 'rgba(14,15,19,0.72)' }
@@ -678,7 +761,7 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   ctx.textBaseline = 'alphabetic';
   ctx.font = `700 19px ${MONO}`;
   ctx.fillStyle = theme.ink;
-  ctx.fillText('FIG. 03 — MICRA', X1, y + 26);
+  ctx.fillText(K.fig, X1, y + 26);
   ctx.font = `500 15px ${MONO}`;
   ctx.fillStyle = theme.soft;
   ctx.fillText(`${F.label.toUpperCase()} · ${w}×${h}`, X1, y + 52);
@@ -693,8 +776,8 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // C · Título: la variedad, como el "COLD BREW." del banner
-  const name = `${String(variety.name || '').toUpperCase()}.`;
+  // C · Título: la variedad (o el nombre del filtro), como el "COLD BREW." del banner
+  const name = `${UP(note ? preset.name : variety?.name)}.`;
   const t = fitTitle(ctx, name, X1 - X0, 2, 108, 56);
   ctx.fillStyle = theme.ink;
   ctx.textAlign = 'left';
@@ -709,7 +792,14 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
   ctx.fill();
   ctx.font = `500 18px ${MONO}`;
   ctx.fillStyle = theme.soft;
-  ctx.fillText('BOGOTÁ, 2.600 MSNM · RECETA AEROPRESS', X0 + 22, y);
+  const sub = !note
+    ? 'BOGOTÁ, 2.600 MSNM · RECETA AEROPRESS'
+    : kind === 'invite' && text
+      ? `${UP(preset.textLabel)}: ${UP(text)}`
+      : preset.usesVariety && variety
+        ? `${UP(variety.name)} · BOGOTÁ, 2.600 MSNM`
+        : 'BOGOTÁ, 2.600 MSNM · ACERO.PRESS';
+  ctx.fillText(sub, X0 + 22, y);
   y += 34;
 
   // E · Cajetín al final de la zona segura
@@ -728,23 +818,42 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
       { label: 'CLIMA BOGOTÁ', value: `${weather?.icon || ''} ${temp}`.trim(), span: 1.1 },
       { label: 'HORA', value: time, span: 1 },
       { label: 'FECHA', value: day, span: 1.25, size: 26 },
-      { label: 'PREPARÓ', value: 'ACERO.press', span: 1.35, accent: true },
+      { label: K.who, value: 'ACERO.press', span: 1.35, accent: true },
     ],
     theme
   );
 
-  // D · Dibujo acotado (izquierda) + panel del odómetro (derecha)
-  const recipeText = variety.recipe_text || 'Pregúntale a tu barista por la receta de hoy.';
-  const panelW = Math.min(490, X1 - X0);
-  const panelX = X1 - panelW;
+  // D · Dibujo acotado (izquierda) + panel del odómetro o del mensaje (derecha)
+  const onPhoto = !!(photo || videoOverlay);
   const zoneTop = y;
   const zoneBottom = blockY - 28;
-  const fit = Math.floor((zoneBottom - zoneTop - PANEL_BASE) / PANEL_LINE);
-  const lines = panelLines(ctx, recipeText, panelW, Math.max(0, Math.min(4, fit)));
-  const panelH = PANEL_BASE + lines.length * PANEL_LINE;
-  if (photo || videoOverlay) {
+  // Con foto, el mensaje usa todo el ancho; la receta y el plano, la columna derecha
+  const panelW = note && onPhoto ? X1 - X0 : Math.min(490, X1 - X0);
+  const panelX = X1 - panelW;
+  let panelH;
+  let paint;
+  if (note) {
+    // Un anuncio sin texto no muestra el ejemplo del campo (no debe publicarse)
+    const message = kind === 'invite' ? preset.note : text || 'Más información en la barra de ACERO.press o por WhatsApp.';
+    const rows = kind === 'invite'
+      ? [['CAFÉ', variety?.name || 'De especialidad'], ['PREPARACIÓN', 'AeroPress'], ['DÓNDE', 'Chapinero, Bogotá'], ['VÁLIDO', text && preset.textLabel === 'Cuándo' ? text : `Hoy · ${day}`]]
+      : preset.usesVariety && variety
+        ? [['CAFÉ', variety.name], ['RECETA', r.dose && r.water ? `${fmt(r.dose)} g · ${fmt(r.water)} ml` : 'AeroPress']]
+        : [];
+    const fitLines = Math.floor((zoneBottom - zoneTop - noteHeight([], rows)) / NOTE_LINE);
+    const lines = noteLines(ctx, message, panelW, Math.max(1, Math.min(onPhoto ? 4 : 6, fitLines)));
+    panelH = noteHeight(lines, rows);
+    paint = (px, py, tone) => drawNotePanel(ctx, px, py, panelW, { fig: K.fig, badge: preset.badge, lines, rows }, tone);
+  } else {
+    const recipeText = variety?.recipe_text || 'Pregúntale a tu barista por la receta de hoy.';
+    const fit = Math.floor((zoneBottom - zoneTop - PANEL_BASE) / PANEL_LINE);
+    const lines = panelLines(ctx, recipeText, panelW, Math.max(0, Math.min(4, fit)));
+    panelH = PANEL_BASE + lines.length * PANEL_LINE;
+    paint = (px, py, tone) => drawPanel(ctx, px, py, panelW, r, lines, tone);
+  }
+  if (onPhoto) {
     // Con foto o video: el panel abajo, para que la foto respire arriba
-    drawPanel(ctx, panelX, Math.max(zoneTop, zoneBottom - panelH), panelW, r, lines, photo ? 'photo' : 'overlay');
+    paint(panelX, Math.max(zoneTop, zoneBottom - panelH), photo ? 'photo' : 'overlay');
   } else {
     const drawW = panelX - X0 - 20;
     // 430 = ancho del dibujo con sus etiquetas de cota (unidades locales)
@@ -759,7 +868,7 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
     ctx.scale(scale, scale);
     drawAeropress(ctx, r, theme.ink, theme.bg);
     ctx.restore();
-    drawPanel(ctx, panelX, groupTop + (groupH - panelH) / 2, panelW, r, lines, 'paper');
+    paint(panelX, groupTop + (groupH - panelH) / 2, 'paper');
   }
 
   return r;
