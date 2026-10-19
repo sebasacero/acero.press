@@ -19,12 +19,20 @@ const MARKER = '"Permanent Marker", cursive';
 // `safe` es la zona que ninguna app tapa; logo, título, panel y cajetín
 // viven dentro de ella. El fondo (papel, cuadrícula, marco) sí llega al borde.
 //  - feed: Instagram 4:5, margen 96 (cabe en el recorte 3:4 del perfil).
-//  - story: vertical universal para Stories, Reels y TikTok: libre 270
-//    arriba, 440 abajo y 180 a la derecha (botones de Reels/TikTok).
+//  - reel: 9:16 de Reels y TikTok: libre 270 arriba, 440 abajo (texto y
+//    audio) y 180 a la derecha (botones de me gusta, comentar, compartir).
+//  - story: 9:16 de Historias: solo tapan la barra del perfil arriba (250) y
+//    la de responder abajo (250), así que el ancho es casi completo y el
+//    panel de la receta baja y se corre a la derecha.
 export const FORMATS = {
   feed: { w: 1080, h: 1350, label: 'Feed 4:5', apps: 'Instagram feed', safe: { x0: 96, y0: 96, x1: 984, y1: 1254 }, logoH: 72 },
-  story: { w: 1080, h: 1920, label: 'Vertical 9:16', apps: 'Stories · Reels · TikTok', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80 },
+  reel: { w: 1080, h: 1920, label: 'Reel 9:16', apps: 'Reels · TikTok', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80 },
+  story: { w: 1080, h: 1920, label: 'Historia 9:16', apps: 'Instagram stories', safe: { x0: 64, y0: 250, x1: 1016, y1: 1670 }, logoH: 80, lowPanel: true },
 };
+
+/** Tipo de publicación en Instagram según el formato y si es video. */
+export const igKind = (format, isVideo) =>
+  format === 'story' ? (isVideo ? 'story_video' : 'story') : isVideo ? 'reel' : format === 'reel' ? 'story' : 'image';
 
 /** Saca dosis, agua, temperatura y tiempo del texto libre de la receta. */
 export function parseRecipe(text = '') {
@@ -120,8 +128,31 @@ function roundPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-const FROST = 24; // px de desenfoque detrás del vidrio (a tamaño real de la tarjeta)
-const canFilter = (ctx) => 'filter' in ctx;
+// Vidrio esmerilado barato: la zona de atrás se reduce a 1/10 y se vuelve a
+// estirar con suavizado. Sin ctx.filter (caro en cada cuadro de video y sin
+// soporte en todos los navegadores) y con un solo lienzo pequeño reutilizado.
+const FROST_SCALE = 10;
+let frostCanvas = null;
+function frost(ctx, x, y, w, h, r) {
+  const fw = Math.max(1, Math.round(w / FROST_SCALE));
+  const fh = Math.max(1, Math.round(h / FROST_SCALE));
+  frostCanvas ||= document.createElement('canvas');
+  if (frostCanvas.width !== fw || frostCanvas.height !== fh) {
+    frostCanvas.width = fw;
+    frostCanvas.height = fh;
+  }
+  const f = frostCanvas.getContext('2d');
+  f.imageSmoothingEnabled = true;
+  f.imageSmoothingQuality = 'high';
+  f.drawImage(ctx.canvas, x, y, w, h, 0, 0, fw, fh);
+  ctx.save();
+  roundPath(ctx, x, y, w, h, r);
+  ctx.clip();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(frostCanvas, 0, 0, fw, fh, x, y, w, h);
+  ctx.restore();
+}
 
 function grid(ctx, w, h, step, minor, major) {
   ctx.lineWidth = 1;
@@ -401,14 +432,7 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   const R = 28;
 
   // Vidrio: lo que ya está pintado detrás (papel o foto) se desenfoca
-  if (tone !== 'overlay' && canFilter(ctx)) {
-    ctx.save();
-    roundPath(ctx, x, y, w, h, R);
-    ctx.clip();
-    ctx.filter = `blur(${FROST}px)`;
-    ctx.drawImage(ctx.canvas, 0, 0);
-    ctx.restore();
-  }
+  if (tone !== 'overlay') frost(ctx, x, y, w, h, R);
   ctx.save();
   roundPath(ctx, x, y, w, h, R);
   ctx.fillStyle = tone === 'paper' ? 'rgba(22,28,48,0.9)' : tone === 'photo' ? 'rgba(14,15,19,0.4)' : 'rgba(14,15,19,0.46)';
@@ -728,7 +752,8 @@ export async function drawEspresaleCard(canvas, { variety, weather, date = new D
     const drawH = 560 * scale;
     // Dibujo y panel centrados juntos en el espacio libre (en el vertical sobra alto)
     const groupH = Math.max(drawH, panelH);
-    const groupTop = zoneTop + Math.max(0, (zoneBottom - zoneTop - groupH) / 2);
+    // En Historias el grupo baja hacia el cajetín; en los demás va centrado.
+    const groupTop = zoneTop + Math.max(0, (zoneBottom - zoneTop - groupH) * (F.lowPanel ? 0.85 : 0.5));
     ctx.save();
     ctx.translate(X0 + 10, groupTop + (groupH - drawH) / 2);
     ctx.scale(scale, scale);
@@ -748,17 +773,10 @@ export function composeVideoFrame(ctx, video, overlay) {
   drawCover(ctx, video, w, h);
   // Vidrio esmerilado: el video se desenfoca detrás del panel de la receta
   const glass = overlay.__glass;
-  if (glass?.length && canFilter(ctx)) {
+  if (glass?.length) {
     const sx = w / overlay.width;
     const sy = h / overlay.height;
-    glass.forEach((g) => {
-      ctx.save();
-      roundPath(ctx, g.x * sx, g.y * sy, g.w * sx, g.h * sy, g.r * sx);
-      ctx.clip();
-      ctx.filter = `blur(${FROST * sx}px)`;
-      drawCover(ctx, video, w, h);
-      ctx.restore();
-    });
+    glass.forEach((g) => frost(ctx, g.x * sx, g.y * sy, g.w * sx, g.h * sy, g.r * sx));
   }
   ctx.drawImage(overlay, 0, 0, w, h);
 }
