@@ -3,6 +3,7 @@
 
 const translations = {
   es: {
+    launch: { aria: 'Banner principal', tag: 'Misión ACERO-01 · Chapinero, Bogotá', title1: 'Café de campeonato,', title2: 'preparado en AeroPress', lede: 'Recetas de los campeones del World AeroPress Championship, café de especialidad colombiano y una barra en Chapinero a 2.600 metros.', ctaShop: 'Comprar café', ctaRecipes: 'Ver recetas', mission: 'Preparación en vivo', gTemp: 'Temperatura', gExt: 'Extracción', masl: 'msnm', stage: { grind: 'Molienda', pour: 'Verter', stir: 'Remover', press: 'Presionar', serve: 'Servir' } },
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2.600 msnm',
     essp: {
@@ -237,6 +238,7 @@ const translations = {
   },
 
   en: {
+    launch: { aria: 'Main banner', tag: 'Mission ACERO-01 · Chapinero, Bogotá', title1: 'Championship coffee,', title2: 'brewed in AeroPress', lede: 'World AeroPress Championship recipes, Colombian specialty coffee and a bar in Chapinero at 2,600 meters.', ctaShop: 'Shop coffee', ctaRecipes: 'See recipes', mission: 'Live brew', gTemp: 'Temperature', gExt: 'Extraction', masl: 'masl', stage: { grind: 'Grind', pour: 'Pour', stir: 'Stir', press: 'Press', serve: 'Serve' } },
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2,600 masl',
     essp: {
@@ -471,6 +473,7 @@ const translations = {
   },
 
   ja: {
+    launch: { aria: 'メインバナー', tag: 'ミッション ACERO-01 · ボゴタ、チャピネロ', title1: 'チャンピオンのコーヒーを、', title2: 'エアロプレスで', lede: 'ワールド・エアロプレス・チャンピオンシップのレシピ、コロンビアのスペシャルティコーヒー、標高2,600mのチャピネロのバー。', ctaShop: 'コーヒーを買う', ctaRecipes: 'レシピを見る', mission: 'ライブ抽出', gTemp: '湯温', gExt: '抽出率', masl: 'm', stage: { grind: '挽く', pour: '注ぐ', stir: '混ぜる', press: 'プレス', serve: '提供' } },
     nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', contact: 'お問い合わせ', app: 'アプリ' },
     essp: {
       tabsLabel: 'エスプレセールのバナー',
