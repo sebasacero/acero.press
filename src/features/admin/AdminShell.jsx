@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { ADMIN_GROUPS, ADMIN_TOOLS, toolById } from './adminTools.js';
+import MicraHome from './MicraHome.jsx';
 import './admin.css';
 
 const LAST_TOOL_KEY = 'acero_admin_last';
+// El inicio de Micra (todas las ventanas como apps) no es una herramienta más
+export const HOME = 'home';
 
-export function readLastTool(fallback = 'espresale') {
+export function readLastTool(fallback = HOME) {
   try {
     const id = localStorage.getItem(LAST_TOOL_KEY);
-    return ADMIN_TOOLS.some((t) => t.id === id) ? id : fallback;
+    return id === HOME || ADMIN_TOOLS.some((t) => t.id === id) ? id : fallback;
   } catch {
     return fallback;
   }
@@ -101,14 +104,16 @@ function CommandPalette({ items, onClose }) {
  */
 export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '← Volver al sitio', userLabel, overlay = false }) {
   const [signals, reloadSignals] = useAdminSignals();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [palette, setPalette] = useState(false);
   const [clock, setClock] = useState(() => new Date());
-  const tool = toolById(activeTool);
-  // Elegir algo siempre cierra el menú (también si es la sección actual).
-  const select = useCallback((id) => { setMenuOpen(false); onSelect(id); }, [onSelect]);
-  const group = ADMIN_GROUPS.find((g) => g.id === tool.group);
-  const Active = tool.Component;
+  const isHome = activeTool === HOME;
+  const tool = isHome ? null : toolById(activeTool);
+  const select = onSelect;
+  const group = tool && ADMIN_GROUPS.find((g) => g.id === tool.group);
+  const Active = tool?.Component;
+  const viewId = tool?.id ?? HOME;
+  // "Ver sitio": en el panel flotante lo cierra; en /admin abre la página
+  const openSite = useCallback(() => (overlay ? onExit() : window.open('/', '_blank', 'noopener')), [overlay, onExit]);
 
   useEffect(() => {
     const id = setInterval(() => setClock(new Date()), 1000);
@@ -116,11 +121,11 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
   }, []);
 
   useEffect(() => {
-    try { localStorage.setItem(LAST_TOOL_KEY, tool.id); } catch { /* sin almacenamiento */ }
+    try { localStorage.setItem(LAST_TOOL_KEY, viewId); } catch { /* sin almacenamiento */ }
     reloadSignals();
-  }, [tool.id, reloadSignals]);
+  }, [viewId, reloadSignals]);
 
-  // Teclado: ⌘K / Ctrl+K abre la paleta; Esc cierra la paleta, luego el menú, luego el panel flotante.
+  // Teclado: ⌘K / Ctrl+K abre la paleta; Esc cierra la paleta, luego la carpeta del inicio, luego el panel flotante.
   useEffect(() => {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -128,13 +133,12 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
         setPalette((v) => !v);
       } else if (e.key === 'Escape') {
         if (palette) setPalette(false);
-        else if (menuOpen) setMenuOpen(false);
-        else if (overlay && !document.querySelector('.bp-drawer-backdrop')) onExit();
+        else if (overlay && !document.querySelector('.bp-drawer-backdrop, .mh-folder-open')) onExit();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [palette, menuOpen, overlay, onExit]);
+  }, [palette, overlay, onExit]);
 
   const badge = (t) => {
     const n = t.signal ? signals[t.signal] : null;
@@ -149,6 +153,7 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
   ].filter(Boolean);
 
   const paletteItems = useMemo(() => [
+    { key: 'go-home', kind: 'IR A', label: 'Inicio', hint: 'Todas las apps de Micra', run: () => select(HOME) },
     ...ADMIN_TOOLS.map((t) => ({
       key: `go-${t.id}`, kind: 'IR A', label: t.label, hint: t.desc,
       group: ADMIN_GROUPS.find((g) => g.id === t.group)?.label, run: () => select(t.id),
@@ -165,8 +170,8 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
   let n = 0;
 
   return (
-    <div className={`ax-shell admin-shell ${overlay ? 'ax-overlay' : ''}`}>
-      <aside className={`ax-side ${menuOpen ? 'is-open' : ''}`} aria-label="Navegación del panel">
+    <div className={`ax-shell admin-shell ${overlay ? 'ax-overlay' : ''} ${isHome ? 'is-home' : ''}`}>
+      <aside className="ax-side" aria-label="Navegación del panel">
         <div className="ax-brand">
           <span className="ax-brand-name">ACERO<em>.press</em></span>
           <span className="ax-brand-sub"><i className="ax-live" aria-hidden="true" /> PANEL · {clockStr}</span>
@@ -178,6 +183,15 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
         </button>
 
         <nav className="ax-nav">
+          <button
+            type="button"
+            className={`ax-item ax-item-home ${isHome ? 'is-active' : ''}`}
+            aria-current={isHome ? 'page' : undefined}
+            onClick={() => select(HOME)}
+          >
+            <span className="ax-item-fig">⌂</span>
+            <span className="ax-item-label">Inicio</span>
+          </button>
           {ADMIN_GROUPS.map((g, gi) => (
             <div key={g.id} className="ax-group">
               <div className="ax-group-head">
@@ -190,8 +204,8 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
                   <button
                     key={t.id}
                     type="button"
-                    className={`ax-item ${t.id === tool.id ? 'is-active' : ''}`}
-                    aria-current={t.id === tool.id ? 'page' : undefined}
+                    className={`ax-item ${t.id === tool?.id ? 'is-active' : ''}`}
+                    aria-current={t.id === tool?.id ? 'page' : undefined}
                     onClick={() => select(t.id)}
                   >
                     <span className="ax-item-fig">{String(n).padStart(2, '0')}</span>
@@ -209,18 +223,16 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
           <button type="button" className="ax-exit" onClick={onExit}>{exitLabel}</button>
         </div>
       </aside>
-      {menuOpen && <div className="ax-scrim" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
 
       <div className="ax-body">
         <header className="ax-top">
-          <button type="button" className="ax-menu-btn" onClick={() => setMenuOpen(true)} aria-label="Abrir menú">
-            <span /><span /><span />
-          </button>
+          {/* En el celular se navega desde el inicio: este botón vuelve a él */}
+          <button type="button" className="ax-home-btn" onClick={() => select(HOME)} aria-label="Volver al inicio">‹ Inicio</button>
           <div className="ax-crumb">
-            <span className="ax-crumb-group">{group?.label}</span>
+            <span className="ax-crumb-group">{isHome ? 'Micra' : group?.label}</span>
             <span className="ax-crumb-sep">/</span>
-            <strong>{tool.label}</strong>
-            <span className="ax-crumb-desc">{tool.desc}</span>
+            <strong>{isHome ? 'Inicio' : tool.label}</strong>
+            <span className="ax-crumb-desc">{isHome ? 'Todas las ventanas, como apps' : tool.desc}</span>
           </div>
           <div className="ax-top-right">
             {alerts.map((a) => (
@@ -232,8 +244,21 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
             {overlay && <button type="button" className="ax-icon-btn ax-close" onClick={onExit} aria-label="Cerrar panel">×</button>}
           </div>
         </header>
-        <main className="admin-main ax-main" key={tool.id}>
-          <Active />
+        <main className={`admin-main ax-main ${isHome ? 'is-home' : ''}`} key={viewId}>
+          {isHome ? (
+            <MicraHome
+              signals={signals}
+              clock={clockStr}
+              onOpen={select}
+              onSearch={() => setPalette(true)}
+              onSite={openSite}
+              onExit={onExit}
+              exitLabel={exitLabel}
+              overlay={overlay}
+            />
+          ) : (
+            <Active />
+          )}
         </main>
       </div>
 

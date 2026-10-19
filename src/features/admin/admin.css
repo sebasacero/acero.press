@@ -1044,9 +1044,14 @@
 .ax-icon-btn{ min-width:38px; height:34px; padding:0 9px; cursor:pointer; border-radius:2px; background:rgba(127,212,255,.06); border:1px solid var(--ax-line-strong); color:var(--ax-cyan); font-family:var(--ax-mono); font-size:11px; }
 .ax-icon-btn:hover{ background:rgba(127,212,255,.16); }
 .ax-close{ font-size:18px; color:#ffffff; }
-.ax-menu-btn{ display:none; width:38px; height:34px; padding:9px 9px; flex-direction:column; justify-content:space-between; background:transparent; border:1px solid var(--ax-line-strong); border-radius:2px; cursor:pointer; }
-.ax-menu-btn span{ display:block; height:1.5px; background:var(--ax-cyan); }
-.ax-scrim{ display:none; }
+.ax-home-btn{
+  display:none; flex-shrink:0; height:34px; padding:0 10px; cursor:pointer; border-radius:2px;
+  background:transparent; border:1px solid var(--ax-line-strong); color:var(--ax-cyan);
+  font-family:var(--ax-mono); font-size:11px; letter-spacing:.06em; white-space:nowrap;
+}
+.ax-home-btn:hover{ background:rgba(127,212,255,.12); }
+.ax-item-home{ margin-bottom:2px; }
+.ax-item-home .ax-item-fig{ font-size:13px; }
 
 /* Contenido: papel de plano para todas las secciones */
 .ax-main{
@@ -1063,15 +1068,11 @@
 
 @media (max-width:900px){
   .admin-overlay-shell{ width:100vw; height:100vh; height:100dvh; max-width:none; border-radius:0; border:none; }
-  /* Cerrado: fuera de pantalla y oculto (si no, su sombra se ve en el borde izquierdo). */
-  .ax-side{ position:fixed; z-index:40; top:0; bottom:0; left:0; width:min(300px, 86vw); transform:translateX(-102%); visibility:hidden; transition:transform .25s ease, visibility 0s linear .25s; }
-  .ax-side.is-open{ visibility:visible; box-shadow:20px 0 50px rgba(0,0,0,.5); transition:transform .25s ease; }
-  .ax-overlay .ax-side{ position:absolute; }
-  .ax-side.is-open{ transform:none; }
-  .ax-scrim{ display:block; position:fixed; inset:0; z-index:39; background:rgba(4,8,16,.55); }
-  .ax-overlay .ax-scrim{ position:absolute; }
+  /* En el celular se navega como en un teléfono: desde el inicio de Micra */
+  .ax-side{ display:none; }
   .ax-shell{ position:relative; }
-  .ax-menu-btn{ display:flex; }
+  .ax-home-btn{ display:inline-flex; align-items:center; }
+  .ax-shell.is-home .ax-top{ display:none; }
   .ax-top{ padding:10px 12px; gap:10px; }
   .ax-crumb-desc, .ax-crumb-group, .ax-crumb-sep{ display:none; }
   .ax-alert{ padding:7px 8px; }
@@ -1080,7 +1081,7 @@
   .ax-main .admin-table{ display:block; max-width:100%; overflow-x:auto; }
 }
 @media (max-width:560px){ .ax-alert{ font-size:0; gap:0; } .ax-alert i{ width:9px; height:9px; } }
-@media (prefers-reduced-motion:reduce){ .ax-main, .ax-live, .ax-alert i{ animation:none; } .ax-side{ transition:none; } }
+@media (prefers-reduced-motion:reduce){ .ax-main, .ax-live, .ax-alert i{ animation:none; } }
 
 /* Paleta de comandos */
 .ax-palette-backdrop{ position:fixed; inset:0; z-index:9500; background:rgba(4,8,16,.6); backdrop-filter:blur(3px); display:flex; justify-content:center; align-items:flex-start; padding:12vh 16px 16px; }
@@ -1518,3 +1519,143 @@
 .algo-form{ display:flex; flex-direction:column; gap:.6rem; padding:.9rem; border:1px dashed rgba(42,53,80,.4); }
 .algo-form-title{ font-family:'Space Grotesk', sans-serif; text-transform:uppercase; font-size:.95rem; color:var(--esp-ink); margin:0; }
 .algo-form-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:.6rem; }
+
+/* =====================================================================
+   INICIO DE MICRA — el panel como la pantalla de inicio de un celular
+   ===================================================================== */
+.ax-main.is-home{ padding:0; background:#2b2f38; display:flex; flex-direction:column; }
+.mh-screen{
+  --mh-icon:62px;
+  position:relative; flex:1; min-height:100%; display:flex; flex-direction:column; gap:0;
+  padding:8px 20px calc(12px + env(safe-area-inset-bottom));
+  color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Archivo', sans-serif;
+  background:
+    radial-gradient(110% 60% at 10% 32%, rgba(40,110,235,.5), transparent 62%),
+    linear-gradient(180deg, rgba(14,22,40,.35), rgba(14,22,40,.05) 45%, rgba(70,40,12,.2)),
+    url('/image/micra-wallpaper.jpg') center / cover no-repeat, #3a3f4a;
+  animation:mh-in .32s ease;
+}
+@keyframes mh-in{ from{ opacity:0; transform:scale(1.03); } to{ opacity:1; transform:none; } }
+
+.mh-status{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; min-height:44px; }
+.mh-time{
+  justify-self:start; padding:3px 12px; border-radius:999px; background:var(--ax-red);
+  font-weight:700; font-size:15px; font-variant-numeric:tabular-nums; letter-spacing:.02em;
+}
+.mh-brand{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:17px; letter-spacing:-.01em; }
+.mh-brand i{ font-style:normal; color:var(--ax-red); }
+.mh-status-right{ justify-self:end; display:flex; align-items:center; gap:10px; }
+.mh-live{ width:8px; height:8px; border-radius:50%; background:#30d158; box-shadow:0 0 8px #30d158; }
+.mh-exit{
+  min-width:32px; height:32px; padding:0 10px; border-radius:999px; border:0; cursor:pointer;
+  background:rgba(255,255,255,.22); color:#fff; font-size:16px; font-weight:600;
+  -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+}
+
+.mh-page{ display:flex; flex-direction:column; gap:22px; padding-top:14px; }
+
+/* Widget del pulso */
+.mh-widget{
+  display:flex; flex-direction:column; gap:10px; width:100%; padding:14px 16px; border:0; cursor:pointer; text-align:left;
+  border-radius:22px; color:#fff; background:rgba(255,255,255,.2);
+  -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+}
+.mh-widget-head{ display:flex; justify-content:space-between; gap:10px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; opacity:.9; }
+.mh-widget-head span:last-child{ text-transform:none; letter-spacing:0; opacity:.85; }
+.mh-widget-rows{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+.mh-widget-rows > span{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.mh-widget-rows small{ font-size:11px; opacity:.8; }
+.mh-widget-rows b{ font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mh-widget-rows b i{ font-style:normal; font-size:11px; font-weight:500; margin-left:2px; opacity:.8; }
+.mh-widget-rows em{ font-style:normal; font-size:11px; font-weight:700; }
+.mh-widget-rows em.is-up{ color:#7dffa8; }
+.mh-widget-rows em.is-down{ color:#ffb3ad; }
+.mh-widget-empty{ font-size:13px; opacity:.85; }
+
+/* Apps */
+.mh-grid{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:22px 8px; justify-items:center; }
+.mh-app{
+  display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; width:100%;
+  padding:0; background:none; border:0; color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.mh-app:active .mh-icon-wrap{ transform:scale(.92); filter:brightness(.85); }
+.mh-app:focus-visible{ outline:none; }
+.mh-app:focus-visible .mh-icon-wrap{ outline:2px solid #fff; outline-offset:3px; border-radius:24%; }
+.mh-icon-wrap{ position:relative; width:var(--mh-icon); aspect-ratio:1; transition:transform .12s ease; }
+.mh-icon{
+  display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:22.5%;
+  color:#fff; box-shadow:0 6px 14px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.28);
+}
+.mh-icon svg{ width:58%; height:58%; overflow:visible; }
+.mh-glyph-word{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:13px; fill:currentColor; letter-spacing:-.5px; }
+.mh-label{ max-width:100%; font-size:12px; font-weight:500; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 3px rgba(0,0,0,.45); }
+.mh-badge{
+  position:absolute; top:-7px; right:-9px; min-width:22px; height:22px; padding:0 6px; border-radius:11px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:#ff3b30; color:#fff; font-size:13px; font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+
+.mh-icon--espresale{ background:linear-gradient(160deg, #ff5a4a, #d4141f); }
+.mh-icon--orders{ background:linear-gradient(160deg, #5ef08e, #1fae4b); }
+.mh-icon--tables{ background:linear-gradient(160deg, #ffc35a, #f07b16); }
+.mh-icon--waitlist{ background:linear-gradient(160deg, #c08bff, #7b3fe4); }
+.mh-icon--dashboard{ background:radial-gradient(circle at 50% 42%, #22407a, #0a1222 72%); color:#7fd4ff; }
+.mh-icon--algorithm{ background:linear-gradient(160deg, #2c2c2e, #050505); }
+.mh-icon--inventory{ background:linear-gradient(160deg, #c08a5e, #7a4a2a); }
+.mh-icon--catalog{ background:linear-gradient(160deg, #36c9b9, #14806f); }
+.mh-icon--publications{ background:linear-gradient(160deg, #5fb2ff, #1b6fe0); }
+.mh-icon--instagram{ background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 62%, #285aeb 92%); }
+.mh-icon--recipes{ background:linear-gradient(160deg, #fbf7ee, #e6dcc4); color:#e0201e; }
+.mh-icon--sections{
+  background:
+    linear-gradient(rgba(127,212,255,.16) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgba(127,212,255,.16) 1px, transparent 1px) 0 0 / 8px 8px,
+    #2a3550;
+}
+.mh-icon--settings{ background:linear-gradient(160deg, #d6d6db, #8e8e93); }
+.mh-icon--site{ background:linear-gradient(180deg, #ffffff, #e8edf4); color:#1a73e8; }
+
+/* Carpeta */
+.mh-folder-icon{
+  display:grid; grid-template-columns:repeat(3, 1fr); align-content:start; gap:7%; padding:13%;
+  width:100%; height:100%; border-radius:22.5%; background:rgba(255,255,255,.26);
+  -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:0 6px 14px rgba(0,0,0,.18);
+}
+.mh-folder-icon .mh-icon{ aspect-ratio:1; height:auto; border-radius:24%; box-shadow:none; }
+.mh-folder-open{
+  position:absolute; inset:0; z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  background:rgba(18,22,30,.32); -webkit-backdrop-filter:blur(26px); backdrop-filter:blur(26px);
+  animation:mh-in .22s ease;
+}
+.mh-folder-title{ margin:0; font-size:28px; font-weight:700; text-shadow:0 1px 4px rgba(0,0,0,.35); }
+.mh-folder-panel{
+  display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:22px 10px; width:min(330px, 84%);
+  padding:24px 16px; border-radius:36px; background:rgba(255,255,255,.2);
+}
+
+/* Buscar y dock */
+.mh-search{
+  align-self:center; margin:auto 0 14px; padding:8px 18px; display:inline-flex; align-items:center; gap:6px;
+  border:0; border-radius:999px; cursor:pointer; color:#fff; font-size:15px; font-weight:600;
+  background:rgba(255,255,255,.22); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
+}
+.mh-search svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; }
+.mh-dock{
+  display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); justify-items:center; gap:8px;
+  padding:14px 12px; border-radius:32px; background:rgba(255,255,255,.22);
+  -webkit-backdrop-filter:blur(24px) saturate(160%); backdrop-filter:blur(24px) saturate(160%);
+}
+.mh-dock .mh-app{ width:auto; }
+
+/* Escritorio: el inicio vive al lado de la barra lateral (que ya tiene la hora y el cierre) */
+@media (min-width:901px){
+  .mh-screen{ --mh-icon:72px; padding:28px 32px 24px; align-items:center; }
+  .mh-status{ display:none; }
+  .mh-page{ width:min(540px, 100%); }
+  .mh-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); gap:28px 12px; }
+  .mh-label{ font-size:13px; }
+  .mh-dock{ width:auto; grid-template-columns:repeat(4, 104px); }
+}
+@media (max-width:360px){ .mh-screen{ --mh-icon:54px; padding-left:14px; padding-right:14px; } .mh-widget-rows b{ font-size:15px; } }
+@media (prefers-reduced-motion:reduce){ .mh-screen, .mh-folder-open{ animation:none; } .mh-icon-wrap{ transition:none; } }

@@ -51,6 +51,10 @@ export default function AdminDock() {
           </button>
 
           <div className="admin-dock-sep" />
+          <button type="button" role="menuitem" className="admin-dock-item" onClick={() => { openTool('home'); setExpanded(false); }}>
+            <span className="admin-dock-num">⌂</span>
+            Inicio de Micra
+          </button>
           {ADMIN_GROUPS.map((g) => (
             <div key={g.id} className="admin-dock-group">
               <span className="admin-dock-group-label">{g.label}</span>
