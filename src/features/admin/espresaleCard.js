@@ -841,15 +841,22 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   video.currentTime = 0;
   await new Promise((r) => { video.onseeked = r; setTimeout(r, 500); });
 
+  // Un dibujo por cuadro nuevo del clip (requestVideoFrameCallback) en vez de
+  // 60 por segundo, y el progreso se avisa solo cuando sube un 1 %.
+  const perFrame = typeof video.requestVideoFrameCallback === 'function';
   let raf = 0;
+  let lastPct = -1;
+  const stop = () => { if (recorder.state === 'recording') recorder.stop(); };
+  video.addEventListener('ended', stop, { once: true });
   const draw = () => {
     composeVideoFrame(ctx, video, overlay);
-    onProgress?.(Math.min(1, video.currentTime / duration));
-    if (video.currentTime >= duration || video.ended) {
-      if (recorder.state === 'recording') recorder.stop();
-      return;
+    const pct = Math.min(1, video.currentTime / duration);
+    if (Math.round(pct * 100) !== lastPct) {
+      lastPct = Math.round(pct * 100);
+      onProgress?.(pct);
     }
-    raf = requestAnimationFrame(draw);
+    if (video.currentTime >= duration || video.ended) { stop(); return; }
+    raf = perFrame ? video.requestVideoFrameCallback(draw) : requestAnimationFrame(draw);
   };
 
   composeVideoFrame(ctx, video, overlay);
@@ -863,7 +870,8 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   }
   draw();
   await stopped;
-  cancelAnimationFrame(raf);
+  if (perFrame) video.cancelVideoFrameCallback(raf);
+  else cancelAnimationFrame(raf);
   video.pause();
   stream.getTracks().forEach((t) => t.stop());
   if (audioCtx) audioCtx.close().catch(() => {});
