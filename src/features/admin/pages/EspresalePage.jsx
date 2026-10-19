@@ -3,6 +3,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { fetchBogotaWeather } from '../../../shared/lib/weather.js';
 import { drawEspresaleCard, parseRecipe, FORMATS, composeVideoFrame, recordCardVideo, pickVideoType } from '../espresaleCard.js';
 import { publishToInstagram as igPublish, recordEspresaleSale } from '../../../shared/lib/instagram.js';
+import MicraCamera from '../components/MicraCamera.jsx';
 
 const PAY_METHODS = [
   { id: 'cash', label: 'Efectivo' },
@@ -22,14 +23,11 @@ function waDigits(phone) {
   return d.length === 10 && d.startsWith('3') ? `57${d}` : d;
 }
 
-function StepHead({ n, title, done, hint }) {
+function Field({ label, aside, children }) {
   return (
-    <div className="esp-step-head">
-      <span className={`esp-step-num ${done ? 'is-done' : ''}`}>{done ? '✓' : n}</span>
-      <div>
-        <h3 className="esp-step-title">{title}</h3>
-        {hint && <p className="esp-step-hint">{hint}</p>}
-      </div>
+    <div className="esp-field">
+      <div className="esp-field-label"><span>{label}</span>{aside}</div>
+      {children}
     </div>
   );
 }
@@ -63,13 +61,17 @@ export default function EspresalePage() {
   const [cardVideo, setCardVideo] = useState(null); // { blob, url, ext, type }
   const [recording, setRecording] = useState(null); // progreso 0..1 mientras graba
 
-  // Venta (paso 05) y publicación de la tarjeta en Instagram
+  // Venta y publicación de la tarjeta en Instagram
   const [variantId, setVariantId] = useState(null);
   const [qty, setQty] = useState(1);
   const [payMethod, setPayMethod] = useState('cash');
   const [sale, setSale] = useState(null); // { orderId, total }
   const [saleBusy, setSaleBusy] = useState(null); // 'sale' | 'publish'
   const [cardPost, setCardPost] = useState(null); // { ok, text }
+
+  // Cámara Micra (se abre con el logo): la foto o el video sale ya con la tarjeta
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [shot, setShot] = useState(null); // { blob, url, type, ext, isVideo, igReady, varietyId, format }
 
   useEffect(() => {
     supabase
@@ -114,8 +116,12 @@ export default function EspresalePage() {
   }, [captured]);
 
   useEffect(() => () => { if (cardVideo?.url) URL.revokeObjectURL(cardVideo.url); }, [cardVideo]);
+  useEffect(() => () => { if (shot?.url) URL.revokeObjectURL(shot.url); }, [shot]);
 
   const videoMode = !!(usePhoto && videoEl);
+  // La captura de la cámara vale mientras sigan elegidos su variedad y su formato.
+  const shotOn = !!(shot && selected && shot.varietyId === selected.id && shot.format === format);
+  const isVideoOut = shotOn ? shot.isVideo : videoMode;
   const minuteKey = `${now.getHours()}:${now.getMinutes()}`;
   useEffect(() => {
     if (!selected || !canvasRef.current) return undefined;
@@ -175,7 +181,7 @@ export default function EspresalePage() {
   }, [variants]);
   const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const tempStr = weather.tempC !== null ? `${weather.tempC}°C` : '—';
-  const fileName = `esspresale-${slug(selected?.name)}.png`;
+  const fileName = `micra-${slug(selected?.name)}.png`;
 
   const buildCaption = () =>
     `☕ ${selected?.name ?? ''} — AceroPress\n\n${selected?.recipe_text ?? ''}\n\n${weather.icon} ${tempStr} en Bogotá · ${timeStr}`;
@@ -196,6 +202,7 @@ export default function EspresalePage() {
     overlaySnap.width = overlayRef.current.width;
     overlaySnap.height = overlayRef.current.height;
     overlaySnap.getContext('2d').drawImage(overlayRef.current, 0, 0);
+    overlaySnap.__glass = overlayRef.current.__glass;
     try {
       await new Promise((resolve, reject) => {
         recVideo.addEventListener('loadeddata', resolve, { once: true });
@@ -223,6 +230,7 @@ export default function EspresalePage() {
 
   // Lo que se descarga/comparte/publica: video si el fondo es video, imagen si no.
   const cardMedia = async ({ jpeg = false } = {}) => {
+    if (shotOn) return { blob: shot.blob, ext: shot.ext, type: shot.type, isVideo: shot.isVideo, igReady: shot.igReady };
     if (videoMode) {
       const v = await ensureCardVideo();
       return { blob: v.blob, ext: v.ext, type: v.type, isVideo: true, igReady: v.igReady };
@@ -370,24 +378,29 @@ export default function EspresalePage() {
     { left: pct(safe.x1, w), top: pct(safe.y0, h), width: pct(w - safe.x1, w), height: pct(safe.y1 - safe.y0, h) },
   ];
 
+  const ready = !!selected && recording === null;
+  const publishLabel = saleBusy === 'publish'
+    ? 'Publicando…'
+    : isVideoOut ? `Publicar ${format === 'story' ? 'historia en video' : 'Reel'}` : `Publicar ${format === 'story' ? 'historia' : 'en el feed'}`;
+
   return (
-    <div className="admin-page esp">
-      <header className="esp-head">
-        <div className="esp-cota">
-          <span>FIG. 06 — ESSPRESALE / VENTA RÁPIDA</span>
-          <span className="esp-badge">{weather.icon} {tempStr} · {timeStr}</span>
-        </div>
-        <h1 className="esp-title">Esspresale.</h1>
-        <p className="esp-sub">
-          Elige la variedad y la tarjeta se dibuja sola como un plano de la receta — con clima y hora
-          de Bogotá. Mándasela al cliente o guárdala para redes.
-        </p>
+    <div className="admin-page esp esp--console">
+      <header className="esp-bar">
+        <h1 className="esp-title">
+          <button type="button" className="esp-logo-btn" onClick={() => setCameraOpen(true)} title="Abrir la cámara" aria-label="Micra: abrir la cámara">
+            Micra<span>.</span><em className="esp-logo-cam" aria-hidden="true">● CÁMARA</em>
+          </button>
+        </h1>
+        <span className="esp-bar-sub">Toca el logo para la cámara · venta en barra · tarjeta para redes</span>
+        <span className="esp-badge">{weather.icon} {tempStr} · {timeStr}</span>
       </header>
 
-      <div className="esp-layout">
-        <div className="esp-steps">
-          <section className="esp-step">
-            <StepHead n="01" title="Variedad" done={!!selected} />
+      <div className="esp-console">
+        {/* 01 · Venta: todo lo que se cobra en la barra */}
+        <section className="esp-panel" aria-labelledby="esp-sale-title">
+          <h2 className="esp-panel-title" id="esp-sale-title"><span>01</span> Venta</h2>
+
+          <Field label="Variedad">
             {varieties === null ? (
               <p className="esp-muted">Cargando variedades…</p>
             ) : varieties.length === 0 ? (
@@ -395,12 +408,7 @@ export default function EspresalePage() {
             ) : (
               <div className="esp-chips">
                 {varieties.map((v) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    className={`esp-chip ${selected?.id === v.id ? 'active' : ''}`}
-                    onClick={() => setSelected(v)}
-                  >
+                  <button key={v.id} type="button" className={`esp-chip ${selected?.id === v.id ? 'active' : ''}`} onClick={() => setSelected(v)}>
                     {v.name}
                   </button>
                 ))}
@@ -414,18 +422,65 @@ export default function EspresalePage() {
                 <div><dt>Tiempo</dt><dd>{recipe.time || '—'}</dd></div>
               </dl>
             )}
-            {selected && !selected.recipe_text && (
-              <p className="esp-muted">Esta variedad no tiene receta — agrégala en Catálogo.</p>
-            )}
-          </section>
+            {selected && !selected.recipe_text && <p className="esp-muted">Esta variedad no tiene receta — agrégala en Catálogo.</p>}
+          </Field>
 
-          <section className="esp-step">
-            <StepHead
-              n="02"
-              title="Fondo"
-              done={!!captured}
-              hint="Plano de papel, o una foto o video real detrás de la hoja (de la cámara o de tu galería)."
-            />
+          <Field label="Presentación">
+            {!selected ? (
+              <p className="esp-muted">Elige primero la variedad.</p>
+            ) : variants.length === 0 ? (
+              <p className="esp-muted">Sin presentaciones con precio activas (Catálogo).</p>
+            ) : (
+              <div className="esp-chips">
+                {variants.map((v) => (
+                  <button key={v.id} type="button" className={`esp-chip ${variantId === v.id ? 'active' : ''}`} onClick={() => setVariantId(v.id)}>
+                    {v.label} · {money(v.price)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </Field>
+
+          <div className="esp-sale-row">
+            <div className="esp-qty" role="group" aria-label="Cantidad">
+              <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">−</button>
+              <span>{qty}</span>
+              <button type="button" onClick={() => setQty((q) => Math.min(99, q + 1))} aria-label="Más">+</button>
+            </div>
+            <strong className="esp-sale-total">{variant ? money(Number(variant.price) * qty) : '—'}</strong>
+          </div>
+
+          <Field label="Pago">
+            <div className="esp-chips esp-chips-pay">
+              {PAY_METHODS.map((m) => (
+                <button key={m.id} type="button" className={`esp-chip esp-chip-ghost ${payMethod === m.id ? 'active' : ''}`} onClick={() => setPayMethod(m.id)}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <div className="esp-panel-foot">
+            {sale ? (
+              <p className="esp-notice ok">✓ Venta registrada: {money(sale.total)}. Suma al contador, al dashboard y al inventario.</p>
+            ) : (
+              <div className="esp-actions-row">
+                <button type="button" className="esp-btn esp-btn-ghost" disabled={!!saleBusy || !variant} onClick={() => registerSale(false)}>
+                  {saleBusy === 'sale' ? 'Registrando…' : 'Registrar venta'}
+                </button>
+                <button type="button" className="esp-btn esp-btn-primary" disabled={!!saleBusy || !variant} onClick={() => registerSale(true)}>
+                  Registrar y publicar
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* 02 · Tarjeta: fondo, formato y a dónde va */}
+        <section className="esp-panel" aria-labelledby="esp-card-title">
+          <h2 className="esp-panel-title" id="esp-card-title"><span>02</span> Tarjeta</h2>
+
+          <Field label="Fondo">
             <div className="esp-chips">
               <button type="button" className={`esp-chip ${!(usePhoto && (photoImg || videoEl)) ? 'active' : ''}`} onClick={() => setUsePhoto(false)}>
                 Plano
@@ -435,45 +490,32 @@ export default function EspresalePage() {
                   {videoEl ? 'Video' : 'Foto'}
                 </button>
               )}
-            </div>
-            <div className="esp-chips">
-              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => galleryInputRef.current?.click()}>
-                🖼 Elegir de la galería
-              </button>
-              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => photoInputRef.current?.click()}>
-                📷 Tomar foto
-              </button>
-              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => videoInputRef.current?.click()}>
-                🎥 Grabar video
-              </button>
+              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => galleryInputRef.current?.click()}>🖼 Galería</button>
+              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => photoInputRef.current?.click()}>📷 Foto</button>
+              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => videoInputRef.current?.click()}>🎥 Video</button>
             </div>
             {/* Sin "capture" el celular ofrece la galería/fototeca; con "capture" abre la cámara directo */}
             <input ref={galleryInputRef} type="file" accept="image/*,video/*" hidden onChange={handleCapture} />
             <input ref={photoInputRef} type="file" accept="image/*" capture="environment" hidden onChange={handleCapture} />
             <input ref={videoInputRef} type="file" accept="video/*" capture="environment" hidden onChange={handleCapture} />
-
             {captured && (
               <p className="esp-muted">
                 {captured.type === 'video'
-                  ? `Video: ${captured.file.name}${videoEl && Number.isFinite(videoEl.duration) ? ` · ${Math.round(videoEl.duration)} s` : ''}. La tarjeta se monta encima; al descargar o publicar se graba un video nuevo${videoEl?.duration > 60 ? ' (primeros 60 s)' : ''}.`
+                  ? `Video: ${captured.file.name}${videoEl && Number.isFinite(videoEl.duration) ? ` · ${Math.round(videoEl.duration)} s` : ''}. Al descargar o publicar se graba un video nuevo${videoEl?.duration > 60 ? ' (primeros 60 s)' : ''}.`
                   : `Foto: ${captured.file.name}.`}
               </p>
             )}
             {captured?.type === 'video' && !pickVideoType() && (
               <p className="esp-notice err">Este navegador no puede grabar video. Usa Safari o Chrome actualizados.</p>
             )}
-          </section>
+          </Field>
 
-          <section className="esp-step">
-            <StepHead n="03" title="Formato" done />
+          <Field label="Formato">
             <div className="esp-chips">
               {Object.entries(FORMATS).map(([id, f]) => (
                 <button key={id} type="button" className={`esp-chip esp-chip-format ${format === id ? 'active' : ''}`} onClick={() => setFormat(id)}>
                   <span className={`esp-ratio esp-ratio-${id}`} aria-hidden="true" />
-                  <span className="esp-chip-text">
-                    {f.label}
-                    <small>{f.apps}</small>
-                  </span>
+                  <span className="esp-chip-text">{f.label}<small>{f.apps}</small></span>
                 </button>
               ))}
             </div>
@@ -481,80 +523,63 @@ export default function EspresalePage() {
               <input type="checkbox" checked={showZones} onChange={(e) => setShowZones(e.target.checked)} />
               Ver zonas de la app en la vista previa
             </label>
-          </section>
+          </Field>
 
-          <section className="esp-step">
-            <StepHead n="04" title="WhatsApp del cliente" done={waDigits(phone).length >= 11} hint="Opcional. Con 10 dígitos se agrega el +57." />
-            <input
-              type="tel"
-              inputMode="tel"
-              className="esp-input"
-              placeholder="300 123 4567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </section>
+          <Field label="WhatsApp del cliente" aside={<small>Opcional · va con la venta y la tarjeta</small>}>
+            <input type="tel" inputMode="tel" className="esp-input" placeholder="300 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </Field>
 
-          <section className="esp-step">
-            <StepHead
-              n="05"
-              title="Venta"
-              done={!!sale}
-              hint="Suma al contador de ventas, al dashboard y descuenta inventario."
-            />
-            {!selected ? (
-              <p className="esp-muted">Elige primero la variedad.</p>
-            ) : variants.length === 0 ? (
-              <p className="esp-muted">Esta variedad no tiene presentaciones con precio activas (Catálogo).</p>
-            ) : (
-              <>
-                <div className="esp-chips">
-                  {variants.map((v) => (
-                    <button key={v.id} type="button" className={`esp-chip ${variantId === v.id ? 'active' : ''}`} onClick={() => setVariantId(v.id)}>
-                      {v.label} · {money(v.price)}
-                    </button>
-                  ))}
-                </div>
-                <div className="esp-sale-row">
-                  <div className="esp-qty" role="group" aria-label="Cantidad">
-                    <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">−</button>
-                    <span>{qty}</span>
-                    <button type="button" onClick={() => setQty((q) => Math.min(99, q + 1))} aria-label="Más">+</button>
-                  </div>
-                  <strong className="esp-sale-total">{variant ? money(Number(variant.price) * qty) : '—'}</strong>
-                </div>
-                <div className="esp-chips">
-                  {PAY_METHODS.map((m) => (
-                    <button key={m.id} type="button" className={`esp-chip esp-chip-ghost ${payMethod === m.id ? 'active' : ''}`} onClick={() => setPayMethod(m.id)}>
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-                {sale ? (
-                  <p className="esp-notice ok">✓ Venta registrada: {money(sale.total)}.</p>
-                ) : (
-                  <div className="esp-actions-row">
-                    <button type="button" className="esp-btn esp-btn-ghost" disabled={!!saleBusy || !variant} onClick={() => registerSale(false)}>
-                      {saleBusy === 'sale' ? 'Registrando…' : 'Registrar venta'}
-                    </button>
-                    <button type="button" className="esp-btn esp-btn-primary" disabled={!!saleBusy || !variant} onClick={() => registerSale(true)}>
-                      Registrar y publicar
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-        </div>
+          <Field label="Enviar y publicar">
+            <div className="esp-grid-actions">
+              {videoMode && !shotOn && !cardVideo && (
+                <button type="button" className="esp-btn esp-btn-primary" disabled={!ready} onClick={() => ensureCardVideo().catch((err) => setNotice({ ok: false, text: err.message }))}>
+                  {recording !== null ? 'Grabando…' : 'Generar video'}
+                </button>
+              )}
+              {canShareFiles && (
+                <button type="button" className={`esp-btn ${videoMode && !shotOn ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!ready || (videoMode && !shotOn && !cardVideo)} onClick={share}>
+                  {isVideoOut ? 'Compartir video' : 'Compartir imagen'}
+                </button>
+              )}
+              <button type="button" className={`esp-btn ${canShareFiles || videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!ready} onClick={download}>
+                {shotOn ? `Descargar ${shot.ext.toUpperCase()}` : videoMode ? `Descargar ${cardVideo ? cardVideo.ext.toUpperCase() : 'video'}` : 'Descargar PNG'}
+              </button>
+              <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>Abrir WhatsApp</button>
+              <button type="button" className="esp-btn esp-btn-ghost" disabled={!ready || !!saleBusy} onClick={() => publishCard()}>{publishLabel}</button>
+              <button type="button" className="esp-btn esp-btn-ghost" disabled={!ready || saving || !!savedUrl} onClick={saveToPublications}>
+                {savedUrl ? '✓ En Publicaciones' : saving ? 'Guardando…' : 'Guardar en Publicaciones'}
+              </button>
+            </div>
+          </Field>
 
-        <div className="esp-preview">
+          <div className="esp-panel-foot">
+            {cardPost && <p className={`esp-notice ${cardPost.ok ? 'ok' : 'err'}`}>{cardPost.text}</p>}
+            {notice && <p className={`esp-notice ${notice.ok ? 'ok' : 'err'}`}>{notice.text}</p>}
+            <p className="esp-fineprint">
+              {canShareFiles
+                ? '“Compartir” abre el menú del celular y adjunta la tarjeta a WhatsApp o Instagram.'
+                : 'WhatsApp Web no adjunta imágenes solo: descarga el PNG y arrástralo al chat que se abre.'}
+            </p>
+          </div>
+        </section>
+
+        {/* 03 · Vista previa: la tarjeta cabe en el alto de la pantalla */}
+        <section className="esp-preview" aria-label="Vista previa de la tarjeta">
           <div className="esp-cota esp-cota-dark">
-            <span>VISTA PREVIA · {w}×{h}</span>
+            <span>03 · {shotOn ? (shot.isVideo ? 'VIDEO DE LA CÁMARA' : 'FOTO DE LA CÁMARA') : 'VISTA PREVIA'} · {w}×{h}</span>
             <span className="esp-badge">{FORMATS[format].apps}</span>
           </div>
 
-          <div className={`esp-canvas-wrap esp-canvas-${format}`}>
-            <div className="esp-canvas-frame" hidden={!selected}>
+          <div className={`esp-canvas-wrap esp-canvas-${format}`} style={{ '--esp-ar': w / h }}>
+            {shotOn && (
+              <div className="esp-canvas-frame esp-shot">
+                {shot.isVideo
+                  ? <video src={shot.url} controls playsInline loop className="esp-canvas" />
+                  : <img src={shot.url} alt={`Tarjeta de ${selected.name} con la foto de la cámara`} className="esp-canvas" />}
+                <button type="button" className="esp-shot-x" onClick={() => setShot(null)}>Descartar captura</button>
+              </div>
+            )}
+            <div className="esp-canvas-frame" hidden={!selected || shotOn}>
               <canvas ref={canvasRef} className="esp-canvas" />
               {recording !== null && (
                 <div className="esp-recording" role="status">
@@ -566,10 +591,7 @@ export default function EspresalePage() {
               {showZones && (
                 <div className="esp-zones" aria-hidden="true">
                   {shades.map((st, i) => <span key={i} className="esp-zone-shade" style={st} />)}
-                  <span
-                    className="esp-zone-safe"
-                    style={{ left: pct(safe.x0, w), top: pct(safe.y0, h), width: pct(safe.x1 - safe.x0, w), height: pct(safe.y1 - safe.y0, h) }}
-                  >
+                  <span className="esp-zone-safe" style={{ left: pct(safe.x0, w), top: pct(safe.y0, h), width: pct(safe.x1 - safe.x0, w), height: pct(safe.y1 - safe.y0, h) }}>
                     <em>ZONA SEGURA</em>
                   </span>
                 </div>
@@ -592,40 +614,26 @@ export default function EspresalePage() {
               </p>
             </div>
           )}
-
-          <div className="esp-actions">
-            {videoMode && !cardVideo && (
-              <button type="button" className="esp-btn esp-btn-primary" disabled={!selected || recording !== null} onClick={() => ensureCardVideo().catch((err) => setNotice({ ok: false, text: err.message }))}>
-                {recording !== null ? 'Grabando…' : 'Generar video de la tarjeta'}
-              </button>
-            )}
-            {canShareFiles && (
-              <button type="button" className={`esp-btn ${videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!selected || recording !== null || (videoMode && !cardVideo)} onClick={share}>
-                {videoMode ? 'Compartir video' : 'Compartir imagen'}
-              </button>
-            )}
-            <button type="button" className={`esp-btn ${canShareFiles || videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!selected || recording !== null} onClick={download}>
-              {videoMode ? `Descargar ${cardVideo ? cardVideo.ext.toUpperCase() : 'video'}` : 'Descargar PNG'}
-            </button>
-            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>
-              Abrir WhatsApp
-            </button>
-            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || !!saleBusy || recording !== null} onClick={() => publishCard()}>
-              {saleBusy === 'publish' ? 'Publicando…' : videoMode ? `Publicar ${format === 'story' ? 'historia en video' : 'Reel'}` : `Publicar ${format === 'story' ? 'historia' : 'en el feed'}`}
-            </button>
-            <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected || saving || !!savedUrl || recording !== null} onClick={saveToPublications}>
-              {savedUrl ? '✓ En Publicaciones' : saving ? 'Guardando…' : 'Guardar en Publicaciones'}
-            </button>
-          </div>
-          {cardPost && <p className={`esp-notice ${cardPost.ok ? 'ok' : 'err'}`}>{cardPost.text}</p>}
-          {notice && <p className={`esp-notice ${notice.ok ? 'ok' : 'err'}`}>{notice.text}</p>}
-          <p className="esp-fineprint">
-            {canShareFiles
-              ? '“Compartir imagen” abre el menú del celular y adjunta la tarjeta a WhatsApp o Instagram.'
-              : 'WhatsApp Web no adjunta imágenes solo: descarga el PNG y arrástralo al chat que se abre.'}
-          </p>
-        </div>
+        </section>
       </div>
+
+      {cameraOpen && (
+        <MicraCamera
+          varieties={varieties}
+          initialVariety={selected}
+          initialFormat={format}
+          weather={weather}
+          onClose={() => setCameraOpen(false)}
+          onFallback={() => photoInputRef.current?.click()}
+          onShot={(s) => {
+            setSelected(s.variety);
+            setFormat(s.format);
+            setShot(s);
+            setSavedUrl(null);
+            setCameraOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

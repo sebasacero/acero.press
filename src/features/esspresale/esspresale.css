@@ -308,3 +308,87 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
   .essp-slide--photo .essp-block { background: rgba(20, 20, 24, .6); }
   .essp-slide--paper .essp-block { background: rgba(255, 255, 255, .9); }
 }
+
+/* Barra de la app dentro del celular: marca Micra */
+.essp-phone-appbar {
+  display: flex; justify-content: space-between; align-items: baseline; padding: 2px 14px 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .14em; color: rgba(244, 242, 236, .6);
+}
+.essp-micra { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: -.03em; color: #F4F2EC; text-transform: lowercase; }
+.essp-micra i { font-style: normal; color: var(--magenta-bright); }
+
+/* === Celular: el banner ES la pantalla de la app ===
+   Cabe en una pantalla (100svh): el mapa de la app a sangre, la barra con
+   la marca y la dirección arriba, el cambio Pedir café / Ser barista, el
+   texto con las tiendas y la tarjeta del pedido abajo, como en Micra. */
+@container (max-width: 760px) {
+  .essp-slide, .essp-slide--photo {
+    --essp-fg: var(--cream); --essp-soft: rgba(247, 243, 232, .78); --essp-line: rgba(247, 243, 232, .85);
+  }
+  .essp-slide .essp-bg, .essp-slide .essp-sheet, .essp-slide .essp-dash { display: none; }
+  .essp-slide .essp-in {
+    min-height: 100svh; padding: 160px 18px 196px; gap: 14px; background: #0d0e11;
+    display: flex; flex-direction: column; justify-content: flex-start;
+  }
+  .essp-slide .essp-main { display: block; }
+
+  /* La pantalla del celular, sin carcasa, ocupa todo el banner */
+  .essp-slide .essp-hero-phone {
+    position: absolute; inset: 0; width: auto; aspect-ratio: auto; z-index: 0; justify-self: stretch; align-self: stretch;
+    border: 0; border-radius: 0; transform: none; box-shadow: none;
+  }
+  .essp-hero-phone::after {
+    content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(10, 10, 12, .7) 0%, rgba(10, 10, 12, .82) 22%, rgba(10, 10, 12, .62) 52%, rgba(10, 10, 12, .08) 72%, rgba(10, 10, 12, 0) 100%);
+  }
+  .essp-hero-phone .essp-phone-screen { z-index: 2; padding: 66px 12px 0; }
+  /* El menú del sitio va encima de la pantalla de la app, en crema */
+  .navbar.navbar--sheet, .navbar--sheet.navbar--paper { color: var(--cream); }
+  .navbar--sheet .lang-switcher--ink .lang-btn { color: var(--cream); }
+  .essp-hero-phone .essp-phone-status { display: none; }
+  .essp-hero-phone .essp-phone-appbar { padding: 0 4px 8px; font-size: 9.5px; }
+  .essp-hero-phone .essp-micra { font-size: 22px; }
+  .essp-hero-phone .essp-phone-pill { margin: 0; padding: 9px 12px; border-radius: 14px; font-size: 14px; }
+  .essp-hero-phone .essp-phone-pill span { font-size: 9px; }
+  .essp-hero-phone .essp-phone-pill .essp-phone-chip { font-size: 10px; padding: 4px 9px; }
+  .essp-hero-phone .essp-phone-sheet { margin: auto -12px 0; padding: 9px 16px 80px; border-radius: 22px 22px 0 0; gap: 9px; }
+  .essp-hero-phone .essp-phone-card { padding: 11px 12px; gap: 8px; border-radius: 14px; }
+  .essp-hero-phone .essp-phone-cota { font-size: 9.5px; }
+  .essp-hero-phone .essp-phone-badge { font-size: 9.5px; padding: 2px 6px; }
+  .essp-hero-phone .essp-phone-card > b, .essp-hero-phone .essp-phone-who b, .essp-hero-phone .essp-phone-toggle b { font-size: 15px; }
+  .essp-hero-phone .essp-phone-card small { font-size: 10.5px; }
+  .essp-hero-phone .essp-phone-who em { font-size: 15px; }
+  .essp-hero-phone .essp-phone-av { width: 32px; height: 32px; font-size: 11px; }
+  .essp-hero-phone .essp-segs i { height: 6px; }
+
+  /* Texto sobre el mapa */
+  .essp-slide .essp-copy { position: relative; z-index: 3; gap: 11px; }
+  .essp-slide .essp-tag { font-size: 10.5px; }
+  .essp-slide .essp-title { font-size: clamp(2.1rem, 11cqi, 2.9rem); }
+  .essp-slide .essp-loc { font-size: 10.5px; }
+  .essp-slide .essp-lede { font-size: 14.5px; line-height: 1.5; max-width: none; }
+  .essp-slide .essp-store { box-shadow: none; border-width: 1.5px; border-radius: 10px; }
+
+  /* Pedir café / Ser barista: el cambio de modo de la app, arriba */
+  .essp-slide .essp-block {
+    order: -1; position: relative; z-index: 3; display: block;
+    border: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 0; overflow: visible;
+  }
+  .essp-slide .essp-block > div:not(.essp-tabs) { display: none; }
+  .essp-slide .essp-block > .essp-tabs {
+    display: flex; flex-direction: row; gap: 4px; padding: 4px; border: 1px solid rgba(255, 255, 255, .16);
+    background: rgba(20, 21, 24, .88); border-radius: 999px;
+  }
+  .essp-slide .essp-block > .essp-tabs button,
+  .essp-slide .essp-block > .essp-tabs button + button {
+    flex: 1; border: 0; border-radius: 999px; padding: 9px 10px; font-size: 11px; color: rgba(247, 243, 232, .8);
+  }
+  .essp-slide .essp-block > .essp-tabs button[aria-selected='true'] { background: var(--magenta-bright); color: #fff; }
+}
+/* Pantallas bajas: se quita el texto largo para que todo quepa. */
+@container (max-width: 760px) {
+  @media (max-height: 700px) {
+    .essp-slide .essp-lede { display: none; }
+    .essp-slide .essp-in { padding-top: 152px; padding-bottom: 184px; }
+  }
+}

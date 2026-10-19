@@ -6,7 +6,7 @@ const ROLE_LABEL = { cliente: 'Pedir café', barista: 'Ser barista' };
 // Números colombianos de 10 dígitos sin indicativo → se les antepone el 57.
 const waNumber = (phone) => (phone.length === 10 && phone.startsWith('3') ? `57${phone}` : phone);
 
-/** Lista de espera de la app Esspresale (formulario de la sección App del sitio). */
+/** Lista de espera de la app Micra (formulario de la sección App del sitio). */
 export default function AppWaitlistPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function AppWaitlistPage() {
     <div className="admin-page">
       <h1 className="admin-page-title">Lista de espera · App</h1>
       <p className="admin-page-sub">
-        Personas que se apuntaron desde la sección App del sitio. Escríbeles por WhatsApp cuando Esspresale abra en su zona.
+        Personas que se apuntaron desde la sección App del sitio. Escríbeles por WhatsApp cuando Micra abra en su zona.
       </p>
       {error && <p className="admin-fineprint" style={{ color: '#de1b1b' }}>{error}</p>}
 

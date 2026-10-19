@@ -3,7 +3,7 @@ import { useAuth } from '../../features/account/AuthContext.jsx';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 import LanguageSwitcher from '../../features/i18n/LanguageSwitcher.jsx';
 
-// variant 'sheet': va dentro del banner de Esspresale (hoja de plano), con el
+// variant 'sheet': va dentro del banner de la app Micra (hoja de plano), con el
 // logo ACERO + .press a la izquierda; tone 'paper' (tinta) o 'photo' (crema).
 export default function Navbar({ onOpenNavDrawer, navOpen, variant = 'overlay', tone = 'photo' }) {
   const { open, totalQty } = useCart();

@@ -22,10 +22,10 @@ export const ADMIN_GROUPS = [
 // id: estable (lo usan otros componentes, p. ej. openTool('espresale')).
 // signal: contador en vivo que se muestra en la navegación (useAdminSignals).
 export const ADMIN_TOOLS = [
-  { id: 'espresale', label: 'Esspresale', group: 'ops', desc: 'Venta rápida en barra y tarjeta para redes', Component: EspresalePage },
+  { id: 'espresale', label: 'Micra', group: 'ops', desc: 'Venta en barra y tarjeta para redes', Component: EspresalePage },
   { id: 'orders', label: 'Pedidos', group: 'ops', desc: 'Confirmar y completar pedidos', signal: 'pending', Component: OrdersPage },
   { id: 'tables', label: 'Mesas / POS', group: 'ops', desc: 'Cuentas abiertas por mesa', signal: 'occupied', Component: TablesPage },
-  { id: 'waitlist', label: 'Lista de espera', group: 'ops', desc: 'Quienes se apuntaron a la app Esspresale', Component: AppWaitlistPage },
+  { id: 'waitlist', label: 'Lista de espera', group: 'ops', desc: 'Quienes se apuntaron a la app Micra', Component: AppWaitlistPage },
   { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
   { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
   { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, marcas y precios', Component: CatalogPage },
