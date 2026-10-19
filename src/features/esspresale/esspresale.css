@@ -344,3 +344,87 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
   .essp-slide .essp-block > .essp-tabs { grid-column: auto; flex-direction: column; border-top: 0; padding: 7px 8px; gap: 4px; }
   .essp-slide .essp-block > .essp-tabs button, .essp-slide .essp-block > .essp-tabs button + button { border-top: 1.5px solid var(--essp-line); padding: 5px 9px; font-size: 9.5px; }
 }
+
+/* === App Micra: la molienda en micras ===
+   Lenguaje de los molinos profesionales: bisel moleteado y escala de un dial
+   (EK43 / EK Omnia) con la pantalla al centro en µm entre muelas, clics de
+   los molinos de mano y la curva de partículas de un analizador. */
+.essp-phone--mill {
+  background:
+    radial-gradient(120% 60% at 50% 22%, #24262b 0%, #141518 55%, #0c0d0f 100%);
+}
+.essp-phone--mill .essp-phone-screen { gap: 6px; }
+.essp-phone--mill .essp-phone-screen > * { flex: none; }
+.essp-phone--mill .essp-phone-sheet { flex: none; grid-template-columns: minmax(0, 1fr); }
+.essp-phone--mill .essp-phone-card, .essp-psd { grid-template-columns: minmax(0, 1fr); }
+.essp-phone--mill .essp-phone-cota { gap: 6px; }
+/* En los celulares angostos del banner las cotas no se parten: se recortan. */
+.essp-mill-cota span, .essp-phone--mill .essp-phone-cota span { white-space: nowrap; }
+.essp-mill-cota span:last-child, .essp-phone--mill .essp-phone-cota span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.essp-mill-cota {
+  margin: 0 14px; display: flex; justify-content: space-between; gap: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 7.5px; letter-spacing: .08em; color: rgba(244, 242, 236, .55);
+  padding-bottom: 4px; border-bottom: 1px dashed rgba(255, 255, 255, .22);
+}
+.essp-mill-cota .is-red { color: var(--magenta-bright); font-weight: 700; }
+
+/* Dial: el bisel es aluminio cepillado (cónico) y el SVG dibuja la cara. */
+.essp-dial {
+  width: 72%; aspect-ratio: 1; align-self: center; border-radius: 50%; flex: none;
+  background:
+    repeating-conic-gradient(from 8deg, rgba(255, 255, 255, .05) 0deg 1.2deg, rgba(0, 0, 0, .06) 1.2deg 2.4deg),
+    conic-gradient(from 20deg, #3a3d43, #9a9ea6, #44474d, #2a2c30, #8d9199, #3a3d43, #b5b9c0, #3a3d43);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(255, 255, 255, .25);
+}
+.essp-dial svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.essp-dial-knurl { stroke: rgba(0, 0, 0, .45); stroke-width: 1.1; }
+.essp-dial-face { fill: #101114; stroke: rgba(0, 0, 0, .7); stroke-width: 1.5; }
+.essp-dial-band { fill: none; stroke: rgba(244, 242, 236, .14); stroke-width: 3; }
+.essp-dial-band.is-aero { stroke: rgba(255, 0, 0, .3); }
+.essp-dial-window { fill: none; stroke: var(--magenta-bright); stroke-width: 4.5; }
+.essp-dial-tick { stroke: rgba(244, 242, 236, .4); stroke-width: .8; }
+.essp-dial-tick.is-major { stroke: #F4F2EC; stroke-width: 1.4; }
+.essp-dial-num { fill: rgba(244, 242, 236, .7); font: 600 6.6px 'JetBrains Mono', monospace; text-anchor: middle; }
+.essp-dial-mark { fill: var(--magenta-bright); }
+.essp-dial-needle {
+  transform-origin: 100px 100px; transform-box: view-box;
+  transition: transform 1.6s cubic-bezier(.2, .8, .2, 1);
+}
+.essp-dial-needle line { stroke: var(--magenta-bright); stroke-width: 1.4; }
+.essp-dial-needle path { fill: var(--magenta-bright); }
+.essp-dial-screen { fill: #050506; stroke: rgba(255, 255, 255, .16); stroke-width: 1; }
+.essp-dial-cap { fill: rgba(244, 242, 236, .55); font: 500 5.6px 'JetBrains Mono', monospace; letter-spacing: .14em; text-anchor: middle; }
+.essp-dial-val { fill: #F4F2EC; font: 700 25px 'JetBrains Mono', monospace; text-anchor: middle; letter-spacing: -.04em; }
+.essp-dial-unit { fill: rgba(244, 242, 236, .6); font: 500 5.4px 'JetBrains Mono', monospace; letter-spacing: .1em; text-anchor: middle; }
+.essp-dial-chip { fill: rgba(244, 242, 236, .12); }
+.essp-dial-chip.is-off { fill: var(--magenta-bright); }
+.essp-dial-chip-t { fill: #F4F2EC; font: 700 6px 'JetBrains Mono', monospace; text-anchor: middle; }
+
+/* Clics por molino de mano */
+.essp-clicks {
+  margin: 2px 10px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; overflow: hidden;
+  font-family: 'JetBrains Mono', monospace; background: rgba(14, 15, 19, .8);
+}
+.essp-clicks div { padding: 5px 4px; display: grid; gap: 1px; text-align: center; min-width: 0; }
+.essp-clicks div + div { border-left: 1px dashed rgba(255, 255, 255, .18); }
+.essp-clicks span { font-size: 6.8px; color: rgba(244, 242, 236, .5); letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.essp-clicks b { white-space: nowrap; }
+.essp-clicks b { font-size: 15px; font-weight: 700; color: #F4F2EC; }
+.essp-clicks b small { font-size: 7px; font-weight: 500; color: rgba(244, 242, 236, .55); margin-left: 2px; }
+.essp-clicks .is-on { background: rgba(255, 0, 0, .14); }
+.essp-clicks .is-on b { color: var(--magenta-bright); }
+
+/* Distribución de partículas */
+.essp-psd { display: grid; gap: 4px; background: rgba(14, 15, 19, .92); border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; padding: 7px 9px; font-family: 'JetBrains Mono', monospace; }
+.essp-psd svg { width: 100%; height: 34px; display: block; }
+.essp-psd-win { fill: rgba(255, 255, 255, .06); }
+.essp-psd-bar { fill: rgba(244, 242, 236, .75); }
+.essp-psd-fines { fill: rgba(244, 242, 236, .3); }
+.essp-psd-d50 { stroke: var(--magenta-bright); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.essp-psd-axis { display: flex; justify-content: space-between; font-size: 6.8px; color: rgba(244, 242, 236, .45); }
+.essp-psd .essp-phone-cota span:last-child { color: var(--magenta-bright); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .essp-dial-needle { transition: none; }
+}
