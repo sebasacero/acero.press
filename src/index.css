@@ -142,6 +142,40 @@ a{ color:inherit; text-decoration:none; }
 .mc{ color:var(--magenta); font-weight:700; }
 @keyframes scrollmq{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 @media (prefers-reduced-motion: reduce){ .mq-track{ animation:none; } }
+.mq-copy{ display:contents; }
+/* Cintas con datos reales: etiqueta fija a la izquierda (vidrio) y cifras al frente */
+.mq-wrap.has-tag{ padding-left:calc(var(--mq-tag-w, 8rem) + 1rem); }
+.mq-tag{
+  position:absolute; z-index:2; left:0; top:0; bottom:0;
+  display:flex; align-items:center; gap:.45rem; padding:0 1rem 0 1.1rem;
+  font-family:'JetBrains Mono', monospace; font-size:.66rem; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink);
+  background:color-mix(in srgb, var(--paper) 78%, transparent);
+  -webkit-backdrop-filter:blur(8px) saturate(140%); backdrop-filter:blur(8px) saturate(140%);
+  border-right:1px solid var(--grid-line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 10px 0 14px -10px rgba(42,53,80,.25);
+}
+.mq-dot{
+  width:6px; height:6px; border-radius:50%; background:var(--magenta);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--magenta) 18%, transparent);
+  animation:mqpulse 2.4s ease-in-out infinite;
+}
+@keyframes mqpulse{ 50%{ opacity:.35; } }
+@media (prefers-reduced-motion: reduce){ .mq-dot{ animation:none; } }
+.mq-live{ display:inline-flex; align-items:baseline; gap:.5rem; }
+.mq-live::after, .mq-src::after{ content:'·'; margin-left:.7rem; color:var(--ink-soft); font-weight:400; }
+.mq-live.is-last::after, .mq-src.is-last::after{ content:none; }
+.mq-k{ text-transform:uppercase; letter-spacing:.1em; font-size:.62rem; color:var(--ink-soft); }
+.mq-live b{ color:var(--ink); font-weight:700; font-variant-numeric:tabular-nums; }
+.mq-live small{ font-size:.62rem; color:var(--ink-soft); }
+.mq-d{ font-style:normal; font-weight:700; font-size:.64rem; color:var(--ink); }
+.mq-d.is-up{ color:var(--sales-prep); }
+.mq-d.is-down{ color:var(--magenta); }
+.mq-src{ font-size:.6rem; color:var(--ink-soft); letter-spacing:.06em; }
+@media (max-width:600px){
+  .mq-wrap.has-tag{ padding-left:calc(var(--mq-tag-w, 6.5rem) + .7rem); }
+  .mq-tag{ padding:0 .7rem 0 .8rem; font-size:.6rem; letter-spacing:.1em; }
+}
 
 /* === Hero === */
 .hero {
