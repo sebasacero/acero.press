@@ -3,6 +3,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { fetchBogotaWeather } from '../../../shared/lib/weather.js';
 import { drawEspresaleCard, parseRecipe, FORMATS, composeVideoFrame, recordCardVideo, pickVideoType } from '../espresaleCard.js';
 import { publishToInstagram as igPublish, recordEspresaleSale } from '../../../shared/lib/instagram.js';
+import MicraCamera from '../components/MicraCamera.jsx';
 
 const PAY_METHODS = [
   { id: 'cash', label: 'Efectivo' },
@@ -68,6 +69,10 @@ export default function EspresalePage() {
   const [saleBusy, setSaleBusy] = useState(null); // 'sale' | 'publish'
   const [cardPost, setCardPost] = useState(null); // { ok, text }
 
+  // Cámara Micra (se abre con el logo): la foto o el video sale ya con la tarjeta
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [shot, setShot] = useState(null); // { blob, url, type, ext, isVideo, igReady, varietyId, format }
+
   useEffect(() => {
     supabase
       .from('products')
@@ -111,8 +116,12 @@ export default function EspresalePage() {
   }, [captured]);
 
   useEffect(() => () => { if (cardVideo?.url) URL.revokeObjectURL(cardVideo.url); }, [cardVideo]);
+  useEffect(() => () => { if (shot?.url) URL.revokeObjectURL(shot.url); }, [shot]);
 
   const videoMode = !!(usePhoto && videoEl);
+  // La captura de la cámara vale mientras sigan elegidos su variedad y su formato.
+  const shotOn = !!(shot && selected && shot.varietyId === selected.id && shot.format === format);
+  const isVideoOut = shotOn ? shot.isVideo : videoMode;
   const minuteKey = `${now.getHours()}:${now.getMinutes()}`;
   useEffect(() => {
     if (!selected || !canvasRef.current) return undefined;
@@ -220,6 +229,7 @@ export default function EspresalePage() {
 
   // Lo que se descarga/comparte/publica: video si el fondo es video, imagen si no.
   const cardMedia = async ({ jpeg = false } = {}) => {
+    if (shotOn) return { blob: shot.blob, ext: shot.ext, type: shot.type, isVideo: shot.isVideo, igReady: shot.igReady };
     if (videoMode) {
       const v = await ensureCardVideo();
       return { blob: v.blob, ext: v.ext, type: v.type, isVideo: true, igReady: v.igReady };
@@ -370,13 +380,17 @@ export default function EspresalePage() {
   const ready = !!selected && recording === null;
   const publishLabel = saleBusy === 'publish'
     ? 'Publicando…'
-    : videoMode ? `Publicar ${format === 'story' ? 'historia en video' : 'Reel'}` : `Publicar ${format === 'story' ? 'historia' : 'en el feed'}`;
+    : isVideoOut ? `Publicar ${format === 'story' ? 'historia en video' : 'Reel'}` : `Publicar ${format === 'story' ? 'historia' : 'en el feed'}`;
 
   return (
     <div className="admin-page esp esp--console">
       <header className="esp-bar">
-        <h1 className="esp-title">Micra<span>.</span></h1>
-        <span className="esp-bar-sub">Venta en barra · tarjeta para redes</span>
+        <h1 className="esp-title">
+          <button type="button" className="esp-logo-btn" onClick={() => setCameraOpen(true)} title="Abrir la cámara" aria-label="Micra: abrir la cámara">
+            Micra<span>.</span><em className="esp-logo-cam" aria-hidden="true">● CÁMARA</em>
+          </button>
+        </h1>
+        <span className="esp-bar-sub">Toca el logo para la cámara · venta en barra · tarjeta para redes</span>
         <span className="esp-badge">{weather.icon} {tempStr} · {timeStr}</span>
       </header>
 
@@ -516,18 +530,18 @@ export default function EspresalePage() {
 
           <Field label="Enviar y publicar">
             <div className="esp-grid-actions">
-              {videoMode && !cardVideo && (
+              {videoMode && !shotOn && !cardVideo && (
                 <button type="button" className="esp-btn esp-btn-primary" disabled={!ready} onClick={() => ensureCardVideo().catch((err) => setNotice({ ok: false, text: err.message }))}>
                   {recording !== null ? 'Grabando…' : 'Generar video'}
                 </button>
               )}
               {canShareFiles && (
-                <button type="button" className={`esp-btn ${videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!ready || (videoMode && !cardVideo)} onClick={share}>
-                  {videoMode ? 'Compartir video' : 'Compartir imagen'}
+                <button type="button" className={`esp-btn ${videoMode && !shotOn ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!ready || (videoMode && !shotOn && !cardVideo)} onClick={share}>
+                  {isVideoOut ? 'Compartir video' : 'Compartir imagen'}
                 </button>
               )}
               <button type="button" className={`esp-btn ${canShareFiles || videoMode ? 'esp-btn-ghost' : 'esp-btn-primary'}`} disabled={!ready} onClick={download}>
-                {videoMode ? `Descargar ${cardVideo ? cardVideo.ext.toUpperCase() : 'video'}` : 'Descargar PNG'}
+                {shotOn ? `Descargar ${shot.ext.toUpperCase()}` : videoMode ? `Descargar ${cardVideo ? cardVideo.ext.toUpperCase() : 'video'}` : 'Descargar PNG'}
               </button>
               <button type="button" className="esp-btn esp-btn-ghost" disabled={!selected} onClick={openWhatsApp}>Abrir WhatsApp</button>
               <button type="button" className="esp-btn esp-btn-ghost" disabled={!ready || !!saleBusy} onClick={() => publishCard()}>{publishLabel}</button>
@@ -551,12 +565,20 @@ export default function EspresalePage() {
         {/* 03 · Vista previa: la tarjeta cabe en el alto de la pantalla */}
         <section className="esp-preview" aria-label="Vista previa de la tarjeta">
           <div className="esp-cota esp-cota-dark">
-            <span>03 · VISTA PREVIA · {w}×{h}</span>
+            <span>03 · {shotOn ? (shot.isVideo ? 'VIDEO DE LA CÁMARA' : 'FOTO DE LA CÁMARA') : 'VISTA PREVIA'} · {w}×{h}</span>
             <span className="esp-badge">{FORMATS[format].apps}</span>
           </div>
 
           <div className={`esp-canvas-wrap esp-canvas-${format}`} style={{ '--esp-ar': w / h }}>
-            <div className="esp-canvas-frame" hidden={!selected}>
+            {shotOn && (
+              <div className="esp-canvas-frame esp-shot">
+                {shot.isVideo
+                  ? <video src={shot.url} controls playsInline loop className="esp-canvas" />
+                  : <img src={shot.url} alt={`Tarjeta de ${selected.name} con la foto de la cámara`} className="esp-canvas" />}
+                <button type="button" className="esp-shot-x" onClick={() => setShot(null)}>Descartar captura</button>
+              </div>
+            )}
+            <div className="esp-canvas-frame" hidden={!selected || shotOn}>
               <canvas ref={canvasRef} className="esp-canvas" />
               {recording !== null && (
                 <div className="esp-recording" role="status">
@@ -593,6 +615,24 @@ export default function EspresalePage() {
           )}
         </section>
       </div>
+
+      {cameraOpen && (
+        <MicraCamera
+          varieties={varieties}
+          initialVariety={selected}
+          initialFormat={format}
+          weather={weather}
+          onClose={() => setCameraOpen(false)}
+          onFallback={() => photoInputRef.current?.click()}
+          onShot={(s) => {
+            setSelected(s.variety);
+            setFormat(s.format);
+            setShot(s);
+            setSavedUrl(null);
+            setCameraOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
