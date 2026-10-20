@@ -43,16 +43,32 @@ export default function FilterCarousel({ filters, selectedId, onSelect, onShutte
   };
   useEffect(() => () => { clearTimeout(settle.current); clearTimeout(hold.current?.timer); }, []);
 
+  // Mientras se graba manteniendo, el dedo puede moverse sin que el navegador
+  // arrastre el carrusel (eso cancelaría el toque y cortaría el video)
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const block = (e) => { if (hold.current?.active) e.preventDefault(); };
+    el.addEventListener('touchmove', block, { passive: false });
+    return () => el.removeEventListener('touchmove', block);
+  }, []);
+
   const endHold = () => {
     const h = hold.current;
     hold.current = null;
     if (!h) return;
     clearTimeout(h.timer);
+    if (h.end) {
+      window.removeEventListener('pointerup', h.end);
+      window.removeEventListener('touchend', h.end);
+    }
     if (h.active) {
       swallowClick.current = true;
       onHoldEnd?.();
     }
   };
+  // Ya grabando, solo soltar termina (no un cancel del navegador ni salirse del botón)
+  const softEnd = () => { if (hold.current?.active) return; cancelHold(); };
 
   return (
     <div className={`mc-carousel-wrap ${locked ? 'is-locked' : ''}`}>
@@ -71,7 +87,13 @@ export default function FilterCarousel({ filters, selectedId, onSelect, onShutte
               disabled={disabled && !on}
               onPointerDown={on && onHoldStart ? (e) => {
                 const h = { x: e.clientX, y: e.clientY, active: false, timer: 0 };
-                h.timer = setTimeout(() => { h.active = true; onHoldStart(); }, HOLD_MS);
+                h.timer = setTimeout(() => {
+                  h.active = true;
+                  h.end = endHold;
+                  window.addEventListener('pointerup', h.end);
+                  window.addEventListener('touchend', h.end);
+                  onHoldStart();
+                }, HOLD_MS);
                 hold.current = h;
               } : undefined}
               onPointerMove={on && onHoldStart ? (e) => {
@@ -79,8 +101,8 @@ export default function FilterCarousel({ filters, selectedId, onSelect, onShutte
                 if (h && !h.active && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 8) cancelHold();
               } : undefined}
               onPointerUp={on && onHoldStart ? endHold : undefined}
-              onPointerCancel={on && onHoldStart ? endHold : undefined}
-              onPointerLeave={on && onHoldStart ? endHold : undefined}
+              onPointerCancel={on && onHoldStart ? softEnd : undefined}
+              onPointerLeave={on && onHoldStart ? softEnd : undefined}
               onContextMenu={(e) => e.preventDefault()}
               onClick={(e) => {
                 if (swallowClick.current) { swallowClick.current = false; return; }

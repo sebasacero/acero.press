@@ -24,8 +24,8 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [error, setError] = useState(null);
-  const [last, setLast] = useState(null); // { orderId, total, lines:[{variantId, qty, label}], varietyIds, at, published }
-  const [attachedOrderId, setAttachedOrderId] = useState(null);
+  const [last, setLast] = useState(null); // { orderId, total, lines, stock:[{variantId, applied}], varietyIds, at, published }
+  const [attached, setAttached] = useState(null); // venta pegada a la tarjeta del editor
   const [stock, setStock] = useState(null); // { [variantId]: { qty, low } }
 
   // La primera línea sigue al filtro de la cámara
@@ -66,8 +66,10 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
 
   const addLine = useCallback(() => setLines((cur) => [...cur, newLine(varietyOf(cur[cur.length - 1]?.varietyId) ?? varieties?.[0])]), [varieties, varietyOf]);
   const removeLine = useCallback((i) => setLines((cur) => (cur.length > 1 ? cur.filter((_, j) => j !== i) : cur)), []);
+  // Ticket nuevo: el café del filtro, una unidad y sin el WhatsApp del cliente anterior
   const resetTicket = useCallback(() => {
     setLines([newLine(varietyOf(varietyId) ?? varieties?.[0] ?? null)]);
+    setPhone('');
     setError(null);
   }, [varieties, varietyId, varietyOf]);
 
@@ -86,13 +88,20 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
     for (const { variantId, change } of changes) if (next[variantId]) next[variantId] = { ...next[variantId], qty: Math.max(0, next[variantId].qty + change) };
     return next;
   });
-  /** Líneas que piden más de lo que hay en el inventario. */
-  const shortages = useCallback(() => resolved.filter((l) => {
-    const st = l.variant && stock?.[l.variant.id];
-    return st && st.qty < l.qty;
-  }), [resolved, stock]);
+  /** Líneas cuya presentación no alcanza (sumando todas las líneas de esa presentación). */
+  const shortages = useCallback(() => {
+    const want = new Map();
+    for (const l of resolved) if (l.variant) want.set(l.variant.id, (want.get(l.variant.id) || 0) + l.qty);
+    return resolved.filter((l) => {
+      const st = l.variant && stock?.[l.variant.id];
+      return st && st.qty < want.get(l.variant.id);
+    });
+  }, [resolved, stock]);
 
-  /** Registra el ticket. `attach`: la venta queda pegada a la tarjeta del editor. */
+  /**
+   * Registra el ticket. `attach`: la venta queda pegada a la tarjeta del
+   * editor (y reemplaza a la que estuviera pegada).
+   */
   const register = useCallback(async ({ attach = false } = {}) => {
     if (busyRef.current || !priced) return null;
     busyRef.current = true;
@@ -105,14 +114,19 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
         orderId: r.orderId,
         total: r.total,
         lines: payload.map((l) => ({ variantId: l.variant.id, qty: l.qty, label: `${l.productName} · ${l.variant.label}` })),
+        stock: r.stock,
+        stockError: r.stockError,
         varietyIds: [...new Set(resolved.map((l) => String(l.varietyId)))],
         at: Date.now(),
         published: false,
       };
       setLast(rec);
-      if (attach) setAttachedOrderId(r.orderId);
-      moveLocalStock(rec.lines.map((l) => ({ variantId: l.variantId, change: -l.qty })));
-      setLines([newLine(varietyOf(varietyId) ?? varieties?.[0] ?? null)]);
+      setAttached(attach ? rec : null);
+      moveLocalStock(r.stock.map((x) => ({ variantId: x.variantId, change: x.applied })));
+      // El siguiente cliente arranca con el mismo café y presentación, una unidad
+      const first = lines[0];
+      setLines([{ ...(first ?? newLine(varietyOf(varietyId))), key: nextKey++, qty: 1 }]);
+      setPhone('');
       return rec;
     } catch (e) {
       setError(e.message);
@@ -121,32 +135,48 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
       busyRef.current = false;
       setBusy(false);
     }
-  }, [priced, resolved, payMethod, phone, varietyId, varieties, varietyOf]);
+  }, [priced, resolved, payMethod, phone, lines, varietyId, varietyOf]);
 
-  /** «Deshacer»: anula una venta (la última, si no se dice cuál) y devuelve el inventario. */
+  /** «Deshacer»: anula una venta (la última, si no se dice cuál) y devuelve el inventario. Una sola vez por venta. */
   const lastRef = useRef(null);
   lastRef.current = last;
+  const voided = useRef(new Set());
   const voidLast = useCallback(async (rec = lastRef.current) => {
-    if (!rec) return;
-    await voidMicraSale({ orderId: rec.orderId, lines: rec.lines });
-    moveLocalStock(rec.lines.map((l) => ({ variantId: l.variantId, change: l.qty })));
-    setAttachedOrderId((id) => (id === rec.orderId ? null : id));
+    if (!rec || voided.current.has(rec.orderId)) return;
+    voided.current.add(rec.orderId);
+    let partial = null;
+    try {
+      const r = await voidMicraSale({ orderId: rec.orderId, stock: rec.stock });
+      if (!r.alreadyVoided) moveLocalStock(rec.stock.map((x) => ({ variantId: x.variantId, change: -x.applied })));
+    } catch (e) {
+      // Si el pedido no se anuló, se puede volver a intentar; si se anuló pero falló el inventario, no
+      if (!/se anuló/.test(e.message)) { voided.current.delete(rec.orderId); throw e; }
+      partial = e;
+    }
+    setAttached((a) => (a?.orderId === rec.orderId ? null : a));
     setLast((l) => (l?.orderId === rec.orderId ? null : l));
+    if (partial) throw partial;
   }, []);
+  const isVoided = useCallback((orderId) => voided.current.has(orderId), []);
 
-  /** Pedido que va con la tarjeta que se publica (o null). */
-  const linkedOrderId = useCallback(({ kind: k, varietyId: vid }) => {
-    if (attachedOrderId) return attachedOrderId;
+  /** Venta que va con la tarjeta que se publica (o null): la pegada a la tarjeta, o la última de esa variedad en 10 min. */
+  const linkedSale = useCallback(({ kind: k, varietyId: vid }) => {
+    if (attached && !attached.published) return attached;
     if (k !== 'recipe' || !last || last.published) return null;
     if (!last.varietyIds.includes(String(vid)) || Date.now() - last.at > LINK_MS) return null;
-    return last.orderId;
-  }, [attachedOrderId, last]);
+    return last;
+  }, [attached, last]);
+  const linkedOrderId = useCallback((q) => linkedSale(q)?.orderId ?? null, [linkedSale]);
+  /** Ya se publicó con este pedido: no se vuelve a enlazar a otra tarjeta. */
   const markPublished = useCallback((orderId) => {
     setLast((l) => (l && l.orderId === orderId ? { ...l, published: true } : l));
+    setAttached((a) => (a?.orderId === orderId ? null : a));
   }, []);
+  /** Se dejó la tarjeta (volver a la cámara): la venta pegada a ella se suelta. */
+  const releaseCard = useCallback(() => setAttached(null), []);
   /** «Nueva tarjeta»: ticket nuevo; la venta enlazable sigue si no se usó. */
   const newCard = useCallback(() => {
-    setAttachedOrderId(null);
+    setAttached(null);
     resetTicket();
   }, [resetTicket]);
 
@@ -158,9 +188,9 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
   }, [resolved, varietyOf]);
 
   return {
-    lines: resolved, setLine, addLine, removeLine, resetTicket, newCard,
+    lines: resolved, setLine, addLine, removeLine, resetTicket, newCard, releaseCard,
     payMethod, setPayMethod, phone, setPhone,
     total, priced, priceFor, stock, stockFor, loadStock, shortages,
-    busy, error, setError, register, last, attachedOrderId, linkedOrderId, voidLast, markPublished,
+    busy, error, setError, register, last, linkedSale, linkedOrderId, voidLast, isVoided, markPublished,
   };
 }

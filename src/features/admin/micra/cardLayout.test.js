@@ -121,7 +121,10 @@ test('slotTargets da un destino por posición de cada pieza móvil', () => {
   const t = slotTargets(F, el, m, (bands) => body(el, false)(bands.zone), false);
   assert.deepEqual(t.logo.map((s) => s.slot), ['left', 'center', 'right']);
   assert.deepEqual(t.title.map((s) => s.slot), ['top', 'bottom']);
-  assert.deepEqual(t.panel.map((s) => s.slot), ['right', 'left']);
+  assert.deepEqual(t.panel.map((s) => s.slot), ['left', 'right']);
+  const noDrawing = resolveElements([{ ...STICKERS, drawing: { visible: false } }]);
+  const t2 = slotTargets(F, noDrawing, measure(F, noDrawing), (bands) => body(noDrawing, false)(bands.zone), false);
+  assert.equal(t2.panel, undefined);
   assert.ok(t.logo[2].x > t.logo[0].x);
 });
 

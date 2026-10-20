@@ -82,6 +82,15 @@ test('el texto libre del modelo entra solo si no hay otro; restablecer pieza y t
   assert.equal(s.undo.length, steps + 1);
 });
 
+test('cambiar de filtro vacía el deshacer (no devuelve textos de otro café)', () => {
+  let s = lookReducer(initialLook(), { type: 'texts', patch: { title: 'GEISHA DE LA CASA' } });
+  s = lookReducer(s, { type: 'hide', kind: 'recipe', id: 'fig', base });
+  s = lookReducer(s, { type: 'filterChanged' });
+  assert.equal(s.undo.length, 0);
+  assert.equal(lookReducer(s, { type: 'undo' }).texts.title, null);
+  assert.ok(s.seq > 0);
+});
+
 test('parsePrefs limpia lo guardado y usa valores por defecto', () => {
   const p = parsePrefs(JSON.stringify({ v: 1, format: 'tiktok', camMode: 'x', pay: 'nequi', overrides: { recipe: { logo: { visible: false, hack: 1 } }, evil: {} }, texts: { handle: '@a', free: 'no se guarda' } }));
   assert.equal(p.format, 'tiktok');

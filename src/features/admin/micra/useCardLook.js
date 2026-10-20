@@ -20,6 +20,6 @@ export function useCardLook({ kind, preset, onPhoto, hasCobrand, saved }) {
   const act = useCallback((a) => dispatch({ kind, base, ...a }), [kind, base]);
   return {
     elements, base, overrides: state.overrides, texts: state.texts,
-    act, canUndo: state.undo.length > 0, undo: () => dispatch({ type: 'undo' }),
+    act, canUndo: state.undo.length > 0, undo: () => dispatch({ type: 'undo' }), seq: state.seq,
   };
 }

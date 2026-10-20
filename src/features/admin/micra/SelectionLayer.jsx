@@ -66,6 +66,12 @@ export default function SelectionLayer({ drawn, cardRef, selection, disabled, on
           aria-label={`${ELEMENT_META[b.id].label}. Toca para editar`}
           aria-pressed={b.id === selection}
           onFocus={(e) => { if (e.currentTarget.matches(':focus-visible')) onSelect(b.id); }}
+          // Lectores de pantalla (VoiceOver/TalkBack) activan con un clic sin puntero
+          onClick={(e) => {
+            if (e.detail !== 0) return;
+            if (b.id !== selection) onSelect(b.id);
+            else if (isText(b.id)) onEditText(b.id);
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();

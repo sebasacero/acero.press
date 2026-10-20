@@ -55,7 +55,7 @@ export function textTargets(kind, preset, el) {
   list.push({ key: 'title', label: 'Título', max: 40, font: 'title' });
   list.push({ key: 'subtitle', label: 'Subtítulo', max: 48, font: 'mono' });
   if (kind !== 'announce') list.push({ key: 'note', label: kind === 'recipe' ? 'Nota del barista' : 'Mensaje', max: kind === 'recipe' ? 140 : 120, multiline: true, font: kind === 'recipe' ? 'mono' : 'body' });
-  list.push({ key: 'free', label: 'Texto libre', max: 80, multiline: true, font: 'free' });
+  list.push({ key: 'free', label: 'Texto libre', max: 80, multiline: true, breaks: true, font: 'free' });
   if (el?.fig?.shown) list.push({ key: 'fig', label: 'Cota', max: 32, font: 'mono' });
   if (el?.block?.shown && el.block.cells.sign) list.push({ key: 'sign', label: 'Firma', max: 16, font: 'title' });
   if (el?.handle?.shown) list.push({ key: 'handle', label: 'Mención', max: 30, font: 'mono' });
@@ -126,11 +126,12 @@ export const initialLook = (saved = {}) => ({
   overrides: { ...emptyOverrides(), ...(saved.overrides || {}) },
   texts: { ...DEFAULT_TEXTS, ...(saved.texts || {}) },
   undo: [],
+  seq: 0, // sube con cada edición (los avisos con «Deshacer» se cierran si hubo otra)
 });
 
 const UNDO_MAX = 20;
 const snapshot = (s) => ({ overrides: s.overrides, texts: s.texts });
-const withUndo = (s, next) => ({ ...next, undo: [...s.undo, snapshot(s)].slice(-UNDO_MAX) });
+const withUndo = (s, next) => ({ ...next, undo: [...s.undo, snapshot(s)].slice(-UNDO_MAX), seq: (s.seq || 0) + 1 });
 
 /**
  * Reductor del diseño. Las acciones que editan llevan `kind` y `base`
@@ -162,18 +163,20 @@ export function lookReducer(state, a) {
       // El texto libre con el que arranca un modelo (p. ej. «Promo») solo si no hay otro
       const texts = { ...state.texts, ...Object.fromEntries(FILTER_TEXT_KEYS.map((k) => [k, null])) };
       if (a.freeText && !texts.free) texts.free = a.freeText;
-      return { ...state, texts };
+      // Deshacer no cruza filtros: devolvería los textos del filtro anterior
+      return { ...state, texts, undo: [], seq: (state.seq || 0) + 1 };
     }
     case 'newCard':
       return {
         ...state,
         texts: { ...state.texts, ...Object.fromEntries(CARD_TEXT_KEYS.map((k) => [k, DEFAULT_TEXTS[k]])) },
         undo: [],
+        seq: (state.seq || 0) + 1,
       };
     case 'undo': {
       if (!state.undo.length) return state;
       const prev = state.undo[state.undo.length - 1];
-      return { ...state, ...prev, undo: state.undo.slice(0, -1) };
+      return { ...state, ...prev, undo: state.undo.slice(0, -1), seq: (state.seq || 0) + 1 };
     }
     default:
       return state;

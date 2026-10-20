@@ -274,6 +274,8 @@
   box-shadow:0 10px 30px rgba(0,0,0,.4); animation:mst-pop .2s ease;
 }
 .mst-toast{ bottom:calc(max(10px, env(safe-area-inset-bottom)) + 86px); }
+/* En la cámara, arriba: abajo taparía el disparador y los filtros */
+.mstudio.is-camera .mst-toast{ top:calc(max(12px, env(safe-area-inset-top)) + 58px); bottom:auto; }
 .mst-job{ top:calc(max(10px, env(safe-area-inset-top)) + 62px); }
 .mst-job.is-done{ background:#1f6e46; }
 .mst-job.is-error{ background:#7d1717; }
@@ -364,6 +366,8 @@
 .msheet-empty{ margin:0; font-size:13px; color:rgba(255,255,255,.65); }
 .msheet-success{ display:flex; flex-direction:column; gap:14px; padding:6px 0 10px; }
 .msheet-success p{ margin:0; font-size:16px; font-weight:700; line-height:1.4; color:#9ef0bf; }
+.msheet-success .msheet-notice{ font-size:13px; font-weight:500; }
+.msheet-sold{ margin:0; padding:0 0 0 18px; font:600 12.5px/1.6 var(--mst-mono); color:rgba(255,255,255,.75); }
 .msheet-switch{ display:flex; align-items:center; gap:10px; min-height:44px; font-size:13.5px; line-height:1.35; cursor:pointer; }
 .msheet-switch input{ flex-shrink:0; width:20px; height:20px; accent-color:var(--mst-red); }
 .msheet-switch small{ margin-left:auto; font-size:11px; color:rgba(255,255,255,.5); }

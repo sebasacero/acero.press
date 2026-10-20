@@ -41,7 +41,20 @@ export default function MicraCamera({
   const [localNote, setLocalNote] = useState(null);
   const plain = mode === 'plain';
   const recording = seconds !== null;
-  useEffect(() => { onRecording?.(recording); }, [recording, onRecording]);
+  const onRecordingRef = useRef(onRecording);
+  onRecordingRef.current = onRecording;
+  useEffect(() => { onRecordingRef.current?.(recording); }, [recording]);
+  // Al desmontar (p. ej. la toma abrió el editor) ya no se graba
+  useEffect(() => () => onRecordingRef.current?.(false), []);
+
+  // Corta lo que se esté grabando y lo descarta (el grabador puede no existir aún: se está pidiendo el micrófono)
+  const discardRecording = () => {
+    const r = recRef.current;
+    if (!r) return;
+    r.cancelled = true;
+    if (r.recorder?.state === 'recording') r.recorder.stop();
+    else { clearInterval(r.timer); recRef.current = null; setSeconds(null); }
+  };
 
   // Cámara: solo video y a 30 cuadros como máximo (el micrófono, solo al grabar)
   useEffect(() => {
@@ -75,8 +88,7 @@ export default function MicraCamera({
       });
     return () => {
       cancelled = true;
-      const r = recRef.current;
-      if (r) { r.cancelled = true; if (r.recorder.state === 'recording') r.recorder.stop(); }
+      discardRecording();
       stopStream(streamRef.current);
       streamRef.current = null;
       const v = videoRef.current;
@@ -89,8 +101,7 @@ export default function MicraCamera({
   useEffect(() => {
     const onVis = () => {
       if (document.hidden) {
-        const r = recRef.current;
-        if (r) { r.cancelled = true; if (r.recorder.state === 'recording') r.recorder.stop(); }
+        discardRecording();
         stopStream(streamRef.current);
         streamRef.current = null;
         setStatus((s) => (s === 'off' ? s : 'starting'));
@@ -159,6 +170,7 @@ export default function MicraCamera({
   };
 
   const startVideo = async () => {
+    if (busy || recRef.current) return;
     const type = pickVideoType();
     if (!type || !streamRef.current) { nativeRef.current?.click(); return; }
     const r = { recorder: null, cancelled: false, stopAsked: false, timer: 0 };
@@ -169,7 +181,16 @@ export default function MicraCamera({
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch { mic = null; }
     if (r.cancelled || !streamRef.current) { stopStream(mic); recRef.current = null; setSeconds(null); return; }
     const stream = new MediaStream([...streamRef.current.getVideoTracks(), ...(mic?.getAudioTracks() ?? [])]);
-    const recorder = new MediaRecorder(stream, { mimeType: type });
+    let recorder;
+    try {
+      recorder = new MediaRecorder(stream, { mimeType: type });
+    } catch {
+      stopStream(mic);
+      recRef.current = null;
+      setSeconds(null);
+      nativeRef.current?.click();
+      return;
+    }
     r.recorder = recorder;
     const chunks = [];
     recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
@@ -188,15 +209,27 @@ export default function MicraCamera({
       setSeconds(s);
       if (s >= MAX_SECONDS) recorder.stop();
     }, 1000);
-    recorder.start(1000);
-    // Soltaron antes de que arrancara (mantener presionado muy corto)
+    try {
+      recorder.start(1000);
+    } catch {
+      clearInterval(r.timer);
+      stopStream(mic);
+      recRef.current = null;
+      setSeconds(null);
+      return;
+    }
     if (r.stopAsked) recorder.stop();
   };
-  const stopVideo = () => {
+  // fromHold: soltaron el filtro. Si aún no arrancaba (se pedía el micrófono), fue un toque largo: foto.
+  const stopVideo = (fromHold = false) => {
     const r = recRef.current;
     if (!r) return;
-    if (r.recorder?.state === 'recording') r.recorder.stop();
-    else r.stopAsked = true;
+    if (r.recorder?.state === 'recording') { r.recorder.stop(); return; }
+    if (r.recorder) { r.stopAsked = true; return; }
+    r.cancelled = true;
+    recRef.current = null;
+    setSeconds(null);
+    if (fromHold && mode === 'photo') takePhoto();
   };
 
   const ready = kind !== 'recipe' || !!variety;
@@ -210,7 +243,7 @@ export default function MicraCamera({
     else if (recording) stopVideo();
     else startVideo();
   };
-  const holdStart = mode === 'photo' && status === 'live' && ready ? () => startVideo() : undefined;
+  const holdStart = mode === 'photo' && status === 'live' && ready && !busy ? () => startVideo() : undefined;
 
   // Teclado (escritorio): espacio/enter = disparador, ←/→ = filtro, V = venta, F = formato
   const keyRef = useRef(null);
@@ -219,6 +252,8 @@ export default function MicraCamera({
     if (paused) return undefined;
     const onKey = (e) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+      // Las flechas y teclas dentro de una hoja (p. ej. la venta acoplada) son de la hoja
+      if (e.target?.closest?.('.msheet, .mst-dock, [role="option"], [role="radio"], [role="tab"]')) return;
       const onButton = e.target?.closest?.('button');
       const k = keyRef.current;
       if ((e.key === ' ' || e.key === 'Enter') && !onButton) { e.preventDefault(); k.shutter(); }
@@ -309,7 +344,7 @@ export default function MicraCamera({
           onSelect={selectFilter}
           onShutter={shutter}
           onHoldStart={holdStart}
-          onHoldEnd={stopVideo}
+          onHoldEnd={() => stopVideo(true)}
           shutterClass={shutterClass}
           shutterLabel={plain ? 'Usar' : null}
           disabled={recording}

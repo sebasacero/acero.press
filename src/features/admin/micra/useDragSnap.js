@@ -33,16 +33,24 @@ export function useDragSnap({ layerRef, selRef, getState, onSelect, onEditText, 
 
   const onPointerDown = (e) => {
     const st = getState();
+    // Un segundo dedo cancela el gesto en curso (no se reemplaza por otro)
+    if (g.current) {
+      const s = g.current;
+      g.current = null;
+      if (s.dragging) finishDrag(s, true);
+      return;
+    }
     if (st.disabled || !st.drawn || e.button > 0) return;
     const rect = layerRef.current.getBoundingClientRect();
     const p = toCanvas(rect, e.clientX, e.clientY);
     const cands = hitCandidates(st.layout, p.x, p.y, FINGER_PAD * p.k);
-    g.current = { id: cands[0] ?? null, cands, x0: e.clientX, y0: e.clientY, t0: performance.now(), rect, k: p.k, dragging: false, near: null, hot: false };
+    g.current = { pointerId: e.pointerId, id: cands[0] ?? null, cands, x0: e.clientX, y0: e.clientY, t0: performance.now(), rect, k: p.k, dragging: false, near: null, hot: false, armed: false };
     layerRef.current.setPointerCapture?.(e.pointerId);
   };
 
   const onPointerMove = (e) => {
     const s = g.current;
+    if (s && e.pointerId !== s.pointerId) return;
     if (!s) {
       // Escritorio: el contorno de la pieza bajo el mouse
       if (e.pointerType === 'mouse' && getState().drawn) {
@@ -63,11 +71,14 @@ export function useDragSnap({ layerRef, selRef, getState, onSelect, onEditText, 
     const sel = selRef.current;
     if (sel) { sel.style.transition = 'none'; sel.style.transform = `translate(${dx}px, ${dy}px)`; }
 
-    // Papelera: cerca del centro de abajo
+    // Papelera: cerca del centro de abajo. Solo se activa después de que el dedo
+    // estuvo fuera de ella (lo que empieza encima, como el cajetín, no cae solo)
     const trash = trashEl();
     if (trash) {
       const tr = trash.getBoundingClientRect();
-      s.hot = Math.hypot(e.clientX - (tr.left + tr.width / 2), e.clientY - (tr.top + tr.height / 2)) < TRASH_HOT;
+      const d = Math.hypot(e.clientX - (tr.left + tr.width / 2), e.clientY - (tr.top + tr.height / 2));
+      if (d >= TRASH_HOT) s.armed = true;
+      s.hot = s.armed && d < TRASH_HOT;
       trash.classList.toggle('is-hot', s.hot);
     }
     // Posición más cercana al centro de la pieza arrastrada (con histéresis)
@@ -110,8 +121,8 @@ export function useDragSnap({ layerRef, selRef, getState, onSelect, onEditText, 
 
   const onPointerUp = (e) => {
     const s = g.current;
+    if (!s || e.pointerId !== s.pointerId) return;
     g.current = null;
-    if (!s) return;
     if (s.dragging) { finishDrag(s, false); return; }
     const now = performance.now();
     if (now - s.t0 > TAP_MS) return;
@@ -130,10 +141,11 @@ export function useDragSnap({ layerRef, selRef, getState, onSelect, onEditText, 
     onSelect(s.id);
   };
 
-  const onPointerCancel = () => {
+  const onPointerCancel = (e) => {
     const s = g.current;
+    if (!s || e.pointerId !== s.pointerId) return;
     g.current = null;
-    if (s?.dragging) finishDrag(s, true);
+    if (s.dragging) finishDrag(s, true);
   };
 
   const onPointerLeave = (e) => { if (e.pointerType === 'mouse' && !g.current) onHover?.(null); };

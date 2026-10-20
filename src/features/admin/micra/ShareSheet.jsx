@@ -11,7 +11,7 @@ import { IconCamera, IconChat, IconDownload, IconGrid, IconShare } from './icons
  */
 export default function ShareSheet({
   out, sale, kind, format, videoMode, cardRef, cardKey, caption, autoCaption, setCaption, hashtags, setHashtags,
-  linkedOrderId, canShare, onPublish, onNewCard, onOpenPublications, guardLogo, onClose, docked,
+  linkedOrderId, canShare, onPublish, onNewCard, onOpenPublications, guardLogo, onClose, docked, onRegistered,
 }) {
   const thumbRef = useRef(null);
   const [notice, setNotice] = useState(null); // { ok, text }
@@ -44,6 +44,7 @@ export default function ShareSheet({
     if (!alsoSale || !showSaleSwitch) return linkedOrderId;
     const rec = await sale.register({ attach: true });
     setAlsoSale(false);
+    if (rec) onRegistered?.(rec);
     return rec?.orderId ?? null;
   };
 
@@ -79,7 +80,7 @@ export default function ShareSheet({
 
   const share = () => {
     // Sin esperar la venta: el menú de compartir necesita el gesto del toque
-    if (alsoSale && showSaleSwitch) withSale().catch(() => {});
+    if (alsoSale && showSaleSwitch) withSale().catch((e) => setNotice({ ok: false, text: `No se registró la venta: ${e.message}` }));
     runJob('share', async () => { await out.share(); });
   };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LOGO_VARIANTS, currentSlot, slotPatch, slotsOf } from './cardLayout.js';
+import { LOGO_VARIANTS, currentSlot, movableSlots, slotPatch } from './cardLayout.js';
 import { ELEMENT_META } from './cardModel.js';
 import {
   IconCells, IconCheck, IconCompact, IconEyeOff, IconImage, IconMoney, IconMove, IconPen, IconReset, IconRuler, IconSize, IconStyle, IconTrash,
@@ -46,16 +46,22 @@ export default function ContextBar({ id, el, kind, onPhoto, note, onSet, onHide,
   useEffect(() => { setRow(null); }, [id]);
   const e = el[id];
   if (!e) return null;
-  const actions = actionsFor(id, kind);
+  const slots = movableSlots(el, id, onPhoto);
+  // «Mover» solo si hay a dónde
+  const actions = actionsFor(id, kind).filter((a) => a.id !== 'move' || slots.length > 1);
 
   const chips = (() => {
     if (row === 'style') return LOGO_VARIANTS.map((v) => ({ key: v.id, label: v.label, on: e.variant === v.id, run: () => onSet({ variant: v.id }), cls: `is-logo is-${v.id}` }));
     if (row === 'size') return SIZES.map(([s, label]) => ({ key: s, label, on: e.size === s, run: () => onSet({ size: s }) }));
     if (row === 'move') {
       const cur = currentSlot(el, id, onPhoto);
-      return slotsOf(id, onPhoto).map((s) => ({ key: s, label: SLOT_LABEL[s], on: cur === s, run: () => onSet(slotPatch(id, s, onPhoto)) }));
+      return slots.map((s) => ({ key: s, label: SLOT_LABEL[s], on: cur === s, run: () => onSet(slotPatch(id, s, onPhoto)) }));
     }
-    if (row === 'cells') return CELLS.map(([c, label]) => ({ key: c, label, on: !!e.cells?.[c], run: () => onSet({ cells: { [c]: !e.cells?.[c] } }) }));
+    if (row === 'cells') {
+      // La última celda encendida no se apaga (sin celdas el cajetín no se podría volver a mostrar)
+      const onCount = CELLS.filter(([c]) => e.cells?.[c]).length;
+      return CELLS.map(([c, label]) => ({ key: c, label, on: !!e.cells?.[c], disabled: !!e.cells?.[c] && onCount === 1, run: () => onSet({ cells: { [c]: !e.cells?.[c] } }) }));
+    }
     return null;
   })();
 
@@ -64,7 +70,11 @@ export default function ContextBar({ id, el, kind, onPhoto, note, onSet, onHide,
     setRow(null);
     if (a.toggle) { onSet({ [a.toggle]: !e[a.toggle] }); return; }
     if (a.id === 'hide') onHide();
-    else if (a.id === 'edit' || a.id === 'sign') onEdit(a.id === 'sign' ? 'sign' : null);
+    else if (a.id === 'sign') {
+      // La firma está en su celda: si estaba apagada, se enciende para poder escribirla
+      if (!e.cells?.sign) onSet({ cells: { sign: true } });
+      onEdit('sign');
+    } else if (a.id === 'edit') onEdit(null);
     else if (a.id === 'reset') onReset();
     else if (a.id === 'sale') onSale();
     else if (a.id === 'cobrand') onCobrand();
@@ -76,7 +86,7 @@ export default function ContextBar({ id, el, kind, onPhoto, note, onSet, onHide,
       {chips && (
         <div className="mst-ctx-row" role="group" aria-label={actions.find((a) => a.id === row)?.label}>
           {chips.map((c) => (
-            <button key={c.key} type="button" className={`mst-ctx-chip ${c.on ? 'on' : ''} ${c.cls ?? ''}`} aria-pressed={c.on} onClick={c.run}>{c.label}</button>
+            <button key={c.key} type="button" className={`mst-ctx-chip ${c.on ? 'on' : ''} ${c.cls ?? ''}`} aria-pressed={c.on} disabled={c.disabled} onClick={c.run}>{c.label}</button>
           ))}
         </div>
       )}

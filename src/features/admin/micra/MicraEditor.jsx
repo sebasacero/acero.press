@@ -85,9 +85,16 @@ export default function MicraEditor({
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
+  // El clip se repite desde el inicio elegido (lo mismo que saldrá en el video)
   const onTime = () => {
     const v = videoRef.current;
-    if (v && v.currentTime > trimStart + LOOP_SECONDS) v.currentTime = trimStart;
+    if (v && (v.currentTime > trimStart + LOOP_SECONDS || v.currentTime < trimStart - 0.25)) v.currentTime = trimStart;
+  };
+  const onEnded = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = trimStart;
+    if (!pausedRef.current) v.play().catch(() => {});
   };
 
   const { w, h } = FORMATS[format];
@@ -102,11 +109,12 @@ export default function MicraEditor({
             ref={videoRef}
             className="mst-video"
             src={videoUrl}
-            loop
             muted
             playsInline
             autoPlay
             onTimeUpdate={onTime}
+            onEnded={onEnded}
+            onSeeked={() => { if (pausedRef.current) composeStill(); }}
             onLoadedData={() => { if (pausedRef.current) composeStill(); }}
           />
         )}

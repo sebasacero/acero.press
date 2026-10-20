@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { autoTexts, FORMATS, igKind, loadPhotoBitmap, parseRecipe } from '../espresaleCard.js';
 import { clearMicraIntent, MICRA_INTENT_EVENT, PRESETS, presetOf, readMicraIntent } from '../micraFilters.js';
-import { currentSlot, slotPatch, slotsOf } from './cardLayout.js';
+import { currentSlot, movableSlots, slotPatch } from './cardLayout.js';
 import { DEFAULT_TEXTS, ELEMENT_META, elementTextKey, isDefaultLook, loadPrefs, savePrefs, textTargets } from './cardModel.js';
 import { buildAltText, buildCaption, money, moneyShort, PAY_METHODS, primaryDest, PUBLISH_ARIA, PUBLISH_LABEL } from './captions.js';
 import { useCardLook } from './useCardLook.js';
@@ -81,6 +81,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const [coach, setCoach] = useState(() => !flag(COACH_KEY));
   const [ticketFlash, setTicketFlash] = useState(false);
   const cardRef = useRef(null);
+  const countdown = useRef(0);
+  useEffect(() => () => clearInterval(countdown.current), []);
   const galleryRef = useRef(null);
   const cobrandRef = useRef(null);
   const recordingRef = useRef(false);
@@ -113,6 +115,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       return;
     }
     look.act({ type: 'filterChanged', freeText: preset?.freeText });
+    setCaption(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterId]);
 
@@ -131,6 +134,10 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     toastTimer.current = setTimeout(() => setToast((cur) => (cur?.id === id ? null : cur)), t.ttl ?? 4000);
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+  // Un aviso con «Deshacer» de una edición se cierra con la siguiente edición
+  useEffect(() => {
+    if (toast?.seq !== undefined && toast.seq !== look.seq) setToast(null);
+  }, [look.seq, toast]);
 
   // ── Textos de la tarjeta ──
   const kindText = kind === 'recipe' ? '' : texts[kind] || '';
@@ -152,12 +159,13 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   // ── Dibujo del editor ──
   const videoMode = bg === 'media' && capture?.type === 'video';
   const photoPending = bg === 'media' && capture?.type === 'image' && !photo;
+  const shownPrice = elements.price.shown ? priceText : null;
   const drawArgs = useMemo(() => ({
-    variety, weather, format, kind, preset, texts, elements, priceText,
+    variety, weather, format, kind, preset, texts, elements, priceText: shownPrice,
     photo: bg === 'media' && capture?.type === 'image' ? photo : null,
     videoOverlay: videoMode,
     cobrand: cobrand?.img ?? null,
-  }), [variety, weather, format, kind, preset, texts, elements, priceText, bg, capture, photo, videoMode, cobrand]);
+  }), [variety, weather, format, kind, preset, texts, elements, shownPrice, bg, capture, photo, videoMode, cobrand]);
   const hold = !!(textKey || confirm || (sheet && !desktop));
   const timeShown = elements.block.shown && elements.block.cells.time;
   // El minuto redibuja solo si se ve la hora, y espera a que no haya hojas ni selección
@@ -167,8 +175,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const tick = tickRef.current;
   // Lo que invalida el video grabado y lo guardado en Publicaciones (no el minuto)
   const cardKey = useMemo(() => JSON.stringify({
-    filterId, format, bg, url: capture?.url, trimStart, o: look.overrides[kind], texts, priceText, cobrand: cobrand?.name ?? null,
-  }), [filterId, format, bg, capture, trimStart, look.overrides, kind, texts, priceText, cobrand]);
+    filterId, format, bg, url: capture?.url, trimStart, o: look.overrides[kind], texts, price: shownPrice, cobrand: cobrand?.name ?? null,
+  }), [filterId, format, bg, capture, trimStart, look.overrides, kind, texts, shownPrice, cobrand]);
 
   const out = useCardOutput({
     getCanvas: () => cardRef.current,
@@ -183,13 +191,15 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     cardKey,
   });
 
-  // La selección se suelta si su pieza dejó de verse
+  // La selección se suelta si su pieza dejó de mostrarse (no antes de que se dibuje una recién puesta)
   useEffect(() => {
-    if (selection && drawn && !drawn.layout.some((b) => b.id === selection)) setSelection(null);
-  }, [drawn, selection]);
+    if (selection && !elements[selection]?.shown) setSelection(null);
+  }, [elements, selection]);
 
   // ── Toma ──
+  const captureUrlRef = useRef(null);
   const dropCapture = useCallback(() => {
+    captureUrlRef.current = null;
     setCapture((c) => { if (c?.url) URL.revokeObjectURL(c.url); return null; });
     setPhoto((p) => { p?.close?.(); return null; });
     setBg('plain');
@@ -198,18 +208,25 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   useEffect(() => () => { dropCapture(); }, [dropCapture]);
 
   const takeCapture = useCallback((file) => {
+    recordingRef.current = false;
     setSelection(null);
     setSheet(null);
     if (!file) { setBg('plain'); setStage('edit'); return; }
     const type = file.type.startsWith('video/') ? 'video' : 'image';
     const url = URL.createObjectURL(file);
+    captureUrlRef.current = url;
     setCapture((c) => { if (c?.url) URL.revokeObjectURL(c.url); return { file, type, url, duration: null }; });
     setPhoto((p) => { p?.close?.(); return null; });
     setBg('media');
     setTrimStart(0);
     setStage('edit');
     if (type === 'image') {
-      loadPhotoBitmap(file).then((img) => setPhoto(img)).catch(() => {
+      // Si llegó otra toma mientras esta se leía, esta se descarta
+      loadPhotoBitmap(file).then((img) => {
+        if (captureUrlRef.current === url) setPhoto(img);
+        else img.close?.();
+      }).catch(() => {
+        if (captureUrlRef.current !== url) return;
         showToast({ text: 'No se pudo leer la foto.' });
         setBg('plain');
       });
@@ -227,12 +244,17 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   }, [showToast]);
 
   const goCamera = useCallback(() => {
+    clearInterval(countdown.current);
+    setJob((j) => (j?.state === 'countdown' ? null : j));
+    sale.releaseCard();
+    setCaption(null);
     dropCapture();
     setSelection(null);
     setSheet(null);
     setZones('off');
     setStage('camera');
-  }, [dropCapture]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dropCapture, sale.releaseCard]);
   const back = useCallback(() => {
     if (capture) setConfirm({ type: 'discard' });
     else goCamera();
@@ -256,17 +278,24 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     setSelection(null);
     if (id === 'cobrand') { setCobrand(null); return; }
     look.act({ type: 'hide', id });
-    showToast({ text: `Se ocultó: ${ELEMENT_META[id].label}`, action: { label: 'Deshacer', run: look.undo } });
+    showToast({ text: `Se ocultó: ${ELEMENT_META[id].label}`, action: { label: 'Deshacer', run: look.undo }, seq: look.seq + 1 });
   };
-  const showEl = (id) => look.act({ type: 'show', id });
-  const toggleEl = (id) => (elements[id].visible ? hideEl(id) : showEl(id));
+  const showEl = (id) => {
+    // Un cajetín sin celdas vuelve con todas
+    if (id === 'block' && !Object.values(elements.block.cells).some(Boolean)) {
+      look.act({ type: 'set', id, patch: { visible: true, cells: { weather: true, time: true, date: true, sign: true } } });
+      return;
+    }
+    look.act({ type: 'show', id });
+  };
+  const toggleEl = (id) => (elements[id].visible && elements[id].available !== false ? hideEl(id) : showEl(id));
   const resetEl = (id) => {
     const key = elementTextKey(id, kind, texts);
     const resetText = key && ['title', 'subtitle', 'fig', 'note', 'sign'].includes(key) ? { [key]: null } : null;
     look.act({ type: 'resetElement', id, texts: resetText });
   };
   const slotStep = (id, dir) => {
-    const list = slotsOf(id, onPhoto);
+    const list = movableSlots(elements, id, onPhoto);
     if (list.length < 2) return;
     const i = list.indexOf(currentSlot(elements, id, onPhoto));
     const next = list[Math.max(0, Math.min(list.length - 1, i + dir))];
@@ -302,13 +331,15 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
   // ── Venta ──
   const payLabel = PAY_METHODS.find((m) => m.id === sale.payMethod)?.label;
-  const linkedOrderId = sale.linkedOrderId({ kind, varietyId: variety?.id });
+  const linkedSale = sale.linkedSale({ kind, varietyId: variety?.id });
+  const linkedOrderId = linkedSale?.orderId ?? null;
   const onSaleRegistered = (rec) => {
-    if (!desktop) setSheet(null);
+    // Cierra la hoja de venta (no la de «Enviar a» que se abrió para compartir)
+    if (!desktop) setSheet((s) => (s === 'sale' ? null : s));
     setTicketFlash(true);
     setTimeout(() => setTicketFlash(false), 6000);
     showToast({
-      text: `✓ Venta registrada · ${money(rec.total)}`,
+      text: rec.stockError ? `✓ Venta registrada · ${money(rec.total)} (el inventario no se actualizó)` : `✓ Venta registrada · ${money(rec.total)}`,
       ttl: 6000,
       action: {
         label: 'Deshacer',
@@ -327,8 +358,6 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   };
   const quickDest = primaryDest(format, canShare);
   const igK = igKind(format, videoMode);
-  const countdown = useRef(0);
-  useEffect(() => () => clearInterval(countdown.current), []);
 
   const publishNow = async (orderId) => {
     setJob({ state: 'run', text: 'Subiendo la tarjeta…' });
@@ -343,6 +372,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       setJob({ state: 'error', text: `✕ No se publicó: ${e.message}`, retry: true });
     }
   };
+  // La cuenta regresiva publica con lo que haya al terminar (formato, pie de foto, tarjeta)
+  const publishRef = useRef(null);
+  publishRef.current = publishNow;
+  const stageRef = useRef(stage);
+  stageRef.current = stage;
   const quickPublish = (orderId = linkedOrderId) => {
     if (videoMode) {
       // El video se graba primero (la grabación ya es la espera)
@@ -360,13 +394,24 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       n -= 1;
       if (n > 0) { setJob((j) => (j?.state === 'countdown' ? { ...j, n } : j)); return; }
       clearInterval(countdown.current);
-      publishNow(orderId);
+      if (stageRef.current !== 'edit') { setJob(null); return; }
+      publishRef.current(orderId);
     }, 1000);
   };
   const cancelJob = () => {
     clearInterval(countdown.current);
     out.cancelVideo();
     setJob(null);
+  };
+  // Descargar: con video, la grabación muestra su avance y se puede cancelar
+  const runDownload = () => {
+    if (videoMode && !out.cardVideo) setJob({ state: 'run', text: 'Preparando video…', video: true });
+    return out.download()
+      .then(() => setJob((j) => (j?.video ? null : j)))
+      .catch((e) => {
+        setJob((j) => (j?.video ? null : j));
+        if (e?.name !== 'AbortError') showToast({ text: e.message });
+      });
   };
   const quick = () => {
     if (quickDest === 'ig') { guardLogo(() => quickPublish()); return; }
@@ -375,7 +420,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       out.share().catch((e) => showToast({ text: e.message }));
       return;
     }
-    out.download().catch((e) => showToast({ text: e.message }));
+    runDownload();
   };
   const quickLabel = quickDest === 'ig' ? PUBLISH_LABEL[igK] : quickDest === 'share' ? 'Compartir' : 'Descargar';
   const quickAria = quickDest === 'ig' ? PUBLISH_ARIA[igK] : quickLabel;
@@ -391,7 +436,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
   // ── Teclado: Esc recorre la cadena (y el panel flotante nunca se cierra detrás) ──
   const keys = useRef(null);
-  keys.current = { confirm, textKey, sheet, selection, stage, back, exit };
+  keys.current = { confirm, textKey, sheet, selection, stage, back, exit, countdown: job?.state === 'countdown', cancelJob };
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape' || document.querySelector('.ax-palette')) return;
@@ -400,6 +445,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       const k = keys.current;
       if (recordingRef.current) return;
       if (k.confirm) setConfirm(null);
+      else if (k.countdown) k.cancelJob();
       else if (k.textKey) setTextKey(null);
       else if (k.sheet) setSheet(null);
       else if (k.selection) setSelection(null);
@@ -411,7 +457,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   }, []);
   // Editor (escritorio): ⌘/Ctrl+Z deshace, ⌘/Ctrl+S descarga, V abre la venta
   const editKeys = useRef(null);
-  editKeys.current = { undo: look.undo, canUndo: look.canUndo, download: out.download };
+  editKeys.current = { undo: look.undo, canUndo: look.canUndo, download: runDownload, busy: busyJob };
   useEffect(() => {
     if (stage !== 'edit' || textKey || (sheet && !desktop)) return undefined;
     const onKey = (e) => {
@@ -419,7 +465,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       const k = editKeys.current;
       const mod = e.metaKey || e.ctrlKey;
       if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); if (k.canUndo) k.undo(); }
-      else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); k.download().catch(() => {}); }
+      else if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); if (!k.busy) k.download(); }
       else if (!mod && !e.altKey && e.key.toLowerCase() === 'v') setSheet('sale');
     };
     window.addEventListener('keydown', onKey);
@@ -483,7 +529,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             onRegisterAndSend={async () => {
               if (quickDest === 'share') {
                 // El menú de compartir necesita el toque: la venta va en paralelo
-                sale.register({ attach: true }).then(onSaleRegistered).catch(() => {});
+                sale.register({ attach: true }).then((rec) => rec && onSaleRegistered(rec))
+                  .catch((e) => showToast({ text: `No se registró la venta: ${e.message}`, ttl: 6000 }));
                 setSheet(null);
                 if (videoMode && !out.cardVideo) setSheet('share');
                 else out.share().catch((e) => showToast({ text: e.message }));
@@ -494,8 +541,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
               onSaleRegistered(rec);
               setSheet(null);
               if (quickDest === 'ig') guardLogo(() => (videoMode ? quickPublish(rec.orderId) : publishNow(rec.orderId)));
-              else out.download().catch((e) => showToast({ text: e.message }));
+              else runDownload();
             }}
+            linked={linkedSale}
+            onSend={() => { setSheet(null); quick(); }}
+            sendOnlyLabel={quickDest === 'ig' ? `Publicar · ${quickLabel}` : quickLabel}
           />
         );
       case 'format':
@@ -505,7 +555,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
           <ShareSheet
             out={out} sale={sale} kind={kind} format={format} videoMode={videoMode} cardRef={cardRef} cardKey={cardKey}
             caption={caption} autoCaption={autoCaption} setCaption={setCaption} hashtags={hashtags} setHashtags={setHashtags}
-            linkedOrderId={linkedOrderId} canShare={canShare}
+            linkedOrderId={linkedOrderId} canShare={canShare} onRegistered={onSaleRegistered}
             onPublish={async ({ orderId }) => {
               const r = await out.publishIG({ orderId });
               if (r.ok && orderId) sale.markPublished(orderId);
@@ -538,7 +588,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             onToggle={toggleEl}
             onSelect={(id) => { setSheet(null); setSelection(id); }}
             onStyle={(styleId) => look.act({ type: 'style', styleId })}
-            onReset={() => { look.act({ type: 'resetKind' }); showToast({ text: 'Diseño restablecido', action: { label: 'Deshacer', run: look.undo } }); }}
+            onReset={() => { look.act({ type: 'resetKind' }); showToast({ text: 'Diseño restablecido', action: { label: 'Deshacer', run: look.undo }, seq: look.seq + 1 }); }}
             canReset={!isDefaultLook(look.overrides, kind)}
             onClose={closeSheet}
             docked={docked}
@@ -608,7 +658,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     </div>
   );
 
-  const saleSold = linkedOrderId && (sale.last?.orderId === linkedOrderId ? sale.last : null);
+  const saleSold = linkedSale;
   const filterLabel = kind === 'recipe' ? `Receta · ${variety?.name ?? '—'}` : `${kind === 'invite' ? 'Invitación' : 'Anuncio'} · ${preset?.name}`;
 
   return (

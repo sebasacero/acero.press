@@ -45,6 +45,11 @@ export async function publishToInstagram({ mediaUrl, kind, caption, publicationI
  * al dashboard, al agente y al algoritmo, y descuenta el inventario. Un
  * ticket puede tener varias líneas (varios cafés o presentaciones).
  * lines: [{ variant: { id, label, price }, productName, qty }]
+ *
+ * Devuelve { orderId, total, stock: [{ variantId, applied }], stockError }:
+ * `applied` es lo que de verdad cambió el inventario (no baja de 0), para que
+ * «Deshacer» devuelva exactamente eso. Si las líneas no se guardan, el pedido
+ * se cancela antes de avisar del error (así un reintento no lo duplica).
  */
 export async function recordMicraSale({ lines, paymentMethod, phone }) {
   const valid = (lines || []).filter((l) => l.variant && l.qty > 0);
@@ -75,37 +80,68 @@ export async function recordMicraSale({ lines, paymentMethod, phone }) {
     qty: l.qty,
     subtotal: Number(l.variant.price) * l.qty,
   })));
-  if (itemError) throw new Error(itemError.message);
+  if (itemError) {
+    await supabase.from('orders').update({ status: 'cancelled' }).eq('id', order.id);
+    throw new Error(itemError.message);
+  }
 
-  // Inventario: mismo flujo que al confirmar un pedido en el panel.
-  await moveStock(valid.map((l) => ({ variantId: l.variant.id, change: -l.qty })), 'sale', order.id, now);
-  return { orderId: order.id, total };
+  // Inventario: mismo flujo que al confirmar un pedido en el panel (una vez por presentación)
+  const perVariant = new Map();
+  for (const l of valid) perVariant.set(l.variant.id, (perVariant.get(l.variant.id) || 0) + l.qty);
+  const { applied, error: stockError } = await moveStock(
+    [...perVariant].map(([variantId, qty]) => ({ variantId, change: -qty })), 'sale', order.id, now,
+  );
+  return { orderId: order.id, total, stock: applied, stockError };
 }
 
-/** Anula una venta recién registrada («Deshacer»): la cancela y devuelve el inventario. */
-export async function voidMicraSale({ orderId, lines }) {
+/**
+ * Anula una venta recién registrada («Deshacer»): la cancela (solo si sigue
+ * completada: anular dos veces no devuelve el stock dos veces), devuelve al
+ * inventario lo que la venta descontó y suelta las publicaciones que la citaban.
+ * stock: [{ variantId, applied }] (lo que devolvió recordMicraSale).
+ */
+export async function voidMicraSale({ orderId, stock }) {
   const now = new Date().toISOString();
-  const { error } = await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId)
+    .eq('status', 'completed')
+    .select('id');
   if (error) throw new Error(error.message);
-  await moveStock(lines.map((l) => ({ variantId: l.variantId, change: l.qty })), 'adjustment', orderId, now);
+  if (!data?.length) return { alreadyVoided: true };
+  await supabase.from('publications').update({ order_id: null }).eq('order_id', orderId);
+  const { error: stockError } = await moveStock(
+    (stock || []).filter((x) => x.applied).map((x) => ({ variantId: x.variantId, change: -x.applied })), 'adjustment', orderId, now,
+  );
+  if (stockError) throw new Error(`La venta se anuló, pero el inventario no se actualizó: ${stockError}`);
+  return { alreadyVoided: false };
 }
 
+/** Mueve el inventario; devuelve lo aplicado de verdad por presentación y el primer error. */
 async function moveStock(changes, reason, orderId, now) {
+  const applied = [];
+  let firstError = null;
   for (const { variantId, change } of changes) {
-    await supabase.from('inventory_movements').insert({
+    const { data: inv, error: readError } = await supabase.from('inventory').select('stock_qty').eq('variant_id', variantId).maybeSingle();
+    if (readError) { firstError ??= readError.message; applied.push({ variantId, applied: 0 }); continue; }
+    if (!inv) { applied.push({ variantId, applied: 0 }); continue; }
+    const next = Math.max(0, inv.stock_qty + change);
+    const { error: updateError } = await supabase
+      .from('inventory')
+      .update({ stock_qty: next, updated_at: now })
+      .eq('variant_id', variantId);
+    if (updateError) { firstError ??= updateError.message; applied.push({ variantId, applied: 0 }); continue; }
+    applied.push({ variantId, applied: next - inv.stock_qty });
+    const { error: logError } = await supabase.from('inventory_movements').insert({
       variant_id: variantId,
-      change_qty: change,
+      change_qty: reason === 'sale' ? change : next - inv.stock_qty,
       reason,
       reference_order_id: orderId,
     });
-    const { data: inv } = await supabase.from('inventory').select('stock_qty').eq('variant_id', variantId).maybeSingle();
-    if (inv) {
-      await supabase
-        .from('inventory')
-        .update({ stock_qty: Math.max(0, inv.stock_qty + change), updated_at: now })
-        .eq('variant_id', variantId);
-    }
+    if (logError) firstError ??= logError.message;
   }
+  return { applied, error: firstError };
 }
 
 /** Una sola línea (como lo registraba la consola de Micra). */

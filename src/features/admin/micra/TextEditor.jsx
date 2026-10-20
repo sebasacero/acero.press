@@ -41,9 +41,9 @@ export default function TextEditor({ targets, initialKey, values, autos, placeho
     onCommit(patch, { free: style, titleColor: tColor !== titleColor ? tColor : undefined });
   };
 
-  // Enter = Listo; Mayús+Enter = otra línea (solo en los textos de varias líneas)
+  // Enter = Listo; Mayús+Enter = otra línea (solo en el texto libre, el único que respeta los saltos)
   const onKeyDown = (e) => {
-    if (e.key !== 'Enter' || (e.shiftKey && target?.multiline)) return;
+    if (e.key !== 'Enter' || (e.shiftKey && target?.breaks)) return;
     e.preventDefault();
     commit();
   };
@@ -84,7 +84,7 @@ export default function TextEditor({ targets, initialKey, values, autos, placeho
           maxLength={target?.max}
           placeholder={placeholder}
           value={value}
-          onChange={(e) => setValue(target?.multiline ? e.target.value : e.target.value.replace(/\n/g, ' '))}
+          onChange={(e) => setValue(target?.breaks ? e.target.value : e.target.value.replace(/\n/g, ' '))}
           onKeyDown={onKeyDown}
         />
       </div>

@@ -9,7 +9,7 @@ export default function LayersSheet({ elements, kind, previews, fit, onToggle, o
   const status = (id) => {
     const e = elements[id];
     if (!e.visible) return { text: 'Oculto' };
-    if (id === 'fig' && fit?.fig === 'short') return { text: 'Reducido', warn: true };
+    if ((id === 'fig' && fit?.fig === 'short') || (id === 'panel' && fit?.panel === 'short')) return { text: 'Reducido', warn: true };
     if ((id === 'fig' && fit?.fig === 'hidden') || (id === 'panel' && fit?.panel === 'hidden')) return { text: 'Sin espacio', warn: true };
     return null;
   };

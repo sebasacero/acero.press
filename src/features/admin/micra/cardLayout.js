@@ -325,7 +325,8 @@ export const ELEMENT_SLOTS = {
   price: ['under-title', 'over-block'],
   handle: ['under-title', 'over-block'],
   place: ['under-title', 'over-block'],
-  panel: { paper: ['right', 'left'], photo: ['bottom', 'middle', 'top'] },
+  // De izquierda a derecha y de arriba abajo (así ←/→ mueven hacia donde dicen)
+  panel: { paper: ['left', 'right'], photo: ['top', 'middle', 'bottom'] },
 };
 const slotKey = (id, onPhoto) => (id === 'panel' ? (onPhoto ? 'photoSlot' : 'paperSlot') : 'slot');
 export const slotsOf = (id, onPhoto) => {
@@ -333,6 +334,8 @@ export const slotsOf = (id, onPhoto) => {
   return Array.isArray(s) ? s : s ? s[onPhoto ? 'photo' : 'paper'] : [];
 };
 export const currentSlot = (el, id, onPhoto) => el[id]?.[slotKey(id, onPhoto)];
+/** Posiciones que de verdad cambian algo: en papel sin dibujo, el panel siempre va centrado. */
+export const movableSlots = (el, id, onPhoto) => (id === 'panel' && !onPhoto && !el.drawing?.shown ? [] : slotsOf(id, onPhoto));
 export const slotPatch = (id, slot, onPhoto) => ({ [slotKey(id, onPhoto)]: slot });
 
 /**
@@ -345,7 +348,7 @@ export function slotTargets(F, el, m, bodyFor, onPhoto) {
   for (const id of Object.keys(ELEMENT_SLOTS)) {
     if (!el[id]?.shown) continue;
     const list = [];
-    for (const slot of slotsOf(id, onPhoto)) {
+    for (const slot of movableSlots(el, id, onPhoto)) {
       const el2 = { ...el, [id]: { ...el[id], ...slotPatch(id, slot, onPhoto) } };
       const bands = layoutBands(F, el2, m);
       const box = id === 'panel' ? layoutBody(F, el2, bands.zone, bodyFor(bands), onPhoto).boxes.panel : bands.boxes[id];

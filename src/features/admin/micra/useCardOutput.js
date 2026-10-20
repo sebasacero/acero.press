@@ -27,12 +27,15 @@ export function useCardOutput({ getCanvas, videoMode, captureUrl, trimStart = 0,
   const [savedUrl, setSavedUrl] = useState(null);
   const [saving, setSaving] = useState(false);
   const abortRef = useRef(null);
+  const inflight = useRef(null);
   const videoRef = useRef(null);
   videoRef.current = cardVideo;
 
   // Cambió la tarjeta: el video grabado y lo guardado ya no valen
   useEffect(() => {
     abortRef.current?.abort();
+    inflight.current = null;
+    videoRef.current = null;
     setCardVideo(null);
     setSavedUrl(null);
   }, [cardKey]);
@@ -41,53 +44,66 @@ export function useCardOutput({ getCanvas, videoMode, captureUrl, trimStart = 0,
 
   const fileName = (ext) => `micra-${slug(name)}.${ext}`;
 
-  const ensureCardVideo = useCallback(async () => {
-    if (videoRef.current) return videoRef.current;
-    const overlay = getCanvas();
-    if (!overlay || !captureUrl) throw new Error('No hay video de fondo.');
-    const ctrl = new AbortController();
-    abortRef.current = ctrl;
-    setProgress(0);
-    // Copias propias del video y de la capa: el editor sigue igual mientras graba
-    const recVideo = document.createElement('video');
-    recVideo.src = captureUrl;
-    recVideo.playsInline = true;
-    recVideo.setAttribute('playsinline', '');
-    recVideo.preload = 'auto';
-    const snap = document.createElement('canvas');
-    snap.width = overlay.width;
-    snap.height = overlay.height;
-    snap.getContext('2d').drawImage(overlay, 0, 0);
-    snap.__glass = overlay.__glass;
-    let lock = null;
-    try {
-      lock = await navigator.wakeLock?.request('screen').catch(() => null);
-      await new Promise((resolve, reject) => {
-        recVideo.addEventListener('loadeddata', resolve, { once: true });
-        recVideo.addEventListener('error', () => reject(new Error('No se pudo leer el video.')), { once: true });
+  // Una sola grabación a la vez: quien la pida mientras corre recibe la misma
+  const ensureCardVideo = useCallback(() => {
+    if (videoRef.current) return Promise.resolve(videoRef.current);
+    if (inflight.current) return inflight.current;
+    const run = (async () => {
+      const overlay = getCanvas();
+      if (!overlay || !captureUrl) throw new Error('No hay video de fondo.');
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      setProgress(0);
+      // Copias propias del video y de la capa: el editor sigue igual mientras graba
+      const recVideo = document.createElement('video');
+      recVideo.src = captureUrl;
+      recVideo.playsInline = true;
+      recVideo.setAttribute('playsinline', '');
+      recVideo.preload = 'auto';
+      const snap = document.createElement('canvas');
+      snap.width = overlay.width;
+      snap.height = overlay.height;
+      snap.getContext('2d').drawImage(overlay, 0, 0);
+      snap.__glass = overlay.__glass;
+      let lock = null;
+      try {
+        lock = await navigator.wakeLock?.request('screen').catch(() => null);
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('El video no cargó. Intenta de nuevo.')), 20000);
+          const done = (fn) => (arg) => { clearTimeout(timer); fn(arg); };
+          recVideo.addEventListener('loadeddata', done(resolve), { once: true });
+          recVideo.addEventListener('error', done(() => reject(new Error('No se pudo leer el video.'))), { once: true });
+          ctrl.signal.addEventListener('abort', done(() => reject(new DOMException('Cancelado', 'AbortError'))), { once: true });
+          recVideo.load();
+        });
+        const r = await recordCardVideo({
+          video: recVideo,
+          overlay: snap,
+          width: FORMATS[format].w,
+          height: FORMATS[format].h,
+          maxSeconds: 60,
+          startAt: trimStart,
+          signal: ctrl.signal,
+          onProgress: (p) => setProgress(p),
+        });
+        if (ctrl.signal.aborted) throw new DOMException('Cancelado', 'AbortError');
+        const result = { ...r, url: URL.createObjectURL(r.blob) };
+        // Ya, no en el próximo render: quien siga en la misma cadena (publicar) no vuelve a grabar
+        videoRef.current = result;
+        setCardVideo(result);
+        return result;
+      } finally {
+        if (abortRef.current === ctrl) abortRef.current = null;
+        setProgress(null);
+        lock?.release?.().catch(() => {});
+        recVideo.pause();
+        recVideo.removeAttribute('src');
         recVideo.load();
-      });
-      const r = await recordCardVideo({
-        video: recVideo,
-        overlay: snap,
-        width: FORMATS[format].w,
-        height: FORMATS[format].h,
-        maxSeconds: 60,
-        startAt: trimStart,
-        signal: ctrl.signal,
-        onProgress: (p) => setProgress(p),
-      });
-      const result = { ...r, url: URL.createObjectURL(r.blob) };
-      if (!ctrl.signal.aborted) setCardVideo(result);
-      return result;
-    } finally {
-      if (abortRef.current === ctrl) abortRef.current = null;
-      setProgress(null);
-      lock?.release?.().catch(() => {});
-      recVideo.pause();
-      recVideo.removeAttribute('src');
-      recVideo.load();
-    }
+      }
+    })();
+    inflight.current = run;
+    run.finally(() => { if (inflight.current === run) inflight.current = null; }).catch(() => {});
+    return run;
   }, [getCanvas, captureUrl, format, trimStart]);
 
   const cancelVideo = useCallback(() => abortRef.current?.abort(), []);

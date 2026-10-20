@@ -15,11 +15,14 @@ const specsOf = (variety) => {
  * una unidad y el último método de pago. `context` = 'camera' | 'editor'
  * (en el editor también está «Registrar y publicar»).
  */
-export default function SaleSheet({ sale, varieties, context, docked, onClose, onRegistered, onRegisterAndSend, sendLabel }) {
+export default function SaleSheet({ sale, varieties, context, docked, linked, onClose, onRegistered, onRegisterAndSend, sendLabel, onSend, sendOnlyLabel, onError }) {
   const [open, setOpen] = useState(0); // línea abierta
   const [phoneOpen, setPhoneOpen] = useState(!!sale.phone);
   const [askStock, setAskStock] = useState(null); // 'sale' | 'send'
   const [done, setDone] = useState(null); // venta registrada (solo acoplada)
+  const [fresh, setFresh] = useState(false); // «Nueva venta» sobre una tarjeta ya vendida
+  const [voiding, setVoiding] = useState(false);
+  const [voidError, setVoidError] = useState(null);
   const { lines, total, priced, busy, error } = sale;
 
   // Stock: se carga la primera vez que se abre la venta
@@ -33,9 +36,12 @@ export default function SaleSheet({ sale, varieties, context, docked, onClose, o
       if (mode === 'send') { await onRegisterAndSend(); return; }
       const rec = await sale.register({ attach: context === 'editor' });
       if (!rec) return;
+      setFresh(false);
       if (docked) setDone(rec);
       onRegistered?.(rec);
-    } catch { /* el error queda en sale.error */ }
+    } catch (e) {
+      onError?.(e);
+    }
   };
 
   const short = askStock && sale.shortages()[0];
@@ -48,15 +54,38 @@ export default function SaleSheet({ sale, varieties, context, docked, onClose, o
     );
   }
 
-  if (done) {
+  // La venta ya registrada (la recién hecha en el inspector o la de esta tarjeta), si no se anuló
+  const candidate = done ?? (!fresh && context === 'editor' ? linked : null);
+  const shown = candidate && !sale.isVoided(candidate.orderId) ? candidate : null;
+  if (shown) {
+    const undo = async () => {
+      setVoiding(true);
+      setVoidError(null);
+      try {
+        await sale.voidLast(shown);
+        setDone(null);
+      } catch (e) {
+        setVoidError(e.message);
+      } finally {
+        setVoiding(false);
+      }
+    };
     return (
-      <Sheet title="Venta" onClose={onClose} docked={docked}>
+      <Sheet title="Venta" aside={<span className="msheet-total">{money(shown.total)}</span>} onClose={onClose} docked={docked}>
         <div className="msheet-success" role="status">
-          <p>✓ Venta registrada: {money(done.total)}. Suma al contador, al dashboard y al inventario.</p>
+          <p>✓ Venta registrada: {money(shown.total)}. Suma al contador, al dashboard y al inventario.</p>
+          <ul className="msheet-sold">
+            {shown.lines.map((l, i) => <li key={i}>{l.label} × {l.qty}</li>)}
+          </ul>
+          {shown.stockError && <p className="msheet-notice is-warn">El inventario no se actualizó: {shown.stockError}</p>}
+          {voidError && <p className="msheet-notice is-err" role="alert">No se anuló: {voidError}</p>}
           <div className="msheet-row">
-            <button type="button" className="msheet-btn" onClick={async () => { await sale.voidLast(done).catch(() => {}); setDone(null); }}>Deshacer</button>
-            <button type="button" className="msheet-btn is-primary" onClick={() => setDone(null)}>Nueva venta</button>
+            <button type="button" className="msheet-btn" disabled={voiding} onClick={undo}>{voiding ? 'Anulando…' : 'Deshacer'}</button>
+            <button type="button" className="msheet-btn" disabled={voiding} onClick={() => { setDone(null); setFresh(true); }}>Nueva venta</button>
           </div>
+          {context === 'editor' && onSend && (
+            <button type="button" className="msheet-btn is-primary is-big" disabled={voiding} onClick={onSend}>{sendOnlyLabel}</button>
+          )}
         </div>
       </Sheet>
     );

@@ -115,20 +115,23 @@ export function loadImage(src) {
   return imageCache.get(src);
 }
 
-function wrapLines(ctx, text, maxWidth, maxLines = Infinity) {
-  const words = String(text).split(/\s+/).filter(Boolean);
+function wrapLines(ctx, text, maxWidth, maxLines = Infinity, { breaks = false } = {}) {
   const lines = [];
-  let line = '';
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = test;
+  // Con `breaks`, cada salto de línea escrito empieza una línea nueva
+  for (const para of breaks ? String(text).split(/\n/) : [String(text)]) {
+    const words = para.split(/\s+/).filter(Boolean);
+    let line = '';
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
     }
+    if (line) lines.push(line);
   }
-  if (line) lines.push(line);
   if (lines.length > maxLines) {
     const kept = lines.slice(0, maxLines);
     let last = kept[maxLines - 1];
@@ -703,13 +706,23 @@ function drawTitleBlock(ctx, x, y, w, h, cells, theme) {
 }
 
 function fitTitle(ctx, text, maxWidth, maxLines, start, min) {
+  const widest = (lines) => Math.max(0, ...lines.map((l) => ctx.measureText(l).width));
   for (let size = start; size >= min; size -= 4) {
     ctx.font = `700 ${size}px ${GROTESK}`;
     const lines = wrapLines(ctx, text, maxWidth);
-    if (lines.length <= maxLines) return { size, lines };
+    if (lines.length <= maxLines && widest(lines) <= maxWidth) return { size, lines };
   }
   ctx.font = `700 ${min}px ${GROTESK}`;
-  return { size: min, lines: wrapLines(ctx, text, maxWidth, maxLines) };
+  let lines = wrapLines(ctx, text, maxWidth, maxLines);
+  // Una sola palabra más ancha que la zona: la letra baja hasta que quepa
+  const w = widest(lines);
+  if (w > maxWidth) {
+    const size = Math.max(24, Math.floor((min * maxWidth) / w));
+    ctx.font = `700 ${size}px ${GROTESK}`;
+    lines = wrapLines(ctx, text, maxWidth, maxLines);
+    return { size, lines };
+  }
+  return { size: min, lines };
 }
 
 // Cada tipo de tarjeta (sección de la cámara de Micra)
@@ -822,13 +835,21 @@ const FREE_FONT = {
 };
 function measureFree(ctx, textValue, opts, maxW) {
   const f = FREE_FONT[opts.style] || FREE_FONT.marker;
-  const px = f[opts.size] || f.m;
-  ctx.font = f.font(px);
   const boxed = opts.bg || opts.style === 'mono';
   const padX = boxed ? 20 : 0;
   const padY = boxed ? 12 : 0;
-  const lines = wrapLines(ctx, textValue, maxW - padX * 2, 3);
-  const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + padX * 2;
+  const inner = maxW - padX * 2;
+  let px = f[opts.size] || f.m;
+  ctx.font = f.font(px);
+  let lines = wrapLines(ctx, textValue, inner, 3, { breaks: true });
+  // Una palabra más ancha que la zona: la letra baja hasta que quepa
+  const widest = () => Math.max(0, ...lines.map((l) => ctx.measureText(l).width));
+  if (widest() > inner) {
+    px = Math.max(18, Math.floor((px * inner) / widest()));
+    ctx.font = f.font(px);
+    lines = wrapLines(ctx, textValue, inner, 3, { breaks: true });
+  }
+  const w = widest() + padX * 2;
   const h = lines.length * px * f.lh + padY * 2;
   return { lines, px, w, h, padX, padY, lh: px * f.lh, boxed };
 }
@@ -1035,10 +1056,18 @@ export async function drawEspresaleCard(canvas, {
     if (note) {
       const rows = auto.rows;
       const message = kind === 'invite' ? T('note') : kindText || ANNOUNCE_FALLBACK;
+      const maxL = onPhoto ? 4 : 6;
       const fitLines = Math.floor((zoneH - noteHeight([], rows)) / NOTE_LINE);
-      const lines = noteLines(ctx, message, panelW, Math.max(1, Math.min(onPhoto ? 4 : 6, fitLines)));
+      const lines = noteLines(ctx, message, panelW, Math.max(1, Math.min(maxL, fitLines)));
       const panelH = noteHeight(lines, rows);
-      return panelH <= zoneH || !onPhoto ? { panelW, panelH, lines, rows } : { panelW, panelH: 0, lines: [], dropped: true };
+      if (panelH <= zoneH) return { panelW, panelH, lines, rows };
+      // No cabe: sin las filas de datos; si tampoco, sin panel
+      const fit2 = Math.floor((zoneH - noteHeight([], [])) / NOTE_LINE);
+      if (fit2 >= 1) {
+        const l2 = noteLines(ctx, message, panelW, Math.min(maxL, fit2));
+        return { panelW, panelH: noteHeight(l2, []), lines: l2, rows: [], reduced: true };
+      }
+      return { panelW, panelH: 0, lines: [], dropped: true };
     }
     const fit = Math.floor((zoneH - PANEL_BASE) / PANEL_LINE);
     const lines = el.panel.compact ? [] : panelLines(ctx, T('note'), panelW, Math.max(0, Math.min(4, fit)));
@@ -1046,6 +1075,10 @@ export async function drawEspresaleCard(canvas, {
     return panelH <= zoneH + 1 || zoneH >= PANEL_BASE ? { panelW, panelH, lines } : { panelW, panelH: 0, lines: [], dropped: true };
   };
   const body = fitBody(bands.zone);
+  if (body.reduced) {
+    bands.fit.panel = 'short';
+    bands.notes.panel = `Panel reducido para caber en ${F.label}`;
+  }
   if (body.dropped) {
     bands.fit.panel = 'hidden';
     bands.notes.panel = `Sin espacio para el panel en ${F.label}: oculta el título o cambia de formato`;
@@ -1225,21 +1258,33 @@ export function pickVideoType() {
  * bajo el límite de 50 MB de Supabase. Devuelve { blob, type, ext, igReady }.
  */
 export async function recordCardVideo({ video, overlay, width, height, maxSeconds = 60, startAt = 0, onProgress, signal }) {
-  if (signal?.aborted) throw new DOMException('Cancelado', 'AbortError');
+  const abortError = () => new DOMException('Cancelado', 'AbortError');
+  if (signal?.aborted) throw abortError();
   const type = pickVideoType();
   if (!type || !HTMLCanvasElement.prototype.captureStream) {
     throw new Error('Este navegador no puede grabar video. Prueba en Chrome o Safari actualizados.');
   }
+  // Cancelar vale desde ya (también durante las esperas de audio y de búsqueda)
+  let aborted = false;
+  let stop = () => {};
+  const onAbort = () => { aborted = true; stop(); };
+  signal?.addEventListener('abort', onAbort, { once: true });
+
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   const stream = canvas.captureStream(30);
+  let audioCtx = null;
+  const release = () => {
+    signal?.removeEventListener('abort', onAbort);
+    stream.getTracks().forEach((t) => t.stop());
+    if (audioCtx) audioCtx.close().catch(() => {});
+  };
 
   // Audio del clip original (si se puede); si no, el video sale sin sonido.
   // Cada grabación usa su propio <video>, así que la fuente de audio es nueva.
   let hasAudio = false;
-  let audioCtx = null;
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const src = audioCtx.createMediaElementSource(video);
@@ -1252,11 +1297,6 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
     hasAudio = false;
   }
 
-  const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6_000_000 });
-  const chunks = [];
-  recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-  const stopped = new Promise((resolve) => { recorder.onstop = resolve; });
-
   const total = Number.isFinite(video.duration) ? video.duration : maxSeconds + startAt;
   const from = Math.max(0, Math.min(startAt, Math.max(0, total - 1)));
   const end = Math.min(total, from + maxSeconds);
@@ -1264,30 +1304,59 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   video.pause();
   video.loop = false;
   video.muted = !hasAudio; // con WebAudio el sonido va a la grabación, no al parlante
-  video.currentTime = from;
-  await new Promise((r) => { video.onseeked = r; setTimeout(r, 500); });
+  // Se graba desde el cuadro elegido: se espera a que la búsqueda termine (clips 4K tardan)
+  if (Math.abs(video.currentTime - from) > 0.01 || video.seeking) {
+    await new Promise((r) => {
+      const t = setTimeout(r, 6000);
+      video.addEventListener('seeked', () => { clearTimeout(t); r(); }, { once: true });
+      video.currentTime = from;
+    });
+  }
+  if (aborted) { release(); throw abortError(); }
+
+  const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6_000_000 });
+  const chunks = [];
+  recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  const stopped = new Promise((resolve) => { recorder.onstop = resolve; });
 
   // Un dibujo por cuadro nuevo del clip (requestVideoFrameCallback) en vez de
   // 60 por segundo, y el progreso se avisa solo cuando sube un 1 %.
   const perFrame = typeof video.requestVideoFrameCallback === 'function';
   let raf = 0;
   let lastPct = -1;
-  let aborted = false;
-  const stop = () => { if (recorder.state === 'recording') recorder.stop(); };
-  const onAbort = () => { aborted = true; stop(); };
-  signal?.addEventListener('abort', onAbort, { once: true });
+  stop = () => { if (recorder.state !== 'inactive') recorder.stop(); };
   video.addEventListener('ended', stop, { once: true });
+  // Cada arranque del bucle tiene su número: al volver de segundo plano no quedan dos bucles
+  let loopGen = 0;
   const draw = () => {
-    if (aborted) return;
-    composeVideoFrame(ctx, video, overlay);
-    const pct = Math.max(0, Math.min(1, (video.currentTime - from) / duration));
-    if (Math.round(pct * 100) !== lastPct) {
-      lastPct = Math.round(pct * 100);
-      onProgress?.(pct);
-    }
-    if (video.currentTime >= end || video.ended) { stop(); return; }
-    raf = perFrame ? video.requestVideoFrameCallback(draw) : requestAnimationFrame(draw);
+    const gen = ++loopGen;
+    const tick = () => {
+      if (gen !== loopGen || aborted || document.hidden) return;
+      composeVideoFrame(ctx, video, overlay);
+      const pct = Math.max(0, Math.min(1, (video.currentTime - from) / duration));
+      if (Math.round(pct * 100) !== lastPct) {
+        lastPct = Math.round(pct * 100);
+        onProgress?.(pct);
+      }
+      if (video.currentTime >= end || video.ended) { stop(); return; }
+      raf = perFrame ? video.requestVideoFrameCallback(tick) : requestAnimationFrame(tick);
+    };
+    tick();
   };
+  // Con la pestaña oculta el navegador deja de pintar: se pausa todo (si no,
+  // el video saldría congelado) y sigue al volver
+  const onVisibility = () => {
+    if (recorder.state === 'inactive') return;
+    if (document.hidden) {
+      video.pause();
+      if (recorder.state === 'recording') recorder.pause();
+    } else {
+      if (recorder.state === 'paused') recorder.resume();
+      video.play().catch(() => {});
+      draw();
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibility);
 
   composeVideoFrame(ctx, video, overlay);
   recorder.start(250);
@@ -1296,17 +1365,17 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   } catch {
     // iOS puede bloquear la reproducción con sonido: se graba sin audio.
     video.muted = true;
-    await video.play();
+    await video.play().catch(() => {});
   }
+  if (document.hidden) onVisibility();
   draw();
   await stopped;
-  signal?.removeEventListener('abort', onAbort);
+  document.removeEventListener('visibilitychange', onVisibility);
   if (perFrame) video.cancelVideoFrameCallback(raf);
   else cancelAnimationFrame(raf);
   video.pause();
-  stream.getTracks().forEach((t) => t.stop());
-  if (audioCtx) audioCtx.close().catch(() => {});
-  if (aborted) throw new DOMException('Cancelado', 'AbortError');
+  release();
+  if (aborted) throw abortError();
 
   const blob = new Blob(chunks, { type: type.split(';')[0] });
   return {
