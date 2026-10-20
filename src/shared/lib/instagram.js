@@ -41,11 +41,20 @@ export async function publishToInstagram({ mediaUrl, kind, caption, publicationI
 }
 
 /**
- * Registra una venta de Micra (barra) como pedido completado (suma al contador,
- * al dashboard y al agente) y descuenta el inventario de la variante.
+ * Registra una venta de Micra (barra) como pedido completado: suma al contador,
+ * al dashboard, al agente y al algoritmo, y descuenta el inventario. Un
+ * ticket puede tener varias líneas (varios cafés o presentaciones).
+ * lines: [{ variant: { id, label, price }, productName, qty }]
+ *
+ * Devuelve { orderId, total, stock: [{ variantId, applied }], stockError }:
+ * `applied` es lo que de verdad cambió el inventario (no baja de 0), para que
+ * «Deshacer» devuelva exactamente eso. Si las líneas no se guardan, el pedido
+ * se cancela antes de avisar del error (así un reintento no lo duplica).
  */
-export async function recordEspresaleSale({ variant, productName, qty, paymentMethod, phone }) {
-  const total = Number(variant.price) * qty;
+export async function recordMicraSale({ lines, paymentMethod, phone }) {
+  const valid = (lines || []).filter((l) => l.variant && l.qty > 0);
+  if (!valid.length) throw new Error('El ticket está vacío.');
+  const total = valid.reduce((s, l) => s + Number(l.variant.price) * l.qty, 0);
   const now = new Date().toISOString();
   const { data: order, error } = await supabase
     .from('orders')
@@ -62,30 +71,80 @@ export async function recordEspresaleSale({ variant, productName, qty, paymentMe
     .single();
   if (error) throw new Error(error.message);
 
-  const { error: itemError } = await supabase.from('order_items').insert({
+  const { error: itemError } = await supabase.from('order_items').insert(valid.map((l) => ({
     order_id: order.id,
-    variant_id: variant.id,
-    product_name_snapshot: productName,
-    variant_label_snapshot: variant.label,
-    unit_price: Number(variant.price),
-    qty,
-    subtotal: total,
-  });
-  if (itemError) throw new Error(itemError.message);
-
-  // Inventario: mismo flujo que al confirmar un pedido en el panel.
-  await supabase.from('inventory_movements').insert({
-    variant_id: variant.id,
-    change_qty: -qty,
-    reason: 'sale',
-    reference_order_id: order.id,
-  });
-  const { data: inv } = await supabase.from('inventory').select('stock_qty').eq('variant_id', variant.id).maybeSingle();
-  if (inv) {
-    await supabase
-      .from('inventory')
-      .update({ stock_qty: Math.max(0, inv.stock_qty - qty), updated_at: now })
-      .eq('variant_id', variant.id);
+    variant_id: l.variant.id,
+    product_name_snapshot: l.productName,
+    variant_label_snapshot: l.variant.label,
+    unit_price: Number(l.variant.price),
+    qty: l.qty,
+    subtotal: Number(l.variant.price) * l.qty,
+  })));
+  if (itemError) {
+    await supabase.from('orders').update({ status: 'cancelled' }).eq('id', order.id);
+    throw new Error(itemError.message);
   }
-  return { orderId: order.id, total };
+
+  // Inventario: mismo flujo que al confirmar un pedido en el panel (una vez por presentación)
+  const perVariant = new Map();
+  for (const l of valid) perVariant.set(l.variant.id, (perVariant.get(l.variant.id) || 0) + l.qty);
+  const { applied, error: stockError } = await moveStock(
+    [...perVariant].map(([variantId, qty]) => ({ variantId, change: -qty })), 'sale', order.id, now,
+  );
+  return { orderId: order.id, total, stock: applied, stockError };
+}
+
+/**
+ * Anula una venta recién registrada («Deshacer»): la cancela (solo si sigue
+ * completada: anular dos veces no devuelve el stock dos veces), devuelve al
+ * inventario lo que la venta descontó y suelta las publicaciones que la citaban.
+ * stock: [{ variantId, applied }] (lo que devolvió recordMicraSale).
+ */
+export async function voidMicraSale({ orderId, stock }) {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId)
+    .eq('status', 'completed')
+    .select('id');
+  if (error) throw new Error(error.message);
+  if (!data?.length) return { alreadyVoided: true };
+  await supabase.from('publications').update({ order_id: null }).eq('order_id', orderId);
+  const { error: stockError } = await moveStock(
+    (stock || []).filter((x) => x.applied).map((x) => ({ variantId: x.variantId, change: -x.applied })), 'adjustment', orderId, now,
+  );
+  if (stockError) throw new Error(`La venta se anuló, pero el inventario no se actualizó: ${stockError}`);
+  return { alreadyVoided: false };
+}
+
+/** Mueve el inventario; devuelve lo aplicado de verdad por presentación y el primer error. */
+async function moveStock(changes, reason, orderId, now) {
+  const applied = [];
+  let firstError = null;
+  for (const { variantId, change } of changes) {
+    const { data: inv, error: readError } = await supabase.from('inventory').select('stock_qty').eq('variant_id', variantId).maybeSingle();
+    if (readError) { firstError ??= readError.message; applied.push({ variantId, applied: 0 }); continue; }
+    if (!inv) { applied.push({ variantId, applied: 0 }); continue; }
+    const next = Math.max(0, inv.stock_qty + change);
+    const { error: updateError } = await supabase
+      .from('inventory')
+      .update({ stock_qty: next, updated_at: now })
+      .eq('variant_id', variantId);
+    if (updateError) { firstError ??= updateError.message; applied.push({ variantId, applied: 0 }); continue; }
+    applied.push({ variantId, applied: next - inv.stock_qty });
+    const { error: logError } = await supabase.from('inventory_movements').insert({
+      variant_id: variantId,
+      change_qty: reason === 'sale' ? change : next - inv.stock_qty,
+      reason,
+      reference_order_id: orderId,
+    });
+    if (logError) firstError ??= logError.message;
+  }
+  return { applied, error: firstError };
+}
+
+/** Una sola línea (como lo registraba la consola de Micra). */
+export function recordEspresaleSale({ variant, productName, qty, paymentMethod, phone }) {
+  return recordMicraSale({ lines: [{ variant, productName, qty }], paymentMethod, phone });
 }

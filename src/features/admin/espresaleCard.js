@@ -1,3 +1,5 @@
+import { SIZE_STEPS, resolveElements, layoutBands, layoutBody, slotTargets } from './micra/cardLayout.js';
+
 // Tarjeta de Micra dibujada en canvas con el lenguaje de los banners:
 // hoja de plano técnico (papel cuadriculado, marco con zonas, cotas en
 // JetBrains Mono), un dibujo acotado de la AeroPress con la receta y el
@@ -18,21 +20,53 @@ const MARKER = '"Permanent Marker", cursive';
 // Formatos del sistema de publicaciones (lienzo "Formato de redes"):
 // `safe` es la zona que ninguna app tapa; logo, título, panel y cajetín
 // viven dentro de ella. El fondo (papel, cuadrícula, marco) sí llega al borde.
-//  - feed: Instagram 4:5, margen 96 (cabe en el recorte 3:4 del perfil).
-//  - reel: 9:16 de Reels y TikTok: libre 270 arriba, 440 abajo (texto y
-//    audio) y 180 a la derecha (botones de me gusta, comentar, compartir).
-//  - story: 9:16 de Historias: solo tapan la barra del perfil arriba (250) y
-//    la de responder abajo (250), así que el ancho es casi completo y el
-//    panel de la receta baja y se corre a la derecha.
+// `vertical` marca los 9:16 (una foto en ese formato va a Instagram como historia).
+//  - feed: Instagram/Facebook 4:5, margen 96.
+//  - portrait: 3:4, la cuadrícula del perfil de Instagram desde 2025 (se ve completo).
+//  - square: 1:1 para Facebook, WhatsApp y LinkedIn.
+//  - story: Historias de Instagram y Facebook y estados de WhatsApp: solo tapan
+//    la barra del perfil arriba (250) y la de responder abajo (250), así que el
+//    ancho es casi completo y el panel de la receta baja y se corre a la derecha.
+//  - reel: Reels: libre 270 arriba, 440 abajo (texto y audio) y 180 a la
+//    derecha (me gusta, comentar, compartir).
+//  - tiktok: las pestañas tapan arriba, la descripción y el audio bajan más
+//    que en Reels (≈ 540) y la columna de botones es más ancha (≈ 160).
+//  - shorts: YouTube Shorts: título y canal abajo (≈ 480), botones a la derecha.
+//  - landscape: 16:9 para YouTube, X y la web.
+// Las zonas de cada app cambian con sus versiones: son márgenes prudentes,
+// no cifras oficiales.
 export const FORMATS = {
-  feed: { w: 1080, h: 1350, label: 'Feed 4:5', apps: 'Instagram feed', safe: { x0: 96, y0: 96, x1: 984, y1: 1254 }, logoH: 72 },
-  reel: { w: 1080, h: 1920, label: 'Reel 9:16', apps: 'Reels · TikTok', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80 },
-  story: { w: 1080, h: 1920, label: 'Historia 9:16', apps: 'Instagram stories', safe: { x0: 64, y0: 250, x1: 1016, y1: 1670 }, logoH: 80, lowPanel: true },
+  feed: { w: 1080, h: 1350, label: 'Feed 4:5', short: '4:5', apps: 'Instagram · Facebook', safe: { x0: 96, y0: 96, x1: 984, y1: 1254 }, logoH: 72 },
+  portrait: { w: 1080, h: 1440, label: 'Feed 3:4', short: '3:4', apps: 'Cuadrícula de Instagram', safe: { x0: 96, y0: 96, x1: 984, y1: 1344 }, logoH: 72 },
+  square: { w: 1080, h: 1080, label: 'Cuadrado 1:1', short: '1:1', apps: 'Facebook · WhatsApp · LinkedIn', safe: { x0: 80, y0: 80, x1: 1000, y1: 1000 }, logoH: 60 },
+  story: { w: 1080, h: 1920, label: 'Historia 9:16', short: 'Historia', apps: 'Instagram · Facebook · WhatsApp', safe: { x0: 64, y0: 250, x1: 1016, y1: 1670 }, logoH: 80, lowPanel: true, vertical: true },
+  reel: { w: 1080, h: 1920, label: 'Reel 9:16', short: 'Reel', apps: 'Instagram · Facebook Reels', safe: { x0: 64, y0: 270, x1: 900, y1: 1480 }, logoH: 80, vertical: true },
+  tiktok: { w: 1080, h: 1920, label: 'TikTok 9:16', short: 'TikTok', apps: 'TikTok', safe: { x0: 64, y0: 240, x1: 920, y1: 1380 }, logoH: 80, vertical: true },
+  shorts: { w: 1080, h: 1920, label: 'Shorts 9:16', short: 'Shorts', apps: 'YouTube Shorts', safe: { x0: 64, y0: 250, x1: 900, y1: 1440 }, logoH: 80, vertical: true },
+  landscape: { w: 1920, h: 1080, label: 'Horizontal 16:9', short: '16:9', apps: 'YouTube · X · web', safe: { x0: 96, y0: 72, x1: 1824, y1: 1008 }, logoH: 64 },
 };
 
+// Qué tapa cada app fuera de la zona segura (para «Zonas» en el editor) y qué
+// interfaz se dibuja encima en «App». Revisado: 2026-10.
+const COVERS = {
+  feed: { covers: [{ side: 'all', label: 'Recorte de la cuadrícula del perfil (3:4)' }], ghost: 'grid34' },
+  portrait: { covers: [{ side: 'all', label: 'Margen de impresión' }], ghost: 'none' },
+  square: { covers: [{ side: 'all', label: 'Margen de impresión' }], ghost: 'none' },
+  story: { covers: [{ side: 'top', label: 'Barra de progreso y perfil' }, { side: 'bottom', label: 'Responder y reacciones' }], ghost: 'story' },
+  reel: { covers: [{ side: 'top', label: 'Reels y cámara' }, { side: 'bottom', label: 'Texto, perfil y audio' }, { side: 'right', label: 'Me gusta, comentar, compartir' }], ghost: 'reel' },
+  tiktok: { covers: [{ side: 'top', label: 'Siguiendo · Para ti' }, { side: 'bottom', label: 'Descripción y audio' }, { side: 'right', label: 'Botones de TikTok' }], ghost: 'tiktok' },
+  shorts: { covers: [{ side: 'top', label: 'Búsqueda y menú' }, { side: 'bottom', label: 'Título y canal' }, { side: 'right', label: 'Botones de Shorts' }], ghost: 'shorts' },
+  landscape: { covers: [{ side: 'bottom', label: 'Controles del reproductor' }], ghost: 'player' },
+};
+for (const [id, c] of Object.entries(COVERS)) Object.assign(FORMATS[id], c, { reviewed: '2026-10' });
+
+
 /** Tipo de publicación en Instagram según el formato y si es video. */
-export const igKind = (format, isVideo) =>
-  format === 'story' ? (isVideo ? 'story_video' : 'story') : isVideo ? 'reel' : format === 'reel' ? 'story' : 'image';
+export const igKind = (format, isVideo) => {
+  if (format === 'story') return isVideo ? 'story_video' : 'story';
+  if (isVideo) return 'reel';
+  return FORMATS[format]?.vertical ? 'story' : 'image';
+};
 
 /** Saca dosis, agua, temperatura y tiempo del texto libre de la receta. */
 export function parseRecipe(text = '') {
@@ -81,20 +115,23 @@ export function loadImage(src) {
   return imageCache.get(src);
 }
 
-function wrapLines(ctx, text, maxWidth, maxLines = Infinity) {
-  const words = String(text).split(/\s+/).filter(Boolean);
+function wrapLines(ctx, text, maxWidth, maxLines = Infinity, { breaks = false } = {}) {
   const lines = [];
-  let line = '';
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = test;
+  // Con `breaks`, cada salto de línea escrito empieza una línea nueva
+  for (const para of breaks ? String(text).split(/\n/) : [String(text)]) {
+    const words = para.split(/\s+/).filter(Boolean);
+    let line = '';
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
     }
+    if (line) lines.push(line);
   }
-  if (line) lines.push(line);
   if (lines.length > maxLines) {
     const kept = lines.slice(0, maxLines);
     let last = kept[maxLines - 1];
@@ -425,12 +462,8 @@ function panelLines(ctx, text, w, maxLines) {
   return wrapLines(ctx, text, w - 60, maxLines);
 }
 
-function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
-  const pad = 30;
-  const inner = w - pad * 2;
-  const h = PANEL_BASE + textLines.length * PANEL_LINE;
-  const R = 28;
-
+/** Caja de vidrio: desenfoca lo que hay detrás y la marca para el video. */
+function glassBox(ctx, x, y, w, h, tone, R = 28) {
   // Vidrio: lo que ya está pintado detrás (papel o foto) se desenfoca
   if (tone !== 'overlay') frost(ctx, x, y, w, h, R);
   ctx.save();
@@ -456,15 +489,15 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   ctx.restore();
   // Zona de vidrio, para que el video y la cámara la desenfoquen debajo
   (ctx.canvas.__glass ||= []).push({ x, y, w, h, r: R });
+}
 
-  let cy = y + pad + 10;
-  // Cota superior: FIG. + insignia roja
+/** Cota del panel: FIG. a la izquierda y la insignia roja a la derecha. Devuelve la y siguiente. */
+function panelHeader(ctx, x, w, cy, pad, fig, badge) {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
   ctx.font = `500 16px ${MONO}`;
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
-  ctx.fillText('FIG. 01 — RECETA AEROPRESS', x + pad, cy);
-  const badge = r.ratio ? `RATIO 1:${fmt(Math.round(r.ratio * 10) / 10)}` : 'MICRA';
+  ctx.fillText(fig, x + pad, cy);
   ctx.font = `700 16px ${MONO}`;
   const bw = ctx.measureText(badge).width + 18;
   ctx.fillStyle = C.red;
@@ -480,6 +513,19 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   ctx.lineTo(x + w - pad, cy);
   ctx.stroke();
   ctx.setLineDash([]);
+  return cy;
+}
+
+function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
+  const pad = 30;
+  const inner = w - pad * 2;
+  const h = PANEL_BASE + textLines.length * PANEL_LINE;
+  glassBox(ctx, x, y, w, h, tone);
+
+  let cy = y + pad + 10;
+  // Cota superior: FIG. + insignia roja
+  const badge = r.ratio ? `RATIO 1:${fmt(Math.round(r.ratio * 10) / 10)}` : 'MICRA';
+  cy = panelHeader(ctx, x, w, cy, pad, 'FIG. 01 — RECETA AEROPRESS', badge);
 
   // Etiqueta de dosis
   cy += 34;
@@ -564,6 +610,66 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   return h;
 }
 
+// Panel de mensaje (invitación y anuncio): cota, el mensaje en grande y
+// datos en dos columnas.
+const NOTE_LINE = 44;
+const NOTE_ROW = 72;
+
+function noteLines(ctx, text, w, maxLines) {
+  if (!text || maxLines <= 0) return [];
+  ctx.font = `600 34px ${GROTESK}`;
+  return wrapLines(ctx, text, w - 60, maxLines);
+}
+
+function noteHeight(lines, rows) {
+  return 96 + lines.length * NOTE_LINE + (rows.length ? 24 + Math.ceil(rows.length / 2) * NOTE_ROW : 0) + 10;
+}
+
+function drawNotePanel(ctx, x, y, w, { fig, badge, lines, rows }, tone) {
+  const pad = 30;
+  const h = noteHeight(lines, rows);
+  glassBox(ctx, x, y, w, h, tone);
+  let cy = panelHeader(ctx, x, w, y + pad + 10, pad, fig, badge);
+
+  cy += 26;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = `600 34px ${GROTESK}`;
+  ctx.fillStyle = '#fff';
+  lines.forEach((line, i) => ctx.fillText(line, x + pad, cy + i * NOTE_LINE));
+  cy += lines.length * NOTE_LINE;
+
+  if (rows.length) {
+    cy += 14;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x + pad, cy);
+    ctx.lineTo(x + w - pad, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    cy += 16;
+    const colW = (w - pad * 2) / 2;
+    rows.forEach(([label, value], i) => {
+      const rx = x + pad + (i % 2) * colW;
+      const ry = cy + Math.floor(i / 2) * NOTE_ROW;
+      ctx.font = `500 13px ${MONO}`;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText(label, rx, ry);
+      ctx.font = `700 24px ${MONO}`;
+      ctx.fillStyle = i === 0 ? C.red : 'rgba(255,255,255,0.9)';
+      let size = 24;
+      while (ctx.measureText(value).width > colW - 16 && size > 14) {
+        size -= 1;
+        ctx.font = `700 ${size}px ${MONO}`;
+      }
+      ctx.fillText(value, rx, ry + 22);
+    });
+  }
+  ctx.textBaseline = 'alphabetic';
+  return h;
+}
+
 /** Cajetín (title block) del plano: clima, hora, fecha, lugar. */
 function drawTitleBlock(ctx, x, y, w, h, cells, theme) {
   ctx.fillStyle = theme.blockBg;
@@ -600,169 +706,517 @@ function drawTitleBlock(ctx, x, y, w, h, cells, theme) {
 }
 
 function fitTitle(ctx, text, maxWidth, maxLines, start, min) {
+  const widest = (lines) => Math.max(0, ...lines.map((l) => ctx.measureText(l).width));
   for (let size = start; size >= min; size -= 4) {
     ctx.font = `700 ${size}px ${GROTESK}`;
     const lines = wrapLines(ctx, text, maxWidth);
-    if (lines.length <= maxLines) return { size, lines };
+    if (lines.length <= maxLines && widest(lines) <= maxWidth) return { size, lines };
   }
   ctx.font = `700 ${min}px ${GROTESK}`;
-  return { size: min, lines: wrapLines(ctx, text, maxWidth, maxLines) };
+  let lines = wrapLines(ctx, text, maxWidth, maxLines);
+  // Una sola palabra más ancha que la zona: la letra baja hasta que quepa
+  const w = widest(lines);
+  if (w > maxWidth) {
+    const size = Math.max(24, Math.floor((min * maxWidth) / w));
+    ctx.font = `700 ${size}px ${GROTESK}`;
+    lines = wrapLines(ctx, text, maxWidth, maxLines);
+    return { size, lines };
+  }
+  return { size: min, lines };
+}
+
+// Cada tipo de tarjeta (sección de la cámara de Micra)
+const KIND = {
+  recipe: { fig: 'FIG. 03 — MICRA', who: 'PREPARÓ' },
+  invite: { fig: 'FIG. 04 — INVITACIÓN', who: 'INVITA' },
+  announce: { fig: 'FIG. 05 — ANUNCIO', who: 'PUBLICA' },
+};
+const UP = (t) => String(t || '').toLocaleUpperCase('es-CO');
+const ANNOUNCE_FALLBACK = 'Más información en la barra de ACERO.press o por WhatsApp.';
+
+/**
+ * Textos automáticos de la tarjeta (lo que sale si nadie escribe nada).
+ * Puro: sirve también para mostrar el texto automático en el editor.
+ */
+export function autoTexts({ kind = 'recipe', preset = null, variety = null, text = '', format = 'feed', date = new Date() }) {
+  const F = FORMATS[format] || FORMATS.feed;
+  const K = KIND[kind] || KIND.recipe;
+  const note = kind !== 'recipe' && preset;
+  const r = parseRecipe(variety?.recipe_text || '');
+  const day = date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
+  const subtitle = !note
+    ? 'BOGOTÁ, 2.600 MSNM · RECETA AEROPRESS'
+    : kind === 'invite' && text
+      ? `${UP(preset.textLabel)}: ${UP(text)}`
+      : preset.usesVariety && variety
+        ? `${UP(variety.name)} · BOGOTÁ, 2.600 MSNM`
+        : 'BOGOTÁ, 2.600 MSNM · ACERO.PRESS';
+  return {
+    title: note ? preset.name : variety?.name || '',
+    subtitle,
+    fig: K.fig,
+    figSize: `${F.label.toUpperCase()} · ${F.w}×${F.h}`,
+    who: K.who,
+    sign: 'ACERO.press',
+    day,
+    // Texto del panel: la receta, la nota de la invitación o el anuncio
+    note: !note ? variety?.recipe_text || 'Pregúntale a tu barista por la receta de hoy.' : kind === 'invite' ? preset.note : text || ANNOUNCE_FALLBACK,
+    rows: !note
+      ? []
+      : kind === 'invite'
+        ? [['CAFÉ', variety?.name || 'De especialidad'], ['PREPARACIÓN', 'AeroPress'], ['DÓNDE', 'Chapinero, Bogotá'], ['VÁLIDO', text && preset.textLabel === 'Cuándo' ? text : `Hoy · ${day}`]]
+        : preset.usesVariety && variety
+          ? [['CAFÉ', variety.name], ['RECETA', r.dose && r.water ? `${fmt(r.dose)} g · ${fmt(r.water)} ml` : 'AeroPress']]
+          : [],
+    badge: note ? preset.badge : null,
+  };
+}
+
+// Logos: la imagen de cada variante se carga solo si se usa
+const LOGO_SRC = { 'acero-press': '/image/logo.png', acero: '/image/logo.png', tag: '/image/logo_aceropress.png' };
+const markerFont = (h) => `${Math.round(h * 0.55)}px ${MARKER}`;
+
+function measureLogo(ctx, variant, img, h) {
+  if (variant === 'type') {
+    ctx.font = `700 ${Math.round(h * 0.78)}px ${GROTESK}`;
+    const tw = ctx.measureText('ACERO').width;
+    ctx.font = markerFont(h);
+    return { w: tw + 8 + ctx.measureText('.press').width, h };
+  }
+  if (!img) return null;
+  const lw = (img.width / img.height) * h;
+  if (variant !== 'acero-press') return { w: lw, h };
+  ctx.font = markerFont(h);
+  return { w: lw + 8 + ctx.measureText('.press').width, h };
+}
+
+function drawMarker(ctx, x, y, h) {
+  ctx.save();
+  ctx.translate(x, y + h - 6);
+  ctx.rotate(-0.1);
+  ctx.font = markerFont(h);
+  ctx.fillStyle = C.red;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('.press', 0, 0);
+  ctx.restore();
+}
+
+function drawLogo(ctx, variant, img, box, theme) {
+  const { x, y, h } = box;
+  if (variant === 'type') {
+    ctx.font = `700 ${Math.round(h * 0.78)}px ${GROTESK}`;
+    ctx.fillStyle = theme.ink;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('ACERO', x, y + h * 0.84);
+    drawMarker(ctx, x + ctx.measureText('ACERO').width + 8, y, h);
+    return;
+  }
+  if (!img) return;
+  const lw = (img.width / img.height) * h;
+  if (variant === 'tag') {
+    ctx.save();
+    roundPath(ctx, x, y, lw, h, h * 0.18);
+    ctx.clip();
+    ctx.drawImage(img, x, y, lw, h);
+    ctx.restore();
+    return;
+  }
+  ctx.drawImage(img, x, y, lw, h);
+  if (variant === 'acero-press') drawMarker(ctx, x + lw + 8, y, h);
+}
+
+// Texto libre: tres letras de la marca, color, fondo y alineación
+const FREE_FONT = {
+  marker: { s: 44, m: 56, l: 72, font: (px) => `${px}px ${MARKER}`, lh: 1.18 },
+  grotesk: { s: 40, m: 52, l: 64, font: (px) => `700 ${px}px ${GROTESK}`, lh: 1.08 },
+  mono: { s: 26, m: 32, l: 40, font: (px) => `700 ${px}px ${MONO}`, lh: 1.35 },
+};
+function measureFree(ctx, textValue, opts, maxW) {
+  const f = FREE_FONT[opts.style] || FREE_FONT.marker;
+  const boxed = opts.bg || opts.style === 'mono';
+  const padX = boxed ? 20 : 0;
+  const padY = boxed ? 12 : 0;
+  const inner = maxW - padX * 2;
+  let px = f[opts.size] || f.m;
+  ctx.font = f.font(px);
+  let lines = wrapLines(ctx, textValue, inner, 3, { breaks: true });
+  // Una palabra más ancha que la zona: la letra baja hasta que quepa
+  const widest = () => Math.max(0, ...lines.map((l) => ctx.measureText(l).width));
+  if (widest() > inner) {
+    px = Math.max(18, Math.floor((px * inner) / widest()));
+    ctx.font = f.font(px);
+    lines = wrapLines(ctx, textValue, inner, 3, { breaks: true });
+  }
+  const w = widest() + padX * 2;
+  const h = lines.length * px * f.lh + padY * 2;
+  return { lines, px, w, h, padX, padY, lh: px * f.lh, boxed };
+}
+function drawFree(ctx, mf, opts, box, theme, onPhoto) {
+  const f = FREE_FONT[opts.style] || FREE_FONT.marker;
+  ctx.save();
+  if (mf.boxed) {
+    roundPath(ctx, box.x, box.y, box.w, box.h, opts.style === 'mono' ? 10 : 18);
+    ctx.fillStyle = opts.style === 'mono' ? C.red : onPhoto ? 'rgba(14,15,19,0.72)' : 'rgba(237,230,211,0.94)';
+    ctx.fill();
+  }
+  ctx.font = f.font(mf.px);
+  ctx.fillStyle = opts.style === 'mono' ? '#fff' : opts.color === 'red' ? C.red : theme.ink;
+  ctx.textBaseline = 'top';
+  const align = opts.align || 'left';
+  ctx.textAlign = align;
+  const ax = align === 'center' ? box.x + box.w / 2 : align === 'right' ? box.x + box.w - mf.padX : box.x + mf.padX;
+  mf.lines.forEach((line, i) => {
+    const ly = box.y + mf.padY + i * mf.lh + (opts.style === 'marker' ? mf.px * 0.05 : 0);
+    if (opts.style === 'marker') {
+      ctx.save();
+      ctx.translate(ax, ly);
+      ctx.rotate(-0.04);
+      ctx.fillText(line, 0, 0);
+      ctx.restore();
+    } else ctx.fillText(line, ax, ly);
+  });
+  ctx.restore();
+}
+
+// Stickers en píldora: precio, mención y ubicación
+const PILL_H = 52;
+function measurePill(ctx, id, textValue) {
+  ctx.font = id === 'price' ? `700 28px ${MONO}` : `700 24px ${MONO}`;
+  const tw = ctx.measureText(textValue).width;
+  return { w: tw + 44 + (id === 'place' ? 28 : 0), h: PILL_H };
+}
+function drawPill(ctx, id, textValue, box, theme, tone) {
+  const { x, y, w, h } = box;
+  const r = h / 2;
+  if (id === 'price') {
+    roundPath(ctx, x, y, w, h, r);
+    ctx.fillStyle = C.red;
+    ctx.fill();
+  } else if (tone === 'paper') {
+    roundPath(ctx, x + 1, y + 1, w - 2, h - 2, r);
+    ctx.strokeStyle = theme.ink;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    glassBox(ctx, x, y, w, h, tone, r);
+  }
+  let tx = x + 22;
+  if (id === 'place') {
+    // Pin rojo dibujado
+    const cx = x + 30;
+    const cy = y + h / 2 - 3;
+    ctx.fillStyle = C.red;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 9, Math.PI, 0);
+    ctx.lineTo(cx, cy + 16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = tone === 'paper' ? C.paper : '#fff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    tx += 28;
+  }
+  ctx.font = id === 'price' ? `700 28px ${MONO}` : `700 24px ${MONO}`;
+  ctx.fillStyle = id === 'price' || tone !== 'paper' ? '#fff' : theme.ink;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(textValue, tx, y + h / 2 + 1);
 }
 
 /**
- * Dibuja la tarjeta. `photo` (Image) es opcional: si existe, la hoja se
- * monta sobre la foto (como el video de fondo de los banners).
- * Con `videoOverlay: true` dibuja solo la capa de encima (degradado,
- * cuadrícula, marco y contenido) sobre fondo transparente, para
- * componerla cuadro a cuadro encima de un video (ver recordCardVideo).
+ * Dibuja la tarjeta. `kind` es la sección: 'recipe' (la variedad y su receta),
+ * 'invite' (invitación a un café) o 'announce' (anuncio); en las dos últimas
+ * `preset` es el filtro elegido (ver micraFilters.js) y `text` lo que se
+ * escribió encima. `photo` (Image/ImageBitmap) es opcional: si existe, la
+ * hoja se monta sobre la foto (como el video de fondo de los banners).
+ * Con `videoOverlay: true` dibuja solo la capa de encima sobre fondo
+ * transparente, para componerla cuadro a cuadro encima de un video.
+ *
+ * Editor de Micra: `elements` (ver micra/cardLayout.js) dice qué piezas se
+ * ven, su variante, tamaño y posición; `texts` reemplaza los textos
+ * automáticos (null = automático); `priceText` es el sticker de precio y
+ * `cobrand` la imagen del logo aliado. Sin ellos sale la tarjeta de siempre.
+ *
+ * Devuelve { recipe, layout, slots, fit, notes } (o null si otra llamada más
+ * nueva sobre el mismo lienzo la reemplazó) y deja en el lienzo `__layout`
+ * (cajas de cada pieza para tocarlas) y `__glass` (zonas de vidrio).
  */
-export async function drawEspresaleCard(canvas, { variety, weather, date = new Date(), format = 'feed', photo = null, videoOverlay = false }) {
-  await ensureFonts();
-  const logo = await loadImage('/image/logo.png');
+export async function drawEspresaleCard(canvas, {
+  variety, weather, date = new Date(), format = 'feed', photo = null, videoOverlay = false,
+  kind = 'recipe', preset = null, text = '',
+  elements = null, texts = null, priceText = null, cobrand = null,
+}) {
+  const seq = (canvas.__seq = (canvas.__seq || 0) + 1);
   const F = FORMATS[format] || FORMATS.feed;
+  const onPhoto = !!(photo || videoOverlay);
+  const el = elements?.logo?.shown !== undefined ? elements : resolveElements([elements || {}], { onPhoto, hasCobrand: !!cobrand });
+  const logoSrc = el.logo.shown && LOGO_SRC[el.logo.variant];
+  await ensureFonts();
+  const logoImg = logoSrc ? await loadImage(logoSrc) : null;
+  // Otra llamada más nueva ya está dibujando en este lienzo: esta no toca nada
+  if (canvas.__seq !== seq) return null;
+  if (import.meta.env?.DEV && typeof window !== 'undefined') window.__micraDraws = (window.__micraDraws || 0) + 1;
+
   const { w, h, safe, logoH } = F;
   canvas.width = w;
   canvas.height = h;
   canvas.__glass = [];
   const ctx = canvas.getContext('2d');
-  const r = parseRecipe(variety.recipe_text || '');
+  const kindText = (texts && texts[kind] != null ? texts[kind] : text) || '';
+  const auto = autoTexts({ kind, preset, variety, text: kindText, format, date });
+  const T = (key) => (texts && texts[key] != null ? texts[key] : auto[key]);
+  const r = parseRecipe(variety?.recipe_text || '');
+  const K = KIND[kind] || KIND.recipe;
+  const note = kind !== 'recipe' && preset;
 
-  const theme = photo || videoOverlay
+  const theme = onPhoto
     ? { ink: C.cream, soft: 'rgba(247,243,232,0.75)', line: 'rgba(247,243,232,0.75)', bg: 'rgba(14,15,19,0.85)', blockBg: 'rgba(14,15,19,0.72)' }
     : { ink: C.ink, soft: C.inkSoft, line: C.ink, bg: C.paper, blockBg: 'rgba(237,230,211,0.94)' };
 
   // Fondo a sangre: papel cuadriculado o foto/video con el degradado del banner
-  if (photo || videoOverlay) {
+  if (onPhoto) {
     ctx.clearRect(0, 0, w, h);
     if (photo) drawCover(ctx, photo, w, h);
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, 'rgba(10,10,12,0.72)');
-    g.addColorStop(0.45, 'rgba(10,10,12,0.28)');
-    g.addColorStop(1, 'rgba(10,10,12,0.82)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    grid(ctx, w, h, 27, 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.1)');
+    if (el.shade.shown) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(10,10,12,0.72)');
+      g.addColorStop(0.45, 'rgba(10,10,12,0.28)');
+      g.addColorStop(1, 'rgba(10,10,12,0.82)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+    if (el.grid.shown) grid(ctx, w, h, 27, 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.1)');
   } else {
     ctx.fillStyle = C.paper;
     ctx.fillRect(0, 0, w, h);
-    grid(ctx, w, h, 27, 'rgba(42,53,80,0.08)', 'rgba(42,53,80,0.17)');
+    if (el.grid.shown) grid(ctx, w, h, 27, 'rgba(42,53,80,0.08)', 'rgba(42,53,80,0.17)');
     const v = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
     v.addColorStop(0, 'rgba(120,90,40,0)');
     v.addColorStop(1, 'rgba(120,90,40,0.16)');
     ctx.fillStyle = v;
     ctx.fillRect(0, 0, w, h);
   }
-
-  sheetFrame(ctx, w, h, theme.line, theme.soft);
+  if (el.frame.shown) sheetFrame(ctx, w, h, theme.line, theme.soft);
 
   const X0 = safe.x0;
   const X1 = safe.x1;
-  let y = safe.y0;
+  const W = X1 - X0;
 
-  // A · Logo arriba a la izquierda, en el ancla de la zona segura
-  if (logo) {
-    const lw = (logo.width / logo.height) * logoH;
-    ctx.drawImage(logo, X0, y, lw, logoH);
-    ctx.save();
-    ctx.translate(X0 + lw + 8, y + logoH - 6);
-    ctx.rotate(-0.1);
-    ctx.font = `${Math.round(logoH * 0.55)}px ${MARKER}`;
-    ctx.fillStyle = C.red;
+  // ── Medidas para la distribución ──
+  const m = { pills: [] };
+  const lh = logoH * SIZE_STEPS[el.logo.size];
+  if (el.logo.shown) m.logo = measureLogo(ctx, el.logo.variant, logoImg, lh);
+  if (el.cobrand.shown && cobrand) {
+    const ch0 = (el.logo.shown ? lh : logoH) * 0.9;
+    const cw0 = ((cobrand.width || cobrand.naturalWidth) / (cobrand.height || cobrand.naturalHeight)) * ch0;
+    const k = Math.min(1, (W * 0.3) / cw0);
+    m.cobrand = { w: cw0 * k, h: ch0 * k };
+  }
+  const figText = T('fig');
+  if (el.fig.shown && figText) {
+    ctx.font = `700 19px ${MONO}`;
+    const w1 = ctx.measureText(figText).width;
+    ctx.font = `500 15px ${MONO}`;
+    m.fig = { w1, w2: el.fig.showSize ? ctx.measureText(auto.figSize).width : null };
+  }
+  const titleText = T('title');
+  let titleFit = null;
+  if (el.title.shown && titleText) {
+    const k = SIZE_STEPS[el.title.size];
+    titleFit = fitTitle(ctx, `${UP(titleText)}.`, W, 2, Math.round(108 * k), Math.round(56 * k));
+    m.title = { size: titleFit.size, n: titleFit.lines.length, w: Math.max(...titleFit.lines.map((l) => ctx.measureText(l).width)) };
+  }
+  const subText = T('subtitle');
+  if (el.subtitle.shown && subText) {
+    ctx.font = `500 18px ${MONO}`;
+    m.subtitle = { w: ctx.measureText(subText).width };
+  }
+  const freeText = texts?.free || '';
+  let freeM = null;
+  if (el.free.shown && freeText) {
+    freeM = measureFree(ctx, freeText, el.free, W);
+    m.free = { w: freeM.w, h: freeM.h };
+  }
+  const pillText = { price: priceText, handle: T('handle'), place: T('place') };
+  for (const id of ['price', 'handle', 'place']) {
+    if (el[id].shown && pillText[id]) m.pills.push({ id, ...measurePill(ctx, id, pillText[id]) });
+  }
+
+  const bands = layoutBands(F, el, m);
+  const B = bands.boxes;
+
+  // ── Panel ajustado a la zona libre ──
+  const panelW = note && onPhoto ? W : Math.min(490, W);
+  const fitBody = (zone) => {
+    if (!el.panel.shown) return { panelW, panelH: 0, lines: [] };
+    const zoneH = zone.bottom - zone.top;
+    if (note) {
+      const rows = auto.rows;
+      const message = kind === 'invite' ? T('note') : kindText || ANNOUNCE_FALLBACK;
+      const maxL = onPhoto ? 4 : 6;
+      const fitLines = Math.floor((zoneH - noteHeight([], rows)) / NOTE_LINE);
+      const lines = noteLines(ctx, message, panelW, Math.max(1, Math.min(maxL, fitLines)));
+      const panelH = noteHeight(lines, rows);
+      if (panelH <= zoneH) return { panelW, panelH, lines, rows };
+      // No cabe: sin las filas de datos; si tampoco, sin panel
+      const fit2 = Math.floor((zoneH - noteHeight([], [])) / NOTE_LINE);
+      if (fit2 >= 1) {
+        const l2 = noteLines(ctx, message, panelW, Math.min(maxL, fit2));
+        return { panelW, panelH: noteHeight(l2, []), lines: l2, rows: [], reduced: true };
+      }
+      return { panelW, panelH: 0, lines: [], dropped: true };
+    }
+    const fit = Math.floor((zoneH - PANEL_BASE) / PANEL_LINE);
+    const lines = el.panel.compact ? [] : panelLines(ctx, T('note'), panelW, Math.max(0, Math.min(4, fit)));
+    const panelH = PANEL_BASE + lines.length * PANEL_LINE;
+    return panelH <= zoneH + 1 || zoneH >= PANEL_BASE ? { panelW, panelH, lines } : { panelW, panelH: 0, lines: [], dropped: true };
+  };
+  const body = fitBody(bands.zone);
+  if (body.reduced) {
+    bands.fit.panel = 'short';
+    bands.notes.panel = `Panel reducido para caber en ${F.label}`;
+  }
+  if (body.dropped) {
+    bands.fit.panel = 'hidden';
+    bands.notes.panel = `Sin espacio para el panel en ${F.label}: oculta el título o cambia de formato`;
+  }
+  const bodyBoxes = layoutBody(F, el, bands.zone, body, onPhoto).boxes;
+
+  // ── Pintar, en el orden de siempre ──
+  if (B.logo) drawLogo(ctx, el.logo.variant, logoImg, B.logo, theme);
+  if (B.cobrand) {
+    const midX = B.logo ? B.logo.x + B.logo.w + 14 : null;
+    if (midX !== null) {
+      ctx.font = `500 26px ${MONO}`;
+      ctx.fillStyle = theme.soft;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('×', midX, B.logo.y + B.logo.h / 2);
+    }
+    ctx.drawImage(cobrand, B.cobrand.x, B.cobrand.y, B.cobrand.w, B.cobrand.h);
+  }
+  // B · Cota FIG., al lado contrario del logo
+  if (B.fig) {
+    const right = B.fig.align === 'right';
+    const ax = right ? B.fig.x + B.fig.w : B.fig.x;
+    ctx.textAlign = right ? 'right' : 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `700 19px ${MONO}`;
+    ctx.fillStyle = theme.ink;
+    ctx.fillText(figText, ax, B.fig.y + 26);
+    if (B.fig.lines === 2) {
+      ctx.font = `500 15px ${MONO}`;
+      ctx.fillStyle = theme.soft;
+      ctx.fillText(auto.figSize, ax, B.fig.y + 52);
+    }
+  }
+  if (bands.ruleY !== null) {
+    ctx.strokeStyle = theme.line;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(X0, bands.ruleY);
+    ctx.lineTo(X1, bands.ruleY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // C · Título: la variedad (o el nombre del filtro), como el "COLD BREW." del banner
+  if (bands.title && titleFit) {
+    ctx.font = `700 ${titleFit.size}px ${GROTESK}`;
+    ctx.fillStyle = el.title.color === 'red' ? C.red : theme.ink;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText('.press', 0, 0);
-    ctx.restore();
+    titleFit.lines.forEach((line, i) => ctx.fillText(line, X0, bands.title.baseline + i * bands.title.lineStep));
   }
-  // B · Cota FIG. arriba a la derecha, a la altura del logo
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'alphabetic';
-  ctx.font = `700 19px ${MONO}`;
-  ctx.fillStyle = theme.ink;
-  ctx.fillText('FIG. 03 — MICRA', X1, y + 26);
-  ctx.font = `500 15px ${MONO}`;
-  ctx.fillStyle = theme.soft;
-  ctx.fillText(`${F.label.toUpperCase()} · ${w}×${h}`, X1, y + 52);
-
-  y += logoH + 24;
-  ctx.strokeStyle = theme.line;
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([6, 6]);
-  ctx.beginPath();
-  ctx.moveTo(X0, y);
-  ctx.lineTo(X1, y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // C · Título: la variedad, como el "COLD BREW." del banner
-  const name = `${String(variety.name || '').toUpperCase()}.`;
-  const t = fitTitle(ctx, name, X1 - X0, 2, 108, 56);
-  ctx.fillStyle = theme.ink;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  y += t.size * 0.95 + 18;
-  t.lines.forEach((line, i) => ctx.fillText(line, X0, y + i * t.size * 0.98));
-  y += (t.lines.length - 1) * t.size * 0.98 + 40;
-
-  ctx.fillStyle = C.red;
-  ctx.beginPath();
-  ctx.arc(X0 + 6, y - 7, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.font = `500 18px ${MONO}`;
-  ctx.fillStyle = theme.soft;
-  ctx.fillText('BOGOTÁ, 2.600 MSNM · RECETA AEROPRESS', X0 + 22, y);
-  y += 34;
+  if (bands.subtitle) {
+    const sy = bands.subtitle.baseline;
+    ctx.fillStyle = C.red;
+    ctx.beginPath();
+    ctx.arc(X0 + 6, sy - 7, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = `500 18px ${MONO}`;
+    ctx.fillStyle = theme.soft;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(subText, X0 + 22, sy);
+  }
 
   // E · Cajetín al final de la zona segura
-  const blockH = 96;
-  const blockY = safe.y1 - blockH;
-  const time = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-  const day = date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
-  const temp = weather?.tempC !== null && weather?.tempC !== undefined ? `${weather.tempC}°C` : '—';
-  drawTitleBlock(
-    ctx,
-    X0,
-    blockY,
-    X1 - X0,
-    blockH,
-    [
-      { label: 'CLIMA BOGOTÁ', value: `${weather?.icon || ''} ${temp}`.trim(), span: 1.1 },
-      { label: 'HORA', value: time, span: 1 },
-      { label: 'FECHA', value: day, span: 1.25, size: 26 },
-      { label: 'PREPARÓ', value: 'ACERO.press', span: 1.35, accent: true },
-    ],
-    theme
-  );
-
-  // D · Dibujo acotado (izquierda) + panel del odómetro (derecha)
-  const recipeText = variety.recipe_text || 'Pregúntale a tu barista por la receta de hoy.';
-  const panelW = Math.min(490, X1 - X0);
-  const panelX = X1 - panelW;
-  const zoneTop = y;
-  const zoneBottom = blockY - 28;
-  const fit = Math.floor((zoneBottom - zoneTop - PANEL_BASE) / PANEL_LINE);
-  const lines = panelLines(ctx, recipeText, panelW, Math.max(0, Math.min(4, fit)));
-  const panelH = PANEL_BASE + lines.length * PANEL_LINE;
-  if (photo || videoOverlay) {
-    // Con foto o video: el panel abajo, para que la foto respire arriba
-    drawPanel(ctx, panelX, Math.max(zoneTop, zoneBottom - panelH), panelW, r, lines, photo ? 'photo' : 'overlay');
-  } else {
-    const drawW = panelX - X0 - 20;
-    // 430 = ancho del dibujo con sus etiquetas de cota (unidades locales)
-    const scale = Math.min(0.92, (zoneBottom - zoneTop) / 560, drawW / 430);
-    const drawH = 560 * scale;
-    // Dibujo y panel centrados juntos en el espacio libre (en el vertical sobra alto)
-    const groupH = Math.max(drawH, panelH);
-    // En Historias el grupo baja hacia el cajetín; en los demás va centrado.
-    const groupTop = zoneTop + Math.max(0, (zoneBottom - zoneTop - groupH) * (F.lowPanel ? 0.85 : 0.5));
-    ctx.save();
-    ctx.translate(X0 + 10, groupTop + (groupH - drawH) / 2);
-    ctx.scale(scale, scale);
-    drawAeropress(ctx, r, theme.ink, theme.bg);
-    ctx.restore();
-    drawPanel(ctx, panelX, groupTop + (groupH - panelH) / 2, panelW, r, lines, 'paper');
+  if (B.block) {
+    const time = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    const temp = weather?.tempC !== null && weather?.tempC !== undefined ? `${weather.tempC}°C` : '—';
+    const cells = [
+      el.block.cells.weather && { label: 'CLIMA BOGOTÁ', value: `${weather?.icon || ''} ${temp}`.trim(), span: 1.1 },
+      el.block.cells.time && { label: 'HORA', value: time, span: 1 },
+      el.block.cells.date && { label: 'FECHA', value: auto.day, span: 1.25, size: 26 },
+      el.block.cells.sign && { label: K.who, value: T('sign') || 'ACERO.press', span: 1.35, accent: true },
+    ].filter(Boolean);
+    drawTitleBlock(ctx, B.block.x, B.block.y, B.block.w, B.block.h, cells, theme);
   }
 
-  return r;
+  // D · Dibujo acotado + panel del odómetro o del mensaje
+  const tone = photo ? 'photo' : videoOverlay ? 'overlay' : 'paper';
+  if (bodyBoxes.drawing) {
+    const d = bodyBoxes.drawing;
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.scale(d.scale, d.scale);
+    drawAeropress(ctx, r, theme.ink, theme.bg);
+    ctx.restore();
+  }
+  if (bodyBoxes.panel) {
+    const p = bodyBoxes.panel;
+    if (note) drawNotePanel(ctx, p.x, p.y, p.w, { fig: K.fig, badge: auto.badge, lines: body.lines, rows: body.rows }, tone);
+    else drawPanel(ctx, p.x, p.y, p.w, r, body.lines, tone);
+  }
+
+  // Texto libre y stickers, encima de todo
+  if (B.free && freeM) drawFree(ctx, freeM, el.free, B.free, theme, onPhoto);
+  for (const id of ['price', 'handle', 'place']) if (B[id]) drawPill(ctx, id, pillText[id], B[id], theme, tone);
+
+  // Cajas para tocar cada pieza en el editor (en px del lienzo)
+  const all = { ...B, ...bodyBoxes };
+  const layout = Object.entries(all).map(([id, b]) => ({ id, x: b.x, y: b.y, w: b.w, h: b.h }));
+  const slots = slotTargets(F, el, m, (bandsAlt) => {
+    const alt = fitBody(bandsAlt.zone);
+    return { panelW: alt.panelW, panelH: alt.panelH };
+  }, onPhoto);
+  canvas.__layout = layout;
+  canvas.__slots = slots;
+  canvas.__fit = { fit: bands.fit, notes: bands.notes };
+  return { recipe: r, layout, slots, fit: bands.fit, notes: bands.notes, elements: el };
+}
+
+/**
+ * Foto de fondo lista para dibujar, reducida UNA vez (máx. `maxSide` px de lado):
+ * las fotos del sensor pesan 12+ MP y redibujarlas en cada cambio cuesta.
+ */
+export async function loadPhotoBitmap(blob, maxSide = 2160) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const probe = await createImageBitmap(blob);
+      const k = Math.min(1, maxSide / Math.max(probe.width, probe.height));
+      if (k === 1) return probe;
+      const w = Math.round(probe.width * k);
+      const h = Math.round(probe.height * k);
+      probe.close();
+      return await createImageBitmap(blob, { resizeWidth: w, resizeHeight: h, resizeQuality: 'high' });
+    } catch { /* cae al <img> */ }
+  }
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+    await img.decode();
+    return img;
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
 }
 
 /** Un cuadro del video de la tarjeta: el video de fondo y la capa encima. */
@@ -799,24 +1253,38 @@ export function pickVideoType() {
 
 /**
  * Graba el video con la tarjeta encima, en tiempo real (dura lo mismo que el
- * clip, máximo `maxSeconds`). Incluye el audio original si el navegador lo
- * permite. Devuelve { blob, type, ext }.
+ * clip desde `startAt`, máximo `maxSeconds`). Incluye el audio original si el
+ * navegador lo permite. `signal` (AbortSignal) lo cancela. 6 Mbps: 60 s caben
+ * bajo el límite de 50 MB de Supabase. Devuelve { blob, type, ext, igReady }.
  */
-export async function recordCardVideo({ video, overlay, width, height, maxSeconds = 60, onProgress }) {
+export async function recordCardVideo({ video, overlay, width, height, maxSeconds = 60, startAt = 0, onProgress, signal }) {
+  const abortError = () => new DOMException('Cancelado', 'AbortError');
+  if (signal?.aborted) throw abortError();
   const type = pickVideoType();
   if (!type || !HTMLCanvasElement.prototype.captureStream) {
     throw new Error('Este navegador no puede grabar video. Prueba en Chrome o Safari actualizados.');
   }
+  // Cancelar vale desde ya (también durante las esperas de audio y de búsqueda)
+  let aborted = false;
+  let stop = () => {};
+  const onAbort = () => { aborted = true; stop(); };
+  signal?.addEventListener('abort', onAbort, { once: true });
+
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   const stream = canvas.captureStream(30);
+  let audioCtx = null;
+  const release = () => {
+    signal?.removeEventListener('abort', onAbort);
+    stream.getTracks().forEach((t) => t.stop());
+    if (audioCtx) audioCtx.close().catch(() => {});
+  };
 
   // Audio del clip original (si se puede); si no, el video sale sin sonido.
   // Cada grabación usa su propio <video>, así que la fuente de audio es nueva.
   let hasAudio = false;
-  let audioCtx = null;
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const src = audioCtx.createMediaElementSource(video);
@@ -829,35 +1297,67 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
     hasAudio = false;
   }
 
-  const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8_000_000 });
-  const chunks = [];
-  recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-  const stopped = new Promise((resolve) => { recorder.onstop = resolve; });
-
-  const duration = Math.min(Number.isFinite(video.duration) ? video.duration : maxSeconds, maxSeconds);
+  const total = Number.isFinite(video.duration) ? video.duration : maxSeconds + startAt;
+  const from = Math.max(0, Math.min(startAt, Math.max(0, total - 1)));
+  const end = Math.min(total, from + maxSeconds);
+  const duration = Math.max(0.1, end - from);
   video.pause();
   video.loop = false;
   video.muted = !hasAudio; // con WebAudio el sonido va a la grabación, no al parlante
-  video.currentTime = 0;
-  await new Promise((r) => { video.onseeked = r; setTimeout(r, 500); });
+  // Se graba desde el cuadro elegido: se espera a que la búsqueda termine (clips 4K tardan)
+  if (Math.abs(video.currentTime - from) > 0.01 || video.seeking) {
+    await new Promise((r) => {
+      const t = setTimeout(r, 6000);
+      video.addEventListener('seeked', () => { clearTimeout(t); r(); }, { once: true });
+      video.currentTime = from;
+    });
+  }
+  if (aborted) { release(); throw abortError(); }
+
+  const recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6_000_000 });
+  const chunks = [];
+  recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+  const stopped = new Promise((resolve) => { recorder.onstop = resolve; });
 
   // Un dibujo por cuadro nuevo del clip (requestVideoFrameCallback) en vez de
   // 60 por segundo, y el progreso se avisa solo cuando sube un 1 %.
   const perFrame = typeof video.requestVideoFrameCallback === 'function';
   let raf = 0;
   let lastPct = -1;
-  const stop = () => { if (recorder.state === 'recording') recorder.stop(); };
+  stop = () => { if (recorder.state !== 'inactive') recorder.stop(); };
   video.addEventListener('ended', stop, { once: true });
+  let playFailed = false;
+  // Cada arranque del bucle tiene su número: al volver de segundo plano no quedan dos bucles
+  let loopGen = 0;
   const draw = () => {
-    composeVideoFrame(ctx, video, overlay);
-    const pct = Math.min(1, video.currentTime / duration);
-    if (Math.round(pct * 100) !== lastPct) {
-      lastPct = Math.round(pct * 100);
-      onProgress?.(pct);
-    }
-    if (video.currentTime >= duration || video.ended) { stop(); return; }
-    raf = perFrame ? video.requestVideoFrameCallback(draw) : requestAnimationFrame(draw);
+    const gen = ++loopGen;
+    const tick = () => {
+      if (gen !== loopGen || aborted || document.hidden) return;
+      composeVideoFrame(ctx, video, overlay);
+      const pct = Math.max(0, Math.min(1, (video.currentTime - from) / duration));
+      if (Math.round(pct * 100) !== lastPct) {
+        lastPct = Math.round(pct * 100);
+        onProgress?.(pct);
+      }
+      if (video.currentTime >= end || video.ended) { stop(); return; }
+      raf = perFrame ? video.requestVideoFrameCallback(tick) : requestAnimationFrame(tick);
+    };
+    tick();
   };
+  // Con la pestaña oculta el navegador deja de pintar: se pausa todo (si no,
+  // el video saldría congelado) y sigue al volver
+  const onVisibility = () => {
+    if (recorder.state === 'inactive') return;
+    if (document.hidden) {
+      video.pause();
+      if (recorder.state === 'recording') recorder.pause();
+    } else {
+      if (recorder.state === 'paused') recorder.resume();
+      video.play().catch(() => { playFailed = true; stop(); });
+      draw();
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibility);
 
   composeVideoFrame(ctx, video, overlay);
   recorder.start(250);
@@ -866,15 +1366,19 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   } catch {
     // iOS puede bloquear la reproducción con sonido: se graba sin audio.
     video.muted = true;
-    await video.play();
+    // Si tampoco así, no hay video que grabar: se termina con un error (no se queda en 0 %)
+    await video.play().catch(() => { playFailed = true; stop(); });
   }
+  if (document.hidden) onVisibility();
   draw();
   await stopped;
+  document.removeEventListener('visibilitychange', onVisibility);
   if (perFrame) video.cancelVideoFrameCallback(raf);
   else cancelAnimationFrame(raf);
   video.pause();
-  stream.getTracks().forEach((t) => t.stop());
-  if (audioCtx) audioCtx.close().catch(() => {});
+  release();
+  if (aborted) throw abortError();
+  if (playFailed) throw new Error('No se pudo reproducir el video para grabarlo. Intenta de nuevo.');
 
   const blob = new Blob(chunks, { type: type.split(';')[0] });
   return {

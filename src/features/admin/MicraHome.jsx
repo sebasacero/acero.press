@@ -90,8 +90,8 @@ export default function MicraHome({ signals, clock, onOpen, onSearch, onSite, on
 
   const open = (id) => {
     setFolderOpen(false);
-    if (id === 'site') onSite();
-    else onOpen(id);
+    if (id === 'site') { onSite(); return; }
+    onOpen(id);
   };
   const app = (id, dock = false) => <App key={id} id={id} dock={dock} overlay={overlay} signals={signals} onOpen={open} />;
 

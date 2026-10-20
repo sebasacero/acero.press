@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { ADMIN_GROUPS, ADMIN_TOOLS, toolById } from './adminTools.js';
 import MicraHome from './MicraHome.jsx';
+import { requestMicra } from './micraFilters.js';
+import { canLeave } from './leaveGuard.js';
 import './admin.css';
 
 const LAST_TOOL_KEY = 'acero_admin_last';
@@ -102,13 +104,15 @@ function CommandPalette({ items, onClose }) {
  * Marco del panel de administración (el flotante sobre el sitio y /admin).
  * activeTool / onSelect: herramienta activa. onExit: volver al sitio o salir.
  */
-export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '← Volver al sitio', userLabel, overlay = false }) {
+export default function AdminShell({ activeTool, onSelect, onExit: exitPanel, exitLabel = '← Volver al sitio', userLabel, overlay = false }) {
   const [signals, reloadSignals] = useAdminSignals();
   const [palette, setPalette] = useState(false);
   const [clock, setClock] = useState(() => new Date());
   const isHome = activeTool === HOME;
   const tool = isHome ? null : toolById(activeTool);
-  const select = onSelect;
+  // La herramienta activa puede pedir confirmación antes de navegar o cerrar (p. ej. Micra preparando un video)
+  const select = useCallback((id) => { if (canLeave()) onSelect(id); }, [onSelect]);
+  const onExit = useCallback(() => { if (canLeave()) exitPanel(); }, [exitPanel]);
   const group = tool && ADMIN_GROUPS.find((g) => g.id === tool.group);
   const Active = tool?.Component;
   const viewId = tool?.id ?? HOME;
@@ -158,7 +162,7 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
       key: `go-${t.id}`, kind: 'IR A', label: t.label, hint: t.desc,
       group: ADMIN_GROUPS.find((g) => g.id === t.group)?.label, run: () => select(t.id),
     })),
-    { key: 'act-sale', kind: 'ACCIÓN', label: 'Registrar una venta', hint: 'Micra · venta en barra', run: () => select('espresale') },
+    { key: 'act-sale', kind: 'ACCIÓN', label: 'Registrar una venta', hint: 'Micra · venta en barra', run: () => { requestMicra('sale'); select('espresale'); } },
     { key: 'act-pending', kind: 'ACCIÓN', label: 'Confirmar pedidos pendientes', hint: 'Pedidos', run: () => select('orders') },
     { key: 'act-stock', kind: 'ACCIÓN', label: 'Reponer stock bajo', hint: 'Inventario', run: () => select('inventory') },
     { key: 'act-agent', kind: 'ACCIÓN', label: 'Preguntarle al agente', hint: 'Agente · canal directo', run: () => select('dashboard') },
@@ -170,7 +174,7 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
   let n = 0;
 
   return (
-    <div className={`ax-shell admin-shell ${overlay ? 'ax-overlay' : ''} ${isHome ? 'is-home' : ''}`}>
+    <div className={`ax-shell admin-shell ${overlay ? 'ax-overlay' : ''} ${isHome ? 'is-home' : ''} ${tool?.bleed ? 'is-bleed' : ''}`}>
       <aside className="ax-side" aria-label="Navegación del panel">
         <div className="ax-brand">
           <span className="ax-brand-name">ACERO<em>.press</em></span>
@@ -244,7 +248,7 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
             {overlay && <button type="button" className="ax-icon-btn ax-close" onClick={onExit} aria-label="Cerrar panel">×</button>}
           </div>
         </header>
-        <main className={`admin-main ax-main ${isHome ? 'is-home' : ''}`} key={viewId}>
+        <main className={`admin-main ax-main ${isHome ? 'is-home' : ''} ${tool?.bleed ? 'is-bleed' : ''}`} key={viewId}>
           {isHome ? (
             <MicraHome
               signals={signals}
@@ -257,7 +261,7 @@ export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '
               overlay={overlay}
             />
           ) : (
-            <Active />
+            <Active onExit={() => select(HOME)} onOpenTool={select} />
           )}
         </main>
       </div>
