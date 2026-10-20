@@ -171,10 +171,10 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
   /**
    * Ya se publicó con este pedido: no se vuelve a enlazar a otra tarjeta, pero
    * esta tarjeta sigue mostrándose vendida (para no invitar a registrarla otra vez).
+   * sameCard: la publicación terminó con su tarjeta todavía en pantalla; si no
+   * (se volvió a la cámara o se cambió de filtro mientras subía), la venta se
+   * suelta y nunca queda pegada a otra tarjeta.
    */
-  // sameCard: la publicación terminó con su tarjeta todavía en pantalla. Si no
-  // (se volvió a la cámara o se cambió de filtro mientras subía), la venta se
-  // suelta: nunca queda pegada a otra tarjeta.
   const markPublished = useCallback((orderId, { sameCard = true } = {}) => {
     const l = lastRef.current;
     setLast((x) => (x && x.orderId === orderId ? { ...x, published: true } : x));
