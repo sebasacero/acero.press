@@ -117,6 +117,7 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
         stock: r.stock,
         stockError: r.stockError,
         varietyIds: [...new Set(resolved.map((l) => String(l.varietyId)))],
+        phone: waDigits(phone) || null, // para «Enviar a › WhatsApp» de esta tarjeta
         at: Date.now(),
         published: false,
       };
@@ -167,10 +168,14 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
     return last;
   }, [attached, last]);
   const linkedOrderId = useCallback((q) => linkedSale(q)?.orderId ?? null, [linkedSale]);
-  /** Ya se publicó con este pedido: no se vuelve a enlazar a otra tarjeta. */
+  /**
+   * Ya se publicó con este pedido: no se vuelve a enlazar a otra tarjeta, pero
+   * esta tarjeta sigue mostrándose vendida (para no invitar a registrarla otra vez).
+   */
   const markPublished = useCallback((orderId) => {
-    setLast((l) => (l && l.orderId === orderId ? { ...l, published: true } : l));
-    setAttached((a) => (a?.orderId === orderId ? null : a));
+    const l = lastRef.current;
+    setLast((x) => (x && x.orderId === orderId ? { ...x, published: true } : x));
+    setAttached((a) => (a?.orderId === orderId ? { ...a, published: true } : l?.orderId === orderId ? { ...l, published: true } : a));
   }, []);
   /** Se dejó la tarjeta (volver a la cámara): la venta pegada a ella se suelta. */
   const releaseCard = useCallback(() => setAttached(null), []);
@@ -192,5 +197,6 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
     payMethod, setPayMethod, phone, setPhone,
     total, priced, priceFor, stock, stockFor, loadStock, shortages,
     busy, error, setError, register, last, linkedSale, linkedOrderId, voidLast, isVoided, markPublished,
+    cardSale: attached, // la venta de la tarjeta en el editor (publicada o no)
   };
 }

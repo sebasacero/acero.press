@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { autoTexts, FORMATS, igKind, loadPhotoBitmap, parseRecipe } from '../espresaleCard.js';
 import { clearMicraIntent, MICRA_INTENT_EVENT, PRESETS, presetOf, readMicraIntent } from '../micraFilters.js';
+import { setLeaveGuard } from '../leaveGuard.js';
 import { currentSlot, movableSlots, slotPatch } from './cardLayout.js';
 import { DEFAULT_TEXTS, ELEMENT_META, elementTextKey, isDefaultLook, loadPrefs, savePrefs, textTargets } from './cardModel.js';
 import { buildAltText, buildCaption, money, moneyShort, PAY_METHODS, primaryDest, PUBLISH_ARIA, PUBLISH_LABEL } from './captions.js';
@@ -36,7 +37,7 @@ const flag = (k) => { try { return localStorage.getItem(k) === '1'; } catch { re
 const setFlag = (k) => { try { localStorage.setItem(k, '1'); } catch { /* sin almacenamiento */ } };
 
 function useDesktop() {
-  const q = '(min-width: 901px)';
+  const q = '(min-width: 1180px)'; // inspector acoplado solo si cabe al lado de la barra lateral
   const [on, setOn] = useState(() => typeof matchMedia === 'function' && matchMedia(q).matches);
   useEffect(() => {
     if (typeof matchMedia !== 'function') return undefined;
@@ -116,6 +117,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     }
     look.act({ type: 'filterChanged', freeText: preset?.freeText });
     setCaption(null);
+    sale.releaseCard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterId]);
 
@@ -134,10 +136,20 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     toastTimer.current = setTimeout(() => setToast((cur) => (cur?.id === id ? null : cur)), t.ttl ?? 4000);
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
+  // Lo que dicen los avisos, en una región viva que no se desmonta
+  const [announce, setAnnounce] = useState('');
+  const say = useCallback((text) => {
+    setAnnounce('');
+    if (text) setTimeout(() => setAnnounce(text), 60);
+  }, []);
   // Un aviso con «Deshacer» de una edición se cierra con la siguiente edición
   useEffect(() => {
     if (toast?.seq !== undefined && toast.seq !== look.seq) setToast(null);
   }, [look.seq, toast]);
+
+  useEffect(() => { if (toast) say(toast.action ? `${toast.text}. ${toast.action.label} disponible.` : toast.text); }, [toast?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const jobSay = job?.text ?? '';
+  useEffect(() => { if (jobSay) say(jobSay); }, [jobSay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Textos de la tarjeta ──
   const kindText = kind === 'recipe' ? '' : texts[kind] || '';
@@ -243,11 +255,15 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     }
   }, [showToast]);
 
-  const goCamera = useCallback(() => {
+  const goCamera = useCallback(({ newCard: fresh = false } = {}) => {
     clearInterval(countdown.current);
-    setJob((j) => (j?.state === 'countdown' ? null : j));
-    sale.releaseCard();
-    setCaption(null);
+    // Solo sigue a la vista lo que todavía corre (subiendo/publicando)
+    setJob((j) => (j?.state === 'run' ? j : null));
+    // Otra toma de la misma tarjeta conserva su venta y su pie de foto
+    if (fresh) {
+      sale.releaseCard();
+      setCaption(null);
+    }
     dropCapture();
     setSelection(null);
     setSheet(null);
@@ -265,6 +281,13 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     if (busyJob) setConfirm({ type: 'leave' });
     else onExit?.();
   }, [busyJob, onExit]);
+  const videoBusy = out.progress !== null;
+  useEffect(() => {
+    if (!busyJob) return undefined;
+    const msg = videoBusy ? 'Se está preparando el video. Si sales, se cancela.' : 'Se está publicando la tarjeta. Si sales, sigue en segundo plano.';
+    setLeaveGuard(() => window.confirm(msg));
+    return () => setLeaveGuard(null);
+  }, [busyJob, videoBusy]);
   useEffect(() => {
     if (!busyJob) return undefined;
     const fn = (e) => { e.preventDefault(); e.returnValue = ''; };
@@ -333,6 +356,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const payLabel = PAY_METHODS.find((m) => m.id === sale.payMethod)?.label;
   const linkedSale = sale.linkedSale({ kind, varietyId: variety?.id });
   const linkedOrderId = linkedSale?.orderId ?? null;
+  // La venta de esta tarjeta (la enlazable o la que ya se publicó con ella)
+  const saleSold = linkedSale ?? sale.cardSale;
   const onSaleRegistered = (rec) => {
     // Cierra la hoja de venta (no la de «Enviar a» que se abrió para compartir)
     if (!desktop) setSheet((s) => (s === 'sale' ? null : s));
@@ -345,7 +370,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
         label: 'Deshacer',
         run: () => sale.voidLast(rec)
           .then(() => showToast({ text: 'Venta anulada · el inventario volvió a su lugar.' }))
-          .catch((e) => showToast({ text: `No se anuló: ${e.message}` })),
+          .catch((e) => showToast({ text: /se anuló/.test(e.message) ? e.message : `No se anuló: ${e.message}`, ttl: 6000 })),
       },
     });
   };
@@ -367,9 +392,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
         if (orderId) sale.markPublished(orderId);
         setJob({ state: 'done', text: `✓ ${r.text}` });
       } else setJob({ state: 'error', text: r.pending ? r.text : `✕ No se publicó: ${r.text}`, retry: !r.pending });
+      return r;
     } catch (e) {
-      if (e?.name === 'AbortError') { setJob(null); return; }
+      if (e?.name === 'AbortError') { setJob(null); return { ok: false, aborted: true }; }
       setJob({ state: 'error', text: `✕ No se publicó: ${e.message}`, retry: true });
+      return { ok: false, text: e.message };
     }
   };
   // La cuenta regresiva publica con lo que haya al terminar (formato, pie de foto, tarjeta)
@@ -428,10 +455,9 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
   const newCard = () => {
     setJob(null);
-    setCaption(null);
     look.act({ type: 'newCard' });
     sale.newCard();
-    goCamera();
+    goCamera({ newCard: true });
   };
 
   // ── Teclado: Esc recorre la cadena (y el panel flotante nunca se cierra detrás) ──
@@ -444,6 +470,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       e.preventDefault();
       const k = keys.current;
       if (recordingRef.current) return;
+      // Dentro del inspector acoplado (escritorio), Esc solo suelta el campo: no sale de Micra
+      if (!k.sheet && !k.confirm && !k.textKey && e.target?.closest?.('.mst-dock')) { e.target.blur?.(); return; }
       if (k.confirm) setConfirm(null);
       else if (k.countdown) k.cancelJob();
       else if (k.textKey) setTextKey(null);
@@ -543,7 +571,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
               if (quickDest === 'ig') guardLogo(() => (videoMode ? quickPublish(rec.orderId) : publishNow(rec.orderId)));
               else runDownload();
             }}
-            linked={linkedSale}
+            linked={saleSold}
             onSend={() => { setSheet(null); quick(); }}
             sendOnlyLabel={quickDest === 'ig' ? `Publicar · ${quickLabel}` : quickLabel}
           />
@@ -556,11 +584,9 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             out={out} sale={sale} kind={kind} format={format} videoMode={videoMode} cardRef={cardRef} cardKey={cardKey}
             caption={caption} autoCaption={autoCaption} setCaption={setCaption} hashtags={hashtags} setHashtags={setHashtags}
             linkedOrderId={linkedOrderId} canShare={canShare} onRegistered={onSaleRegistered}
-            onPublish={async ({ orderId }) => {
-              const r = await out.publishIG({ orderId });
-              if (r.ok && orderId) sale.markPublished(orderId);
-              return r;
-            }}
+            onPublish={({ orderId }) => publishNow(orderId)}
+            busy={busyJob}
+            linkedPhone={saleSold?.phone ?? null}
             onNewCard={newCard}
             onOpenPublications={() => onOpenTool?.('publications')}
             guardLogo={guardLogo}
@@ -599,7 +625,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
           <BackgroundSheet
             bg={bg} capture={capture} thumbUrl={capture?.type === 'image' ? capture.url : null}
             onBg={(b) => setBg(b)}
-            onRetake={goCamera}
+            onRetake={() => goCamera()}
             onGallery={() => galleryRef.current?.click()}
             elements={elements} onToggle={toggleEl}
             trimStart={trimStart} onTrim={setTrimStart} duration={capture?.duration}
@@ -623,11 +649,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
   const confirmBox = confirm && (() => {
     const C = {
-      discard: { text: '¿Descartar la toma?', yes: 'Descartar', no: 'Seguir editando', run: goCamera },
+      discard: { text: '¿Descartar la toma?', yes: 'Descartar', no: 'Seguir editando', run: () => goCamera() },
       noLogo: { text: 'La tarjeta sale sin logo. ¿Publicar igual?', yes: 'Publicar igual', no: 'Mostrar el logo', run: confirm.onYes, onNo: () => showEl('logo') },
       leave: out.progress !== null
-        ? { text: 'Se está preparando el video. Si sales, se cancela.', yes: 'Salir y cancelar', no: 'Quedarme', run: () => { out.cancelVideo(); onExit?.(); } }
-        : { text: 'Se está publicando la tarjeta. Si sales, sigue en segundo plano.', yes: 'Salir', no: 'Quedarme', run: () => onExit?.() },
+        ? { text: 'Se está preparando el video. Si sales, se cancela.', yes: 'Salir y cancelar', no: 'Quedarme', run: () => { out.cancelVideo(); setLeaveGuard(null); onExit?.(); } }
+        : { text: 'Se está publicando la tarjeta. Si sales, sigue en segundo plano.', yes: 'Salir', no: 'Quedarme', run: () => { setLeaveGuard(null); onExit?.(); } },
     }[confirm.type];
     return (
       <div className="mst-confirm-back">
@@ -643,7 +669,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   })();
 
   const jobPill = job && (
-    <div className={`mst-job is-${job.state}`} role="status" aria-live="polite">
+    <div className={`mst-job is-${job.state}`}>
       <span>
         {job.video && out.progress !== null ? `Preparando video ${Math.round(out.progress * 100)} %` : job.text}
         {job.state === 'countdown' ? ` ${job.n}` : ''}
@@ -658,12 +684,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     </div>
   );
 
-  const saleSold = linkedSale;
   const filterLabel = kind === 'recipe' ? `Receta · ${variety?.name ?? '—'}` : `${kind === 'invite' ? 'Invitación' : 'Anuncio'} · ${preset?.name}`;
 
   return (
     <div
-      className={`mstudio is-${stage}`}
+      className={`mstudio is-${stage} ${job ? 'has-job' : ''}`}
       data-still={(stage === 'edit' ? !videoMode : camMode === 'plain') ? 'true' : 'false'}
       onDragOver={(e) => { if ([...(e.dataTransfer?.types ?? [])].includes('Files')) e.preventDefault(); }}
       onDrop={onDrop}
@@ -782,7 +807,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
         {jobPill}
         {toast && (
-          <div className="mst-toast" role="status" aria-live="polite" key={toast.id}>
+          <div className="mst-toast" key={toast.id}>
             <span>{toast.text}</span>
             {toast.action && <button type="button" className="mst-toast-action" onClick={() => { setToast(null); toast.action.run(); }}>{toast.action.label}</button>}
           </div>
@@ -804,6 +829,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       </div>
 
       {activeSheet && <div className={`mst-dock ${docked ? 'is-docked' : ''}`}>{renderSheet()}</div>}
+      <div className="mst-sr" role="status" aria-live="polite" aria-atomic="true">{announce}</div>
 
       <input ref={galleryRef} type="file" accept="image/*,video/*" hidden onChange={(e) => pickFile(e, takeCapture)} />
       <input ref={cobrandRef} type="file" accept="image/*" hidden onChange={(e) => pickFile(e, takeCobrand)} />

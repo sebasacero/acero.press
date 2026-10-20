@@ -3,6 +3,7 @@ import { supabase } from '../../shared/lib/supabaseClient.js';
 import { ADMIN_GROUPS, ADMIN_TOOLS, toolById } from './adminTools.js';
 import MicraHome from './MicraHome.jsx';
 import { requestMicra } from './micraFilters.js';
+import { canLeave } from './leaveGuard.js';
 import './admin.css';
 
 const LAST_TOOL_KEY = 'acero_admin_last';
@@ -103,13 +104,15 @@ function CommandPalette({ items, onClose }) {
  * Marco del panel de administración (el flotante sobre el sitio y /admin).
  * activeTool / onSelect: herramienta activa. onExit: volver al sitio o salir.
  */
-export default function AdminShell({ activeTool, onSelect, onExit, exitLabel = '← Volver al sitio', userLabel, overlay = false }) {
+export default function AdminShell({ activeTool, onSelect, onExit: exitPanel, exitLabel = '← Volver al sitio', userLabel, overlay = false }) {
   const [signals, reloadSignals] = useAdminSignals();
   const [palette, setPalette] = useState(false);
   const [clock, setClock] = useState(() => new Date());
   const isHome = activeTool === HOME;
   const tool = isHome ? null : toolById(activeTool);
-  const select = onSelect;
+  // La herramienta activa puede pedir confirmación antes de navegar o cerrar (p. ej. Micra preparando un video)
+  const select = useCallback((id) => { if (canLeave()) onSelect(id); }, [onSelect]);
+  const onExit = useCallback(() => { if (canLeave()) exitPanel(); }, [exitPanel]);
   const group = tool && ADMIN_GROUPS.find((g) => g.id === tool.group);
   const Active = tool?.Component;
   const viewId = tool?.id ?? HOME;

@@ -25,11 +25,12 @@ export default function SaleSheet({ sale, varieties, context, docked, linked, on
   const [voidError, setVoidError] = useState(null);
   const { lines, total, priced, busy, error } = sale;
 
-  // Stock: se carga la primera vez que se abre la venta
-  useEffect(() => { if (!sale.stock) sale.loadStock(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Stock: se carga la primera vez que se abre la venta (y otra vez cuando llegan las variedades)
+  useEffect(() => { if (!sale.stock) sale.loadStock(); }, [sale.loadStock]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (open >= lines.length) setOpen(lines.length - 1); }, [lines.length, open]);
 
   const run = async (mode, force = false) => {
+    setVoidError(null);
     if (!force && sale.shortages().length) { setAskStock(mode); return; }
     setAskStock(null);
     try {
@@ -56,7 +57,8 @@ export default function SaleSheet({ sale, varieties, context, docked, linked, on
 
   // La venta ya registrada (la recién hecha en el inspector o la de esta tarjeta), si no se anuló
   const candidate = done ?? (!fresh && context === 'editor' ? linked : null);
-  const shown = candidate && !sale.isVoided(candidate.orderId) ? candidate : null;
+  // Mientras se anula, la venta sigue a la vista con «Anulando…»
+  const shown = candidate && (voiding || !sale.isVoided(candidate.orderId)) ? candidate : null;
   if (shown) {
     const undo = async () => {
       setVoiding(true);
@@ -78,9 +80,11 @@ export default function SaleSheet({ sale, varieties, context, docked, linked, on
             {shown.lines.map((l, i) => <li key={i}>{l.label} × {l.qty}</li>)}
           </ul>
           {shown.stockError && <p className="msheet-notice is-warn">El inventario no se actualizó: {shown.stockError}</p>}
-          {voidError && <p className="msheet-notice is-err" role="alert">No se anuló: {voidError}</p>}
+          {voidError && <p className="msheet-notice is-err" role="alert">{/se anuló/.test(voidError) ? voidError : `No se anuló: ${voidError}`}</p>}
           <div className="msheet-row">
-            <button type="button" className="msheet-btn" disabled={voiding} onClick={undo}>{voiding ? 'Anulando…' : 'Deshacer'}</button>
+            {!sale.isVoided(shown.orderId) || voiding ? (
+              <button type="button" className="msheet-btn" disabled={voiding} onClick={undo}>{voiding ? 'Anulando…' : 'Deshacer'}</button>
+            ) : null}
             <button type="button" className="msheet-btn" disabled={voiding} onClick={() => { setDone(null); setFresh(true); }}>Nueva venta</button>
           </div>
           {context === 'editor' && onSend && (
@@ -93,6 +97,7 @@ export default function SaleSheet({ sale, varieties, context, docked, linked, on
 
   const footer = (
     <>
+      {voidError && /se anuló/.test(voidError) && <p className="msheet-notice is-warn" role="alert">{voidError}</p>}
       {short && (
         <div className="msheet-notice is-warn" role="alert">
           <p>No hay stock de {short.variant.label} en el inventario. ¿Registrar igual?</p>

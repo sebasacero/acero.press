@@ -12,6 +12,7 @@ import { IconCamera, IconChat, IconDownload, IconGrid, IconShare } from './icons
 export default function ShareSheet({
   out, sale, kind, format, videoMode, cardRef, cardKey, caption, autoCaption, setCaption, hashtags, setHashtags,
   linkedOrderId, canShare, onPublish, onNewCard, onOpenPublications, guardLogo, onClose, docked, onRegistered,
+  busy: studioBusy = false, linkedPhone = null,
 }) {
   const thumbRef = useRef(null);
   const [notice, setNotice] = useState(null); // { ok, text }
@@ -64,13 +65,19 @@ export default function ShareSheet({
     const orderId = await withSale();
     const r = await onPublish({ orderId });
     if (r.ok) setDone(r.text);
-    else setNotice({ ok: false, text: r.pending ? r.text : `No se publicó: ${r.text}` });
+    else if (!r.aborted) setNotice({ ok: false, text: r.pending ? r.text : `No se publicó: ${r.text}` });
   }));
 
   const whatsapp = () => {
-    if (!sale.phone.trim()) { setPhoneOpen(true); return; }
+    // El número de este ticket o el de la venta de esta tarjeta
+    const to = sale.phone.trim() || linkedPhone || '';
+    if (!to) { setPhoneOpen(true); return; }
     // El chat se abre YA (en el mismo toque); la tarjeta se descarga después para adjuntarla
-    out.openWhatsApp(sale.phone);
+    if (!out.openWhatsApp(to)) {
+      setPhoneOpen(true);
+      setNotice({ ok: false, text: 'Escribe el WhatsApp del cliente.' });
+      return;
+    }
     runJob('wa', async () => {
       await withSale();
       if (!canShare) await out.download();
@@ -117,7 +124,8 @@ export default function ShareSheet({
     { id: 'wa', label: 'WhatsApp', sub: 'cliente', Icon: IconChat, run: whatsapp },
     canShare && { id: 'share', label: 'Compartir', sub: 'menú del celular', Icon: IconShare, run: share, disabled: videoMode && !videoReady },
     { id: 'download', label: 'Descargar', sub: videoMode ? (out.cardVideo?.ext?.toUpperCase() || 'Video') : 'PNG', Icon: IconDownload, run: download },
-    { id: 'save', label: 'Publicaciones', sub: out.savedUrl ? '✓ Guardada' : 'Guardar', Icon: IconGrid, run: save, on: !!out.savedUrl },
+    // Guardada una vez basta (otra subida sería una fila repetida)
+    { id: 'save', label: 'Publicaciones', sub: out.savedUrl ? '✓ Guardada' : 'Guardar', Icon: IconGrid, run: save, on: !!out.savedUrl, disabled: !!out.savedUrl },
   ].filter(Boolean);
 
   return (
@@ -169,7 +177,7 @@ export default function ShareSheet({
 
       <div className="msheet-dest-grid">
         {dests.map((d) => (
-          <button key={d.id} type="button" className={`msheet-dest ${d.on ? 'on' : ''}`} onClick={d.run} disabled={!!busy || d.disabled || out.progress !== null} aria-label={d.aria}>
+          <button key={d.id} type="button" className={`msheet-dest ${d.on ? 'on' : ''}`} onClick={d.run} disabled={!!busy || studioBusy || d.disabled || out.progress !== null} aria-label={d.aria}>
             <span className="msheet-dest-icon"><d.Icon /></span>
             <b>{busy === d.id ? '…' : d.label}</b>
             <small>{d.sub}</small>

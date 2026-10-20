@@ -1326,6 +1326,7 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   let lastPct = -1;
   stop = () => { if (recorder.state !== 'inactive') recorder.stop(); };
   video.addEventListener('ended', stop, { once: true });
+  let playFailed = false;
   // Cada arranque del bucle tiene su número: al volver de segundo plano no quedan dos bucles
   let loopGen = 0;
   const draw = () => {
@@ -1352,7 +1353,7 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
       if (recorder.state === 'recording') recorder.pause();
     } else {
       if (recorder.state === 'paused') recorder.resume();
-      video.play().catch(() => {});
+      video.play().catch(() => { playFailed = true; stop(); });
       draw();
     }
   };
@@ -1365,7 +1366,8 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   } catch {
     // iOS puede bloquear la reproducción con sonido: se graba sin audio.
     video.muted = true;
-    await video.play().catch(() => {});
+    // Si tampoco así, no hay video que grabar: se termina con un error (no se queda en 0 %)
+    await video.play().catch(() => { playFailed = true; stop(); });
   }
   if (document.hidden) onVisibility();
   draw();
@@ -1376,6 +1378,7 @@ export async function recordCardVideo({ video, overlay, width, height, maxSecond
   video.pause();
   release();
   if (aborted) throw abortError();
+  if (playFailed) throw new Error('No se pudo reproducir el video para grabarlo. Intenta de nuevo.');
 
   const blob = new Blob(chunks, { type: type.split(';')[0] });
   return {

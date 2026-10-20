@@ -179,15 +179,18 @@ export default function MicraCamera({
     // Micrófono solo mientras se graba
     let mic = null;
     try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch { mic = null; }
-    if (r.cancelled || !streamRef.current) { stopStream(mic); recRef.current = null; setSeconds(null); return; }
+    if (r.cancelled || !streamRef.current) {
+      stopStream(mic);
+      if (recRef.current === r) { recRef.current = null; setSeconds(null); }
+      return;
+    }
     const stream = new MediaStream([...streamRef.current.getVideoTracks(), ...(mic?.getAudioTracks() ?? [])]);
     let recorder;
     try {
       recorder = new MediaRecorder(stream, { mimeType: type });
     } catch {
       stopStream(mic);
-      recRef.current = null;
-      setSeconds(null);
+      if (recRef.current === r) { recRef.current = null; setSeconds(null); }
       nativeRef.current?.click();
       return;
     }
@@ -214,8 +217,7 @@ export default function MicraCamera({
     } catch {
       clearInterval(r.timer);
       stopStream(mic);
-      recRef.current = null;
-      setSeconds(null);
+      if (recRef.current === r) { recRef.current = null; setSeconds(null); }
       return;
     }
     if (r.stopAsked) recorder.stop();
@@ -287,20 +289,21 @@ export default function MicraCamera({
           <canvas ref={cardRef} className={`mc-card ${plain ? 'is-plain' : ''}`} aria-hidden="true" />
           {status === 'starting' && !plain && <p className="mc-status">Abriendo la cámara…</p>}
           {recording && <span className="mc-rec">● REC {clock(seconds)} / {clock(MAX_SECONDS)}</span>}
-          {(status === 'denied' || status === 'error') && !plain && (
-            <div className="mc-perm" role="alert">
-              <p>{status === 'denied'
-                ? 'La cámara está bloqueada para este sitio. Actívala en los ajustes del navegador (el candado junto a la dirección) y toca Reintentar.'
-                : 'No se pudo abrir la cámara (¿otra app la está usando?).'}</p>
-              <div className="mc-perm-actions">
-                <button type="button" className="mc-pill mc-pill-on" onClick={() => setRestart((n) => n + 1)}>Reintentar</button>
-                {status === 'denied' && coarse() && <button type="button" className="mc-pill" onClick={() => nativeRef.current?.click()}>Usar la cámara del celular</button>}
-                <button type="button" className="mc-pill" onClick={() => onMode('plain')}>Plano</button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {(status === 'denied' || status === 'error') && !plain && (
+        <div className="mc-perm" role="alert">
+          <p>{status === 'denied'
+            ? 'La cámara está bloqueada para este sitio. Actívala en los ajustes del navegador (el candado junto a la dirección) y toca Reintentar.'
+            : 'No se pudo abrir la cámara (¿otra app la está usando?).'}</p>
+          <div className="mc-perm-actions">
+            <button type="button" className="mc-pill mc-pill-on" onClick={() => setRestart((n) => n + 1)}>Reintentar</button>
+            {status === 'denied' && coarse() && <button type="button" className="mc-pill" onClick={() => nativeRef.current?.click()}>Usar la cámara del celular</button>}
+            <button type="button" className="mc-pill" onClick={() => onMode('plain')}>Plano</button>
+          </div>
+        </div>
+      )}
 
       <header className="mc-top">
         <button type="button" className="mc-round" onClick={onExit} disabled={recording} aria-label="Cerrar la cámara"><IconClose /></button>

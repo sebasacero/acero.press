@@ -33,7 +33,7 @@
 .mc-status{ position:absolute; inset:0; display:grid; place-items:center; margin:0; font-family:var(--mst-mono); font-size:12px; letter-spacing:.12em; color:rgba(244,242,236,.7); }
 .mc-rec{ position:absolute; top:72px; left:50%; transform:translateX(-50%); background:var(--mst-red); color:#fff; font-family:var(--mst-mono); font-size:12px; font-weight:700; letter-spacing:.1em; padding:5px 10px; border-radius:3px; }
 .mc-perm{
-  position:absolute; left:16px; right:16px; top:50%; transform:translateY(-50%); z-index:2;
+  position:absolute; left:16px; right:16px; top:50%; transform:translateY(-50%); z-index:3; max-width:420px; margin:0 auto;
   display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:16px;
   background:var(--mst-glass-strong); border:1px solid var(--mst-line); text-align:center;
 }
@@ -277,6 +277,9 @@
 .mst-toast{ bottom:calc(max(10px, env(safe-area-inset-bottom)) + 86px); }
 /* En la cámara, arriba: abajo taparía el disparador y los filtros */
 .mstudio.is-camera .mst-toast{ top:calc(max(12px, env(safe-area-inset-top)) + 58px); bottom:auto; }
+/* …y debajo del aviso de publicación si hay uno */
+.mstudio.is-camera.has-job .mst-toast{ top:calc(max(12px, env(safe-area-inset-top)) + 116px); }
+.mst-sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
 .mst-job{ top:calc(max(10px, env(safe-area-inset-top)) + 62px); }
 .mst-job.is-done{ background:#1f6e46; }
 .mst-job.is-error{ background:#7d1717; }
@@ -482,11 +485,15 @@
 
 /* ── Dentro del panel ─────────────────────────────────────────────── */
 .ax-main.is-bleed{ padding:0; overflow:hidden; position:relative; background:#050506; animation:none; }
-@media (max-width:900px){
+/* En /admin el marco mide la pantalla (la barra lateral hace scroll por dentro):
+   los controles de abajo del estudio nunca quedan bajo el pliegue */
+.ax-shell.is-bleed:not(.ax-overlay){ height:100vh; height:100dvh; }
+/* Hasta 1179 px el estudio va a pantalla completa (con el inspector al lado no cabría) */
+@media (max-width:1179px){
   .ax-shell.is-bleed .ax-top{ display:none; }
 }
 /* Escritorio: el estudio llena el contenido y el inspector queda a la derecha */
-@media (min-width:901px){
+@media (min-width:1180px){
   .mstudio{ position:absolute; z-index:auto; display:grid; grid-template-columns:minmax(0, 1fr) 360px; }
   .mst-dock{ position:relative; inset:auto; z-index:1; min-height:0; pointer-events:auto; background:#101115; border-left:1px solid var(--mst-line); }
   .mst-dock .msheet-backdrop{ display:none; }

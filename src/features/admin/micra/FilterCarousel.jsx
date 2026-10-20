@@ -86,10 +86,15 @@ export default function FilterCarousel({ filters, selectedId, onSelect, onShutte
               className={`mc-filter ${on ? 'on' : ''}`}
               disabled={disabled && !on}
               onPointerDown={on && onHoldStart ? (e) => {
-                const h = { x: e.clientX, y: e.clientY, active: false, timer: 0 };
+                const h = { x: e.clientX, y: e.clientY, active: false, timer: 0, pointerId: e.pointerId, btn: e.currentTarget };
                 h.timer = setTimeout(() => {
                   h.active = true;
-                  h.end = endHold;
+                  // Solo soltar el dedo del disparador termina (no otro dedo en la pantalla)
+                  h.end = (ev) => {
+                    if (ev.type === 'pointerup' && ev.pointerId !== h.pointerId) return;
+                    if (ev.type === 'touchend' && [...ev.touches].some((t) => h.btn.contains(t.target))) return;
+                    endHold();
+                  };
                   window.addEventListener('pointerup', h.end);
                   window.addEventListener('touchend', h.end);
                   onHoldStart();
@@ -100,7 +105,7 @@ export default function FilterCarousel({ filters, selectedId, onSelect, onShutte
                 const h = hold.current;
                 if (h && !h.active && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 8) cancelHold();
               } : undefined}
-              onPointerUp={on && onHoldStart ? endHold : undefined}
+              onPointerUp={on && onHoldStart ? (e) => { if (!hold.current || e.pointerId === hold.current.pointerId) endHold(); } : undefined}
               onPointerCancel={on && onHoldStart ? softEnd : undefined}
               onPointerLeave={on && onHoldStart ? softEnd : undefined}
               onContextMenu={(e) => e.preventDefault()}
