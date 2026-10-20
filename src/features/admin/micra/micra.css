@@ -136,6 +136,7 @@
 .mc-formats button.on small{ color:rgba(0,0,0,.6); }
 
 /* ── Editor ───────────────────────────────────────────────────────── */
+.mst-top[hidden]{ display:none; }
 .mst-top{
   position:absolute; top:0; left:0; right:0; z-index:5; display:flex; align-items:center; gap:8px;
   padding:max(10px, env(safe-area-inset-top)) 12px 10px; background:linear-gradient(rgba(0,0,0,.55), transparent);
@@ -325,7 +326,7 @@
 }
 .msheet-chips.is-grid .msheet-chip{ padding:0 4px; font-size:12px; }
 .msheet-chip.on{ background:#fff; color:#111; border-color:#fff; }
-.msheet-chip.is-sm{ min-height:32px; padding:0 10px; font-size:11.5px; }
+.msheet-chip.is-sm{ min-height:40px; padding:0 12px; font-size:12px; }
 .msheet-chip:disabled{ cursor:default; }
 .msheet-stock{ font:600 10.5px var(--mst-mono); color:rgba(255,255,255,.65); }
 .msheet-chip.on .msheet-stock{ color:rgba(0,0,0,.6); }
@@ -441,11 +442,11 @@
 .msheet-layer.is-na .msheet-layer-name b{ color:rgba(255,255,255,.45); }
 
 /* ── Editor de texto ──────────────────────────────────────────────── */
-.mtext{ position:absolute; inset:0; z-index:40; display:flex; flex-direction:column; background:rgba(0,0,0,.72); animation:mst-fade .15s ease; }
+.mtext{ position:absolute; inset:0; z-index:40; display:flex; flex-direction:column; background:rgba(5,5,6,.9); animation:mst-fade .15s ease; }
 .mtext-top{ display:flex; justify-content:space-between; padding:max(12px, env(safe-area-inset-top)) 14px 6px; }
 .mtext-chips{ display:flex; gap:8px; overflow-x:auto; padding:6px 14px; scrollbar-width:none; }
 .mtext-chips::-webkit-scrollbar{ display:none; }
-.mtext-chip{ flex:0 0 auto; min-height:38px; padding:0 14px; border-radius:999px; border:1px solid rgba(255,255,255,.3); background:none; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+.mtext-chip{ flex:0 0 auto; min-height:44px; padding:0 14px; border-radius:999px; border:1px solid rgba(255,255,255,.3); background:none; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
 .mtext-chip.on{ background:#fff; color:#111; border-color:#fff; }
 .mtext-mid{ flex:1; min-height:0; display:flex; align-items:center; padding:12px 20px; }
 .mtext-input{
@@ -453,6 +454,7 @@
   font:700 30px/1.2 var(--mst-grotesk);
 }
 .mtext-input::placeholder{ color:rgba(255,255,255,.4); }
+.mstudio .mtext-input:focus-visible{ outline:none; }
 .mtext-input.is-title{ font-size:34px; text-transform:uppercase; }
 .mtext-input.is-mono{ font:600 20px/1.35 var(--mst-mono); text-transform:uppercase; }
 .mtext-input.is-body{ font:600 22px/1.35 -apple-system, 'Archivo', sans-serif; }

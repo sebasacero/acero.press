@@ -698,7 +698,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
           />
         ) : (
           <>
-            <header className="mst-top">
+            <header className="mst-top" hidden={!!textKey}>
               <button type="button" className="mc-round" onClick={back} aria-label="Volver a la cámara"><IconBack /></button>
               <button type="button" className="mst-filterchip" onClick={() => setSheet('filter')} aria-label={`Filtro: ${filterLabel}. Cambiar`}>
                 <span>{filterLabel}</span> ▾
@@ -733,7 +733,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
               {coach && !selection && drawn && <p className="mst-coach">Toca cualquier parte de la tarjeta para editarla</p>}
             </MicraEditor>
 
-            {!selection && (
+            {!selection && !textKey && (
               <ToolRail
                 onText={() => setTextKey('free')}
                 onStickers={() => setSheet('stickers')}
@@ -744,7 +744,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
               />
             )}
 
-            {selection ? (
+            {textKey ? null : selection ? (
               <ContextBar
                 id={selection}
                 el={elements}
