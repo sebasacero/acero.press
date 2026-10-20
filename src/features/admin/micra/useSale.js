@@ -172,10 +172,17 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
    * Ya se publicó con este pedido: no se vuelve a enlazar a otra tarjeta, pero
    * esta tarjeta sigue mostrándose vendida (para no invitar a registrarla otra vez).
    */
-  const markPublished = useCallback((orderId) => {
+  // sameCard: la publicación terminó con su tarjeta todavía en pantalla. Si no
+  // (se volvió a la cámara o se cambió de filtro mientras subía), la venta se
+  // suelta: nunca queda pegada a otra tarjeta.
+  const markPublished = useCallback((orderId, { sameCard = true } = {}) => {
     const l = lastRef.current;
     setLast((x) => (x && x.orderId === orderId ? { ...x, published: true } : x));
-    setAttached((a) => (a?.orderId === orderId ? { ...a, published: true } : l?.orderId === orderId ? { ...l, published: true } : a));
+    setAttached((a) => {
+      if (a?.orderId === orderId) return sameCard ? { ...a, published: true } : null;
+      if (sameCard && !a && l?.orderId === orderId) return { ...l, published: true };
+      return a;
+    });
   }, []);
   /** Se dejó la tarjeta (volver a la cámara): la venta pegada a ella se suelta. */
   const releaseCard = useCallback(() => setAttached(null), []);

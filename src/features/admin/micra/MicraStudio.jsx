@@ -84,6 +84,9 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const cardRef = useRef(null);
   const countdown = useRef(0);
   useEffect(() => () => clearInterval(countdown.current), []);
+  // Número de la tarjeta en pantalla: cambia al volver a la cámara o cambiar de filtro
+  const cardIdRef = useRef(0);
+  const publishingRef = useRef(false);
   const galleryRef = useRef(null);
   const cobrandRef = useRef(null);
   const recordingRef = useRef(false);
@@ -118,6 +121,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     look.act({ type: 'filterChanged', freeText: preset?.freeText });
     setCaption(null);
     sale.releaseCard();
+    cardIdRef.current += 1;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterId]);
 
@@ -255,12 +259,16 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     }
   }, [showToast]);
 
+  const cardSaleRef = useRef(null);
+  cardSaleRef.current = sale.cardSale;
   const goCamera = useCallback(({ newCard: fresh = false } = {}) => {
     clearInterval(countdown.current);
+    cardIdRef.current += 1;
     // Solo sigue a la vista lo que todavía corre (subiendo/publicando)
     setJob((j) => (j?.state === 'run' ? j : null));
-    // Otra toma de la misma tarjeta conserva su venta y su pie de foto
-    if (fresh) {
+    // Otra toma de la misma tarjeta conserva su venta y su pie de foto; una
+    // tarjeta ya publicada no: lo que sigue es el próximo cliente
+    if (fresh || cardSaleRef.current?.published) {
       sale.releaseCard();
       setCaption(null);
     }
@@ -277,6 +285,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   }, [capture, goCamera]);
 
   const busyJob = job?.state === 'run' || out.progress !== null;
+  const countdownOn = job?.state === 'countdown';
   const exit = useCallback(() => {
     if (busyJob) setConfirm({ type: 'leave' });
     else onExit?.();
@@ -385,18 +394,25 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const igK = igKind(format, videoMode);
 
   const publishNow = async (orderId) => {
+    clearInterval(countdown.current);
+    if (publishingRef.current) return { ok: false, aborted: true };
+    publishingRef.current = true;
+    const cardId = cardIdRef.current;
+    const retry = () => publishRef.current(orderId);
     setJob({ state: 'run', text: 'Subiendo la tarjeta…' });
     try {
       const r = await out.publishIG({ orderId, onStage: (s) => s === 'publish' && setJob({ state: 'run', text: `Publicando en Instagram · ${PUBLISH_LABEL[igK]}…` }) });
       if (r.ok) {
-        if (orderId) sale.markPublished(orderId);
+        if (orderId) sale.markPublished(orderId, { sameCard: cardIdRef.current === cardId && stageRef.current === 'edit' });
         setJob({ state: 'done', text: `✓ ${r.text}` });
-      } else setJob({ state: 'error', text: r.pending ? r.text : `✕ No se publicó: ${r.text}`, retry: !r.pending });
+      } else setJob({ state: 'error', text: r.pending ? r.text : `✕ No se publicó: ${r.text}`, retry: r.pending ? null : retry });
       return r;
     } catch (e) {
       if (e?.name === 'AbortError') { setJob(null); return { ok: false, aborted: true }; }
-      setJob({ state: 'error', text: `✕ No se publicó: ${e.message}`, retry: true });
+      setJob({ state: 'error', text: `✕ No se publicó: ${e.message}`, retry });
       return { ok: false, text: e.message };
+    } finally {
+      publishingRef.current = false;
     }
   };
   // La cuenta regresiva publica con lo que haya al terminar (formato, pie de foto, tarjeta)
@@ -405,12 +421,13 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const stageRef = useRef(stage);
   stageRef.current = stage;
   const quickPublish = (orderId = linkedOrderId) => {
+    if (publishingRef.current || countdownOn) return;
     if (videoMode) {
       // El video se graba primero (la grabación ya es la espera)
       setJob({ state: 'run', text: 'Preparando video…', video: true });
       out.ensureCardVideo().then(() => publishNow(orderId)).catch((e) => {
         if (e?.name === 'AbortError') setJob(null);
-        else setJob({ state: 'error', text: `✕ No se publicó: ${e.message}`, retry: true });
+        else setJob({ state: 'error', text: `✕ No se publicó: ${e.message}`, retry: () => quickPublish(orderId) });
       });
       return;
     }
@@ -471,7 +488,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       const k = keys.current;
       if (recordingRef.current) return;
       // Dentro del inspector acoplado (escritorio), Esc solo suelta el campo: no sale de Micra
-      if (!k.sheet && !k.confirm && !k.textKey && e.target?.closest?.('.mst-dock')) { e.target.blur?.(); return; }
+      if (!k.sheet && !k.confirm && !k.textKey && !k.countdown && e.target?.closest?.('.mst-dock')) { e.target.blur?.(); return; }
       if (k.confirm) setConfirm(null);
       else if (k.countdown) k.cancelJob();
       else if (k.textKey) setTextKey(null);
@@ -573,6 +590,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             }}
             linked={saleSold}
             onSend={() => { setSheet(null); quick(); }}
+            sendBusy={busyJob || countdownOn}
             sendOnlyLabel={quickDest === 'ig' ? `Publicar · ${quickLabel}` : quickLabel}
           />
         );
@@ -585,7 +603,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             caption={caption} autoCaption={autoCaption} setCaption={setCaption} hashtags={hashtags} setHashtags={setHashtags}
             linkedOrderId={linkedOrderId} canShare={canShare} onRegistered={onSaleRegistered}
             onPublish={({ orderId }) => publishNow(orderId)}
-            busy={busyJob}
+            busy={busyJob || countdownOn}
             linkedPhone={saleSold?.phone ?? null}
             onNewCard={newCard}
             onOpenPublications={() => onOpenTool?.('publications')}
@@ -677,7 +695,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       {(job.state === 'countdown' || job.video) && job.state !== 'done' && job.state !== 'error' && (
         <button type="button" className="mst-toast-action" onClick={cancelJob}>Cancelar</button>
       )}
-      {job.state === 'error' && job.retry && <button type="button" className="mst-toast-action" onClick={() => { setJob(null); quick(); }}>Reintentar</button>}
+      {job.state === 'error' && job.retry && <button type="button" className="mst-toast-action" onClick={() => { const again = job.retry; setJob(null); again(); }}>Reintentar</button>}
       {(job.state === 'done' || job.state === 'error') && (
         <button type="button" className="mst-toast-action" onClick={() => setJob(null)} aria-label="Cerrar aviso">×</button>
       )}

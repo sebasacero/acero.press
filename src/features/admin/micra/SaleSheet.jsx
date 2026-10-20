@@ -15,7 +15,7 @@ const specsOf = (variety) => {
  * una unidad y el último método de pago. `context` = 'camera' | 'editor'
  * (en el editor también está «Registrar y publicar»).
  */
-export default function SaleSheet({ sale, varieties, context, docked, linked, onClose, onRegistered, onRegisterAndSend, sendLabel, onSend, sendOnlyLabel, onError }) {
+export default function SaleSheet({ sale, varieties, context, docked, linked, onClose, onRegistered, onRegisterAndSend, sendLabel, onSend, sendOnlyLabel, sendBusy = false, onError }) {
   const [open, setOpen] = useState(0); // línea abierta
   const [phoneOpen, setPhoneOpen] = useState(!!sale.phone);
   const [askStock, setAskStock] = useState(null); // 'sale' | 'send'
@@ -88,7 +88,7 @@ export default function SaleSheet({ sale, varieties, context, docked, linked, on
             <button type="button" className="msheet-btn" disabled={voiding} onClick={() => { setDone(null); setFresh(true); }}>Nueva venta</button>
           </div>
           {context === 'editor' && onSend && (
-            <button type="button" className="msheet-btn is-primary is-big" disabled={voiding} onClick={onSend}>{sendOnlyLabel}</button>
+            <button type="button" className="msheet-btn is-primary is-big" disabled={voiding || sendBusy} onClick={onSend}>{sendOnlyLabel}</button>
           )}
         </div>
       </Sheet>

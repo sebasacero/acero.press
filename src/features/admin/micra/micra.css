@@ -488,6 +488,8 @@
 /* En /admin el marco mide la pantalla (la barra lateral hace scroll por dentro):
    los controles de abajo del estudio nunca quedan bajo el pliegue */
 .ax-shell.is-bleed:not(.ax-overlay){ height:100vh; height:100dvh; }
+/* Pantallas anchas (tableta acostada, laptop): la tarjeta de la cámara cabe completa sobre los controles */
+@media (min-width:901px){ .mc-stage{ padding-bottom:218px; } }
 /* Hasta 1179 px el estudio va a pantalla completa (con el inspector al lado no cabría) */
 @media (max-width:1179px){
   .ax-shell.is-bleed .ax-top{ display:none; }
@@ -501,8 +503,6 @@
   .msheet.is-docked .msheet-head{ padding-top:16px; }
   .mst-rail-label{ opacity:1; }
   .mst-rail{ right:16px; }
-  /* La tarjeta de la cámara cabe completa sobre los controles de abajo */
-  .mc-stage{ padding-bottom:218px; }
 }
 @media (max-width:360px){
   .mc-kinds{ gap:8px; }
