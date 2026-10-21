@@ -1271,7 +1271,7 @@ dialog.sales-modal-banner::backdrop{ background:rgba(20,20,20,.6); backdrop-filt
 
 .product-section{ position:relative; }
 
-/* === Barista con IA (sección de recetas): conversación + un solo campo === */
+/* === Burbujas de chat estilo WhatsApp (las usa la meta de ventas; nacieron con el barista IA) === */
 .barista-wrap{ margin-top:46px; }
 .barista-heading{ max-width:760px; margin:0 auto 6px; text-align:center; }
 .barista-fig{ font-family:'JetBrains Mono', monospace; font-size:.66rem; letter-spacing:.14em; color:var(--ink-soft); }
@@ -1731,7 +1731,7 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 .pb-lede .jp{ display:block; margin-top:.4rem; }
 .pb-figure{ justify-self:center; }
 /* Como en la portada, el celular va apenas girado sobre la hoja */
-.pb-stage .pb-phone{ width:min(320px, calc((100svh - 270px) * 270 / 560)); transform:rotate(-2deg); }
+.pb-stage .pb-phone{ width:min(340px, calc((100svh - 180px) * 270 / 560)); transform:rotate(-2deg); }
 
 /* Panel oscuro: el paso de ahora en el odómetro y la lista para saltar */
 .pb-panel{ gap:9px; padding:18px 18px 16px; justify-self:end; }
@@ -1750,17 +1750,10 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 .pb-side .ps-step:not(.is-on) .ps-body > span{ display:none; }
 .pb-panel .essp-specs b{ font-size:18px; }
 
-/* Cajetín: el paso en curso y las dos fases (llevan a su primer paso) */
-.pb-block{ flex:none; grid-template-columns:1.1fr 1fr 1fr 1.1fr auto; }
-.pb-phase button[aria-pressed='true']{ background:var(--magenta-bright); border-color:var(--magenta-bright); color:#fff; }
-.ps-after .essp-stores{ margin-bottom:1.2rem; }
 
 @media (max-width:1100px){
   .pb-main{ grid-template-columns:minmax(0, 1fr) auto; }
   .pb-panel{ display:none; }
-  .pb-block{ grid-template-columns:1fr 1fr 1fr auto; }
-  .pb-block .pb-cell-zone{ display:none; }
-  .pb-block > div.pb-cell-time{ border-left:0; }
 }
 
 .pb-phone{
@@ -1870,24 +1863,23 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
   .ps-stage.pb-stage{ padding:0; }
   .pb-stage .essp-sheet{ inset:8px; }
   .pb-stage .essp-sheet::after{ inset:7px; }
-  /* Abajo quedan libres los botones flotantes del sitio */
-  .pb-in{ padding:28px 24px 92px; gap:10px; }
+  .pb-in{ padding:28px 24px 26px; gap:10px; }
   .pb-stage.is-static .pb-in{ padding:30px 26px 30px; gap:12px; }
   .ps-stage.pb-stage .essp-dash{ display:none; }
-  .pb-main{ display:contents; }
-  .pb-copy{ order:1; gap:6px; }
+  /* Celular: título arriba, el celular de la app lo más grande posible y los íconos
+     de las tiendas abajo, entre los botones flotantes del sitio */
+  .pb-main, .ps-stage.pb-stage .pb-copy{ display:contents; }
+  .ps-stage.pb-stage .essp-tag{ order:1; }
+  .ps-stage.pb-stage .pb-title{ order:2; }
+  .ps-stage.pb-stage .essp-stores{ order:4; flex:none; height:74px; padding-top:6px; align-items:center; justify-content:center; gap:26px; flex-wrap:nowrap; }
+  .ps-stage.pb-stage .essp-appicon{ width:64px; gap:5px; }
+  .ps-stage.pb-stage .essp-appicon-tile{ width:52px; height:52px; border-radius:12px; }
+  .ps-stage.pb-stage .essp-appicon-name{ font-size:11px; }
   .ps-stage.pb-stage .essp-loc, .ps-stage.pb-stage .pb-lede{ display:none; }
   .pb-copy .essp-tag{ font-size:10.5px; }
   .pb-title{ font-size:clamp(1.6rem, 8cqi, 2rem); }
-  .pb-block{ order:2; grid-template-columns:1fr 1fr auto; }
-  .pb-block .pb-cell-zone, .pb-block .pb-cell-time{ display:none; }
-  .pb-block > div:nth-child(3){ border-left:0; }
-  .pb-block > div{ padding:6px 10px 7px; }
-  .pb-block b{ font-size:16px; }
-  .pb-block > .pb-phase{ grid-column:auto; flex-direction:column; border-top:0; padding:6px 8px; gap:3px; }
-  .pb-block > .pb-phase button, .pb-block > .pb-phase button + button{ border-top:1.5px solid var(--essp-line); padding:4px 8px; font-size:9px; }
   .pb-figure{ order:3; flex:1 1 auto; min-height:0; display:grid; place-items:center; }
-  .pb-stage .pb-phone{ width:min(320px, 82vw, calc((100svh - 310px) * 270 / 560)); transform:none; }
+  .pb-stage .pb-phone{ width:min(340px, 86vw, calc((100svh - 262px) * 270 / 560)); transform:none; }
   .pb-side{ display:none; }
 }
 @media (prefers-reduced-motion:reduce){

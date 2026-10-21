@@ -63,7 +63,7 @@ function RecipeVideo({ recipe, index, custom, active }) {
   );
 }
 
-function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onOpen, onAskBarista }) {
+function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onOpen }) {
   const { lang, t } = useLanguage();
   const ref = useRef(null);
   useEffect(() => { if (ref.current) ref.current.inert = !active; }, [active]);
@@ -120,14 +120,10 @@ function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onO
             )}
           </div>
 
-          {pairing ? (
+          {pairing && (
             <button type="button" className="bar-order-btn rb-kit-btn" onClick={() => onOpen(recipe, { kit: true })}>
               <span>{t('recipesBanner.kitCta')}</span>
               <span>{money(total)} →</span>
-            </button>
-          ) : (
-            <button type="button" className="bar-order-btn rb-kit-btn" onClick={() => onAskBarista(recipe)}>
-              <span>{t('barista.cardCta')}</span><span aria-hidden="true">→</span>
             </button>
           )}
           <button type="button" className="rb-full" onClick={() => onOpen(recipe)}>{t('recipeCard.viewFull')} ▾</button>
@@ -138,7 +134,7 @@ function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onO
 }
 
 /** Carrusel de banners de las recetas campeonas. */
-export default function RecipeBanners({ recipes, pairings, onOpen, onAskBarista }) {
+export default function RecipeBanners({ recipes, pairings, onOpen }) {
   const { t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [videos, reloadVideos] = useRecipeVideos();
@@ -169,7 +165,6 @@ export default function RecipeBanners({ recipes, pairings, onOpen, onAskBarista 
               video={videos[r.year]}
               onVideoSaved={reloadVideos}
               onOpen={onOpen}
-              onAskBarista={onAskBarista}
             />
           ))}
         </div>
