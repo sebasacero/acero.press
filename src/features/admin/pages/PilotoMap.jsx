@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import MapCanvas from '../../esspresale/MapCanvas.jsx';
 import { salesGeoJSON, tinterosGeoJSON, boundsOf } from '../../../shared/lib/streetGeo.js';
+import { themeChanges } from '../../../shared/lib/mapTheme.js';
 
 // Mapa real del piloto (MapLibre + OpenStreetMap): calor de las ventas por
 // cuadra y un pin por tintero con su ficha. Es la vista que tendrá la app.
@@ -8,6 +9,30 @@ import { salesGeoJSON, tinterosGeoJSON, boundsOf } from '../../../shared/lib/str
 
 const CHAPINERO = [-74.0585, 4.6565];
 const STYLE_TIMEOUT_MS = 8000;
+
+// Estilos del mapa: «plano» y «noche» visten el mapa real como el de la app
+// (papel o pantalla oscura, con la retícula de la hoja); «calles» lo deja tal cual.
+const MAP_THEMES = [['plano', 'Plano'], ['noche', 'Noche'], ['calles', 'Calles']];
+const THEME_KEY = 'acero.piloto.mapTheme';
+const savedTheme = () => {
+  try {
+    const t = localStorage.getItem(THEME_KEY);
+    return MAP_THEMES.some(([id]) => id === t) ? t : 'plano';
+  } catch {
+    return 'plano';
+  }
+};
+
+/** Viste las capas del estilo base con el tema (las del estudio no se tocan). */
+function applyTheme(map, theme) {
+  if (theme === 'calles') return;
+  for (const [id, kind, prop, value] of themeChanges(map.getStyle()?.layers, theme)) {
+    try {
+      if (kind === 'paint') map.setPaintProperty(id, prop, value);
+      else map.setLayoutProperty(id, prop, value);
+    } catch { /* una capa que no admite el cambio se queda como venía */ }
+  }
+}
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 
@@ -57,8 +82,13 @@ function pinElement(f) {
 
 export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
   const box = useRef(null);
+  const mapRef = useRef(null);
+  const baseRef = useRef(null); // el estilo base en uso (OpenFreeMap u OpenStreetMap)
   const [state, setState] = useState('loading'); // loading · ready · fallback
   const [style, setStyle] = useState('vector'); // vector · osm
+  const [theme, setTheme] = useState(savedTheme);
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const salesGeo = salesGeoJSON(sales);
   const tinterosGeo = tinterosGeoJSON(tinteros, { withNames: true });
   const dataKey = JSON.stringify([salesGeo, tinterosGeo]);
@@ -80,6 +110,7 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
       if (!lib.hasWebGL()) { setState('fallback'); return; }
       const { default: ml, STYLE_URL, OSM_STYLE } = lib;
       const bounds = boundsOf(salesGeo, tinterosGeo);
+      baseRef.current = STYLE_URL;
       try {
         map = new ml.Map({
           container: box.current,
@@ -99,16 +130,22 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
         if (loaded) return;
         loaded = true;
         setStyle('osm');
+        baseRef.current = OSM_STYLE;
         map.setStyle(OSM_STYLE);
       };
       // Si OpenFreeMap no contesta a tiempo, OpenStreetMap
       styleTimer = setTimeout(onStyleError, STYLE_TIMEOUT_MS);
       map.on('error', (e) => { if (!loaded && /style|fetch|Failed/i.test(String(e?.error?.message ?? e?.error ?? ''))) onStyleError(); });
+      let framed = false;
+      // Cada estilo nuevo (el base, la caída a OpenStreetMap o un cambio de tema)
+      // llega sin las capas del estudio: se vuelven a poner y se viste el mapa
       map.on('style.load', () => {
         clearTimeout(styleTimer);
         loaded = true;
-        if (map.getSource('ventas')) return;
-        addLayers(map, salesGeo);
+        applyTheme(map, themeRef.current);
+        if (!map.getSource('ventas')) addLayers(map, salesGeo);
+        if (framed) return;
+        framed = true;
         if (bounds) {
           const [[w, s], [e, n]] = bounds;
           const single = w === e && s === n;
@@ -122,6 +159,8 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
           );
           markers.push(new ml.Marker({ element: pinElement(f), anchor: 'bottom' }).setLngLat(f.geometry.coordinates).setPopup(popup).addTo(map));
         }
+        mapRef.current = map;
+        if (box.current) box.current.__map = map; // para las pruebas de navegador
         setState('ready');
       });
     })();
@@ -130,20 +169,42 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
       clearTimeout(styleTimer);
       markers.forEach((m) => m.remove());
       map?.remove();
+      mapRef.current = null;
     };
   }, [dataKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cambiar de tema: se recarga el estilo base y style.load lo viste de nuevo
+  const firstTheme = useRef(true);
+  useEffect(() => {
+    try { localStorage.setItem(THEME_KEY, theme); } catch { /* sin almacenamiento, solo esta vez */ }
+    if (firstTheme.current) { firstTheme.current = false; return; }
+    const map = mapRef.current;
+    if (map && baseRef.current) map.setStyle(baseRef.current);
+  }, [theme]);
+
   return (
     <div
-      className={`piloto-geo is-${state}`}
+      className={`piloto-geo is-${state} is-${theme}`}
       data-state={state}
       data-style={style}
+      data-theme={theme}
       data-sales={salesGeo.features.length}
       data-tinteros={tinterosGeo.features.length}
       role="region"
       aria-label={label}
     >
-      {state === 'fallback' ? <MapCanvas view={fallbackView} redrawKey={dataKey} label={label} /> : <div ref={box} className="piloto-geo-map" />}
+      {state === 'fallback' ? <MapCanvas view={fallbackView} redrawKey={dataKey} label={label} /> : (
+        <>
+          <div ref={box} className="piloto-geo-map" />
+          {/* La hoja de plano encima: retícula y doble marco, sin tapar los toques */}
+          {theme !== 'calles' && <div className="piloto-geo-sheet" aria-hidden="true" />}
+          <div className="piloto-geo-themes" role="group" aria-label="Estilo del mapa">
+            {MAP_THEMES.map(([id, name]) => (
+              <button key={id} type="button" aria-pressed={theme === id} className={theme === id ? 'on' : undefined} onClick={() => setTheme(id)}>{name}</button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
