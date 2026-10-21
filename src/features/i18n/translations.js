@@ -14,8 +14,8 @@ const translations = {
       order: {
         tag: 'FIG. 01 — HOY VENDEMOS EN',
         badge: 'EN LA CALLE',
-        title: ['Café en AeroPress', 'en tu cuadra'],
-        script: 'hoy en Chapinero',
+        title: ['Pide café', 'en AeroPress'],
+        script: 'a domicilio',
         loc: 'BOGOTÁ, 2.600 MSNM · BARRA PORTÁTIL',
         lede: 'Una barra de café que cabe en una mochila. Cada taza que vendemos en la calle queda en este mapa con su cuadra: así sabemos dónde vale la pena una barra fija.',
         cta: 'Ver la tienda',
@@ -300,8 +300,8 @@ const translations = {
       order: {
         tag: 'FIG. 01 — SELLING TODAY AT',
         badge: 'ON THE STREET',
-        title: ['AeroPress coffee', 'on your block'],
-        script: 'today in Chapinero',
+        title: ['AeroPress coffee,', 'delivered'],
+        script: 'to your door',
         loc: 'BOGOTÁ, 2,600 MASL · PORTABLE BAR',
         lede: 'A coffee bar that fits in a backpack. Every cup we sell on the street lands on this map with its block: that is how we learn where a fixed bar is worth it.',
         cta: 'Visit the shop',
@@ -585,8 +585,8 @@ const translations = {
       order: {
         tag: '図01 — 本日の出店場所',
         badge: '路上で',
-        title: ['エアロプレスの一杯を', 'あなたの街角で'],
-        script: '今日はチャピネロ',
+        title: ['エアロプレスの一杯を', 'お届け'],
+        script: 'デリバリー',
         loc: 'ボゴタ · 標高2,600m · 持ち運べるバー',
         lede: 'リュックに収まるコーヒーバー。路上で売れた一杯ごとに、この地図に街区が記録されます。固定のバーを置く価値がある場所が、そうして分かります。',
         cta: 'ショップを見る',

@@ -35,7 +35,8 @@ test('con ventas y tinteros reales, el calor sigue a las cuadras del estudio y l
   await expect(slide.locator('.essp-odo')).toHaveText('40');
   await expect(slide.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
   await expect(slide.locator('.essp-phone-who')).toContainText('1 cuadras · 1 tinteros');
-  await expect(page.locator('.essp-hero')).not.toContainText(/Laura|en camino|domicilio/i);
+  await expect(slide.locator('.essp-title')).toContainText('Pide caféen AeroPressa domicilio');
+  await expect(page.locator('.essp-hero')).not.toContainText(/Laura|en camino/i);
   await expect(slide.locator('.essp-ctas a').first()).toHaveAttribute('href', '#beans');
   // Orden del inicio: tienda, barra, archivo WAC y recetas antes de Micra (#prensado) y el pie
   const order = await page.evaluate(() => ['#beans', '#metodo', '#prensado'].map((id) => document.querySelector(id)?.getBoundingClientRect().top + window.scrollY));
