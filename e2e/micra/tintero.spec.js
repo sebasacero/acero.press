@@ -22,7 +22,28 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await sheet.getByLabel('Precio del tinto').fill('1.500');
   await sheet.getByLabel('Tazas por hora').fill('25');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
-  await expect(page.locator('.mst-toast')).toContainText('Don Jairo quedó en el estudio con su foto');
+
+  // Guardada la ficha, sigue la encuesta: sin el permiso no se puede marcar ni guardar
+  const enc = page.getByRole('dialog', { name: 'Encuesta de Don Jairo' });
+  await expect(enc.getByRole('status')).toContainText('La ficha de Don Jairo quedó guardada con su foto');
+  await expect(enc.getByRole('button', { name: 'Guardar encuesta' })).toBeDisabled();
+  await expect(enc.getByRole('group', { name: 'Días a la semana' }).getByRole('button', { name: '6' })).toBeDisabled();
+  await enc.getByLabel('Aceptó responder').check();
+  await enc.getByRole('group', { name: 'Tazas al día: valores rápidos' }).getByRole('button', { name: '80' }).click();
+  await enc.getByRole('group', { name: 'Días a la semana' }).getByRole('button', { name: '6' }).click();
+  await enc.getByRole('group', { name: 'Qué café usa' }).getByRole('button', { name: 'Águila Roja' }).click();
+  await enc.getByRole('group', { name: 'Libras a la semana (de 500 g): valores rápidos' }).getByRole('button', { name: '3' }).click();
+  await enc.getByLabel('A cuánto compra la libra').fill('20.000');
+  await enc.getByRole('group', { name: '¿Vendería una taza de especialidad?' }).getByRole('button', { name: 'Tal vez' }).click();
+  await enc.getByLabel('¿A cuánto la vendería?').fill('4.000');
+  await enc.getByRole('group', { name: '¿Cómo le pagan?' }).getByRole('button', { name: 'Nequi' }).click();
+  await enc.getByRole('group', { name: 'Género' }).getByRole('button', { name: 'Prefiere no decir' }).click();
+  await expect(enc.locator('.srv-progress')).toContainText('9 de 17');
+  await enc.getByRole('button', { name: 'Guardar encuesta' }).click();
+  await expect(page.locator('.mst-toast')).toContainText('Don Jairo quedó en el estudio con su foto y su encuesta');
+  const sv = api.all('/surveys', 'POST')[0];
+  expect(sv.p).toBe(`/api/v1/bi/tinteros/${api.tinteros[0].id}/surveys`);
+  expect(sv.data).toMatchObject({ consent: true, cups_per_day: 80, days_per_week: 6, coffee_brand: 'Águila Roja', coffee_g_week: 1500, coffee_price_kg: 40000, would_sell_specialty: 'tal_vez', specialty_price: 4000, payments: ['nequi'], gender: 'prefiere_no' });
 
   const upload = api.calls.find((c) => c.p.includes('/storage/v1/object/'));
   expect(upload.p).toContain('/object/estudio/tinteros/');
@@ -33,6 +54,7 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   expect(post.data.surveyed_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   expect(api.tinteros).toHaveLength(1);
   await expect(sheet).toHaveCount(0);
+  await expect(enc).toHaveCount(0);
   expect(errors).toEqual([]);
   await page.context().close();
 });
@@ -56,8 +78,12 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
   // Con nombre pero sin permiso: la ficha sí, la foto no
   await sheet.getByPlaceholder(/Don Jairo/).fill('Carrito de la 83');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
+  // La encuesta se puede dejar para después: la ficha ya quedó
+  await page.getByRole('dialog', { name: 'Encuesta de Carrito de la 83' }).getByRole('button', { name: /Ahora no/ }).click();
   await expect(page.locator('.mst-toast')).toContainText('Carrito de la 83 quedó en el estudio');
   await expect(page.locator('.mst-toast')).not.toContainText('con su foto');
+  await expect(page.locator('.mst-toast')).not.toContainText('encuesta');
+  expect(api.all('/surveys', 'POST')).toHaveLength(0);
   expect(api.calls.some((c) => c.p.includes('/storage/v1/object/'))).toBe(false);
   const post = api.find('/api/v1/bi/tinteros', 'POST');
   expect(post.data.photo_consent).toBe(false);

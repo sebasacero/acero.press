@@ -12,7 +12,7 @@ from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..pulse import BOGOTA
 from .brief import Brief, Kind, build_brief
@@ -54,9 +54,13 @@ async def owner(authorization: str | None = Header(default=None)):
         await sb.aclose()
 
 
-def db_error(err: SupabaseError) -> HTTPException:
+TINTEROS_MIGRATION = "Faltan las tablas de la red de tinteros (migración 20261019120000_micra_tinteros)."
+SURVEYS_MIGRATION = "Falta activar la encuesta y el escenario del piloto (migración 20261022140000_tintero_surveys)."
+
+
+def db_error(err: SupabaseError, missing: str = TINTEROS_MIGRATION) -> HTTPException:
     if err.missing_table:
-        return HTTPException(409, "Faltan las tablas de la red de tinteros (migración 20261019120000_micra_tinteros).")
+        return HTTPException(409, missing)
     return HTTPException(400 if err.status < 500 else 502, str(err))
 
 
@@ -125,8 +129,82 @@ class TinteroDayIn(BaseModel):
     source: Literal["panel", "whatsapp", "app"] = "panel"
 
 
+# ── Encuesta del tintero (lo que dice; lo observado está en la ficha) ─────
+Si3 = Literal["si", "tal_vez", "no"]
+
+
+class SurveyIn(BaseModel):
+    """Una visita de encuesta. Café en gramos por semana y precio por kilo
+    (la app pregunta en libras de 500 g y convierte)."""
+    consent: bool = Field(description="El tintero aceptó responder después de saber para qué es")
+    surveyed_at: datetime | None = None
+    cups_per_day: int | None = Field(default=None, ge=0, le=2000)
+    hours_per_day: float | None = Field(default=None, gt=0, le=24)
+    days_per_week: int | None = Field(default=None, ge=1, le=7)
+    years_selling: Literal["menos_1", "1_3", "3_10", "mas_10"] | None = None
+    coffee_brand: str | None = Field(default=None, max_length=60)
+    coffee_g_week: int | None = Field(default=None, ge=0, le=200000)
+    coffee_price_kg: float | None = Field(default=None, ge=0, le=500000)
+    buys_where: Literal["tienda", "supermercado", "plaza", "distribuidor", "otro"] | None = None
+    would_sell_specialty: Si3 | None = None
+    specialty_price: float | None = Field(default=None, ge=0, le=50000)
+    kit_interest: Si3 | None = None
+    kit_payment: Literal["contado", "cuotas", "arriendo", "no_sabe"] | None = None
+    has_smartphone: bool | None = None
+    payments: list[Literal["efectivo", "nequi", "daviplata", "bre_b", "tarjeta"]] | None = Field(default=None, max_length=5)
+    gender: Literal["mujer", "hombre", "otro", "prefiere_no"] | None = None
+    age_range: Literal["18_24", "25_34", "35_44", "45_54", "55_64", "65_mas", "prefiere_no"] | None = None
+    main_income: Literal["si", "no", "prefiere_no"] | None = None
+    notes: str | None = Field(default=None, max_length=500)
+
+    @field_validator("coffee_brand", "notes", mode="before")
+    @classmethod
+    def _blank_is_none(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            return v or None
+        return v
+
+    @field_validator("payments")
+    @classmethod
+    def _unique(cls, v):
+        return list(dict.fromkeys(v)) if v else None
+
+    @model_validator(mode="after")
+    def _needs_consent(self):
+        # Ley 1581 de 2012: sin autorización no se guardan datos de la persona
+        if not self.consent:
+            raise ValueError("Sin permiso del tintero no se guarda la encuesta.")
+        return self
+
+
+class ScenarioIn(BaseModel):
+    """Supuestos del informe de la reunión. Privados: no van en app_config (es pública)."""
+    model_config = ConfigDict(extra="forbid")
+    partner: str | None = Field(default=None, max_length=80)
+    specialtyPrice: float | None = Field(default=None, ge=0, le=50000)
+    gramsPerCup: float | None = Field(default=None, ge=5, le=40)
+    specialtyCupsPerDay: float | None = Field(default=None, ge=0, le=500)
+    pilotTinteros: int | None = Field(default=None, ge=1, le=500)
+    pilotWeeks: int | None = Field(default=None, ge=1, le=52)
+    kitCost: float | None = Field(default=None, ge=0, le=10_000_000)
+    startCoffeeKg: float | None = Field(default=None, ge=0, le=100)
+    distributorPriceKg: float | None = Field(default=None, ge=0, le=1_000_000)
+
+
 # ── Piloto (estudio de calle) ────────────────────────────────────────────
 GRAMS_PER_CUP = 18  # receta de la barra: 18 g por taza
+SCENARIO_KEY = "reunion"
+
+
+async def _optional(load, empty):
+    """Lee algo que depende de una migración que quizá no se ha aplicado: sin la tabla, (empty, False)."""
+    try:
+        return await load(), True
+    except SupabaseError as err:
+        if err.missing_table:
+            return empty, False
+        raise db_error(err) from err
 
 
 def _week(now: datetime, back: int) -> tuple[date, date]:
@@ -171,6 +249,18 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
         }
 
     cur, prev = week_stats(_week(now, 0)), week_stats(_week(now, 1))
+
+    # Encuestas, lista de espera y escenario: si su migración aún no está, el piloto funciona igual
+    surveys, surveys_ready = await _optional(
+        lambda: sb.select("tintero_surveys", {"select": "*", "order": "surveyed_at.desc", "limit": "2000"}), [])
+    signups, _ = await _optional(lambda: sb.select("app_waitlist", {"select": "role"}), [])
+    scenario_rows, scenario_ready = await _optional(
+        lambda: sb.select("pilot_scenarios", {"select": "data,updated_at", "key": f"eq.{SCENARIO_KEY}"}), [])
+    waitlist = {"cliente": 0, "barista": 0}
+    for r in signups:
+        if r.get("role") in waitlist:
+            waitlist[r["role"]] += 1
+
     surveyed = [t for t in tinteros if t.get("carrera") is not None]
     prices = [float(t["tinto_price"]) for t in surveyed if t.get("tinto_price")]
     rates = [float(t["cups_per_hour"]) for t in surveyed if t.get("cups_per_hour")]
@@ -179,6 +269,11 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
         "week": {"from": _week(now, 0)[0].isoformat(), "to": _week(now, 0)[1].isoformat(), "cur": cur, "prev": prev},
         "sales": sales,
         "tinteros": [{k: v for k, v in t.items() if k != "phone"} for t in tinteros],
+        "surveys": [{k: v for k, v in s.items() if k != "surveyed_by"} for s in surveys],
+        "surveysReady": surveys_ready,
+        "waitlist": waitlist,
+        "scenario": scenario_rows[0]["data"] if scenario_rows else None,
+        "scenarioReady": scenario_ready,
         "study": {
             "surveyed": len(surveyed), "with_photo": sum(1 for t in surveyed if t.get("photo_url")),
             "consented": sum(1 for t in surveyed if t.get("photo_consent")),
@@ -187,6 +282,28 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
             "zones": sorted({t["zone"] for t in surveyed if t.get("zone")}),
         },
     }
+
+
+@router.put("/piloto/escenario", summary="Guardar los supuestos del informe de la reunión")
+async def save_scenario(body: ScenarioIn, sb: Supabase = Depends(owner)):
+    try:
+        row = await sb.insert("pilot_scenarios", {
+            "key": SCENARIO_KEY, "data": body.model_dump(mode="json", exclude_none=True),
+            "updated_at": datetime.now(BOGOTA).isoformat(),
+        }, upsert=True)
+    except SupabaseError as err:
+        raise db_error(err, SURVEYS_MIGRATION) from err
+    return row.get("data", {})
+
+
+@router.post("/tinteros/{tintero_id}/surveys", status_code=201, summary="Guardar una encuesta de un tintero")
+async def create_survey(tintero_id: UUID, body: SurveyIn, sb: Supabase = Depends(owner)):
+    try:
+        return await sb.insert("tintero_surveys", {"tintero_id": str(tintero_id), **body.model_dump(mode="json", exclude_none=True)})
+    except SupabaseError as err:
+        if err.code == "23503":
+            raise HTTPException(404, "No existe ese tintero.") from err
+        raise db_error(err, SURVEYS_MIGRATION) from err
 
 
 @router.get("/tinteros", summary="Tinteros y sus últimos 30 días")

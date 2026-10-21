@@ -19,15 +19,16 @@ Datos reales hoy (oct. 2026): 13 productos, 31 presentaciones, 8 pedidos, 4 clie
 - `src/features/esspresale/`: la portada de la app Micra (el nombre viejo quedó en carpetas, enum `order_source='esspresale'` y ruta de storage `esspresale/`; no lo cambies sin migrar datos).
 - `src/features/admin/`: `AdminShell.jsx` + `adminTools.js` (lista de herramientas), `pages/*`, y `micra/` (`MicraStudio.jsx` orquesta; `useSale.js` venta; `useCardOutput.js` salida; `cardModel.js`/`cardLayout.js`/`captions.js` lógica pura con tests; `espresaleCard.js` dibuja la tarjeta).
 - `src/shared/lib/instagram.js`: escritura de ventas de Micra (RPC) y publicación.
+- Estudio de calle y reunión: `src/features/admin/survey/` (encuesta del tintero: `survey.js` puro con tests, `SurveyForm`, `SurveyDialog`; se llena en Micra después de la ficha o desde Piloto) y `src/features/admin/piloto/` (`pilotReport.js` puro con tests arma el informe: medianas con su n, precio techo por kilo, cuenta del distribuidor, grupos de 5 para género/edad; `PilotReport` es la pestaña Informe imprimible y `PilotDeck` la presentación a pantalla completa, cargados aparte).
 - Mapas: la portada usa el mapa ilustrado (`esspresale/bogotaMap.js`, canvas, sin servicio externo). La página Piloto usa MapLibre con teselas de OpenFreeMap (sin clave; cae a OpenStreetMap si no responde), cargado con import dinámico (`shared/lib/maplibre.js`): no lo importes desde el sitio público. `shared/lib/bogotaGeo.js` convierte (carrera, calle) en GPS con una o dos cuadras de margen en Chapinero y el norte; `shared/lib/mapTheme.js` viste las capas del estilo base con la paleta de la app (Plano, Noche) sin cambiar de teselas.
-- `supabase/migrations/`: SOLO lo creado desde que el repo tiene migraciones (Instagram, pairings, waitlist, tinteros, venta atómica). Las tablas base (`orders`, `order_items`, `inventory`, `inventory_movements`, `products`, `product_variants`, `customers`, `publications`, `app_config`, `page_sections`, `admin_users`, `is_admin()`, `get_sales_counts()`, `compute_growth_metrics()`, sus RLS) se crearon a mano en el dashboard y no están en el repo. Antes de escribir SQL, consulta el esquema real; `supabase/tests/micra_atomic_sale/schema.sql` es una réplica parcial para pruebas, no la fuente.
+- `supabase/migrations/`: SOLO lo creado desde que el repo tiene migraciones (Instagram, pairings, waitlist, tinteros, venta atómica, estudio de calle, encuestas y escenario). Las tablas base (`orders`, `order_items`, `inventory`, `inventory_movements`, `products`, `product_variants`, `customers`, `publications`, `app_config`, `page_sections`, `admin_users`, `is_admin()`, `get_sales_counts()`, `compute_growth_metrics()`, sus RLS) se crearon a mano en el dashboard y no están en el repo. Antes de escribir SQL, consulta el esquema real; `supabase/tests/micra_atomic_sale/schema.sql` es una réplica parcial para pruebas, no la fuente.
 - `e2e/`: Playwright. Simulador de Supabase y helpers en `e2e/micra/fixtures.js`; úsalo también para secciones nuevas.
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm run api` (FastAPI en :8000; necesita `uvicorn`, no está en `requirements.txt`).
 - `npm test`: unitarias (`node --test`) de los módulos puros. El glob es fijo (`admin/micra` y `home/sections`): si agregas un `*.test.js` en otra carpeta, amplía el script.
 - `npm run e2e`: navegador con Supabase simulado; nunca toca la base real. Chromium viene con `@playwright/test`; `PW_CHROMIUM` apunta a uno propio.
-- `npm run shot -- <ruta> <salida.png> [--desk] [--session] [--street=e2e/data/street.json] [--click=sel] [--full]`: captura con el mismo simulador, para mirar un cambio visual antes de probarlo entero. Mira la captura con el lector de imágenes; no la subas a git.
+- `npm run shot -- <ruta> <salida.png> [--desk] [--session] [--street=e2e/data/street.json] [--piloto=e2e/data/informe.json] [--click=sel] [--full]`: captura con el mismo simulador, para mirar un cambio visual antes de probarlo entero. Mira la captura con el lector de imágenes; no la subas a git.
 - `npm run test:sql`: funciones SQL de venta contra un Postgres local desechable (variables `PG*`; se niega a correr contra Supabase).
 - No hay CI, lint ni formateador: lo que no corras tú no lo corre nadie.
 
@@ -45,6 +46,7 @@ Antes de dar algo por terminado: `npm test`, `npm run build` (sin avisos nuevos 
 
 ## Reglas
 - Nunca pedir ni pegar secretos en el chat (claves, tokens, `.env`).
+- `app_config` es de lectura pública: nada privado ahí. Los supuestos de la reunión (precio de distribuidor, costo del kit) van en `pilot_scenarios`, solo del equipo. Las encuestas exigen consentimiento en la base; nombres, notas y fotos nunca salen en el informe ni en la presentación.
 - DDL en Supabase solo con aprobación explícita del usuario: se entrega el SQL y se aplica cuando lo autorice. Consultas de solo lectura sí, siempre.
 - `reports/` y `research_notes/` no van a git (hoy solo están en `.git/info/exclude`; si clonas de nuevo, vuelve a excluirlos o pásalos a `.gitignore`).
 - Sin identificadores de modelo en commits, PRs ni código.

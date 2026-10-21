@@ -102,6 +102,15 @@ const GLYPHS = {
       <circle cx="12" cy="12" r="6.2" />
     </g>
   ),
+  // Piloto: un pin sobre el calor de la cuadra (estudio de calle)
+  piloto: () => (
+    <g {...S}>
+      <circle cx="12" cy="17.5" r="3.6" strokeOpacity=".5" />
+      <circle cx="12" cy="17.5" r="6.4" strokeOpacity=".3" strokeWidth="1.2" />
+      <path d="M12 16.2s-4.6-4.7-4.6-8a4.6 4.6 0 0 1 9.2 0c0 3.3-4.6 8-4.6 8z" fill="currentColor" fillOpacity=".18" />
+      <circle cx="12" cy="8.2" r="1.7" fill="currentColor" stroke="none" />
+    </g>
+  ),
   // Ver el sitio: brújula
   site: () => (
     <g {...S}>

@@ -1,0 +1,279 @@
+{
+  "generatedAt": "2026-10-22T15:00:00-05:00",
+  "days": 90,
+  "surveysReady": true,
+  "scenarioReady": true,
+  "scenario": {
+    "partner": "Distribuidora de prueba",
+    "kitCost": 300000,
+    "distributorPriceKg": 100000
+  },
+  "week": {
+    "from": "2026-10-16",
+    "to": "2026-10-22",
+    "cur": {
+      "cups": 12,
+      "sales": 8,
+      "income": 42000,
+      "blocks": 2,
+      "zones": [
+        "Chapinero"
+      ],
+      "kg": 0.22
+    },
+    "prev": {
+      "cups": 8,
+      "sales": 5,
+      "income": 28000,
+      "blocks": 1,
+      "zones": [
+        "Chapinero"
+      ],
+      "kg": 0.14
+    }
+  },
+  "waitlist": {
+    "cliente": 3,
+    "barista": 1
+  },
+  "sales": [
+    {
+      "id": "s1",
+      "at": "2026-10-22T13:10:00Z",
+      "total": 7000,
+      "cups": 2,
+      "what": "Castillo taza",
+      "carrera": 13,
+      "calle": 85,
+      "zone": "Zona T"
+    },
+    {
+      "id": "s2",
+      "at": "2026-10-21T12:00:00Z",
+      "total": 3500,
+      "cups": 1,
+      "what": "Geisha taza",
+      "carrera": 13,
+      "calle": 72,
+      "zone": "Chapinero"
+    }
+  ],
+  "tinteros": [
+    {
+      "id": "t1",
+      "name": "Doña Rosa",
+      "stage": "prospecto",
+      "carrera": 13,
+      "calle": 60,
+      "zone": "Chapinero",
+      "tinto_price": 1500,
+      "cups_per_hour": 20,
+      "photo_consent": false,
+      "photo_url": null
+    },
+    {
+      "id": "t2",
+      "name": "Don Pedro",
+      "stage": "activo",
+      "carrera": 13,
+      "calle": 63,
+      "zone": "Chapinero",
+      "tinto_price": 1500,
+      "cups_per_hour": 21,
+      "photo_consent": false,
+      "photo_url": null
+    },
+    {
+      "id": "t3",
+      "name": "Carrito de la 63",
+      "stage": "prospecto",
+      "carrera": 13,
+      "calle": 83,
+      "zone": "Zona T",
+      "tinto_price": 2000,
+      "cups_per_hour": 22,
+      "photo_consent": false,
+      "photo_url": null
+    },
+    {
+      "id": "t4",
+      "name": "Doña Marta",
+      "stage": "prospecto",
+      "carrera": 12,
+      "calle": 85,
+      "zone": "Zona T",
+      "tinto_price": 1800,
+      "cups_per_hour": 23,
+      "photo_consent": false,
+      "photo_url": null
+    },
+    {
+      "id": "t5",
+      "name": "Don Luis",
+      "stage": "prospecto",
+      "carrera": 11,
+      "calle": 66,
+      "zone": "Chapinero",
+      "tinto_price": 1200,
+      "cups_per_hour": 24,
+      "photo_consent": false,
+      "photo_url": null
+    },
+    {
+      "id": "t6",
+      "name": "Don Ernesto",
+      "stage": "prospecto",
+      "carrera": 6,
+      "calle": 119,
+      "zone": "Usaquén",
+      "tinto_price": 1000,
+      "cups_per_hour": 25,
+      "photo_consent": false,
+      "photo_url": null
+    }
+  ],
+  "surveys": [
+    {
+      "id": "e0",
+      "tintero_id": "t1",
+      "surveyed_at": "2026-10-20T10:00:00Z",
+      "consent": true,
+      "cups_per_day": 80,
+      "days_per_week": 6,
+      "hours_per_day": 6,
+      "coffee_g_week": 1500,
+      "coffee_price_kg": 40000,
+      "coffee_brand": "Águila Roja",
+      "buys_where": "tienda",
+      "would_sell_specialty": "si",
+      "specialty_price": 4000,
+      "kit_interest": "si",
+      "kit_payment": "cuotas",
+      "has_smartphone": true,
+      "payments": [
+        "efectivo",
+        "nequi"
+      ],
+      "gender": "mujer",
+      "age_range": "45_54",
+      "main_income": "si",
+      "notes": "NOTA PRIVADA"
+    },
+    {
+      "id": "e1",
+      "tintero_id": "t2",
+      "surveyed_at": "2026-10-21T10:00:00Z",
+      "consent": true,
+      "cups_per_day": 80,
+      "days_per_week": 6,
+      "hours_per_day": 6,
+      "coffee_g_week": 1500,
+      "coffee_price_kg": 40000,
+      "coffee_brand": "Águila Roja",
+      "buys_where": "tienda",
+      "would_sell_specialty": "si",
+      "specialty_price": 4000,
+      "kit_interest": "si",
+      "kit_payment": "cuotas",
+      "has_smartphone": true,
+      "payments": [
+        "efectivo",
+        "nequi"
+      ],
+      "gender": "mujer",
+      "age_range": "45_54",
+      "main_income": "si",
+      "notes": "NOTA PRIVADA"
+    },
+    {
+      "id": "e2",
+      "tintero_id": "t3",
+      "surveyed_at": "2026-10-22T10:00:00Z",
+      "consent": true,
+      "cups_per_day": 80,
+      "days_per_week": 6,
+      "hours_per_day": 6,
+      "coffee_g_week": 1500,
+      "coffee_price_kg": 40000,
+      "coffee_brand": "Águila Roja",
+      "buys_where": "tienda",
+      "would_sell_specialty": "tal_vez",
+      "specialty_price": 4000,
+      "kit_interest": "si",
+      "kit_payment": "cuotas",
+      "has_smartphone": true,
+      "payments": [
+        "efectivo",
+        "nequi"
+      ],
+      "gender": "mujer",
+      "age_range": "45_54",
+      "main_income": "si",
+      "notes": "NOTA PRIVADA"
+    },
+    {
+      "id": "e3",
+      "tintero_id": "t4",
+      "surveyed_at": "2026-10-23T10:00:00Z",
+      "consent": true,
+      "cups_per_day": 80,
+      "days_per_week": 6,
+      "hours_per_day": 6,
+      "coffee_g_week": 1500,
+      "coffee_price_kg": 40000,
+      "coffee_brand": "Sello Rojo",
+      "buys_where": "tienda",
+      "would_sell_specialty": "tal_vez",
+      "specialty_price": 4000,
+      "kit_interest": "si",
+      "kit_payment": "cuotas",
+      "has_smartphone": true,
+      "payments": [
+        "efectivo",
+        "nequi"
+      ],
+      "gender": "mujer",
+      "age_range": "45_54",
+      "main_income": "si",
+      "notes": "NOTA PRIVADA"
+    },
+    {
+      "id": "e4",
+      "tintero_id": "t5",
+      "surveyed_at": "2026-10-24T10:00:00Z",
+      "consent": true,
+      "cups_per_day": 80,
+      "days_per_week": 6,
+      "hours_per_day": 6,
+      "coffee_g_week": 1500,
+      "coffee_price_kg": 40000,
+      "coffee_brand": "Sello Rojo",
+      "buys_where": "tienda",
+      "would_sell_specialty": "tal_vez",
+      "specialty_price": 4000,
+      "kit_interest": "si",
+      "kit_payment": "cuotas",
+      "has_smartphone": false,
+      "payments": [
+        "efectivo",
+        "nequi"
+      ],
+      "gender": "hombre",
+      "age_range": "45_54",
+      "main_income": "si",
+      "notes": "NOTA PRIVADA"
+    }
+  ],
+  "study": {
+    "surveyed": 6,
+    "with_photo": 0,
+    "consented": 0,
+    "tinto_price_avg": 1500,
+    "cups_per_hour_avg": 22.5,
+    "zones": [
+      "Chapinero",
+      "Usaquén",
+      "Zona T"
+    ]
+  }
+}
