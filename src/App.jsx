@@ -17,6 +17,7 @@ import Marquee from './features/home/sections/Marquee.jsx';
 import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
 import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
+import PressStory from './features/home/sections/PressStory.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
 
 export default function App() {
@@ -44,6 +45,8 @@ export default function App() {
             <Marquee channel="city" />
 
             <WacBanner />
+
+            <PressStory />
 
             <RecipeArchive />
 
