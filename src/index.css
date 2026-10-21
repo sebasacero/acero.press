@@ -1707,12 +1707,61 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 
 /* --- Banner de la app: el celular inicia sesión y abre la receta guiada --- */
 .ps-track.pb-track{ height:calc(var(--ps-steps, 8) * 70vh + 100vh); }
-.ps-stage.pb-stage{ grid-template-columns:minmax(0, 560px) auto; justify-content:center; column-gap:clamp(2rem, 7vw, 7rem); }
-.pb-side{ display:grid; gap:.4rem; align-content:center; max-width:560px; }
-.pb-group{ margin:.6rem 0 .1rem 1rem; color:var(--ink); font-weight:700; letter-spacing:.12em; }
-.pb-side .ps-step:not(.is-on) .ps-body > span{ display:none; }
-.pb-side .ps-step button{ padding:.6rem 1rem; }
+/* La hoja de plano de la portada (esspresale.css): marco con zonas, mapa de papel,
+   título con la frase roja, panel oscuro y cajetín. Las piezas .essp-* leen estos colores */
+.ps-stage.pb-stage, .pb-stage.is-static{
+  display:block; padding:0; border:0; background:var(--paper); container-type:inline-size; color:var(--ink);
+  --essp-fg:var(--ink); --essp-soft:var(--ink-soft); --essp-line:var(--ink); --essp-block:rgba(237, 230, 211, .95);
+}
+.pb-stage.is-static{ position:relative; overflow:hidden; }
+.pb-bg{ position:absolute; inset:0; z-index:0; }
+.pb-bg canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.pb-fade{
+  position:absolute; inset:0;
+  background:
+    linear-gradient(90deg, rgba(237, 230, 211, .97) 0%, rgba(237, 230, 211, .88) 34%, rgba(237, 230, 211, .2) 58%, rgba(237, 230, 211, .35) 100%),
+    radial-gradient(ellipse at center, rgba(120, 90, 40, 0) 50%, rgba(120, 90, 40, .16) 100%);
+}
+.pb-in{ position:relative; z-index:2; height:100%; display:flex; flex-direction:column; gap:16px; padding:48px 58px 46px; }
+.pb-stage.is-static .pb-in{ height:auto; padding:58px 58px 54px; gap:18px; }
+.pb-main{ flex:1 1 auto; min-height:0; display:grid; grid-template-columns:minmax(0, 1fr) auto minmax(0, 370px); gap:34px; align-items:center; }
+.pb-copy{ min-width:0; display:grid; gap:14px; align-content:center; justify-items:start; }
+.pb-title{ font-size:clamp(2rem, 3.7cqi, 3.9rem); }
+.pb-lede{ max-width:42ch; }
+.pb-lede .jp{ display:block; margin-top:.4rem; }
 .pb-figure{ justify-self:center; }
+/* Como en la portada, el celular va apenas girado sobre la hoja */
+.pb-stage .pb-phone{ width:min(320px, calc((100svh - 270px) * 270 / 560)); transform:rotate(-2deg); }
+
+/* Panel oscuro: el paso de ahora en el odómetro y la lista para saltar */
+.pb-panel{ gap:9px; padding:18px 18px 16px; justify-self:end; }
+.pb-panel .essp-odo span{ width:32px; height:46px; font-size:24px; }
+.pb-group{ margin:4px 0 0; font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700; letter-spacing:.12em; color:rgba(255, 255, 255, .5); }
+.pb-panel .ps-steps{ gap:1px; }
+.pb-panel .ps-step button{ padding:5px 8px; gap:10px; border-radius:2px; opacity:.5; }
+.pb-panel .ps-step.is-done button{ opacity:.72; }
+.pb-panel .ps-step.is-on button{ opacity:1; background:rgba(255, 255, 255, .07); box-shadow:none; border-left-color:var(--magenta-bright); }
+.pb-panel .ps-step button:focus-visible{ outline-color:var(--magenta-bright); }
+.pb-panel .ps-num{ background:transparent; color:rgba(255, 255, 255, .85); border:1.5px solid rgba(255, 255, 255, .3); font-size:10px; padding:.08rem .35rem; }
+.pb-panel .ps-step.is-on .ps-num{ background:var(--magenta-bright); border-color:var(--magenta-bright); color:#fff; }
+.pb-panel .ps-body{ gap:.2rem; }
+.pb-panel .ps-body b{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:.06em; color:#F2F2F0; }
+.pb-panel .ps-body span{ font-family:'Archivo', sans-serif; font-size:12px; line-height:1.5; color:rgba(255, 255, 255, .68); }
+.pb-side .ps-step:not(.is-on) .ps-body > span{ display:none; }
+.pb-panel .essp-specs b{ font-size:18px; }
+
+/* Cajetín: el paso en curso y las dos fases (llevan a su primer paso) */
+.pb-block{ flex:none; grid-template-columns:1.1fr 1fr 1fr 1.1fr auto; }
+.pb-phase button[aria-pressed='true']{ background:var(--magenta-bright); border-color:var(--magenta-bright); color:#fff; }
+.ps-after .essp-stores{ margin-bottom:1.2rem; }
+
+@media (max-width:1100px){
+  .pb-main{ grid-template-columns:minmax(0, 1fr) auto; }
+  .pb-panel{ display:none; }
+  .pb-block{ grid-template-columns:1fr 1fr 1fr auto; }
+  .pb-block .pb-cell-zone{ display:none; }
+  .pb-block > div.pb-cell-time{ border-left:0; }
+}
 
 .pb-phone{
   position:relative; width:min(340px, calc((100svh - 10vh) * 270 / 560)); aspect-ratio:270 / 560;
@@ -1818,9 +1867,28 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 
 @media (max-width:820px){
   .ps-track.pb-track{ height:calc(var(--ps-steps, 8) * 60vh + 100vh); }
-  .ps-stage.pb-stage{ grid-template-columns:1fr; place-items:center; padding:12px 16px 104px; }
+  .ps-stage.pb-stage{ padding:0; }
+  .pb-stage .essp-sheet{ inset:8px; }
+  .pb-stage .essp-sheet::after{ inset:7px; }
+  /* Abajo quedan libres los botones flotantes del sitio */
+  .pb-in{ padding:28px 24px 92px; gap:10px; }
+  .pb-stage.is-static .pb-in{ padding:30px 26px 30px; gap:12px; }
+  .ps-stage.pb-stage .essp-dash{ display:none; }
+  .pb-main{ display:contents; }
+  .pb-copy{ order:1; gap:6px; }
+  .ps-stage.pb-stage .essp-loc, .ps-stage.pb-stage .pb-lede{ display:none; }
+  .pb-copy .essp-tag{ font-size:10.5px; }
+  .pb-title{ font-size:clamp(1.6rem, 8cqi, 2rem); }
+  .pb-block{ order:2; grid-template-columns:1fr 1fr auto; }
+  .pb-block .pb-cell-zone, .pb-block .pb-cell-time{ display:none; }
+  .pb-block > div:nth-child(3){ border-left:0; }
+  .pb-block > div{ padding:6px 10px 7px; }
+  .pb-block b{ font-size:16px; }
+  .pb-block > .pb-phase{ grid-column:auto; flex-direction:column; border-top:0; padding:6px 8px; gap:3px; }
+  .pb-block > .pb-phase button, .pb-block > .pb-phase button + button{ border-top:1.5px solid var(--essp-line); padding:4px 8px; font-size:9px; }
+  .pb-figure{ order:3; flex:1 1 auto; min-height:0; display:grid; place-items:center; }
+  .pb-stage .pb-phone{ width:min(320px, 82vw, calc((100svh - 310px) * 270 / 560)); transform:none; }
   .pb-side{ display:none; }
-  .pb-phone{ width:min(330px, 84vw, calc((100svh - 130px) * 270 / 560)); }
 }
 @media (prefers-reduced-motion:reduce){
   .pb-screen, .pb-chooser, .pb-welcome{ transition:none; }

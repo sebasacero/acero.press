@@ -121,28 +121,34 @@
 }
 .essp-btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--essp-line, var(--ink)); }
 .essp-btn:disabled { opacity: .6; cursor: wait; }
-.essp-btn:focus-visible, .essp-store:focus-visible, .essp-tabs button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
+.essp-btn:focus-visible, .essp-tabs button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
 
 /* Llamados del banner: uno lleno, otro solo con borde (hereda el color del banner) */
 .essp-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
 .essp-btn.is-ghost { background: transparent; color: inherit; border-color: currentColor; box-shadow: none; }
 .essp-btn.is-ghost:hover { box-shadow: 4px 4px 0 var(--essp-line, var(--ink)); }
 
-/* Insignias App Store / Google Play */
-.essp-stores { display: flex; gap: 12px; flex-wrap: wrap; }
-.essp-store {
-  display: inline-flex; align-items: center; gap: 10px; min-width: 170px;
-  padding: 9px 16px 9px 12px; background: #050506; color: #fff; text-decoration: none;
-  border: 2px solid var(--essp-line, var(--ink)); box-shadow: 4px 4px 0 var(--essp-line, var(--ink));
-  transition: transform .15s ease, box-shadow .15s ease;
+/* Tiendas como íconos de app en la pantalla de inicio del celular */
+.essp-stores { display: flex; gap: 22px; flex-wrap: wrap; }
+.essp-appicon {
+  display: grid; justify-items: center; gap: 7px; width: 74px; color: var(--essp-fg, var(--ink)); text-decoration: none;
 }
-a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--magenta-bright); }
-.essp-store span { display: grid; line-height: 1.1; }
-.essp-store small { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
-.essp-store b { font-family: 'Archivo', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
-.essp-store.is-soon { cursor: default; opacity: .92; }
-.essp-store.is-soon small { color: var(--magenta-bright); opacity: 1; font-weight: 700; }
-
+.essp-appicon-tile {
+  position: relative; width: 64px; height: 64px; border-radius: 15px; /* la curva de los íconos de iOS y Android */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .18), 0 0 0 1px rgba(0, 0, 0, .06); transition: transform .15s ease;
+}
+.essp-appicon-tile svg { width: 100%; height: 100%; display: block; border-radius: inherit; }
+.essp-appicon-name { font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
+/* Globo rojo de notificación: aún no está en la tienda */
+.essp-appicon-badge {
+  position: absolute; top: -7px; right: -12px; font-style: normal; white-space: nowrap;
+  background: var(--magenta-bright); color: #fff; border: 2px solid var(--paper, #F7F3E8); border-radius: 999px;
+  padding: 2px 7px; font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 800; line-height: 1.2;
+}
+a.essp-appicon:hover .essp-appicon-tile { transform: translateY(-2px); }
+a.essp-appicon:active .essp-appicon-tile { transform: scale(.94); }
+.essp-appicon:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 4px; border-radius: 16px; }
+.essp-appicon.is-soon { cursor: default; }
 /* Panel oscuro del odómetro */
 .essp-panel {
   background: rgba(14, 15, 19, .92); color: #F2F2F0; border: 1.5px solid rgba(255, 255, 255, .18);
@@ -255,8 +261,6 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
   /* Los dos llamados en una fila, para que el celular siga asomando */
   .essp-ctas { flex-wrap: nowrap; gap: 10px; }
   .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; }
-  .essp-store { flex: 1 1 0; min-width: 0; padding: 8px 10px; gap: 8px; }
-  .essp-store b { font-size: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

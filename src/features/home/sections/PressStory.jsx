@@ -3,13 +3,14 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import translations from '../../i18n/translations.js';
 import MapCanvas from '../../esspresale/MapCanvas.jsx';
 import StoreButtons from '../../esspresale/StoreButtons.jsx';
-import { useClock } from '../../esspresale/parts.jsx';
+import { useClock, SheetFrame, Segs, Odometer } from '../../esspresale/parts.jsx';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import {
   DURATION, STEPS, LOGIN_ITEMS, ITEM_COUNT, trackProgress, sceneAt, stepAt, stepStart, progressForItem,
 } from './pressStory.js';
 
-// Banner de la app Micra: al bajar, el celular inicia sesión con Google
+// Banner de la app Micra, en la misma hoja de plano que la portada (marco con
+// zonas, mapa de papel, panel oscuro y cajetín): al bajar, el celular inicia sesión con Google
 // (como el sitio) y abre la receta guiada, donde la animación del AeroPress
 // avanza con el scroll. El clip viene recortado y con el fondo gris llevado a
 // blanco: con mix-blend-mode: multiply queda dibujado sobre el papel de la
@@ -25,6 +26,11 @@ const num = (i) => String(i + 1).padStart(2, '0');
 // Dentro del celular los textos van en español, como el resto de la app (abre primero en Bogotá)
 const APP_STEPS = translations.es.press.steps;
 const LOGIN_MAP = { style: 'oscuro', c: 11, k: 81, ax: 0.5, ay: 0.42, s: 7, heat: 0.7, labels: 0.6 };
+// Fondo de la hoja: el mismo plano de papel de la portada, más al norte
+const SHEET_MAP = (w) => ({ style: 'plano', c: 13, k: 90, ax: w < 820 ? 0.5 : 0.55, ay: 0.5, s: Math.max(8, w / 160), heat: 0.55, labels: 1 });
+// Lo que dicen los pasos: 15–18 g de café, 20–30 s de presión, cinco pasos de receta
+const SPECS = ['15–18 g', '20–30 s', String(STEPS.length).padStart(2, '0')];
+const PHONE_MQ = '(max-width: 820px)';
 
 const reducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -44,12 +50,47 @@ function Status() {
   return <div className="pb-status"><span>{time}</span><span>5G ▮▮▮</span></div>;
 }
 
+/** En el celular las tiendas van debajo de la hoja: dentro no caben con el celular de la app. */
+function useNarrow() {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(PHONE_MQ).matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.(PHONE_MQ);
+    if (!mq) return undefined;
+    const onChange = () => setNarrow(mq.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+  return narrow;
+}
+
+/** Encabezado de la hoja: cota FIG., título con la frase roja, ubicación y texto. */
+function SheetCopy({ t, desc, stores }) {
+  const lines = t('press.titleLines');
+  return (
+    <div className="pb-copy">
+      <div className="essp-tag">{t('press.tag')} <span className="essp-new">{t('press.badge')}</span></div>
+      <h2 className="essp-title pb-title" id="ps-title">
+        {lines[0]}<br />{lines[1]}
+        <span className="essp-script">{t('press.script')}</span>
+      </h2>
+      <div className="essp-loc">{t('press.loc')}</div>
+      <p className="essp-lede pb-lede">
+        {desc}
+        <span className="jp">{t('press.descJp')}</span>
+      </p>
+      {stores}
+    </div>
+  );
+}
+
 export default function PressStory() {
   const { t } = useLanguage();
   // 'scroll' = el celular sigue al scroll; 'static' = pasos con foto (movimiento reducido o video que no carga)
   const [mode, setMode] = useState(() => (reducedMotion() ? 'static' : 'scroll'));
   const [view, setView] = useState({ scene: 'login', beat: 'screen', item: 0 });
   const [stores, setStores] = useState({ appStoreUrl: null, playStoreUrl: null });
+  const narrow = useNarrow();
+  const { time } = useClock();
   const trackRef = useRef(null);
   const stageRef = useRef(null);
   const videoRef = useRef(null);
@@ -209,29 +250,18 @@ export default function PressStory() {
 
   return (
     <section className="press-story" id="prensado" aria-labelledby="ps-title">
-      <div className="section-label">
-        <span className="num">{t('press.num')}</span>
-        <span className="rule"></span>
-        <span className="sub">{t('press.sub')}</span>
-      </div>
-      <div className="sp">
-        <h2 className="sec-h2" id="ps-title">{t('press.title')}</h2>
-        <p className="sec-desc">
-          {t(mode === 'scroll' ? 'press.desc' : 'press.descStatic')}
-          <span className="jp" style={{ display: 'block', marginTop: '.4rem' }}>{t('press.descJp')}</span>
-        </p>
-        <StoreButtons {...stores} />
-      </div>
-
       {mode === 'scroll' ? (
         <div className="ps-track pb-track" ref={trackRef} style={{ '--ps-steps': ITEM_COUNT }}>
           <div className="ps-stage pb-stage" ref={stageRef}>
-            <div className="pb-side">
-              <p className="annot pb-group">{t('press.groupApp')}</p>
-              <ol className="ps-steps">{items.slice(0, LOGIN_ITEMS.length).map((it, i) => renderItem(it, i))}</ol>
-              <p className="annot pb-group">{t('press.groupBrew')}</p>
-              <ol className="ps-steps">{items.slice(LOGIN_ITEMS.length).map((it, i) => renderItem(it, i + LOGIN_ITEMS.length))}</ol>
+            <div className="pb-bg" aria-hidden="true">
+              <MapCanvas view={SHEET_MAP} />
+              <div className="pb-fade" />
             </div>
+            <SheetFrame />
+            <div className="pb-in">
+            <hr className="essp-dash" />
+            <div className="pb-main">
+            <SheetCopy t={t} desc={t('press.desc')} stores={narrow ? null : <StoreButtons {...stores} />} />
 
             <figure className="pb-figure">
               <div className="pb-phone" data-scene={view.scene} data-beat={view.beat} aria-hidden="true">
@@ -297,9 +327,52 @@ export default function PressStory() {
               </div>
               <figcaption className="ps-sr">{t('press.phoneLabel')}</figcaption>
             </figure>
+
+            {/* Panel oscuro, como el del odómetro de la portada: el paso de ahora y la lista */}
+            <aside className="essp-panel pb-panel pb-side" aria-label={t('press.panelFig')}>
+              <div className="essp-panel-cota"><span>{t('press.panelFig')}</span><span className="essp-badge">{num(view.item)} / {num(ITEM_COUNT - 1)}</span></div>
+              <div className="essp-panel-label">{t('press.panelLabel')}</div>
+              <div className="essp-odo-row">
+                <Odometer digits={num(view.item).split('')} />
+                <span className="essp-odo-sep">/</span>
+                <span className="essp-odo-target">{num(ITEM_COUNT - 1)} {t('press.total')}</span>
+              </div>
+              <Segs filled={Math.round(((view.item + 1) / ITEM_COUNT) * 20)} className="essp-bar" />
+              <p className="pb-group">{t('press.groupApp')}</p>
+              <ol className="ps-steps">{items.slice(0, LOGIN_ITEMS.length).map((it, i) => renderItem(it, i))}</ol>
+              <p className="pb-group">{t('press.groupBrew')}</p>
+              <ol className="ps-steps">{items.slice(LOGIN_ITEMS.length).map((it, i) => renderItem(it, i + LOGIN_ITEMS.length))}</ol>
+              <div className="essp-specs">
+                {SPECS.map((v, i) => <div key={i}><b>{v}</b><span>{t('press.specs')[i]}</span></div>)}
+              </div>
+            </aside>
+            </div>
+
+            {/* Cajetín: dónde, a qué hora, qué paso y quién prepara; las fases llevan a su primer paso */}
+            <div className="essp-block pb-block">
+              <div className="pb-cell-zone"><span>{t('essp.block.zone')}</span><b>Chapinero</b></div>
+              <div className="pb-cell-time"><span>{t('essp.block.time')}</span><b>{time}</b></div>
+              <div><span>{t('press.blockStep')}</span><b>{num(view.item)} / {num(ITEM_COUNT - 1)}</b></div>
+              <div className="pb-cell-maker"><span>{t('essp.block.maker')}</span><b className="is-red">{t('essp.block.you')}</b></div>
+              <div className="essp-tabs pb-phase">
+                {[[t('press.groupApp'), 0], [t('press.groupBrew'), LOGIN_ITEMS.length]].map(([label, first], g) => (
+                  <button key={label} type="button" aria-pressed={(view.item >= LOGIN_ITEMS.length ? 1 : 0) === g} onClick={() => jump(first)}>{label}</button>
+                ))}
+              </div>
+            </div>
+            </div>
           </div>
         </div>
       ) : (
+        <>
+        <div className="pb-stage is-static">
+          <div className="pb-bg" aria-hidden="true"><div className="pb-fade" /></div>
+          <SheetFrame />
+          <div className="pb-in">
+            <hr className="essp-dash" />
+            <SheetCopy t={t} desc={t('press.descStatic')} stores={<StoreButtons {...stores} />} />
+          </div>
+        </div>
         <ol className="ps-static">
           {LOGIN_ITEMS.map((it, i) => (
             <li key={it.key} className="ps-card is-login">
@@ -318,12 +391,14 @@ export default function PressStory() {
             </li>
           ))}
         </ol>
+        </>
       )}
 
       <div className="sp ps-after">
-        <div className="ps-cta">
-          <a className="btn" href="#metodo">{t('press.ctaRecipes')}</a>
-          <a className="btn" href="#beans">{t('press.ctaShop')}</a>
+        {mode === 'scroll' && narrow && <StoreButtons {...stores} />}
+        <div className="essp-ctas ps-cta">
+          <a className="essp-btn" href="#metodo">{t('press.ctaRecipes')}</a>
+          <a className="essp-btn is-ghost" href="#beans">{t('press.ctaShop')}</a>
         </div>
         <p className="annot ps-legal">{t('press.legal')}</p>
       </div>
