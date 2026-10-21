@@ -30,9 +30,9 @@ test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scrol
   await page.locator('#prensado').scrollIntoViewIfNeeded();
   await expect(page.locator('#ps-title')).toContainText('Entra a Micra');
   await expect(page.locator('#ps-title .essp-script')).toHaveText('tu AeroPress');
-  // La hoja de la portada: marco con zonas, panel oscuro con el odómetro y cajetín
+  // La hoja de la portada: marco con zonas y panel oscuro con el odómetro
   await expect(page.locator('#prensado .essp-sheet')).toHaveCount(1);
-  await expect(page.locator('#prensado .pb-block')).toContainText(/0[1-8] \/ 08/);
+  await expect(page.locator('#prensado .pb-panel .essp-badge')).toHaveText(/0[1-8] \/ 08/);
   await expect(page.locator('.pb-side .ps-step')).toHaveCount(8);
   await expect(page.locator('#prensado .essp-stores')).toHaveCount(1);
 

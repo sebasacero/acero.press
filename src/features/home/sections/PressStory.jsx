@@ -10,7 +10,7 @@ import {
 } from './pressStory.js';
 
 // Banner de la app Micra, en la misma hoja de plano que la portada (marco con
-// zonas, mapa de papel, panel oscuro y cajetín): al bajar, el celular inicia sesión con Google
+// zonas, mapa de papel y panel oscuro): al bajar, el celular inicia sesión con Google
 // (como el sitio) y abre la receta guiada, donde la animación del AeroPress
 // avanza con el scroll. El clip viene recortado y con el fondo gris llevado a
 // blanco: con mix-blend-mode: multiply queda dibujado sobre el papel de la
@@ -30,7 +30,6 @@ const LOGIN_MAP = { style: 'oscuro', c: 11, k: 81, ax: 0.5, ay: 0.42, s: 7, heat
 const SHEET_MAP = (w) => ({ style: 'plano', c: 13, k: 90, ax: w < 820 ? 0.5 : 0.55, ay: 0.5, s: Math.max(8, w / 160), heat: 0.55, labels: 1 });
 // Lo que dicen los pasos: 15–18 g de café, 20–30 s de presión, cinco pasos de receta
 const SPECS = ['15–18 g', '20–30 s', String(STEPS.length).padStart(2, '0')];
-const PHONE_MQ = '(max-width: 820px)';
 
 const reducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -48,19 +47,6 @@ function GoogleIcon({ size = 16 }) {
 function Status() {
   const { time } = useClock();
   return <div className="pb-status"><span>{time}</span><span>5G ▮▮▮</span></div>;
-}
-
-/** En el celular las tiendas van debajo de la hoja: dentro no caben con el celular de la app. */
-function useNarrow() {
-  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(PHONE_MQ).matches);
-  useEffect(() => {
-    const mq = window.matchMedia?.(PHONE_MQ);
-    if (!mq) return undefined;
-    const onChange = () => setNarrow(mq.matches);
-    mq.addEventListener?.('change', onChange);
-    return () => mq.removeEventListener?.('change', onChange);
-  }, []);
-  return narrow;
 }
 
 /** Encabezado de la hoja: cota FIG., título con la frase roja, ubicación y texto. */
@@ -89,8 +75,6 @@ export default function PressStory() {
   const [mode, setMode] = useState(() => (reducedMotion() ? 'static' : 'scroll'));
   const [view, setView] = useState({ scene: 'login', beat: 'screen', item: 0 });
   const [stores, setStores] = useState({ appStoreUrl: null, playStoreUrl: null });
-  const narrow = useNarrow();
-  const { time } = useClock();
   const trackRef = useRef(null);
   const stageRef = useRef(null);
   const videoRef = useRef(null);
@@ -261,7 +245,7 @@ export default function PressStory() {
             <div className="pb-in">
             <hr className="essp-dash" />
             <div className="pb-main">
-            <SheetCopy t={t} desc={t('press.desc')} stores={narrow ? null : <StoreButtons {...stores} />} />
+            <SheetCopy t={t} desc={t('press.desc')} stores={<StoreButtons {...stores} />} />
 
             <figure className="pb-figure">
               <div className="pb-phone" data-scene={view.scene} data-beat={view.beat} aria-hidden="true">
@@ -348,18 +332,6 @@ export default function PressStory() {
             </aside>
             </div>
 
-            {/* Cajetín: dónde, a qué hora, qué paso y quién prepara; las fases llevan a su primer paso */}
-            <div className="essp-block pb-block">
-              <div className="pb-cell-zone"><span>{t('essp.block.zone')}</span><b>Chapinero</b></div>
-              <div className="pb-cell-time"><span>{t('essp.block.time')}</span><b>{time}</b></div>
-              <div><span>{t('press.blockStep')}</span><b>{num(view.item)} / {num(ITEM_COUNT - 1)}</b></div>
-              <div className="pb-cell-maker"><span>{t('essp.block.maker')}</span><b className="is-red">{t('essp.block.you')}</b></div>
-              <div className="essp-tabs pb-phase">
-                {[[t('press.groupApp'), 0], [t('press.groupBrew'), LOGIN_ITEMS.length]].map(([label, first], g) => (
-                  <button key={label} type="button" aria-pressed={(view.item >= LOGIN_ITEMS.length ? 1 : 0) === g} onClick={() => jump(first)}>{label}</button>
-                ))}
-              </div>
-            </div>
             </div>
           </div>
         </div>
@@ -395,7 +367,6 @@ export default function PressStory() {
       )}
 
       <div className="sp ps-after">
-        {mode === 'scroll' && narrow && <StoreButtons {...stores} />}
         <div className="essp-ctas ps-cta">
           <a className="essp-btn" href="#metodo">{t('press.ctaRecipes')}</a>
           <a className="essp-btn is-ghost" href="#beans">{t('press.ctaShop')}</a>
