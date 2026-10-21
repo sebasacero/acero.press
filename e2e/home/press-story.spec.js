@@ -28,7 +28,11 @@ test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scrol
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } } });
   await page.goto('/', { waitUntil: 'load' });
   await page.locator('#prensado').scrollIntoViewIfNeeded();
-  await expect(page.locator('#ps-title')).toHaveText('Entra a Micra y prepara tu AeroPress');
+  await expect(page.locator('#ps-title')).toContainText('Entra a Micra');
+  await expect(page.locator('#ps-title .essp-script')).toHaveText('tu AeroPress');
+  // La hoja de la portada: marco con zonas, panel oscuro con el odómetro y cajetín
+  await expect(page.locator('#prensado .essp-sheet')).toHaveCount(1);
+  await expect(page.locator('#prensado .pb-block')).toContainText(/0[1-8] \/ 08/);
   await expect(page.locator('.pb-side .ps-step')).toHaveCount(8);
   await expect(page.locator('#prensado .essp-stores')).toHaveCount(1);
 
