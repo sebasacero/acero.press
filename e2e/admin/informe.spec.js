@@ -82,6 +82,7 @@ test('informe: cada cifra con su n, el precio techo, grupos de 5 y supuestos que
   await expect.poll(() => api.all('/api/v1/bi/piloto/escenario', 'PUT').at(-1)?.data).toMatchObject({ partner: 'Distribuidora de prueba', kitCost: 300000, distributorPriceKg: 100000, gramsPerCup: 18 });
   await expect(ready.locator('li', { hasText: 'Costo del kit por tintero' })).toHaveClass(/is-done/);
   await expect(ready.locator('li', { hasText: 'Para quién es la propuesta' })).toHaveClass(/is-done/);
+  await expect(ready.locator('li', { hasText: 'Tu precio objetivo por kilo' })).toHaveClass(/is-done/); // $100.000, bajo el techo
   expect(errors).toEqual([]);
   await page.context().close();
 });

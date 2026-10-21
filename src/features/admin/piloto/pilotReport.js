@@ -344,6 +344,9 @@ export function buildReport(data, scenarioRaw, { now = new Date() } = {}) {
     count('cups', 'Tazas vendidas en la calle con lugar', pilot.cups, GOALS.cups),
     check('specialty', 'Precio de la taza de especialidad', specialtyPrice !== null, specialtySource === 'encuesta' ? 'sale de la encuesta' : null),
     check('kit', 'Costo del kit por tintero', scenario.kitCost !== null),
+    // El techo es un argumento, no la oferta: sin precio objetivo la propuesta dice «por acordar»
+    check('price', 'Tu precio objetivo por kilo, por debajo del techo', P !== null && (tintero.ceilingKg.median === null || P <= tintero.ceilingKg.median),
+      P !== null && tintero.ceilingKg.median !== null && P > tintero.ceilingKg.median ? 'está por encima del techo' : null),
     check('partner', 'Para quién es la propuesta', !!scenario.partner),
   ];
 

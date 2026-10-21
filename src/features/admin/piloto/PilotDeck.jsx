@@ -146,7 +146,7 @@ export function buildSlides(r, data) {
     { id: 'pedimos', render: () => (
       <Slide fig="FIG. 09 — LO QUE PEDIMOS" title="Lo que proponemos">
         <div className="deck-ask-figs">
-          <Figure label="Precio de distribuidor" value={P !== null ? `${money(P)} / kg` : ceiling !== null ? `hasta ${money(ceiling)} / kg` : '—'}
+          <Figure label="Precio de distribuidor" value={P !== null ? `${money(P)} / kg` : 'Por acordar'}
             foot={ceiling !== null ? `Techo que dan los datos: ${money(ceiling)} por kilo.${P !== null ? (P <= ceiling ? ' Por debajo: la taza le deja al tintero más que un tinto.' : ' Por encima: la taza le deja menos que un tinto.') : ''}` : 'Se define con el techo que sale de la encuesta.'} />
           <Figure label={`Inversión del piloto · ${r.scenario.pilotTinteros} tinteros`} value={moneyBig(r.distributor.investment.total)} accent
             foot={[r.distributor.investment.kits !== null && `Kits: ${moneyBig(r.distributor.investment.kits)}`, r.distributor.investment.coffee !== null && `café inicial: ${moneyBig(r.distributor.investment.coffee)}`, r.distributor.investment.missing.length > 0 && `falta ${r.distributor.investment.missing.join(' y ')}`].filter(Boolean).join(' · ')} />

@@ -166,7 +166,13 @@ test('la lista de preparación dice qué falta para la reunión', () => {
   assert.equal(by.zones.have, 2);
   assert.equal(by.specialty.done, true);
   assert.equal(by.kit.done, false);
+  assert.equal(by.price.done, false); // sin precio objetivo
   assert.equal(r.ready, false);
+  const high = Object.fromEntries(buildReport(DATA, { distributorPriceKg: 200000 }).readiness.map((x) => [x.id, x]));
+  assert.equal(high.price.done, false);
+  assert.equal(high.price.hint, 'está por encima del techo');
+  const ok = Object.fromEntries(buildReport(DATA, { distributorPriceKg: 100000 }).readiness.map((x) => [x.id, x]));
+  assert.equal(ok.price.done, true);
 });
 
 test('sin datos no se rompe ni inventa nada', () => {

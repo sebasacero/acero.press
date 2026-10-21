@@ -296,7 +296,7 @@ export function ReportDoc({ report: r, data }) {
             <h3 className="rep-h3">Precio de distribuidor</h3>
             <p>{P !== null
               ? `${money(P)} por kilo${ceiling !== null ? (P <= ceiling ? `, por debajo del techo de ${money(ceiling)}: la taza le deja al tintero más que un tinto.` : `, por encima del techo de ${money(ceiling)}: la taza le deja al tintero menos que un tinto.`) : '.'}`
-              : ceiling !== null ? `Hasta ${money(ceiling)} por kilo, el techo que sale de los datos.` : 'Se define con el techo que sale de la encuesta.'}</p>
+              : ceiling !== null ? `Por acordar, por debajo del techo de ${money(ceiling)} por kilo que sale de los datos.` : 'Por acordar con lo que diga la encuesta.'}</p>
           </div>
           <div>
             <h3 className="rep-h3">Inversión del piloto</h3>
