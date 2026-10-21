@@ -123,6 +123,11 @@
 .essp-btn:disabled { opacity: .6; cursor: wait; }
 .essp-btn:focus-visible, .essp-store:focus-visible, .essp-tabs button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
 
+/* Llamados del banner: uno lleno, otro solo con borde (hereda el color del banner) */
+.essp-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+.essp-btn.is-ghost { background: transparent; color: inherit; border-color: currentColor; box-shadow: none; }
+.essp-btn.is-ghost:hover { box-shadow: 4px 4px 0 var(--essp-line, var(--ink)); }
+
 /* Insignias App Store / Google Play */
 .essp-stores { display: flex; gap: 12px; flex-wrap: wrap; }
 .essp-store {
@@ -247,6 +252,9 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
   .essp-block > .essp-tabs button + button { border-top: 1.5px solid var(--essp-line); border-left: none; }
   .essp-block b { font-size: 18px; }
   .essp-stores { flex-wrap: nowrap; gap: 10px; }
+  /* Los dos llamados en una fila, para que el celular siga asomando */
+  .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; }
   .essp-store { flex: 1 1 0; min-width: 0; padding: 8px 10px; gap: 8px; }
   .essp-store b { font-size: 15px; }
 }

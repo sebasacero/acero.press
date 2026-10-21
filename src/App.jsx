@@ -46,9 +46,9 @@ export default function App() {
 
             <WacBanner />
 
-            <PressStory />
-
             <RecipeArchive />
+
+            <PressStory />
 
             <Marquee />
 
