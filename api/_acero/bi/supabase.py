@@ -26,19 +26,30 @@ def configured() -> bool:
     return bool(_url() and _key())
 
 
+def _clean(name: str) -> str:
+    # Variables pegadas en el panel de Vercel llegan a veces con comillas, espacios
+    # o un salto de línea al final: httpx falla al instante con eso.
+    return os.environ.get(name, "").strip().strip("\"'").strip()
+
+
 def _url() -> str:
-    return (os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL") or "").rstrip("/")
+    # La primera que sea una URL válida; en el navegador VITE_SUPABASE_URL ya probó serlo.
+    for name in ("SUPABASE_URL", "VITE_SUPABASE_URL"):
+        value = _clean(name).rstrip("/")
+        if value.startswith(("https://", "http://")):
+            return value
+    return ""
 
 
 def _key() -> str:
-    return os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY") or ""
+    return _clean("SUPABASE_ANON_KEY") or _clean("VITE_SUPABASE_ANON_KEY")
 
 
 class Supabase:
     def __init__(self, jwt: str, http: httpx.AsyncClient | None = None):
         self.url = _url()
-        if not self.url.startswith(("https://", "http://")):
-            raise RuntimeError(f"SUPABASE_URL debe empezar por https:// (vale «{self.url or '(vacío)'}»).")
+        if not self.url:
+            raise RuntimeError("Ni SUPABASE_URL ni VITE_SUPABASE_URL es una URL https:// válida en el servidor.")
         self.jwt = jwt
         self.http = http or httpx.AsyncClient(timeout=httpx.Timeout(8.0))
         self._headers = {"apikey": _key(), "Authorization": f"Bearer {jwt}"}
