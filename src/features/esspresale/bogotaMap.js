@@ -7,8 +7,10 @@
 //   { style: 'plano' | 'oscuro', c, k, ax, ay, s, heat?, labels?, pins?, route? }
 //   ax/ay = posición (0–1) del punto (c, k) en el lienzo; s = píxeles por cuadra.
 
-// [carrera, calle, peso, radio en cuadras] — demanda de ejemplo hasta tener pedidos reales.
-const HEAT = [
+// [carrera, calle, peso, radio en cuadras] — demanda de ejemplo mientras no
+// haya ventas reales. Con datos del estudio, `view.heat` trae los puntos
+// reales (streetMap.js) y estos no se usan.
+const SAMPLE_HEAT = [
   [13, 83, 1, 5], [12, 93, 0.9, 4.5], [5, 69, 0.65, 4], [7, 42, 0.8, 6], [11, 58, 0.55, 6],
   [15, 100, 0.75, 6], [6, 119, 0.6, 5], [9, 73, 0.8, 4.5], [14, 88, 0.45, 4], [19, 76, 0.35, 7],
   [7, 63, 0.5, 4], [22, 45, 0.3, 8], [10, 106, 0.45, 5], [24, 96, 0.3, 7], [3, 52, 0.25, 4],
@@ -150,12 +152,14 @@ export function drawBogotaMap(canvas, view) {
   const octx = off.getContext('2d');
   const img = octx.createImageData(gw, gh);
   const heat = view.heat ?? 1;
+  // Puntos reales del estudio o, si no hay, la demanda de ejemplo
+  const points = view.heatPoints?.length ? view.heatPoints : SAMPLE_HEAT;
   for (let gy = 0; gy < gh; gy++) {
     for (let gx = 0; gx < gw; gx++) {
       const c = view.c - (gx * step - W * view.ax) / s;
       const k = view.k - (gy * step - H * view.ay) / s;
       let v = 0;
-      for (const [hc, hk, w, r] of HEAT) v += w * Math.exp(-((c - hc) ** 2 + (k - hk) ** 2) / (2 * r * r));
+      for (const [hc, hk, w, r] of points) v += w * Math.exp(-((c - hc) ** 2 + (k - hk) ** 2) / (2 * r * r));
       v = Math.min(1, v / 1.15) * heat;
       if (c < ridge(k)) v *= 0.15;
       const i = (gy * gw + gx) * 4;
@@ -206,7 +210,7 @@ export function drawBogotaMap(canvas, view) {
 
   if (!view.pins) return;
 
-  if (view.route) {
+  if (view.route && !view.pinPoints?.length) {
     ctx.strokeStyle = P.route;
     ctx.lineWidth = 2.5;
     ctx.setLineDash([5, 4]);
@@ -221,7 +225,8 @@ export function drawBogotaMap(canvas, view) {
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const [c, k, text, home] of SAMPLE_PINS) {
+  const pins = view.pinPoints?.length ? view.pinPoints : SAMPLE_PINS;
+  for (const [c, k, text, home] of pins) {
     const x = X(c);
     const y = Y(k);
     ctx.font = `700 ${9 * z}px ${MONO}`;
@@ -235,6 +240,7 @@ export function drawBogotaMap(canvas, view) {
     ctx.fillStyle = home ? '#fff' : P.pinFg;
     ctx.fillText(text, x, y - 16);
   }
+  if (view.pinPoints?.length) return; // con datos reales no hay «tú estás aquí» de ejemplo
   ctx.fillStyle = '#2f7cf6';
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 3;

@@ -27,7 +27,8 @@ test.describe('1440×900 sin cámara: video y teclado', () => {
   });
 
   test('soltar un video sobre el estudio abre el editor con video nativo', async () => {
-    await dropGeneratedClip(page, '.mstudio');
+    // 6 s: preparar el video dura lo que el clip y la prueba de abajo lo cancela a medias
+    await dropGeneratedClip(page, '.mstudio', { seconds: 6 });
     await page.waitForSelector('.mstudio.is-edit video.mst-video');
     await page.waitForFunction(() => document.querySelector('.mst-video')?.readyState >= 2);
     await page.waitForTimeout(800);

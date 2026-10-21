@@ -19,7 +19,7 @@ const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-header
 
 export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomic = true } = {}) {
   const calls = [];
-  const opts = { slowPublish: false, dropNextSaleResponse: false };
+  const opts = { slowPublish: false, dropNextSaleResponse: false, streetMap: null, piloto: null };
   const stock = new Map((inventory ?? DEFAULT_STOCK(coffee)).map((r) => [r.variant_id, { ...r }]));
   const priceOf = new Map(coffee.flatMap((c) => c.product_variants.map((v) => [v.id, v.price])));
   const orders = new Map();
@@ -27,8 +27,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   let orderN = 0;
 
   // Como micra_record_sale / micra_void_sale (supabase/migrations/20261021120000_micra_atomic_sale.sql)
-  const summary = (o, replay) => ({ order_id: o.id, total: o.total, status: o.status, replay, stock: [...o.net].map(([variant_id, applied]) => ({ variant_id, applied })) });
-  const recordSale = ({ p_lines, p_client_ref }) => {
+  const summary = (o, replay) => ({ order_id: o.id, total: o.total, status: o.status, replay, place: o.place ?? null, stock: [...o.net].map(([variant_id, applied]) => ({ variant_id, applied })) });
+  const recordSale = ({ p_lines, p_client_ref, p_place = null }) => {
     if (p_client_ref && byRef.has(p_client_ref)) return summary(byRef.get(p_client_ref), true);
     const per = new Map();
     let total = 0;
@@ -44,7 +44,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       net.set(variantId, next - row.stock_qty);
       row.stock_qty = next;
     }
-    const o = { id: `order-${++orderN}`, total, status: 'completed', net, ref: p_client_ref };
+    const o = { id: `order-${++orderN}`, total, status: 'completed', net, ref: p_client_ref, place: p_place };
     orders.set(o.id, o);
     if (p_client_ref) byRef.set(p_client_ref, o);
     return summary(o, false);
@@ -68,6 +68,25 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   // Clima fijo: 14 °C y lluvia ligera
   await page.route(/open-meteo/, (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify({ current: { temperature_2m: 14, weather_code: 61 } }) }));
   await page.route('**/api/v1/pulse', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }));
+  // API de BI: el piloto (lo que la prueba ponga en opts.piloto; vacío por defecto)
+  await page.route('**/api/v1/bi/piloto**', (route) => {
+    if (!(route.request().headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
+    const empty = { generatedAt: new Date().toISOString(), days: 90, week: { from: '2026-10-16', to: '2026-10-22', cur: { cups: 0, sales: 0, income: 0, blocks: 0, zones: [], kg: 0 }, prev: { cups: 0, sales: 0, income: 0, blocks: 0, zones: [], kg: 0 } }, sales: [], tinteros: [], study: { surveyed: 0, with_photo: 0, consented: 0, tinto_price_avg: null, cups_per_hour_avg: null, zones: [] } };
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(opts.piloto ?? empty) });
+  });
+  // API de BI: la ficha de campo de un tintero (como POST /api/v1/bi/tinteros)
+  const tinteros = [];
+  await page.route('**/api/v1/bi/tinteros', async (route) => {
+    const req = route.request();
+    if (req.method() !== 'POST') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(tinteros.map((t) => ({ ...t, days: [] }))) });
+    if (!(req.headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
+    const body = req.postDataJSON();
+    calls.push({ m: 'POST', p: '/api/v1/bi/tinteros', q: '', data: body });
+    if ((body.carrera == null) !== (body.calle == null)) return route.fulfill({ status: 422, contentType: 'application/json', body: JSON.stringify({ detail: [{ msg: 'El lugar necesita carrera y calle.' }] }) });
+    const row = { id: `tintero-${tinteros.length + 1}`, created_at: new Date().toISOString(), ...body };
+    tinteros.push(row);
+    return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(row) });
+  });
   await page.route('https://mock.supabase.co/**', async (route) => {
     const req = route.request();
     const u = new URL(req.url());
@@ -80,6 +99,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     try { data = req.postDataJSON(); } catch { data = req.postData(); }
     if (m !== 'GET') calls.push({ m, p, q: u.search, data });
 
+    if (p.endsWith('/rpc/micra_street_map')) return json(200, opts.streetMap ?? { days: 90, sales: [], tinteros: [] });
     if (p.endsWith('/rpc/micra_record_sale') || p.endsWith('/rpc/micra_void_sale')) {
       if (!atomic) return json(404, { code: 'PGRST202', details: null, hint: null, message: `Could not find the function public.${p.split('/').pop()} in the schema cache` });
       if (p.endsWith('/rpc/micra_void_sale')) return json(200, voidSale(data));
@@ -89,6 +109,9 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, result);
     }
     if (p.includes('/storage/v1/object/marketing')) return json(200, { Key: 'marketing/x' });
+    if (p.includes('/storage/v1/object/estudio/')) return json(200, { Key: p.split('/object/')[1] });
+    // URL firmada del bucket privado (la pide la página del piloto con la sesión)
+    if (p.includes('/storage/v1/object/sign/estudio/')) return json(200, { signedURL: `/object/sign/${p.split('/object/sign/')[1]}?token=firmado` });
     if (p.includes('/functions/v1/publish-content')) {
       if (opts.slowPublish) await new Promise((r) => setTimeout(r, 2500));
       return json(200, { ok: true, results: { instagram: { success: true, post_id: '1' } } });
@@ -123,6 +146,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     opts,
     orders,
     stock,
+    tinteros,
     clear: () => { calls.length = 0; },
     find: (path, method) => calls.find((c) => c.p.endsWith(path) && (!method || c.m === method)),
     all: (path, method) => calls.filter((c) => c.p.endsWith(path) && (!method || c.m === method)),
@@ -215,9 +239,10 @@ export const center = (page, id) => page.evaluate((id) => {
 
 /**
  * Graba un clip corto en la página (canvas → MediaRecorder) y lo suelta sobre
- * `selector`, como si se arrastrara un video desde el escritorio.
+ * `selector`, como si se arrastrara un video desde el escritorio. `seconds`
+ * manda cuando la prueba necesita que preparar el video tarde más que sus pasos.
  */
-export const dropGeneratedClip = (page, selector) => page.evaluate(async (selector) => {
+export const dropGeneratedClip = (page, selector, { seconds = 2.5 } = {}) => page.evaluate(async ([selector, ms]) => {
   const c = document.createElement('canvas');
   c.width = 360;
   c.height = 640;
@@ -235,7 +260,7 @@ export const dropGeneratedClip = (page, selector) => page.evaluate(async (select
       g.fillRect(0, 0, c.width, c.height);
       g.fillStyle = '#fff';
       g.fillRect(Math.round(t / 6) % c.width, 300, 48, 48);
-      if (t < 2500) requestAnimationFrame(tick); else done();
+      if (t < ms) requestAnimationFrame(tick); else done();
     };
     tick();
   });
@@ -246,4 +271,4 @@ export const dropGeneratedClip = (page, selector) => page.evaluate(async (select
   const el = document.querySelector(selector);
   el.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true, cancelable: true }));
   el.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
-}, selector);
+}, [selector, seconds * 1000]);

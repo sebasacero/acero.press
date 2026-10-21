@@ -15,6 +15,7 @@ import ContextBar from './ContextBar.jsx';
 import ToolRail from './ToolRail.jsx';
 import TextEditor from './TextEditor.jsx';
 import SaleSheet from './SaleSheet.jsx';
+import TinteroSheet from './TinteroSheet.jsx';
 import ShareSheet from './ShareSheet.jsx';
 import StickerTray from './StickerTray.jsx';
 import LayersSheet from './LayersSheet.jsx';
@@ -63,6 +64,15 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const [format, setFormat] = useState(prefs.format);
   const [camMode, setCamMode] = useState(prefs.camMode);
   const [capture, setCapture] = useState(null); // { file, type, url, duration }
+  // Foto de una ficha de tintero: aparte de la toma de la tarjeta, nunca abre el editor
+  const [snap, setSnap] = useState(null); // { file, url }
+  const cameraRef = useRef(null);
+  const clearSnap = useCallback(() => setSnap((x) => { if (x?.url) URL.revokeObjectURL(x.url); return null; }), []);
+  const takeSnap = useCallback(async () => {
+    const file = await cameraRef.current?.snapshot?.();
+    if (!file) { showToast({ text: 'La cámara no está lista para la foto.' }); return; }
+    setSnap((x) => { if (x?.url) URL.revokeObjectURL(x.url); return { file, url: URL.createObjectURL(file) }; });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [photo, setPhoto] = useState(null);
   const [bg, setBg] = useState('plain');
   const [trimStart, setTrimStart] = useState(0);
@@ -99,7 +109,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   const onPhoto = stage === 'camera' ? camMode !== 'plain' : bg === 'media' && !!capture;
   const look = useCardLook({ kind, preset, onPhoto, hasCobrand: !!cobrand, saved: prefs });
   const { elements, texts } = look;
-  const sale = useSale({ varieties, varietyId: variety?.id, kind, onVariety: setVarietyId, initialPay: prefs.pay });
+  const sale = useSale({ varieties, varietyId: variety?.id, kind, onVariety: setVarietyId, initialPay: prefs.pay, initialPlace: prefs.place });
 
   // Intención de entrada (⌘K «Registrar una venta») y la que llega con Micra ya abierto
   useEffect(() => {
@@ -127,9 +137,9 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
   // Preferencias del celular (formato, modo, pago, etiquetas y diseño), sin escribir en cada tecla
   useEffect(() => {
-    const id = setTimeout(() => savePrefs({ format, camMode, pay: sale.payMethod, hashtags, overrides: look.overrides, texts }), 400);
+    const id = setTimeout(() => savePrefs({ format, camMode, pay: sale.payMethod, hashtags, overrides: look.overrides, texts, place: sale.place && !sale.place.error ? sale.place : null }), 400);
     return () => clearTimeout(id);
-  }, [format, camMode, sale.payMethod, hashtags, look.overrides, texts]);
+  }, [format, camMode, sale.payMethod, hashtags, look.overrides, texts, sale.place]);
 
   // ── Avisos ──
   const toastTimer = useRef(0);
@@ -595,6 +605,24 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             sendOnlyLabel={quickDest === 'ig' ? `Publicar · ${quickLabel}` : quickLabel}
           />
         );
+      case 'tintero':
+        return (
+          <TinteroSheet
+            place={sale.place}
+            onPlace={sale.setPlace}
+            photo={snap}
+            onTakePhoto={takeSnap}
+            onClearPhoto={clearSnap}
+            canShoot={stage === 'camera' && camMode !== 'plain'}
+            docked={docked}
+            onClose={() => { clearSnap(); closeSheet(); }}
+            onSaved={(t) => {
+              clearSnap();
+              closeSheet();
+              showToast({ text: `✓ ${t.name} quedó en el estudio${t.hadPhoto ? ' con su foto' : ''}.`, ttl: 5000 });
+            }}
+          />
+        );
       case 'format':
         return <FormatSheet format={format} onFormat={setFormat} onClose={closeSheet} docked={docked} />;
       case 'share':
@@ -715,6 +743,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       <div className="mst-col">
         {stage === 'camera' ? (
           <MicraCamera
+            ref={cameraRef}
             varieties={varieties}
             variety={variety}
             onVariety={setVarietyId}
@@ -736,6 +765,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             onCapture={takeCapture}
             onEditText={(key) => setTextKey(key)}
             onOpenSale={() => setSheet('sale')}
+            onOpenTintero={() => setSheet('tintero')}
             ticketLabel={ticketLabel}
             onExit={exit}
             onRecording={(r) => { recordingRef.current = r; }}

@@ -188,7 +188,7 @@ const PREFS_KEY = 'micra_prefs_v1';
 const FORMAT_IDS = ['feed', 'portrait', 'square', 'story', 'reel', 'tiktok', 'shorts', 'landscape'];
 const CAM_MODES = ['plain', 'photo', 'video'];
 const PAY_IDS = ['cash', 'nequi', 'daviplata', 'card'];
-export const DEFAULT_PREFS = { v: 1, format: 'feed', camMode: 'photo', pay: 'cash', hashtags: true, overrides: emptyOverrides(), texts: {} };
+export const DEFAULT_PREFS = { v: 1, format: 'feed', camMode: 'photo', pay: 'cash', hashtags: true, overrides: emptyOverrides(), texts: {}, place: null };
 
 /** Lee las preferencias (formato, modo de cámara, pago, diseño) y descarta lo desconocido. */
 export function parsePrefs(raw) {
@@ -212,6 +212,8 @@ export function parsePrefs(raw) {
     hashtags: typeof p.hashtags === 'boolean' ? p.hashtags : DEFAULT_PREFS.hashtags,
     overrides,
     texts,
+    // Lugar de venta: se guarda tal cual y lo valida place.js al usarlo
+    place: p.place && typeof p.place === 'object' ? { carrera: p.place.carrera ?? null, calle: p.place.calle ?? null, zone: typeof p.place.zone === 'string' ? p.place.zone.slice(0, 60) : null } : null,
   };
 }
 
@@ -219,10 +221,10 @@ export function loadPrefs() {
   try { return parsePrefs(localStorage.getItem(PREFS_KEY)); } catch { return parsePrefs(null); }
 }
 
-export function savePrefs({ format, camMode, pay, hashtags = true, overrides, texts }) {
+export function savePrefs({ format, camMode, pay, hashtags = true, overrides, texts, place = null }) {
   const keep = Object.fromEntries(KEPT_TEXT_KEYS.map((k) => [k, texts?.[k] ?? DEFAULT_TEXTS[k]]));
   try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify({ v: 1, format, camMode, pay, hashtags, overrides, texts: keep }));
+    localStorage.setItem(PREFS_KEY, JSON.stringify({ v: 1, format, camMode, pay, hashtags, overrides, texts: keep, place }));
   } catch { /* sin almacenamiento: solo dura esta visita */ }
 }
 

@@ -11,7 +11,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..pulse import BOGOTA
 from .brief import Brief, Kind, build_brief
@@ -72,6 +72,21 @@ class TinteroIn(BaseModel):
     baseline_cups: int | None = Field(default=None, ge=0, description="Tintos al día antes de la red")
     notes: str | None = Field(default=None, max_length=500)
     joined_at: date | None = None
+    # Ficha de campo (estudio de calle): dónde está el puesto y qué se vio
+    carrera: float | None = Field(default=None, ge=1, le=120)
+    calle: float | None = Field(default=None, ge=1, le=200)
+    photo_url: str | None = Field(default=None, pattern=r"^https://", max_length=500)
+    photo_consent: bool = False
+    tinto_price: float | None = Field(default=None, ge=0, le=50000, description="Precio del tinto en el puesto (COP)")
+    cups_per_hour: float | None = Field(default=None, ge=0, le=500, description="Tazas por hora observadas")
+    surveyed_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def _place_complete(self):
+        # Las dos coordenadas o ninguna: el check de la base lo exige igual
+        if (self.carrera is None) != (self.calle is None):
+            raise ValueError("El lugar necesita carrera y calle.")
+        return self
 
 
 class TinteroPatch(BaseModel):
@@ -84,6 +99,13 @@ class TinteroPatch(BaseModel):
     baseline_cups: int | None = Field(default=None, ge=0)
     notes: str | None = Field(default=None, max_length=500)
     joined_at: date | None = None
+    carrera: float | None = Field(default=None, ge=1, le=120)
+    calle: float | None = Field(default=None, ge=1, le=200)
+    photo_url: str | None = Field(default=None, pattern=r"^https://", max_length=500)
+    photo_consent: bool | None = None
+    tinto_price: float | None = Field(default=None, ge=0, le=50000)
+    cups_per_hour: float | None = Field(default=None, ge=0, le=500)
+    surveyed_at: datetime | None = None
 
 
 class TinteroDayIn(BaseModel):
@@ -93,6 +115,70 @@ class TinteroDayIn(BaseModel):
     net_income: float | None = Field(default=None, ge=0)
     hours: float | None = Field(default=None, gt=0, le=24)
     source: Literal["panel", "whatsapp", "app"] = "panel"
+
+
+# ── Piloto (estudio de calle) ────────────────────────────────────────────
+GRAMS_PER_CUP = 18  # receta de la barra: 18 g por taza
+
+
+def _week(now: datetime, back: int) -> tuple[date, date]:
+    today = now.astimezone(BOGOTA).date()
+    return (today - timedelta(days=6 + 7 * back), today - timedelta(days=7 * back))
+
+
+@router.get("/piloto", summary="Piloto del estudio de calle: ventas con lugar, tinteros y la semana")
+async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(owner)):
+    """Lo que se muestra en la reunión: dónde se vendió, a quién se mapeó y los números de la semana.
+    Ventas: solo las de Micra completadas con lugar (sin teléfono ni datos del cliente)."""
+    now = datetime.now(BOGOTA)
+    since = (now - timedelta(days=days)).isoformat()
+    try:
+        orders = await sb.select("orders", {
+            "select": "id,total,created_at,place_carrera,place_calle,place_zone,order_items(qty,product_name_snapshot,variant_label_snapshot)",
+            "source": "eq.esspresale", "status": "eq.completed", "place_carrera": "not.is.null",
+            "created_at": f"gte.{since}", "order": "created_at.desc", "limit": "500",
+        })
+        tinteros = await sb.select("tinteros", {"select": "*", "order": "created_at.desc"})
+    except SupabaseError as err:
+        raise db_error(err) from err
+
+    sales = []
+    for o in orders:
+        items = o.get("order_items") or []
+        sales.append({
+            "id": o["id"], "at": o["created_at"], "total": float(o.get("total") or 0),
+            "cups": sum(int(i.get("qty") or 0) for i in items),
+            "what": ", ".join(f"{i.get('product_name_snapshot')} {i.get('variant_label_snapshot') or ''}".strip() for i in items)[:120],
+            "carrera": o.get("place_carrera"), "calle": o.get("place_calle"), "zone": o.get("place_zone"),
+        })
+
+    def week_stats(span: tuple[date, date]) -> dict:
+        rows = [x for x in sales if span[0] <= datetime.fromisoformat(x["at"].replace("Z", "+00:00")).astimezone(BOGOTA).date() <= span[1]]
+        cups = sum(x["cups"] for x in rows)
+        return {
+            "cups": cups, "sales": len(rows), "income": round(sum(x["total"] for x in rows)),
+            "blocks": len({(round(x["carrera"]), round(x["calle"])) for x in rows}),
+            "zones": sorted({x["zone"] for x in rows if x["zone"]}),
+            "kg": round(cups * GRAMS_PER_CUP / 1000, 2),
+        }
+
+    cur, prev = week_stats(_week(now, 0)), week_stats(_week(now, 1))
+    surveyed = [t for t in tinteros if t.get("carrera") is not None]
+    prices = [float(t["tinto_price"]) for t in surveyed if t.get("tinto_price")]
+    rates = [float(t["cups_per_hour"]) for t in surveyed if t.get("cups_per_hour")]
+    return {
+        "generatedAt": now.isoformat(), "days": days,
+        "week": {"from": _week(now, 0)[0].isoformat(), "to": _week(now, 0)[1].isoformat(), "cur": cur, "prev": prev},
+        "sales": sales,
+        "tinteros": [{k: v for k, v in t.items() if k != "phone"} for t in tinteros],
+        "study": {
+            "surveyed": len(surveyed), "with_photo": sum(1 for t in surveyed if t.get("photo_url")),
+            "consented": sum(1 for t in surveyed if t.get("photo_consent")),
+            "tinto_price_avg": round(sum(prices) / len(prices)) if prices else None,
+            "cups_per_hour_avg": round(sum(rates) / len(rates), 1) if rates else None,
+            "zones": sorted({t["zone"] for t in surveyed if t.get("zone")}),
+        },
+    }
 
 
 @router.get("/tinteros", summary="Tinteros y sus últimos 30 días")

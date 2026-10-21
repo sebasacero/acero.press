@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { drawEspresaleCard, FORMATS, pickVideoType } from '../espresaleCard.js';
 import { CARD_KINDS, PRESETS, presetOf } from '../micraFilters.js';
 import FilterCarousel from './FilterCarousel.jsx';
@@ -22,11 +22,11 @@ export const canLive = () => typeof navigator !== 'undefined' && !!navigator.med
 const coarse = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 const typing = (el) => !!el?.closest?.('input, textarea, select, [contenteditable="true"]');
 
-export default function MicraCamera({
+const MicraCamera = forwardRef(function MicraCamera({
   varieties, variety, onVariety, kind, onKind, presetId, onPreset,
   format, onOpenFormat, weather, elements, texts, priceText, filterExtra, cobrand,
-  mode, onMode, paused, onCapture, onEditText, onOpenSale, ticketLabel, onExit, note, onRecording,
-}) {
+  mode, onMode, paused, onCapture, onEditText, onOpenSale, onOpenTintero, ticketLabel, onExit, note, onRecording,
+}, ref) {
   const videoRef = useRef(null);
   const cardRef = useRef(null);
   const streamRef = useRef(null);
@@ -146,7 +146,9 @@ export default function MicraCamera({
     if (next) selectFilter(next.id);
   };
 
-  const takePhoto = async () => {
+  // deliver: a quién va la foto. Por defecto abre el editor (onCapture); una
+  // ficha de tintero la pide con su propio destino y la cámara sigue en vivo.
+  const takePhoto = async (deliver = onCapture) => {
     setBusy(true);
     try {
       const track = streamRef.current?.getVideoTracks()[0];
@@ -163,11 +165,20 @@ export default function MicraCamera({
         c.getContext('2d').drawImage(v, 0, 0);
         blob = await new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.92));
       }
-      if (blob) onCapture(new File([blob], `micra-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' }));
+      if (blob) deliver(new File([blob], `micra-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' }));
     } finally {
       setBusy(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    /** Foto para una ficha (no abre el editor). Resuelve null si no hay cámara en vivo. */
+    snapshot: () => new Promise((resolve) => {
+      if (status !== 'live' || busy) { resolve(null); return; }
+      takePhoto(resolve).catch(() => resolve(null));
+    }),
+    live: status === 'live',
+  }), [status, busy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startVideo = async () => {
     if (busy || recRef.current) return;
@@ -366,6 +377,11 @@ export default function MicraCamera({
           <button type="button" className="mst-ticket" onClick={onOpenSale} disabled={recording} aria-label="Venta">
             {ticketLabel}
           </button>
+          {onOpenTintero && (
+            <button type="button" className="mst-tintero" onClick={onOpenTintero} disabled={recording} aria-label="Registrar un tintero">
+              Tintero
+            </button>
+          )}
         </div>
       </div>
 
@@ -374,4 +390,6 @@ export default function MicraCamera({
       <input ref={galleryRef} type="file" accept="image/*,video/*" hidden onChange={pick} />
     </div>
   );
-}
+});
+
+export default MicraCamera;
