@@ -1,7 +1,7 @@
 // Captura de pantalla con el Supabase simulado de las pruebas: para mirar un
 // cambio visual sin montar nada a mano.
 //
-//   npm run shot -- / portada.png                 celular (390×844), sin sesión
+//   npm run shot -- / portada.png                 celular (390×844), como un visitante
 //   npm run shot -- / portada.png --desk          computador (1440×900)
 //   npm run shot -- /admin piloto.png --session   con sesión de owner
 //   npm run shot -- / portada.png --street=e2e/data/street.json   datos del mapa
@@ -12,7 +12,7 @@
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { openPage, PHONE } from './micra/fixtures.js';
+import { PHONE, mockBackend, signIn, watchErrors } from './micra/fixtures.js';
 import { BASE_URL } from '../playwright.config.js';
 
 const args = process.argv.slice(2);
@@ -38,7 +38,12 @@ if (!(await serverUp())) {
 
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
 try {
-  const { page, api, errors } = await openPage(browser, { context, session: flags.session ? { coach: true } : undefined });
+  // Como un visitante, salvo --session: entonces con la sesión de owner de las pruebas
+  const page = await (await browser.newContext(context)).newPage();
+  page.setDefaultTimeout(8000);
+  const errors = watchErrors(page);
+  const api = await mockBackend(page);
+  if (flags.session) await signIn(page, { coach: true });
   if (flags.street) api.opts.streetMap = JSON.parse(readFileSync(flags.street, 'utf8'));
   if (flags.piloto) api.opts.piloto = JSON.parse(readFileSync(flags.piloto, 'utf8'));
   await page.goto(`${BASE_URL}${path}`, { waitUntil: 'load' });
