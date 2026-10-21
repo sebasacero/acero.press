@@ -373,7 +373,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     setTicketFlash(true);
     setTimeout(() => setTicketFlash(false), 6000);
     showToast({
-      text: rec.stockError ? `✓ Venta registrada · ${money(rec.total)} (el inventario no se actualizó)` : `✓ Venta registrada · ${money(rec.total)}`,
+      text: rec.replay ? `✓ Esa venta ya estaba registrada · ${money(rec.total)}`
+        : rec.stockError ? `✓ Venta registrada · ${money(rec.total)} (el inventario no se actualizó)` : `✓ Venta registrada · ${money(rec.total)}`,
       ttl: 6000,
       action: {
         label: 'Deshacer',

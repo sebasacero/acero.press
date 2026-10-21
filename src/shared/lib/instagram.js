@@ -40,20 +40,54 @@ export async function publishToInstagram({ mediaUrl, kind, caption, publicationI
   return data?.results?.instagram ?? { success: false, error: 'Instagram no respondió.' };
 }
 
+// La venta y la anulación van en una sola transacción de la base
+// (micra_record_sale / micra_void_sale, migración 20261021120000). Mientras
+// esa migración no esté aplicada se usa el camino de antes, llamada por llamada.
+let atomicMissing = false;
+const isMissingFn = (e) => e?.code === 'PGRST202' || e?.code === '42883';
+
 /**
  * Registra una venta de Micra (barra) como pedido completado: suma al contador,
  * al dashboard, al agente y al algoritmo, y descuenta el inventario. Un
  * ticket puede tener varias líneas (varios cafés o presentaciones).
  * lines: [{ variant: { id, label, price }, productName, qty }]
+ * clientRef: identifica el ticket; un reintento con la misma referencia
+ * devuelve el pedido ya creado en vez de duplicarlo.
  *
- * Devuelve { orderId, total, stock: [{ variantId, applied }], stockError }:
+ * Devuelve { orderId, total, stock: [{ variantId, applied }], stockError, replay }:
  * `applied` es lo que de verdad cambió el inventario (no baja de 0), para que
- * «Deshacer» devuelva exactamente eso. Si las líneas no se guardan, el pedido
- * se cancela antes de avisar del error (así un reintento no lo duplica).
+ * «Deshacer» devuelva exactamente eso; `replay`: el pedido ya existía (reintento).
  */
-export async function recordMicraSale({ lines, paymentMethod, phone }) {
+export async function recordMicraSale({ lines, paymentMethod, phone, clientRef }) {
   const valid = (lines || []).filter((l) => l.variant && l.qty > 0);
   if (!valid.length) throw new Error('El ticket está vacío.');
+  if (!atomicMissing) {
+    // Precios y nombres los pone la base; aquí solo van presentación y cantidad
+    const { data, error } = await supabase.rpc('micra_record_sale', {
+      p_lines: valid.map((l) => ({ variant_id: l.variant.id, qty: l.qty })),
+      p_payment_method: paymentMethod ?? null,
+      p_phone: phone || null,
+      p_client_ref: clientRef ?? null,
+    });
+    if (!error) {
+      return {
+        orderId: data.order_id,
+        total: Number(data.total),
+        stock: (data.stock ?? []).map((x) => ({ variantId: x.variant_id, applied: x.applied })),
+        stockError: null,
+        replay: !!data.replay,
+      };
+    }
+    // Sin código = no hubo respuesta: la venta pudo guardarse y el mismo ticket se puede reintentar
+    if (!error.code) throw new Error('sin respuesta del servidor. Reintenta el mismo ticket: si ya se había guardado, no se registra dos veces.');
+    if (!isMissingFn(error)) throw new Error(error.message);
+    atomicMissing = true;
+  }
+  return recordMicraSaleSteps({ lines: valid, paymentMethod, phone });
+}
+
+/** Camino de antes (sin la migración): si las líneas no se guardan, el pedido se cancela antes de avisar. */
+async function recordMicraSaleSteps({ lines: valid, paymentMethod, phone }) {
   const total = valid.reduce((s, l) => s + Number(l.variant.price) * l.qty, 0);
   const now = new Date().toISOString();
   const { data: order, error } = await supabase
@@ -91,16 +125,23 @@ export async function recordMicraSale({ lines, paymentMethod, phone }) {
   const { applied, error: stockError } = await moveStock(
     [...perVariant].map(([variantId, qty]) => ({ variantId, change: -qty })), 'sale', order.id, now,
   );
-  return { orderId: order.id, total, stock: applied, stockError };
+  return { orderId: order.id, total, stock: applied, stockError, replay: false };
 }
 
 /**
  * Anula una venta recién registrada («Deshacer»): la cancela (solo si sigue
  * completada: anular dos veces no devuelve el stock dos veces), devuelve al
  * inventario lo que la venta descontó y suelta las publicaciones que la citaban.
- * stock: [{ variantId, applied }] (lo que devolvió recordMicraSale).
+ * stock: [{ variantId, applied }] (lo que devolvió recordMicraSale; la función
+ * de la base no lo necesita: lo lee de los movimientos del pedido).
  */
 export async function voidMicraSale({ orderId, stock }) {
+  if (!atomicMissing) {
+    const { data, error } = await supabase.rpc('micra_void_sale', { p_order_id: orderId });
+    if (!error) return { alreadyVoided: !!data?.already_voided };
+    if (!isMissingFn(error)) throw new Error(error.message);
+    atomicMissing = true;
+  }
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from('orders')
@@ -118,7 +159,12 @@ export async function voidMicraSale({ orderId, stock }) {
   return { alreadyVoided: false };
 }
 
-/** Mueve el inventario; devuelve lo aplicado de verdad por presentación y el primer error. */
+/**
+ * Mueve el inventario; devuelve lo aplicado de verdad por presentación y el
+ * primer error. Como en la base: la venta registra −qty y, si no alcanzaba, un
+ * 'adjustment' con lo que no se descontó (la suma de movimientos del pedido es
+ * lo que de verdad cambió el inventario).
+ */
 async function moveStock(changes, reason, orderId, now) {
   const applied = [];
   let firstError = null;
@@ -126,7 +172,8 @@ async function moveStock(changes, reason, orderId, now) {
     const { data: inv, error: readError } = await supabase.from('inventory').select('stock_qty').eq('variant_id', variantId).maybeSingle();
     if (readError) { firstError ??= readError.message; applied.push({ variantId, applied: 0 }); continue; }
     if (!inv) { applied.push({ variantId, applied: 0 }); continue; }
-    const next = Math.max(0, inv.stock_qty + change);
+    // Una salida no baja de 0 (y si ya estaba en 0 o menos, no se mueve)
+    const next = change < 0 ? Math.min(inv.stock_qty, Math.max(0, inv.stock_qty + change)) : inv.stock_qty + change;
     const { error: updateError } = await supabase
       .from('inventory')
       .update({ stock_qty: next, updated_at: now })
@@ -140,11 +187,15 @@ async function moveStock(changes, reason, orderId, now) {
       reference_order_id: orderId,
     });
     if (logError) firstError ??= logError.message;
+    if (reason === 'sale' && next - inv.stock_qty !== change) {
+      const { error: clampError } = await supabase.from('inventory_movements').insert({
+        variant_id: variantId,
+        change_qty: next - inv.stock_qty - change,
+        reason: 'adjustment',
+        reference_order_id: orderId,
+      });
+      if (clampError) firstError ??= clampError.message;
+    }
   }
   return { applied, error: firstError };
-}
-
-/** Una sola línea (como lo registraba la consola de Micra). */
-export function recordEspresaleSale({ variant, productName, qty, paymentMethod, phone }) {
-  return recordMicraSale({ lines: [{ variant, productName, qty }], paymentMethod, phone });
 }

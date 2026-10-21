@@ -8,7 +8,9 @@
     "api": "uvicorn --app-dir api v1:app --reload --port 8000",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test \"src/features/admin/micra/*.test.js\""
+    "test": "node --test \"src/features/admin/micra/*.test.js\"",
+    "e2e": "playwright test",
+    "test:sql": "bash supabase/tests/micra_atomic_sale/run.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.134.0",
@@ -18,6 +20,7 @@
     "stripe": "^17.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.0"
   }
