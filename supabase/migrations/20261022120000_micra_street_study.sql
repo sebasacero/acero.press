@@ -12,6 +12,12 @@
 --
 -- Invariante nueva: una venta de Micra con lugar tiene carrera y calle
 -- dentro de Bogotá (1–120 / 1–200); sin lugar, las tres columnas van nulas.
+--
+-- Aplicada en Supabase el 21 oct. 2026 en cuatro partes (micra_street_study_
+-- tables, _map, _record_sale, _bucket) porque la herramienta se queda esperando
+-- confirmación ante cualquier `drop`: allá la firma vieja de micra_record_sale
+-- quedó renombrada a micra_record_sale_v1, sin permisos, en vez de borrada.
+-- Para borrarla desde el panel: drop function public.micra_record_sale_v1(jsonb, text, text, text);
 
 set lock_timeout = '5s';
 
