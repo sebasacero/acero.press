@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DURATION, STEPS, trackProgress, timeAt, stepAt, stepStart, progressForStep } from './pressStory.js';
+import {
+  DURATION, STEPS, trackProgress, timeAt, stepAt, stepStart, progressForStep,
+  LOGIN_SHARE, LOGIN_BEATS, LOGIN_ITEMS, ITEM_COUNT, sceneAt, itemAt, progressForItem,
+} from './pressStory.js';
 
 test('el avance va de 0 a 1 dentro de la pista y no se sale', () => {
   assert.equal(trackProgress(100, 5000, 800), 0);
@@ -39,4 +42,38 @@ test('saltar a un paso lleva justo dentro de ese paso', () => {
     assert.equal(stepAt(t), i, `paso ${i}`);
     assert.ok(t >= stepStart(i));
   }
+});
+
+
+test('primero el inicio de sesión, en orden, y el video quieto en 0', () => {
+  const beats = [];
+  for (let p = 0; p < LOGIN_SHARE; p += 0.005) {
+    const s = sceneAt(p);
+    assert.equal(s.scene, 'login');
+    assert.equal(s.time, 0);
+    if (beats.at(-1) !== s.beat) beats.push(s.beat);
+  }
+  assert.deepEqual(beats, LOGIN_BEATS.map((b) => b.key));
+});
+
+test('después de entrar, la receta recorre todo el clip', () => {
+  assert.equal(sceneAt(LOGIN_SHARE).scene, 'brew');
+  assert.equal(sceneAt(LOGIN_SHARE).time, 0);
+  assert.equal(sceneAt(1).time, DURATION);
+  assert.ok(sceneAt(0.6).time > sceneAt(0.4).time);
+});
+
+test('lo narrado avanza de 0 a 7 sin volver atrás', () => {
+  let last = 0;
+  for (let p = 0; p <= 1; p += 0.002) {
+    const i = itemAt(p);
+    assert.ok(i >= last && i < ITEM_COUNT, `p=${p}: ${i} tras ${last}`);
+    last = i;
+  }
+  assert.equal(last, ITEM_COUNT - 1);
+});
+
+test('saltar a un ítem lleva justo a ese ítem', () => {
+  for (let i = 0; i < ITEM_COUNT; i++) assert.equal(itemAt(progressForItem(i)), i, `ítem ${i}`);
+  assert.equal(LOGIN_ITEMS.length, 3);
 });
