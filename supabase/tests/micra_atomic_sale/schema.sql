@@ -51,6 +51,8 @@ grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 -- Como Supabase: las funciones nuevas quedan ejecutables por anon y authenticated
 alter default privileges in schema public grant execute on functions to anon, authenticated;
+-- Como Supabase: las tablas que creen las migraciones también quedan concedidas a los roles de la API
+alter default privileges in schema public grant all on tables to anon, authenticated;
 
 -- Stub de storage (el real es de Supabase): solo lo que la migración de estudio toca
 create schema if not exists storage;

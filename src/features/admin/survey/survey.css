@@ -1,0 +1,16 @@
+/* Encuesta del tintero: vive dentro de las hojas de Micra (msheet-*) */
+.srv{ display:flex; flex-direction:column; gap:14px; }
+.srv-say{ padding:10px 12px; border:1px dashed var(--mst-line, rgba(255,255,255,.2)); border-radius:12px; font-size:13px; }
+.srv-body{ display:flex; flex-direction:column; gap:14px; min-width:0; margin:0; padding:0; border:0; }
+.srv-body:disabled{ opacity:.4; }
+/* .srv delante: el panel pone mayúsculas y tinta azul a todo h3 de .ax-main */
+.srv .srv-h{ margin:6px 0 -4px; color:#fff; font:800 15px/1.2 var(--mst-grotesk, 'Space Grotesk', sans-serif); letter-spacing:-.01em; text-transform:none; }
+.srv .srv-h small{ display:block; margin-top:3px; font:500 11.5px/1.3 var(--mst-mono, monospace); color:rgba(255,255,255,.55); }
+.srv-grid-7{ grid-template-columns:repeat(7, minmax(0, 1fr)) !important; }
+.srv-progress{ position:sticky; top:0; z-index:1; display:flex; align-items:center; gap:10px; padding:8px 0; background:#16171b; font:700 11px var(--mst-mono, monospace); color:rgba(255,255,255,.65); }
+.srv-progress i{ flex:1; height:5px; border-radius:3px; background:linear-gradient(90deg, var(--mst-red, #fa2525) var(--p), rgba(255,255,255,.14) var(--p)); }
+/* En el panel (Piloto), la misma hoja centrada como un diálogo */
+.srv-modal{ background:transparent !important; z-index:7000 !important; }
+.srv-modal .msheet{ left:0; right:0; margin-inline:auto; width:min(640px, 100%); background:#16171b; }
+/* En Micra la hoja es de vidrio sobre la cámara: la barra de avance toma ese tono */
+.mstudio:not(.srv-modal) .srv-progress{ background:rgb(20,20,24); }

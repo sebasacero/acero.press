@@ -118,6 +118,35 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     tinteros.push(row);
     return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(row) });
   });
+  // Encuesta (POST /api/v1/bi/tinteros/{id}/surveys) y escenario de la reunión (PUT /api/v1/bi/piloto/escenario).
+  // opts.surveysDown simula que la migración de la encuesta aún no se aplicó.
+  const surveys = [];
+  const MISSING = { detail: 'Falta activar la encuesta y el escenario del piloto (migración 20261022140000_tintero_surveys).' };
+  await page.route('**/api/v1/bi/tinteros/*/surveys', async (route) => {
+    const req = route.request();
+    if (!(req.headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
+    const id = decodeURIComponent(new URL(req.url()).pathname.split('/').at(-2));
+    const body = req.postDataJSON();
+    calls.push({ m: 'POST', p: `/api/v1/bi/tinteros/${id}/surveys`, q: '', data: body });
+    if (opts.surveysDown) return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify(MISSING) });
+    if (!body.consent) return route.fulfill({ status: 422, contentType: 'application/json', body: JSON.stringify({ detail: [{ msg: 'Value error, Sin permiso del tintero no se guarda la encuesta.' }] }) });
+    const known = tinteros.some((t) => t.id === id) || (opts.piloto?.tinteros ?? []).some((t) => t.id === id);
+    if (!known) return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ detail: 'No existe ese tintero.' }) });
+    const row = { id: `encuesta-${surveys.length + 1}`, tintero_id: id, created_at: new Date().toISOString(), ...body };
+    surveys.push(row);
+    if (opts.piloto) opts.piloto = { ...opts.piloto, surveys: [row, ...(opts.piloto.surveys ?? [])] };
+    return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(row) });
+  });
+  await page.route('**/api/v1/bi/piloto/escenario', async (route) => {
+    const req = route.request();
+    if (!(req.headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
+    const body = req.postDataJSON();
+    calls.push({ m: req.method(), p: '/api/v1/bi/piloto/escenario', q: '', data: body });
+    if (opts.surveysDown) return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify(MISSING) });
+    opts.scenario = body;
+    if (opts.piloto) opts.piloto = { ...opts.piloto, scenario: body };
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+  });
   await page.route('https://mock.supabase.co/**', async (route) => {
     const req = route.request();
     const u = new URL(req.url());
@@ -178,6 +207,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     orders,
     stock,
     tinteros,
+    surveys,
     clear: () => { calls.length = 0; },
     find: (path, method) => calls.find((c) => c.p.endsWith(path) && (!method || c.m === method)),
     all: (path, method) => calls.filter((c) => c.p.endsWith(path) && (!method || c.m === method)),

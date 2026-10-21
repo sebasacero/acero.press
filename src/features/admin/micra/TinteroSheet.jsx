@@ -3,12 +3,17 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import Sheet from './Sheet.jsx';
 import { ZONES, isValidPlace, placeLabel, placeOfZone, editPlace } from './place.js';
 import { EMPTY_TINTERO, buildTintero, canUploadPhoto, photoPath } from './tinteroForm.js';
+import SurveyForm from '../survey/SurveyForm.jsx';
+import { EMPTY_SURVEY, buildSurvey } from '../survey/survey.js';
+import { postSurvey } from '../survey/surveyApi.js';
 
 // Ficha de campo de un tintero (estudio de calle), para levantar en dos
 // minutos parado frente al puesto: foto con la misma cámara de Micra, dónde
 // está, a cuánto vende el tinto y cuántas tazas por hora se le vieron. La
 // foto va al bucket privado «estudio» y solo con permiso; la ficha entra por
 // la API de BI (la misma que usa el panel), así que aplican el owner y RLS.
+// Guardada la ficha, sigue la encuesta (dos minutos, con su permiso); se
+// puede dejar para después y hacerla desde Piloto.
 
 const BUCKET = 'estudio';
 
@@ -31,6 +36,8 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
   const [form, setForm] = useState(() => ({ ...EMPTY_TINTERO, place }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(null); // la ficha ya guardada: sigue la encuesta
+  const [survey, setSurvey] = useState(EMPTY_SURVEY);
   const nameRef = useRef(null);
   const set = (patch) => { setError(null); setForm((f) => ({ ...f, ...patch })); };
 
@@ -51,14 +58,56 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
         const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
         body.photo_url = data.publicUrl;
       }
-      const saved = await postTintero(body);
-      onSaved?.({ ...saved, hadPhoto: !!body.photo_url });
+      const row = await postTintero(body);
+      setSaved({ ...row, hadPhoto: !!body.photo_url });
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  const finish = (surveyed) => onSaved?.({ ...saved, surveyed });
+
+  const saveSurvey = async () => {
+    const { body, error: e } = buildSurvey(survey);
+    if (e) { setError(e); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      await postSurvey(saved.id, body);
+      finish(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (saved) {
+    return (
+      <Sheet
+        title="Encuesta"
+        aside={<span className="msheet-total">2 min</span>}
+        onClose={() => finish(false)}
+        docked={docked}
+        size="tall"
+        label={`Encuesta de ${saved.name}`}
+        footer={(
+          <>
+            {error && <p className="msheet-notice is-err" role="alert">{error}</p>}
+            <button type="button" className="msheet-btn is-primary is-big" disabled={busy || !survey.consent} onClick={saveSurvey}>
+              {busy ? 'Guardando…' : 'Guardar encuesta'}
+            </button>
+            <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => finish(false)}>Ahora no: la hago después desde Piloto</button>
+          </>
+        )}
+      >
+        <p className="msheet-notice is-ok" role="status">✓ La ficha de {saved.name} quedó guardada{saved.hadPhoto ? ' con su foto' : ''}.</p>
+        <SurveyForm form={survey} onChange={(f) => { setError(null); setSurvey(f); }} name={saved.name} />
+      </Sheet>
+    );
+  }
 
   const footer = (
     <>

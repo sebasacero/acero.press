@@ -135,11 +135,25 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterId]);
 
-  // Preferencias del celular (formato, modo, pago, etiquetas y diseño), sin escribir en cada tecla
+  // Preferencias del celular (formato, modo, pago, etiquetas, diseño y lugar), sin escribir en cada tecla
+  const pendingPrefs = useRef(null);
   useEffect(() => {
-    const id = setTimeout(() => savePrefs({ format, camMode, pay: sale.payMethod, hashtags, overrides: look.overrides, texts, place: sale.place && !sale.place.error ? sale.place : null }), 400);
+    pendingPrefs.current = { format, camMode, pay: sale.payMethod, hashtags, overrides: look.overrides, texts, place: sale.place && !sale.place.error ? sale.place : null };
+    const id = setTimeout(() => { savePrefs(pendingPrefs.current); pendingPrefs.current = null; }, 400);
     return () => clearTimeout(id);
   }, [format, camMode, sale.payMethod, hashtags, look.overrides, texts, sale.place]);
+  // Lo pendiente se guarda igual si la página se recarga, se esconde o el celular la cierra antes de los 400 ms
+  useEffect(() => {
+    const flush = () => { if (pendingPrefs.current) { savePrefs(pendingPrefs.current); pendingPrefs.current = null; } };
+    const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onHide);
+      flush();
+    };
+  }, []);
 
   // ── Avisos ──
   const toastTimer = useRef(0);
@@ -619,7 +633,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             onSaved={(t) => {
               clearSnap();
               closeSheet();
-              showToast({ text: `✓ ${t.name} quedó en el estudio${t.hadPhoto ? ' con su foto' : ''}.`, ttl: 5000 });
+              showToast({ text: `✓ ${t.name} quedó en el estudio${t.hadPhoto ? ' con su foto' : ''}${t.surveyed ? ' y su encuesta' : ''}.`, ttl: 5000 });
             }}
           />
         );

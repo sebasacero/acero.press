@@ -1421,6 +1421,7 @@
 .mh-icon--waitlist{ background:linear-gradient(160deg, #c08bff, #7b3fe4); }
 .mh-icon--dashboard{ background:radial-gradient(circle at 50% 42%, #22407a, #0a1222 72%); color:#7fd4ff; }
 .mh-icon--algorithm{ background:linear-gradient(160deg, #2c2c2e, #050505); }
+.mh-icon--piloto{ background:linear-gradient(160deg, #F7F3E8, #E3DBC4); color:#2A3550; box-shadow:inset 0 0 0 1px rgba(42,53,80,.18); }
 .mh-icon--inventory{ background:linear-gradient(160deg, #c08a5e, #7a4a2a); }
 .mh-icon--catalog{ background:linear-gradient(160deg, #36c9b9, #14806f); }
 .mh-icon--publications{ background:linear-gradient(160deg, #5fb2ff, #1b6fe0); }
@@ -1536,3 +1537,12 @@
 .piloto-photo, .piloto-nophoto{ width:120px; aspect-ratio:4 / 3; object-fit:cover; border-radius:8px; border:1.5px solid var(--esp-ink); background:rgba(42,53,80,.06); }
 .piloto-nophoto{ display:grid; place-items:center; font-family:var(--esp-mono); font-size:10px; text-align:center; color:var(--esp-soft); padding:.4rem; }
 @media (max-width:520px){ .piloto-tintero{ grid-template-columns:1fr; } .piloto-photo, .piloto-nophoto{ width:100%; } }
+
+/* Pestañas de Piloto y estado de la encuesta en cada tintero */
+.piloto-tabs{ display:flex; gap:0; margin-top:.6rem; border-bottom:1.5px solid var(--esp-ink, #2A3550); }
+.piloto-tabs button{ min-height:42px; padding:0 1rem; border:1.5px solid transparent; border-bottom:0; background:none; color:var(--esp-ink, #2A3550);
+  font:700 11.5px 'JetBrains Mono', monospace; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; margin-bottom:-1.5px; }
+.piloto-tabs button.on{ border-color:var(--esp-ink, #2A3550); background:#F7F3E8; }
+.piloto-survey{ font:600 10.5px 'JetBrains Mono', monospace; color:var(--esp-red, #fa2525); }
+.piloto-survey.is-done{ color:#2E8B57; }
+.piloto-survey-btn{ align-self:flex-start; margin-top:.3rem; }

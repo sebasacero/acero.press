@@ -80,7 +80,7 @@ function pinElement(f) {
   return el;
 }
 
-export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
+export default function PilotoMap({ sales, tinteros, fallbackView, label, withNames = true }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const baseRef = useRef(null); // el estilo base en uso (OpenFreeMap u OpenStreetMap)
@@ -90,7 +90,8 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label }) {
   const themeRef = useRef(theme);
   themeRef.current = theme;
   const salesGeo = salesGeoJSON(sales);
-  const tinterosGeo = tinterosGeoJSON(tinteros, { withNames: true });
+  // En la presentación (la ve el distribuidor) los pines no llevan nombres
+  const tinterosGeo = tinterosGeoJSON(tinteros, { withNames });
   const dataKey = JSON.stringify([salesGeo, tinterosGeo]);
 
   useEffect(() => {

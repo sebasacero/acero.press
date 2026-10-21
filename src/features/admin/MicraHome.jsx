@@ -8,7 +8,8 @@ import AppIcon from './micraIcons.jsx';
 // sitio web en una carpeta, y arriba un widget con el pulso del café.
 
 const FOLDER = { folder: 'site-folder', label: 'Sitio', apps: ['sections', 'recipes', 'settings'] };
-const GRID = ['dashboard', 'algorithm', 'inventory', 'catalog', FOLDER, 'instagram', 'publications', 'waitlist'];
+// Piloto va en la primera fila: es lo que se abre en la calle (encuestas) y en la reunión
+const GRID = ['dashboard', 'piloto', 'algorithm', 'inventory', 'catalog', FOLDER, 'instagram', 'publications', 'waitlist'];
 const DOCK = ['espresale', 'orders', 'site', 'tables'];
 const WX = { clear: 'Despejado', partly: 'Parcialmente nublado', cloudy: 'Nublado', fog: 'Neblina', drizzle: 'Llovizna', rain: 'Lluvia', showers: 'Chubascos', storm: 'Tormenta' };
 

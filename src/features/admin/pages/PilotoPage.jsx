@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import PilotoMap from './PilotoMap.jsx';
 import { heatFromSales, pinsFromTinteros } from '../../../shared/lib/streetMap.js';
+import { latestByTintero } from '../survey/survey.js';
+
+// El informe y la presentación pesan (gráficas, diapositivas): se cargan al abrir la pestaña
+const PilotReport = lazy(() => import('../piloto/PilotReport.jsx'));
+const SurveyDialog = lazy(() => import('../survey/SurveyDialog.jsx'));
+const shortDate = (iso) => new Date(iso).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' });
 
 // Piloto del estudio de calle: la página que se abre en la reunión. Mapa con
 // las ventas y los tinteros reales, los números de la semana y las fichas con
@@ -65,6 +71,9 @@ export default function PilotoPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(90);
+  const [tab, setTab] = useState('estudio'); // estudio · informe
+  const [surveying, setSurveying] = useState(null); // el tintero que se está encuestando
+  const [notice, setNotice] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -93,6 +102,7 @@ export default function PilotoPage() {
 
   const w = data?.week;
   const cupsDelta = w ? delta(w.cur.cups, w.prev.cups) : null;
+  const lastSurvey = useMemo(() => latestByTintero(data?.surveys), [data]);
 
   return (
     <div className="admin-page esp dash piloto">
@@ -112,9 +122,25 @@ export default function PilotoPage() {
       </header>
 
       {error && <p className="esp-notice" role="alert">No se pudo leer el piloto: {error}</p>}
+      {notice && <p className="esp-notice ok" role="status">{notice}</p>}
+      {data?.surveysReady === false && <p className="esp-notice" role="note">La encuesta y el informe completo se activan al aplicar en Supabase la migración de encuestas (20261022140000_tintero_surveys). Mientras tanto se ve lo de la ficha y las ventas.</p>}
       {!data && loading && <p className="dash-booting">LEYENDO EL ESTUDIO…</p>}
 
       {data && (
+        <div className="piloto-tabs" role="tablist" aria-label="Vista del piloto">
+          {[['estudio', 'Estudio'], ['informe', 'Informe y presentación']].map(([id, label]) => (
+            <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : undefined} onClick={() => setTab(id)}>{label}</button>
+          ))}
+        </div>
+      )}
+
+      {data && tab === 'informe' && (
+        <Suspense fallback={<p className="dash-booting">ARMANDO EL INFORME…</p>}>
+          <PilotReport data={data} onScenarioSaved={load} />
+        </Suspense>
+      )}
+
+      {data && tab === 'estudio' && (
         <>
           <section className="dash-kpis" aria-label="Esta semana">
             <Kpi label={`Tazas en la calle · ${w.from} → ${w.to}`} value={num(w.cur.cups)} foot={cupsDelta === null ? `Semana anterior: ${num(w.prev.cups)}` : `${cupsDelta >= 0 ? '▲' : '▼'} ${Math.abs(cupsDelta)} % vs. ${num(w.prev.cups)} la semana anterior`} warn={cupsDelta !== null && cupsDelta < 0} />
@@ -152,22 +178,39 @@ export default function PilotoPage() {
               <div className="esp-cota"><span>TINTEROS</span><span>{data.tinteros.length}</span></div>
               {data.tinteros.length === 0 ? <p className="esp-muted">Aún no hay tinteros registrados.</p> : (
                 <ul className="piloto-tinteros">
-                  {data.tinteros.map((t) => (
-                    <li key={t.id} className="piloto-tintero">
-                      {t.photo_consent ? <Photo url={t.photo_url} alt={`Puesto de ${t.name}`} /> : <div className="piloto-nophoto">Sin permiso de foto</div>}
-                      <div>
-                        <b>{t.name}</b>
-                        <span>{cuadra(t)}</span>
-                        <span>{STAGE_LABEL[t.stage] ?? t.stage}{t.tinto_price ? ` · tinto a ${money(t.tinto_price)}` : ''}{t.cups_per_hour ? ` · ${t.cups_per_hour} tazas/h` : ''}</span>
-                        {t.notes && <small>{t.notes}</small>}
-                      </div>
-                    </li>
-                  ))}
+                  {data.tinteros.map((t) => {
+                    const sv = lastSurvey.get(t.id);
+                    return (
+                      <li key={t.id} className="piloto-tintero">
+                        {t.photo_consent ? <Photo url={t.photo_url} alt={`Puesto de ${t.name}`} /> : <div className="piloto-nophoto">Sin permiso de foto</div>}
+                        <div>
+                          <b>{t.name}</b>
+                          <span>{cuadra(t)}</span>
+                          <span>{STAGE_LABEL[t.stage] ?? t.stage}{t.tinto_price ? ` · tinto a ${money(t.tinto_price)}` : ''}{t.cups_per_hour ? ` · ${t.cups_per_hour} tazas/h` : ''}</span>
+                          {t.notes && <small>{t.notes}</small>}
+                          <span className={`piloto-survey ${sv ? 'is-done' : ''}`}>{sv ? `Encuestado el ${shortDate(sv.surveyed_at)}` : 'Sin encuesta'}</span>
+                          {data.surveysReady !== false && (
+                            <button type="button" className="esp-chip piloto-survey-btn" onClick={() => { setNotice(null); setSurveying(t); }}>{sv ? 'Encuestar de nuevo' : 'Encuestar'}</button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
           </div>
         </>
+      )}
+
+      {surveying && (
+        <Suspense fallback={null}>
+        <SurveyDialog
+          tintero={surveying}
+          onClose={() => setSurveying(null)}
+          onSaved={() => { setNotice(`✓ Encuesta de ${surveying.name} guardada.`); setSurveying(null); load(); }}
+        />
+        </Suspense>
       )}
     </div>
   );
