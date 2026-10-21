@@ -26,6 +26,7 @@ Datos reales hoy (oct. 2026): 13 productos, 31 presentaciones, 8 pedidos, 4 clie
 - `npm run dev` · `npm run build` · `npm run api` (FastAPI en :8000; necesita `uvicorn`, no está en `requirements.txt`).
 - `npm test`: unitarias (`node --test`) de los módulos puros. El glob es fijo (`admin/micra` y `home/sections`): si agregas un `*.test.js` en otra carpeta, amplía el script.
 - `npm run e2e`: navegador con Supabase simulado; nunca toca la base real. Chromium viene con `@playwright/test`; `PW_CHROMIUM` apunta a uno propio.
+- `npm run shot -- <ruta> <salida.png> [--desk] [--session] [--street=e2e/data/street.json] [--click=sel] [--full]`: captura con el mismo simulador, para mirar un cambio visual antes de probarlo entero. Mira la captura con el lector de imágenes; no la subas a git.
 - `npm run test:sql`: funciones SQL de venta contra un Postgres local desechable (variables `PG*`; se niega a correr contra Supabase).
 - No hay CI, lint ni formateador: lo que no corras tú no lo corre nadie.
 

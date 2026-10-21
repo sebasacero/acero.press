@@ -1,0 +1,11 @@
+{
+  "days": 90,
+  "sales": [
+    { "carrera": 13, "calle": 85, "cups": 48, "zone": "Zona T" },
+    { "carrera": 13, "calle": 72, "cups": 12, "zone": "Chapinero" }
+  ],
+  "tinteros": [
+    { "carrera": 13, "calle": 72, "stage": "activo", "cups_per_hour": 30, "zone": "Chapinero" },
+    { "carrera": 11, "calle": 79, "stage": "prospecto", "cups_per_hour": 20, "zone": "Chapinero" }
+  ]
+}
