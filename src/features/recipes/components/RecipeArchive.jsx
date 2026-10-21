@@ -2,7 +2,6 @@ import { useState } from 'react';
 import recipes from '../data/recipes.js';
 import RecipeBanners from './RecipeBanners.jsx';
 import RecipeModal from './RecipeModal.jsx';
-import BaristaChat from './BaristaChat.jsx';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import useRecipePairings from '../hooks/useRecipePairings.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
@@ -12,22 +11,14 @@ const HEAD_FIELDS = [
   { key: 'recipes_title', label: 'Título de la sección' },
   { key: 'recipes_desc', label: 'Descripción', multiline: true },
 ];
-const BARISTA_FIELDS = [
-  { key: 'barista_title', label: 'Título del barista' },
-  { key: 'barista_sub', label: 'Texto del barista', multiline: true },
-];
 
 export default function RecipeArchive() {
   const { t } = useLanguage();
-  const [text, reloadTexts] = useEditableTexts(['recipes_title', 'recipes_desc', 'barista_title', 'barista_sub']);
+  const [text, reloadTexts] = useEditableTexts(['recipes_title', 'recipes_desc']);
   const [openRecipe, setOpenRecipe] = useState(null);
   const [focusKit, setFocusKit] = useState(false);
   const pairings = useRecipePairings();
   const open = (recipe, opts = {}) => { setFocusKit(!!opts.kit); setOpenRecipe(recipe); };
-  // Pregunta al barista desde una tarjeta sin kit: qué café de la tienda le va a esa receta.
-  const [baristaAsk, setBaristaAsk] = useState(null);
-  const askBarista = (recipe) =>
-    setBaristaAsk({ id: Date.now(), text: t('barista.askPrompt').replace('{year}', recipe.year).replace('{name}', recipe.name) });
 
   return (
     <>
@@ -48,20 +39,7 @@ export default function RecipeArchive() {
         </p>
       </div>
 
-      <RecipeBanners recipes={recipes} pairings={pairings} onOpen={open} onAskBarista={askBarista} />
-
-      <div className="sp barista-wrap" id="barista">
-        <div className="barista-heading" style={{ position: 'relative' }}>
-          <SectionEditButton section="Barista · textos" fig="FIG. 03.2 — BARRA ABIERTA" onSaved={reloadTexts} fields={BARISTA_FIELDS} />
-          <span className="barista-fig">{t('barista.fig')}</span>
-          <h3>{text('barista_title', t('barista.title'))}</h3>
-          <p>{text('barista_sub', t('barista.sub'))}</p>
-        </div>
-        <BaristaChat
-          request={baristaAsk}
-          onOpenRecipe={(year) => { const r = recipes.find((x) => x.year === year); if (r) open(r); }}
-        />
-      </div>
+      <RecipeBanners recipes={recipes} pairings={pairings} onOpen={open} />
 
       <RecipeModal
         recipe={openRecipe}
