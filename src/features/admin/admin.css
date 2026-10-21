@@ -1481,7 +1481,19 @@
 
 /* === Piloto: estudio de calle === */
 .piloto-map-box{ position:relative; width:100%; aspect-ratio:16 / 10; max-height:70vh; border:2px solid var(--esp-ink); border-radius:8px 14px 8px 14px; overflow:hidden; background:var(--esp-paper, #EDE6D3); }
-.piloto-map-box canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.piloto-geo{ position:absolute; inset:0; }
+.piloto-geo > canvas, .piloto-geo-map{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.piloto-geo.is-loading::after{ content:'Cargando el mapa…'; position:absolute; left:12px; bottom:12px; font:600 11px/1 'JetBrains Mono', monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--esp-ink); opacity:.7; }
+/* Pin de tintero: punto y etiqueta corta; el activo en rojo */
+.piloto-pin{ display:flex; flex-direction:column; align-items:center; gap:3px; padding:0; border:0; background:none; cursor:pointer; font:inherit; }
+.piloto-pin span{ background:#fff; color:#1d2433; border:1.5px solid #1d2433; border-radius:999px; padding:3px 8px; font:700 11px/1.1 'JetBrains Mono', monospace; white-space:nowrap; box-shadow:2px 2px 0 rgba(0,0,0,.25); }
+.piloto-pin i{ order:2; width:12px; height:12px; border-radius:50%; background:#1d2433; border:2px solid #fff; box-shadow:0 0 0 1.5px #1d2433; }
+.piloto-pin.is-active span{ background:#E8201C; border-color:#E8201C; color:#fff; }
+.piloto-pin.is-active i{ background:#E8201C; box-shadow:0 0 0 1.5px #E8201C; }
+.piloto-pin:focus-visible span{ outline:2px solid #E8201C; outline-offset:2px; }
+.piloto-popup .maplibregl-popup-content{ display:grid; gap:3px; padding:10px 12px; font:500 13px/1.35 'Archivo', sans-serif; color:#1d2433; border-radius:8px; }
+.piloto-popup .maplibregl-popup-content small{ color:#5b6478; }
+.piloto-geo-note{ margin-top:8px; }
 .piloto-cols{ display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1rem; margin-top:1rem; }
 .piloto-list{ list-style:none; margin:0; padding:0; display:grid; gap:.6rem; }
 .piloto-list li{ display:grid; gap:.15rem; padding:.6rem 0; border-top:1px dashed rgba(42,53,80,.3); }

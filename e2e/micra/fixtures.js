@@ -15,6 +15,7 @@ export const ONE_COFFEE = coffees([['Castillo', 'castillo', [['250 g', 32000]]]]
 /** 3 de cada presentación, menos Geisha 500 g (agotada). */
 export const DEFAULT_STOCK = (coffee) => coffee.flatMap((c) => c.product_variants.map((v) => ({ variant_id: v.id, stock_qty: v.id === 'c1-500' ? 0 : 3, low_stock_threshold: 2 })));
 
+const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range' };
 
 export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomic = true } = {}) {
@@ -68,6 +69,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   // Clima fijo: 14 °C y lluvia ligera
   await page.route(/open-meteo/, (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify({ current: { temperature_2m: 14, weather_code: 61 } }) }));
   await page.route('**/api/v1/pulse', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }));
+  // Teselas del mapa real (MapLibre): un estilo mínimo de OpenFreeMap y PNG de 1 px de OpenStreetMap.
+  // opts.styleDown simula que OpenFreeMap no responde (el mapa cae a OpenStreetMap).
+  await page.route('https://tiles.openfreemap.org/**', (route) => (opts.styleDown
+    ? route.fulfill({ status: 503, headers: CORS, body: 'caído' })
+    : route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify({ version: 8, name: 'prueba', sources: {}, layers: [{ id: 'fondo', type: 'background', paint: { 'background-color': '#efe9dc' } }] }) })));
+  await page.route('https://tile.openstreetmap.org/**', (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'image/png', body: PIXEL }));
   // API de BI: el piloto (lo que la prueba ponga en opts.piloto; vacío por defecto)
   await page.route('**/api/v1/bi/piloto**', (route) => {
     if (!(route.request().headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });

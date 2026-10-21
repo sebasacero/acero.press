@@ -38,8 +38,18 @@ test('con datos: KPIs de la semana, mapa real, ventas con cuadra y hora, y la fo
   await expect(kpis).toContainText('Chapinero · Zona T');
   await expect(kpis).toContainText('1 con foto · tinto a $1.750 · 27.5 tazas/h');
 
-  // Mapa: dibujado con puntos reales (sin la nota de «todavía sin puntos»)
-  await expect(page.locator('.piloto-map canvas')).toHaveCount(1);
+  // Mapa real (MapLibre): calor de 2 cuadras con venta y un pin por tintero, con su ficha al tocarlo
+  const geo = page.locator('.piloto-geo');
+  await expect(geo).toHaveAttribute('data-state', 'ready');
+  await expect(geo).toHaveAttribute('data-style', 'vector');
+  await expect(geo).toHaveAttribute('data-sales', '2');
+  await expect(geo).toHaveAttribute('data-tinteros', '2');
+  await expect(geo.locator('canvas.maplibregl-canvas')).toHaveCount(1);
+  await expect(geo.getByRole('button', { name: 'Tintero: Don Jairo · 25/h' })).toBeVisible();
+  await expect(geo.locator('.piloto-pin.is-active')).toContainText('Carrito de la 83');
+  await geo.getByRole('button', { name: 'Tintero: Don Jairo · 25/h' }).click();
+  await expect(page.locator('.piloto-popup')).toContainText('Calle 72 con 13 · Chapinero');
+  await expect(page.locator('.piloto-popup')).toContainText('Prospecto · tinto a $1.500 · 25 tazas/h');
   await expect(page.locator('.piloto-map')).not.toContainText('todavía sin puntos');
   await expect(page.locator('.piloto-map')).toContainText('ventas y tinteros de los últimos 90 días');
 
@@ -70,7 +80,38 @@ test('sin datos: lo dice claro y explica cómo se llena', async ({ browser }) =>
   await expect(page.locator('.piloto-map')).toContainText('El mapa se llena solo');
   await expect(page.locator('section[aria-label="Ventas con lugar"]')).toContainText('Aún no hay ventas con lugar');
   await expect(page.locator('section[aria-label="Tinteros"]')).toContainText('Aún no hay tinteros');
-  await expect(page.locator('.piloto-map canvas')).toHaveCount(1); // el mapa se dibuja igual
+  await expect(page.locator('.piloto-geo')).toHaveAttribute('data-state', 'ready'); // el mapa se dibuja igual, centrado en Chapinero
+  await expect(page.locator('.piloto-pin')).toHaveCount(0);
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('si OpenFreeMap no responde, el mapa usa OpenStreetMap y sigue mostrando los datos', async ({ browser }) => {
+  const { page, api, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } }, session: { coach: true } });
+  api.opts.piloto = FILLED;
+  api.opts.styleDown = true;
+  await openPiloto(page);
+  const geo = page.locator('.piloto-geo');
+  await expect(geo).toHaveAttribute('data-style', 'osm');
+  await expect(geo).toHaveAttribute('data-state', 'ready');
+  await expect(geo.locator('.piloto-pin')).toHaveCount(2);
+  // El único error aceptado es el del estilo caído, que es lo que se simula
+  expect(errors.filter((e) => !/AJAXError|503/.test(e))).toEqual([]);
+  await page.context().close();
+});
+
+test('sin WebGL queda el mapa ilustrado con los mismos datos', async ({ browser }) => {
+  const { page, api, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } }, session: { coach: true } });
+  await page.addInitScript(() => {
+    const get = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (kind, ...rest) { return /webgl/.test(kind) ? null : get.call(this, kind, ...rest); };
+  });
+  api.opts.piloto = FILLED;
+  await openPiloto(page);
+  const geo = page.locator('.piloto-geo');
+  await expect(geo).toHaveAttribute('data-state', 'fallback');
+  await expect(geo.locator('canvas')).toHaveCount(1);
+  await expect(geo.locator('.maplibregl-canvas')).toHaveCount(0);
   expect(errors).toEqual([]);
   await page.context().close();
 });
