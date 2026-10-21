@@ -7,7 +7,7 @@ const translations = {
     location: 'Bogotá, 2.600 msnm',
     essp: {
       tabsLabel: 'Banners de Micra',
-      store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en' },
+      store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
       tabs: { order: 'Dónde estamos', barista: 'Ser barista' },
       block: { zone: 'ZONA', time: 'HORA', date: 'FECHA', maker: 'PREPARA', you: 'Tú' },
       mapLabel: 'Mapa de Bogotá con las ventas en la calle y los tinteros',
@@ -304,7 +304,7 @@ const translations = {
     location: 'Bogotá, 2,600 masl',
     essp: {
       tabsLabel: 'Micra banners',
-      store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to' },
+      store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
       tabs: { order: 'Where we are', barista: 'Be a barista' },
       block: { zone: 'AREA', time: 'TIME', date: 'DATE', maker: 'BREWED BY', you: 'You' },
       mapLabel: 'Map of Bogotá with street sales and tinto vendors',
@@ -599,7 +599,7 @@ const translations = {
     nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', contact: 'お問い合わせ', app: 'アプリ' },
     essp: {
       tabsLabel: 'Micraのバナー',
-      store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開' },
+      store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },
       tabs: { order: '出店場所', barista: 'バリスタになる' },
       block: { zone: 'エリア', time: '時刻', date: '日付', maker: '抽出', you: 'あなた' },
       mapLabel: '路上販売とティンテロを示すボゴタの地図',
