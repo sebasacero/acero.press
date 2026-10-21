@@ -1494,6 +1494,32 @@
 .piloto-popup .maplibregl-popup-content{ display:grid; gap:3px; padding:10px 12px; font:500 13px/1.35 'Archivo', sans-serif; color:#1d2433; border-radius:8px; }
 .piloto-popup .maplibregl-popup-content small{ color:#5b6478; }
 .piloto-geo-note{ margin-top:8px; }
+/* Hoja de plano sobre el mapa real: retícula de 28 px y doble marco, como la portada */
+.piloto-geo-sheet{ position:absolute; inset:0; pointer-events:none; z-index:2;
+  background-image:linear-gradient(var(--sheet-grid) 1px, transparent 1px), linear-gradient(90deg, var(--sheet-grid) 1px, transparent 1px);
+  background-size:28px 28px; }
+.piloto-geo-sheet::before, .piloto-geo-sheet::after{ content:''; position:absolute; border:2px solid var(--sheet-line); }
+.piloto-geo-sheet::before{ inset:10px; }
+.piloto-geo-sheet::after{ inset:18px; border-width:1px; }
+.piloto-geo.is-plano{ --sheet-grid:rgba(42,53,80,.07); --sheet-line:rgba(42,53,80,.55); }
+.piloto-geo.is-noche{ --sheet-grid:rgba(255,255,255,.04); --sheet-line:rgba(247,243,232,.45); }
+.piloto-geo.is-plano .maplibregl-canvas{ filter:sepia(.08); }
+/* Selector de estilo, arriba a la izquierda dentro del marco */
+.piloto-geo-themes{ position:absolute; top:26px; left:26px; z-index:3; display:flex; border:1.5px solid #2A3550; border-radius:999px; overflow:hidden; background:#F7F3E8; }
+.piloto-geo-themes button{ border:0; background:none; padding:6px 12px; font:700 10.5px/1 'JetBrains Mono', monospace; letter-spacing:.08em; text-transform:uppercase; color:#2A3550; cursor:pointer; }
+.piloto-geo-themes button + button{ border-left:1.5px solid #2A3550; }
+.piloto-geo-themes button.on{ background:#2A3550; color:#F7F3E8; }
+.piloto-geo-themes button:focus-visible{ outline:2px solid #E8201C; outline-offset:-3px; }
+.piloto-geo.is-noche .piloto-geo-themes{ background:#1E2026; border-color:rgba(247,243,232,.5); }
+.piloto-geo.is-noche .piloto-geo-themes button{ color:#F7F3E8; }
+.piloto-geo.is-noche .piloto-geo-themes button + button{ border-color:rgba(247,243,232,.5); }
+.piloto-geo.is-noche .piloto-geo-themes button.on{ background:#F7F3E8; color:#141518; }
+/* En noche, los pines como en el celular de la app: crema sobre la pantalla oscura */
+.piloto-geo.is-noche .piloto-pin span{ background:#F7F3E8; border-color:#F7F3E8; color:#141518; }
+.piloto-geo.is-noche .piloto-pin i{ background:#F7F3E8; border-color:#141518; box-shadow:0 0 0 1.5px #F7F3E8; }
+.piloto-geo.is-noche .piloto-pin.is-active span, .piloto-geo.is-noche .piloto-pin.is-active i{ background:#E8201C; border-color:#E8201C; color:#fff; }
+.piloto-geo .maplibregl-ctrl-top-right{ top:16px; right:16px; }
+.piloto-geo .maplibregl-ctrl-bottom-right{ bottom:16px; right:16px; }
 .piloto-cols{ display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1rem; margin-top:1rem; }
 .piloto-list{ list-style:none; margin:0; padding:0; display:grid; gap:.6rem; }
 .piloto-list li{ display:grid; gap:.15rem; padding:.6rem 0; border-top:1px dashed rgba(42,53,80,.3); }

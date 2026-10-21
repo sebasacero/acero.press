@@ -115,3 +115,40 @@ test('sin WebGL queda el mapa ilustrado con los mismos datos', async ({ browser 
   expect(errors).toEqual([]);
   await page.context().close();
 });
+
+test('el mapa real se viste como la app: plano por defecto, noche y calles, y recuerda la elección', async ({ browser }) => {
+  const { page, api, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } }, session: { coach: true } });
+  api.opts.piloto = FILLED;
+  await openPiloto(page);
+  const geo = page.locator('.piloto-geo');
+  await expect(geo).toHaveAttribute('data-state', 'ready');
+  const paint = (layer, prop) => page.evaluate(([l, p]) => document.querySelector('.piloto-geo-map').__map.getPaintProperty(l, p), [layer, prop]);
+  // Plano: papel, tinta azul en la autopista, sin el borde naranja; retícula de hoja encima
+  await expect(geo).toHaveAttribute('data-theme', 'plano');
+  await expect.poll(() => paint('background', 'background-color')).toBe('#EDE6D3');
+  expect(await paint('road_motorway', 'line-color')).toBe('#2A3550');
+  expect(await paint('road_motorway_casing', 'line-opacity')).toBe(0);
+  expect(await paint('water', 'fill-color')).toBe('#C9D3DC');
+  await expect(geo.locator('.piloto-geo-sheet')).toHaveCount(1);
+  // El calor del estudio sigue ahí después de vestir el mapa
+  expect(await page.evaluate(() => !!document.querySelector('.piloto-geo-map').__map.getLayer('ventas-calor'))).toBe(true);
+
+  const themes = geo.getByRole('group', { name: 'Estilo del mapa' });
+  await themes.getByRole('button', { name: 'Noche' }).click();
+  await expect(geo).toHaveAttribute('data-theme', 'noche');
+  await expect.poll(() => paint('background', 'background-color')).toBe('#141518');
+  await expect.poll(() => page.evaluate(() => !!document.querySelector('.piloto-geo-map').__map.getLayer('ventas-calor'))).toBe(true);
+  await expect(geo.locator('.piloto-pin')).toHaveCount(2); // los pines no se duplican ni se pierden
+
+  await themes.getByRole('button', { name: 'Calles' }).click();
+  await expect.poll(() => paint('background', 'background-color')).toBe('#efe9dc');
+  expect(await paint('road_motorway', 'line-color')).toBe('#fc8');
+  await expect(geo.locator('.piloto-geo-sheet')).toHaveCount(0);
+
+  // Se recuerda al volver
+  await page.reload({ waitUntil: 'load' });
+  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await expect(page.locator('.piloto-geo')).toHaveAttribute('data-theme', 'calles');
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
