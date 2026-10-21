@@ -45,20 +45,40 @@ export default function PressStory() {
     if (!src) { setMode('static'); return undefined; }
     let url = null;
     let cancelled = false;
+    let watchdog = 0;
+    let gotFrame = false;
     const onError = () => setMode('static');
-    // iOS no pinta los cuadros buscados de un video que nunca se reprodujo
-    const prime = () => video.play().then(() => video.pause()).catch(() => {});
+    const onFrame = () => { gotFrame = true; };
     video.addEventListener('error', onError);
-    video.addEventListener('loadeddata', prime, { once: true });
+    video.addEventListener('loadeddata', onFrame);
+    // Safari de iOS no descarga nada de un video con preload="none" hasta
+    // load()/play(), y solo lo deja reproducir sin toque con el atributo muted
+    // (React pone la propiedad, no el atributo). Un play()→pause() también hace
+    // que pinte los cuadros buscados.
+    const start = (from) => {
+      if (cancelled) return;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.setAttribute('muted', '');
+      video.setAttribute('playsinline', '');
+      video.preload = 'auto';
+      video.src = from;
+      video.load();
+      video.play()?.then(() => video.pause()).catch(() => {});
+      // Si nunca llega un cuadro (p. ej. iOS en modo de bajo consumo bloquea el
+      // video), mejor los pasos con foto que una imagen congelada. No se mira
+      // readyState: baja un momento en cada búsqueda.
+      watchdog = window.setTimeout(() => { if (!gotFrame && video.readyState < 2) setMode('static'); }, 8000);
+    };
     const load = () => {
       fetch(src)
         .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
         .then((blob) => {
           if (cancelled) return;
           url = URL.createObjectURL(blob);
-          video.src = url;
+          start(url);
         })
-        .catch(() => { if (!cancelled) video.src = src; });
+        .catch(() => start(src));
     };
     const io = new IntersectionObserver((entries) => {
       if (entries.some((e) => e.isIntersecting)) { io.disconnect(); load(); }
@@ -67,8 +87,9 @@ export default function PressStory() {
     return () => {
       cancelled = true;
       io.disconnect();
+      window.clearTimeout(watchdog);
       video.removeEventListener('error', onError);
-      video.removeEventListener('loadeddata', prime);
+      video.removeEventListener('loadeddata', onFrame);
       if (url) URL.revokeObjectURL(url);
     };
   }, [mode]);
@@ -109,15 +130,15 @@ export default function PressStory() {
     io.observe(track);
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
-    video.addEventListener('loadeddata', schedule);
-    video.addEventListener('seeked', schedule);
+    // También al cargar y tras la pausa del arranque (el play() pudo moverlo unos cuadros)
+    const SYNC = ['loadedmetadata', 'loadeddata', 'seeked', 'pause'];
+    SYNC.forEach((ev) => video.addEventListener(ev, schedule));
     return () => {
       io.disconnect();
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
-      video.removeEventListener('loadeddata', schedule);
-      video.removeEventListener('seeked', schedule);
+      SYNC.forEach((ev) => video.removeEventListener(ev, schedule));
     };
   }, [mode]);
 

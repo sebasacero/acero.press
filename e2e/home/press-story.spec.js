@@ -31,6 +31,12 @@ test('escritorio: el scroll mueve el video y los pasos, y tocar un paso lleva a 
 
   await scrollTrack(page, 0);
   await page.waitForFunction(() => document.querySelector('.ps-video')?.readyState >= 2);
+  // Lo que Safari de iOS necesita para cargar y buscar sin un toque: preload auto,
+  // atributo muted (no solo la propiedad) y el video quieto tras el arranque
+  await expect.poll(() => page.evaluate(() => {
+    const v = document.querySelector('.ps-video');
+    return [v.preload, v.hasAttribute('muted'), v.hasAttribute('playsinline'), v.paused];
+  })).toEqual(['auto', true, true, true]);
   await expect(activeStep(page)).toHaveText('Filtro y tapa');
   const seen = [];
   let last = -1;
@@ -65,6 +71,8 @@ test('celular: solo se ve el paso de ahora y nada se sale de la pantalla', async
   await scrollTrack(page, 0.5);
   await page.waitForFunction(() => document.querySelector('.ps-video')?.readyState >= 2);
   await expect.poll(() => videoTime(page)).toBeGreaterThan(5);
+  // Entre paso y paso hay un fundido de 0,3 s: espera a que quede uno solo
+  await expect.poll(() => page.evaluate(() => [...document.querySelectorAll('.ps-step')].filter((li) => getComputedStyle(li).visibility === 'visible').length)).toBe(1);
   const r = await page.evaluate(() => ({
     sw: document.documentElement.scrollWidth,
     visible: [...document.querySelectorAll('.ps-step')].filter((li) => getComputedStyle(li).visibility === 'visible').length,
