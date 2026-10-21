@@ -192,8 +192,8 @@ proyecto tiene una API en **FastAPI** (Python) para datos e integraciones:
 
 - Entrada: `api/v1.py` · código: `api/_acero/` · dependencias: `requirements.txt`.
 - Todo lo que llegue a `/api/v1/*` lo atiende FastAPI (regla en `vercel.json`).
-- Documentación interactiva: `https://acero.press/api/v1/docs`.
-  El contrato `https://acero.press/api/v1/openapi.json` sirve para generar el
+- Documentación interactiva: `https://www.aceropress.com/api/v1/docs`.
+  El contrato `https://www.aceropress.com/api/v1/openapi.json` sirve para generar el
   cliente de la app Android de Micra (openapi-generator, Kotlin).
 
 | Ruta | Qué hace |
