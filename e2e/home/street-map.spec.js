@@ -29,6 +29,18 @@ test('con ventas y tinteros reales, el calor sigue a las cuadras del estudio y l
   const cold = await heatAt(page, 20, 110); // lejos de toda venta real
   expect(hot).toBeGreaterThan(cold + 20);
   expect(await page.locator('.essp-bg canvas').count()).toBe(1);
+  // El panel y el celular del banner cuentan lo real: tazas, cuadras y tinteros; nada inventado
+  const slide = page.locator('.essp-slide').first();
+  await expect(slide.locator('.essp-panel')).toContainText('1 cuadra');
+  await expect(slide.locator('.essp-odo')).toHaveText('40');
+  await expect(slide.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
+  await expect(slide.locator('.essp-phone-who')).toContainText('1 cuadras · 1 tinteros');
+  await expect(page.locator('.essp-hero')).not.toContainText(/Laura|en camino|domicilio/i);
+  await expect(slide.locator('.essp-ctas a').first()).toHaveAttribute('href', '#beans');
+  // Orden del inicio: tienda, barra, archivo WAC y recetas antes de Micra (#prensado) y el pie
+  const order = await page.evaluate(() => ['#beans', '#metodo', '#prensado'].map((id) => document.querySelector(id)?.getBoundingClientRect().top + window.scrollY));
+  expect(order[0]).toBeLessThan(order[1]);
+  expect(order[1]).toBeLessThan(order[2]);
   expect(errors).toEqual([]);
   await page.context().close();
 });
@@ -40,6 +52,8 @@ test('sin estudio, el mapa dibuja su demanda de ejemplo (la Zona T sigue calient
   const sampleHot = await heatAt(page, 13, 83); // punto de la demanda de ejemplo
   const cold = await heatAt(page, 45, 150);
   expect(sampleHot).toBeGreaterThan(cold + 20);
+  // Sin estudio aún, el panel dice 0 de verdad, no un ejemplo
+  await expect(page.locator('.essp-slide').first().locator('.essp-panel')).toContainText('0 cuadras');
   expect(errors).toEqual([]);
   await page.context().close();
 });

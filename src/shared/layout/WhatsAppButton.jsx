@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 
-const FALLBACK_WHATSAPP_NUMBER = '573152125327';
+export const FALLBACK_WHATSAPP_NUMBER = '573152125327';
 
 export default function WhatsAppButton() {
   const { t } = useLanguage();

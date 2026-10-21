@@ -1,15 +1,19 @@
 import MapCanvas from './MapCanvas.jsx';
 import { Segs, useClock } from './parts.jsx';
 
-// Pantallas de la app Micra dentro de un celular, para el banner. En el
+// Pantallas de Micra dentro de un celular, para el banner: el mapa con las
+// ventas reales de la calle y la pantalla del barista. En el
 // celular el banner muestra la pantalla a sangre, como si fuera la app (ver
 // esspresale.css). Los textos de la app van en español: abre primero en Bogotá.
 
-const CLIENT_VIEW = { style: 'oscuro', c: 11, k: 81, ax: 0.55, ay: 0.36, s: 8.5, heat: 0.9, pins: true, route: true, labels: 0.9 };
+// Sin pines ni ruta de ejemplo: el celular solo señala lo que el estudio tiene de verdad
+const CLIENT_VIEW = { style: 'oscuro', c: 11, k: 81, ax: 0.55, ay: 0.36, s: 8.5, heat: 0.9, pins: false, route: false, labels: 0.9 };
 const BARISTA_VIEW = { style: 'oscuro', c: 12, k: 80, ax: 0.55, ay: 0.4, s: 4.2, heat: 1, labels: 0.9 };
 // A pantalla completa (celular) el pedido baja al hueco entre el texto y la tarjeta.
 const FULL = 320;
 const clientView = (w) => (w >= FULL ? { ...CLIENT_VIEW, ay: 0.64, s: 9.5 } : CLIENT_VIEW);
+// Con el estudio real, el calor y los tinteros del mapa grande también van en el celular
+const streetView = (layers) => (w) => (layers ? { ...clientView(w), heatPoints: layers.heatPoints, pinPoints: layers.pinPoints, pins: layers.pinPoints.length > 0 } : clientView(w));
 const baristaView = (w) => (w >= FULL ? { ...BARISTA_VIEW, ay: 0.66, s: 4.8 } : BARISTA_VIEW);
 
 function StatusBar() {
@@ -31,26 +35,28 @@ function AppBar({ zone }) {
   );
 }
 
-export function ClientPhone({ className = '' }) {
+export function StreetPhone({ className = '', street = null, layers = null }) {
+  const n = (v) => (street ? String(v) : '—');
+  const zone = street?.zones?.[0] ?? 'Chapinero';
   return (
-    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra: pedido en camino en el mapa de Chapinero">
-      <MapCanvas view={clientView} />
+    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra: el mapa de las ventas en la calle y los tinteros de Chapinero">
+      <MapCanvas view={streetView(layers)} redrawKey={layers} />
       <div className="essp-phone-screen" aria-hidden="true">
         <StatusBar />
-        <AppBar zone="CHAPINERO" />
+        <AppBar zone={zone.toUpperCase()} />
         <div className="essp-phone-pill">
-          <div><span>ENTREGAR EN</span>Cra. 11 #79-20 ▾</div>
-          <span className="essp-phone-chip">SA</span>
+          <div><span>HOY VENDEMOS EN</span>{zone} ▾</div>
+          <span className="essp-phone-chip">AP</span>
         </div>
         <div className="essp-phone-sheet">
           <span className="essp-phone-handle" />
           <div className="essp-phone-card">
-            <div className="essp-phone-cota"><span>FIG. 01 — TU PEDIDO</span><span className="essp-phone-badge">EN CAMINO</span></div>
-            <Segs filled={13} />
+            <div className="essp-phone-cota"><span>FIG. 01 — EL ESTUDIO</span><span className="essp-phone-badge">EN LA CALLE</span></div>
+            <Segs filled={Math.min(20, street?.blocks ?? 0)} />
             <div className="essp-phone-who">
-              <span className="essp-phone-av">LM</span>
-              <div><b>Laura preparó tu AeroPress</b><small>Pink Bourbon · receta WAC</small></div>
-              <em>12′</em>
+              <span className="essp-phone-av">AP</span>
+              <div><b>{n(street?.cups)} tazas en la calle</b><small>{n(street?.blocks)} cuadras · {n(street?.tinteros)} tinteros</small></div>
+              <em>{street ? `${street.days} d` : '—'}</em>
             </div>
           </div>
         </div>

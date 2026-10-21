@@ -2,24 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
 import MapCanvas from './MapCanvas.jsx';
-import { ClientPhone, BaristaPhone } from './AppPhones.jsx';
+import { StreetPhone, BaristaPhone } from './AppPhones.jsx';
 import { SheetFrame, Segs, Odometer, useClock } from './parts.jsx';
-import StoreButtons from './StoreButtons.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
 import { useStreetMap } from '../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
+import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx';
 import { useEditableTexts } from '../../shared/lib/editableTexts.js';
 import './esspresale.css';
 
-// Primera sección del sitio: dos banners de la app Micra (pedir café / ser
-// barista) dibujados como las tarjetas de redes. Rotan solos cada 8 s y se
-// detienen mientras el cursor o el foco están encima.
+// Primera sección del sitio: dos banners dibujados como las tarjetas de redes.
+// «Dónde estamos»: el mapa y los números reales del estudio de calle (ventas
+// con cuadra y tinteros). «Ser barista»: la convocatoria del piloto. Rotan
+// solos cada 8 s y se detienen mientras el cursor o el foco están encima.
 const AUTO_MS = 8000;
-
-const STORE_FIELDS = [
-  { key: 'app_store_url', label: 'App Store (URL)', i18n: false, type: 'url', hint: 'Vacío = la insignia dice "Muy pronto".' },
-  { key: 'play_store_url', label: 'Google Play (URL)', i18n: false, type: 'url', hint: 'Vacío = la insignia dice "Muy pronto".' },
-];
 
 // Textos de cada banner que se cambian con su lápiz (app_config essp_<banner>_<campo>_<idioma>).
 const TEXT_KEYS = ['title1', 'title2', 'script', 'loc', 'lede', 'panelText'];
@@ -30,8 +26,11 @@ const textFields = (kind) => [
   { key: `essp_${kind}_loc`, label: 'Línea de ubicación' },
   { key: `essp_${kind}_lede`, label: 'Texto', multiline: true },
   { key: `essp_${kind}_panelText`, label: 'Texto del panel oscuro', multiline: true },
-  ...STORE_FIELDS,
 ];
+
+/** Cifras del panel y del celular: lo que micra_street_map cuenta, o guiones mientras llega. */
+const digitsOf = (n) => (n === null ? ['—'] : String(n).padStart(2, '0').split(''));
+
 
 const BG_VIEW = (w) =>
   w < 760
@@ -69,7 +68,7 @@ function TitleBlock({ maker, makerIsYou, index, onSelect }) {
   );
 }
 
-function Slide({ kind, active, index, onSelect, stores, onStoresSaved, streetLayers = null }) {
+function Slide({ kind, active, index, onSelect, street = null, streetLayers = null, whatsapp }) {
   const { t } = useLanguage();
   const ref = useRef(null);
   const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
@@ -78,6 +77,11 @@ function Slide({ kind, active, index, onSelect, stores, onStoresSaved, streetLay
   const isOrder = kind === 'order';
   const title = [text(`essp_${kind}_title1`, base('title')[0]), text(`essp_${kind}_title2`, base('title')[1])];
   const specs = base('specs');
+  // Datos reales del estudio (null hasta que lleguen): tazas, cuadras con venta, tinteros
+  const cups = street ? street.cups : null;
+  const blocks = street ? street.blocks : null;
+  const tinteros = street ? street.tinteros : null;
+  const show = (n) => (n === null ? '—' : String(n));
 
   // La diapositiva oculta no debe recibir foco ni lectores de pantalla.
   useEffect(() => {
@@ -111,7 +115,7 @@ function Slide({ kind, active, index, onSelect, stores, onStoresSaved, streetLay
         fig={base('tag')}
         placement="hero"
         fields={textFields(kind)}
-        onSaved={() => { reloadTexts(); onStoresSaved(); }}
+        onSaved={reloadTexts}
       />
 
       <div className="essp-in">
@@ -125,36 +129,45 @@ function Slide({ kind, active, index, onSelect, stores, onStoresSaved, streetLay
             </h1>
             <div className="essp-loc">{k('loc')}</div>
             <p className="essp-lede">{k('lede')}</p>
-            <StoreButtons {...stores} />
+            <div className="essp-ctas">
+              {isOrder ? (
+                <>
+                  <a className="essp-btn" href="#beans">{base('cta')}</a>
+                  <a className="essp-btn is-ghost" href="#prensado">{base('cta2')}</a>
+                </>
+              ) : (
+                <a className="essp-btn" href={whatsapp} target="_blank" rel="noopener noreferrer">{base('cta')}</a>
+              )}
+            </div>
           </div>
 
-          {isOrder ? <ClientPhone className="essp-hero-phone" /> : <BaristaPhone className="essp-hero-phone" />}
+          {isOrder ? <StreetPhone className="essp-hero-phone" street={street} layers={streetLayers} /> : <BaristaPhone className="essp-hero-phone" />}
 
           <aside className="essp-panel" aria-label={k('panelFig')}>
             <div className="essp-panel-cota"><span>{k('panelFig')}</span><span className="essp-badge">{k('panelBadge')}</span></div>
             <div className="essp-panel-label">{k('panelLabel')}</div>
             <div className="essp-odo-row">
-              <Odometer digits={isOrder ? ['0', '1', '2', '′'] : ['0', '2', '5']} />
+              <Odometer digits={isOrder ? digitsOf(cups) : ['0', '2', '5']} />
               <span className="essp-odo-sep">/</span>
-              <span className="essp-odo-target">{isOrder ? 'Laura' : k('days')}</span>
+              <span className="essp-odo-target">{isOrder ? `${show(blocks)} ${blocks === 1 ? base('target1') : base('target')}` : k('days')}</span>
             </div>
-            <Segs filled={isOrder ? 13 : 10} className="essp-bar" />
+            <Segs filled={isOrder ? Math.min(20, blocks ?? 0) : 10} className="essp-bar" />
             <div className="essp-specs">
-              {(isOrder ? ['12′', '700 m', '3'] : ['1', '350', '1 kg']).map((v, i) => (
+              {(isOrder ? [show(cups), show(blocks), show(tinteros)] : ['1', '350', '1 kg']).map((v, i) => (
                 <div key={i}><b>{v}</b><span>{specs[i]}</span></div>
               ))}
             </div>
             <p className="essp-panel-text">{k('panelText')}</p>
           </aside>
         </div>
-        <TitleBlock maker="Laura" makerIsYou={!isOrder} index={index} onSelect={onSelect} />
+        <TitleBlock maker="Acero" makerIsYou={!isOrder} index={index} onSelect={onSelect} />
       </div>
     </section>
   );
 }
 
 export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
-  const { layers: streetLayers } = useStreetMap();
+  const { layers: streetLayers, summary: street } = useStreetMap();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [tick, setTick] = useState(0);
@@ -170,14 +183,11 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     return () => clearInterval(id);
   }, [paused, tick]);
 
-  // Enlaces de las tiendas (se editan con el lápiz del banner).
-  const [stores, setStores] = useState({ appStoreUrl: null, playStoreUrl: null });
-  const loadStores = useCallback(() => {
-    Promise.all([fetchAppConfig('app_store_url', null), fetchAppConfig('play_store_url', null)]).then(([a, p]) =>
-      setStores({ appStoreUrl: a || null, playStoreUrl: p || null })
-    );
+  // «Ser barista» escribe al WhatsApp del negocio (el mismo del botón flotante)
+  const [whatsapp, setWhatsapp] = useState(`https://wa.me/${FALLBACK_WHATSAPP_NUMBER}`);
+  useEffect(() => {
+    fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setWhatsapp(`https://wa.me/${n}`));
   }, []);
-  useEffect(() => { loadStores(); }, [loadStores]);
 
   const tone = index === 0 ? 'paper' : 'photo';
 
@@ -191,8 +201,8 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     >
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} streetLayers={streetLayers} />
-        <Slide kind="barista" active={index === 1} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />
+        <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} />
+        <Slide kind="barista" active={index === 1} index={index} onSelect={select} whatsapp={whatsapp} />
       </div>
     </header>
   );
