@@ -20,11 +20,18 @@ test('360×740: nada se sale de la pantalla y todo botón tiene nombre', async (
         }
         return false;
       };
+      // Lo que queda por debajo dentro de un cuerpo que se desplaza (la hoja de venta) se alcanza con scroll
+      const inScroll = (b) => {
+        for (let el = b.parentElement; el && el !== document.body; el = el.parentElement) {
+          if (/auto|scroll/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight + 1) return true;
+        }
+        return false;
+      };
       return {
         sw: document.documentElement.scrollWidth,
         offscreen: btns.filter((b) => {
           const q = b.getBoundingClientRect();
-          return q.bottom > vh + 1 || q.top < -1 || ((q.right > vw + 1 || q.left < -1) && !inRow(b));
+          return ((q.bottom > vh + 1 || q.top < -1) && !inScroll(b)) || ((q.right > vw + 1 || q.left < -1) && !inRow(b));
         }).map(name),
         unlabeled: btns.filter((b) => !b.textContent.trim() && !b.getAttribute('aria-label')).length,
       };

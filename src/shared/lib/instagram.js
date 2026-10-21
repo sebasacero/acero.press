@@ -53,12 +53,13 @@ const isMissingFn = (e) => e?.code === 'PGRST202' || e?.code === '42883';
  * lines: [{ variant: { id, label, price }, productName, qty }]
  * clientRef: identifica el ticket; un reintento con la misma referencia
  * devuelve el pedido ya creado en vez de duplicarlo.
+ * place: { carrera, calle, zone } de dónde se vendió (estudio de calle), o null.
  *
  * Devuelve { orderId, total, stock: [{ variantId, applied }], stockError, replay }:
  * `applied` es lo que de verdad cambió el inventario (no baja de 0), para que
  * «Deshacer» devuelva exactamente eso; `replay`: el pedido ya existía (reintento).
  */
-export async function recordMicraSale({ lines, paymentMethod, phone, clientRef }) {
+export async function recordMicraSale({ lines, paymentMethod, phone, clientRef, place = null }) {
   const valid = (lines || []).filter((l) => l.variant && l.qty > 0);
   if (!valid.length) throw new Error('El ticket está vacío.');
   if (!atomicMissing) {
@@ -68,6 +69,7 @@ export async function recordMicraSale({ lines, paymentMethod, phone, clientRef }
       p_payment_method: paymentMethod ?? null,
       p_phone: phone || null,
       p_client_ref: clientRef ?? null,
+      p_place: place ?? null, // { carrera, calle, zone } o null: dónde se vendió
     });
     if (!error) {
       return {
@@ -76,6 +78,7 @@ export async function recordMicraSale({ lines, paymentMethod, phone, clientRef }
         stock: (data.stock ?? []).map((x) => ({ variantId: x.variant_id, applied: x.applied })),
         stockError: null,
         replay: !!data.replay,
+        place: data.place ?? null,
       };
     }
     // Sin código = no hubo respuesta: la venta pudo guardarse y el mismo ticket se puede reintentar

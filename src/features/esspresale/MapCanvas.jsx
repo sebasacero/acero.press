@@ -6,7 +6,7 @@ import { drawBogotaMap } from './bogotaMap.js';
  * recibe el ancho en px (para acercar el mapa en pantallas angostas). Se
  * redibuja al cambiar de tamaño y cuando cargan las fuentes de las etiquetas.
  */
-export default function MapCanvas({ view, className = '', label }) {
+export default function MapCanvas({ view, className = '', label, redrawKey = null }) {
   const ref = useRef(null);
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -30,7 +30,7 @@ export default function MapCanvas({ view, className = '', label }) {
       cancelAnimationFrame(frame);
       ro?.disconnect();
     };
-  }, []);
+  }, [redrawKey]); // se vuelve a dibujar cuando llegan las capas reales del estudio
 
   return <canvas ref={ref} className={className} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true} />;
 }

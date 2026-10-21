@@ -3,6 +3,7 @@ import { parseRecipe } from '../espresaleCard.js';
 import { money, PAY_METHODS } from './captions.js';
 import Sheet from './Sheet.jsx';
 import { IconMinus, IconPlus } from './icons.jsx';
+import { ZONES, isValidPlace, placeLabel, placeOfZone, editPlace } from './place.js';
 
 const specsOf = (variety) => {
   const r = parseRecipe(variety?.recipe_text || '');
@@ -181,6 +182,35 @@ export default function SaleSheet({ sale, varieties, context, docked, linked, on
       {(varieties ?? []).length > 0 && (
         <button type="button" className="msheet-add" onClick={() => { sale.addLine(); setOpen(lines.length); }}>+ Otro café</button>
       )}
+
+      <div className="msheet-group" data-testid="sale-place">
+        <span className="msheet-label">Hoy vendo en</span>
+        <div className="msheet-chips" role="listbox" aria-label="Zona">
+          {ZONES.map((z) => {
+            const on = isValidPlace(sale.place) && sale.place.zone === z.id;
+            return (
+              <button key={z.id} type="button" role="option" aria-selected={on} className={`msheet-chip ${on ? 'on' : ''}`}
+                onClick={() => sale.setPlace(on ? null : placeOfZone(z))}>{z.id}</button>
+            );
+          })}
+        </div>
+        <div className="msheet-row is-place">
+          <label className="msheet-place-field">
+            <span>Calle</span>
+            <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="85" aria-label="Calle"
+              value={sale.place?.calle ?? ''} onChange={(e) => sale.setPlace(editPlace(sale.place, { calle: e.target.value }))} />
+          </label>
+          <span className="msheet-place-con" aria-hidden="true">con</span>
+          <label className="msheet-place-field">
+            <span>Carrera</span>
+            <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="13" aria-label="Carrera"
+              value={sale.place?.carrera ?? ''} onChange={(e) => sale.setPlace(editPlace(sale.place, { carrera: e.target.value }))} />
+          </label>
+        </div>
+        {sale.place?.error
+          ? <small className="msheet-fine is-warn" role="alert">{sale.place.error} La venta se guarda sin lugar.</small>
+          : <small className="msheet-fine">{isValidPlace(sale.place) ? `${placeLabel(sale.place)} · va en cada venta y en el mapa` : 'Opcional: queda en el mapa del estudio de calle.'}</small>}
+      </div>
 
       <div className="msheet-group">
         <span className="msheet-label">Pago</span>

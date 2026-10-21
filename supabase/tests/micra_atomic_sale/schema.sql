@@ -20,6 +20,14 @@ create table order_items (id uuid primary key default gen_random_uuid(), order_i
 create table inventory (variant_id uuid primary key references product_variants(id) on delete cascade, stock_qty int not null default 0, low_stock_threshold int default 5, updated_at timestamptz default now());
 create table inventory_movements (id uuid primary key default gen_random_uuid(), variant_id uuid not null references product_variants(id) on delete cascade, change_qty int not null, reason movement_reason not null, reference_order_id uuid constraint fk_movement_order references orders(id), created_at timestamptz default now());
 create table publications (id bigint generated always as identity primary key, video_url text not null default '', order_id uuid);
+create table tinteros (
+  id uuid primary key default gen_random_uuid(), name text not null, phone text, zone text,
+  stage text not null default 'prospecto' check (stage in ('prospecto','piloto','activo','pausa','salio')),
+  kit text not null default 'ninguno', baseline_income numeric, baseline_cups integer, notes text, joined_at date,
+  created_at timestamptz not null default now()
+);
+alter table tinteros enable row level security;
+create policy "solo admin gestiona tinteros" on tinteros for all using (is_admin()) with check (is_admin());
 alter table admin_users enable row level security; alter table products enable row level security; alter table product_variants enable row level security;
 alter table orders enable row level security; alter table order_items enable row level security; alter table inventory enable row level security;
 alter table inventory_movements enable row level security; alter table publications enable row level security; alter table customers enable row level security;
@@ -43,3 +51,11 @@ grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 -- Como Supabase: las funciones nuevas quedan ejecutables por anon y authenticated
 alter default privileges in schema public grant execute on functions to anon, authenticated;
+
+-- Stub de storage (el real es de Supabase): solo lo que la migración de estudio toca
+create schema if not exists storage;
+create table if not exists storage.buckets (id text primary key, name text not null, public boolean not null default false);
+create table if not exists storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text);
+alter table storage.objects enable row level security;
+grant usage on schema storage to anon, authenticated;
+grant all on storage.objects, storage.buckets to anon, authenticated;

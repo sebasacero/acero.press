@@ -3,6 +3,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { recordMicraSale, voidMicraSale } from '../../../shared/lib/instagram.js';
 import { money, waDigits } from './captions.js';
 import { variantsOf } from './useMicraData.js';
+import { parsePlace, placePayload } from './place.js';
 
 // Venta en barra desde Micra: un ticket de una o varias líneas (café +
 // presentación + cantidad), método de pago recordado y WhatsApp opcional.
@@ -17,11 +18,13 @@ let nextKey = 1;
 const newRef = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 const newLine = (variety) => ({ key: nextKey++, varietyId: variety?.id ?? null, variantId: variantsOf(variety)[0]?.id ?? null, qty: 1 });
 
-export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'cash' }) {
+export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'cash', initialPlace = null }) {
   const byId = useMemo(() => new Map((varieties ?? []).map((v) => [String(v.id), v])), [varieties]);
   const varietyOf = useCallback((id) => byId.get(String(id)) ?? null, [byId]);
   const [lines, setLines] = useState([]);
   const [payMethod, setPayMethod] = useState(initialPay);
+  // Dónde se vende hoy: se elige una vez y va en cada venta (estudio de calle)
+  const [place, setPlace] = useState(() => parsePlace(initialPlace));
   const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
@@ -118,7 +121,7 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
     const t = ticketRef.current;
     if (t?.sig !== sig || Date.now() - t.at > RETRY_MS) ticketRef.current = { sig, ref: newRef(), at: Date.now() };
     try {
-      const r = await recordMicraSale({ lines: payload, paymentMethod: payMethod, phone: waDigits(phone), clientRef: ticketRef.current.ref });
+      const r = await recordMicraSale({ lines: payload, paymentMethod: payMethod, phone: waDigits(phone), clientRef: ticketRef.current.ref, place: placePayload(place) });
       ticketRef.current = null;
       const rec = {
         orderId: r.orderId,
@@ -127,6 +130,7 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
         stock: r.stock,
         stockError: r.stockError,
         replay: r.replay,
+        place: r.place ?? placePayload(place),
         varietyIds: [...new Set(resolved.map((l) => String(l.varietyId)))],
         phone: waDigits(phone) || null, // para «Enviar a › WhatsApp» de esta tarjeta
         at: Date.now(),
@@ -147,7 +151,7 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
       busyRef.current = false;
       setBusy(false);
     }
-  }, [priced, resolved, payMethod, phone, lines, varietyId, varietyOf]);
+  }, [priced, resolved, payMethod, phone, place, lines, varietyId, varietyOf]);
 
   /** «Deshacer»: anula una venta (la última, si no se dice cuál) y devuelve el inventario. Una sola vez por venta. */
   const lastRef = useRef(null);
@@ -212,7 +216,7 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
 
   return {
     lines: resolved, setLine, addLine, removeLine, resetTicket, newCard, releaseCard,
-    payMethod, setPayMethod, phone, setPhone,
+    payMethod, setPayMethod, phone, setPhone, place, setPlace,
     total, priced, priceFor, stock, stockFor, loadStock, shortages,
     busy, error, setError, register, last, linkedSale, linkedOrderId, voidLast, isVoided, markPublished,
     cardSale: attached, // la venta de la tarjeta en el editor (publicada o no)

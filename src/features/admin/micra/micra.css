@@ -515,3 +515,21 @@
   .mc-shutter-ring.is-rec, .mst-coach, .msheet, .msheet-backdrop, .mst-toast, .mst-job, .mtext{ animation:none; }
   .mc-filter, .mst-trash, .mst-rail-label{ transition:none; }
 }
+
+/* Venta: «Hoy vendo en» (calle con carrera) */
+.msheet-row.is-place{ display:flex; align-items:flex-end; gap:8px; }
+.msheet-place-field{ flex:1 1 0; display:flex; flex-direction:column; gap:4px; min-width:0; }
+.msheet-place-field > span{ font:700 10.5px var(--mst-mono); letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.6); }
+.msheet-place-field .msheet-input{ width:100%; text-align:center; font-variant-numeric:tabular-nums; }
+.msheet-place-con{ padding-bottom:12px; font-size:13px; color:rgba(255,255,255,.6); }
+.msheet-fine.is-warn{ color:#ffb15c; }
+
+/* Ficha de tintero */
+.mtin-photo{ display:grid; gap:8px; }
+.mtin-photo img{ width:100%; aspect-ratio:4 / 3; object-fit:cover; border-radius:10px; border:1px solid var(--mst-line); background:#000; }
+.mst-tintero{
+  display:inline-flex; align-items:center; justify-content:center; height:44px; padding:0 14px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--mst-line); background:var(--mst-glass); color:#fff; font-size:13px; font-weight:700; white-space:nowrap;
+}
+.mst-tintero:disabled{ opacity:.5; cursor:default; }
+@media (max-width:360px){ .mst-tintero{ padding:0 10px; font-size:12px; } }

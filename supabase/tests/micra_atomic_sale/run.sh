@@ -20,6 +20,8 @@ trap 'rm -rf "$TMP"; "${ADMIN[@]}" -c "drop database if exists $DB" >/dev/null 2
 "${ADMIN[@]}" -c "set client_min_messages = warning" -c "drop database if exists $DB" -c "create database $DB"
 "${T[@]}" -f "$HERE/schema.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261021120000_micra_atomic_sale.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261022120000_micra_street_study.sql"
+"${T[@]}" -f "$HERE/test_street.sql"
 "${T[@]}" -f "$HERE/seed.sql"
 "${T[@]}" -f "$HERE/test.sql"
 

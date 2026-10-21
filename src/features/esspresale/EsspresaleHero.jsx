@@ -6,6 +6,7 @@ import { ClientPhone, BaristaPhone } from './AppPhones.jsx';
 import { SheetFrame, Segs, Odometer, useClock } from './parts.jsx';
 import StoreButtons from './StoreButtons.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
+import { useStreetMap } from '../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { useEditableTexts } from '../../shared/lib/editableTexts.js';
 import './esspresale.css';
@@ -37,6 +38,10 @@ const BG_VIEW = (w) =>
     ? { style: 'plano', c: 12, k: 80, ax: 0.6, ay: 0.62, s: 9, heat: 0.8 }
     : { style: 'plano', c: 12, k: 82, ax: 0.8, ay: 0.5, s: Math.max(8, w / 150), heat: 0.9, labels: 1.1 };
 
+// Con datos del estudio de calle, el fondo dibuja el calor real de las ventas
+// y los tinteros registrados; sin datos, la demanda de ejemplo de siempre.
+const withLayers = (layers) => (w) => (layers ? { ...BG_VIEW(w), heatPoints: layers.heatPoints, pinPoints: layers.pinPoints, pins: layers.pinPoints.length > 0 } : BG_VIEW(w));
+
 function Tabs({ index, onSelect }) {
   const { t } = useLanguage();
   return (
@@ -64,7 +69,7 @@ function TitleBlock({ maker, makerIsYou, index, onSelect }) {
   );
 }
 
-function Slide({ kind, active, index, onSelect, stores, onStoresSaved }) {
+function Slide({ kind, active, index, onSelect, stores, onStoresSaved, streetLayers = null }) {
   const { t } = useLanguage();
   const ref = useRef(null);
   const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
@@ -90,7 +95,7 @@ function Slide({ kind, active, index, onSelect, stores, onStoresSaved }) {
       <div className="essp-bg" aria-hidden="true">
         {isOrder ? (
           <>
-            <MapCanvas view={BG_VIEW} />
+            <MapCanvas view={withLayers(streetLayers)} redrawKey={streetLayers} />
             <div className="essp-paper-fade" />
           </>
         ) : (
@@ -149,6 +154,7 @@ function Slide({ kind, active, index, onSelect, stores, onStoresSaved }) {
 }
 
 export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
+  const { layers: streetLayers } = useStreetMap();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [tick, setTick] = useState(0);
@@ -185,7 +191,7 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     >
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />
+        <Slide kind="order" active={index === 0} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} streetLayers={streetLayers} />
         <Slide kind="barista" active={index === 1} index={index} onSelect={select} stores={stores} onStoresSaved={loadStores} />
       </div>
     </header>
