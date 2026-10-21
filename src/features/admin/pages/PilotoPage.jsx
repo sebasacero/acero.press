@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
-import MapCanvas from '../../esspresale/MapCanvas.jsx';
+import PilotoMap from './PilotoMap.jsx';
 import { heatFromSales, pinsFromTinteros } from '../../../shared/lib/streetMap.js';
 
 // Piloto del estudio de calle: la página que se abre en la reunión. Mapa con
@@ -126,9 +126,10 @@ export default function PilotoPage() {
           <section className="dash-sheet piloto-map" aria-label="Mapa del estudio">
             <div className="esp-cota"><span>MAPA · {view.real ? `ventas y tinteros de los últimos ${data.days} días` : 'todavía sin puntos reales'}</span><span>{data.study.zones.join(' · ') || '—'}</span></div>
             <div className="piloto-map-box">
-              <MapCanvas view={view} redrawKey={data} label="Mapa de Bogotá con el calor de las ventas en la calle y los tinteros mapeados" />
+              <PilotoMap sales={data.sales} tinteros={data.tinteros} fallbackView={view} label="Mapa de Bogotá con el calor de las ventas en la calle y los tinteros mapeados" />
             </div>
             {!view.real && <p className="esp-muted">El mapa se llena solo: elige «Hoy vendo en» en la venta de Micra y registra tinteros con el botón «Tintero» de la cámara.</p>}
+            {view.real && <p className="esp-muted piloto-geo-note">Ubicación por cuadra (calle y carrera), con una o dos cuadras de margen. Toca un tintero para ver su ficha.</p>}
           </section>
 
           <div className="piloto-cols">
