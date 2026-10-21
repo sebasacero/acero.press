@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from typing import Literal
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from pydantic import BaseModel, Field, model_validator
 
@@ -35,10 +36,17 @@ async def owner(authorization: str | None = Header(default=None)):
         raise HTTPException(401, "Inicia sesión en el panel.")
     sb = Supabase(jwt)
     try:
-        user = await sb.user()
-        if not user:
-            raise HTTPException(401, "La sesión venció: vuelve a entrar al panel.")
-        rows = await sb.select("admin_users", {"select": "role", "auth_user_id": f"eq.{user['id']}"})
+        # Si la API no alcanza a Supabase (red, URL mal puesta, TLS), que se
+        # sepa cuál fue el error y no un 500 mudo en texto plano.
+        try:
+            user = await sb.user()
+            if not user:
+                raise HTTPException(401, "La sesión venció: vuelve a entrar al panel.")
+            rows = await sb.select("admin_users", {"select": "role", "auth_user_id": f"eq.{user['id']}"})
+        except httpx.HTTPError as err:
+            raise HTTPException(502, f"La API no pudo hablar con Supabase ({type(err).__name__}: {err}).") from err
+        except SupabaseError as err:
+            raise HTTPException(502, f"Supabase respondió {err.status} al validar la sesión: {err}.") from err
         if not rows or rows[0].get("role") != "owner":
             raise HTTPException(403, "Solo el dueño puede ver el algoritmo.")
         yield sb

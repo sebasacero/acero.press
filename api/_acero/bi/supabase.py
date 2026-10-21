@@ -37,6 +37,8 @@ def _key() -> str:
 class Supabase:
     def __init__(self, jwt: str, http: httpx.AsyncClient | None = None):
         self.url = _url()
+        if not self.url.startswith(("https://", "http://")):
+            raise RuntimeError(f"SUPABASE_URL debe empezar por https:// (vale «{self.url or '(vacío)'}»).")
         self.jwt = jwt
         self.http = http or httpx.AsyncClient(timeout=httpx.Timeout(8.0))
         self._headers = {"apikey": _key(), "Authorization": f"Bearer {jwt}"}
