@@ -10,7 +10,7 @@ Tienda y café (Bogotá) con panel de admin y Micra (cámara/editor de tarjetas 
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm run api` (FastAPI en :8000)
-- `npm test`: pruebas unitarias (`node --test`) de los módulos puros de Micra.
+- `npm test`: pruebas unitarias (`node --test`) de los módulos puros (Micra y secciones del inicio, p. ej. `pressStory.js`).
 - `npm run e2e`: pruebas de navegador (Playwright) en `e2e/`. Levanta Vite con un Supabase simulado; nunca toca la base real.
 - `npm run test:sql`: funciones SQL de venta contra un Postgres local desechable (variables `PG*`; se niega a correr contra Supabase).
 - Servidor de desarrollo con datos simulados (lo que usa `e2e`):
