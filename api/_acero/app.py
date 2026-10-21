@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from urllib.parse import parse_qsl, urlencode
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 
 from .bi.routes import router as bi_router
 from .pulse import Pulse, read_pulse
@@ -51,6 +52,13 @@ class RestoreVercelPath:
 
 app.add_middleware(RestoreVercelPath)
 app.include_router(bi_router, prefix=PREFIX)
+
+
+@app.exception_handler(Exception)
+async def unexpected(_: Request, err: Exception) -> JSONResponse:
+    # Vercel convertiría la excepción en «Internal Server Error» en texto plano y el
+    # panel solo diría «la API no respondió»: mejor un JSON con la causa (sin traza).
+    return JSONResponse(status_code=500, content={"detail": f"Error inesperado en la API ({type(err).__name__}: {str(err)[:200]})."})
 
 
 @app.get(PREFIX, include_in_schema=False)

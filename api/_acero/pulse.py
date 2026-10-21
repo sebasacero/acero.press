@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup
 from pydantic import BaseModel
 from pypdf import PdfReader
 
-UA = "Mozilla/5.0 (compatible; AceroPressPulse/1.0; +https://acero.press)"
+UA = "Mozilla/5.0 (compatible; AceroPressPulse/1.0; +https://www.aceropress.com)"
 TIMEOUT = httpx.Timeout(5.0)
 BOGOTA = timezone(timedelta(hours=-5))
 BOGOTA_LAT, BOGOTA_LON = 4.711, -74.0721
