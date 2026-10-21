@@ -332,9 +332,6 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
 @container (max-width: 760px) {
   .essp-slide .essp-in {
     height: 100svh; min-height: 560px; padding: 74px 20px 0; display: flex; flex-direction: column; gap: 12px; overflow: hidden;
-    /* El celular se funde antes del marco interior de la hoja (a 18 px del borde): no lo cruza */
-    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 92px), transparent calc(100% - 22px));
-    mask-image: linear-gradient(180deg, #000 calc(100% - 92px), transparent calc(100% - 22px));
   }
   .essp-slide .essp-dash { flex: none; }
   .essp-slide .essp-main { display: contents; }
@@ -342,7 +339,7 @@ a.essp-store:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var
   .essp-slide .essp-tag, .essp-slide .essp-loc { font-size: 10.5px; }
   .essp-slide .essp-title { font-size: clamp(2rem, 10.5cqi, 2.7rem); }
   .essp-slide .essp-lede { font-size: 14px; line-height: 1.45; }
-  /* El celular asoma: se ve lo que quepa y se funde con la hoja */
+  /* El celular sobresale: pasa por encima del marco de la hoja y lo corta el borde de la pantalla */
   .essp-slide .essp-hero-phone { flex: none; width: 210px; align-self: center; margin-top: 2px; order: 3; }
   /* Cajetín en una fila: hora, quién prepara y el cambio de banner */
   .essp-slide .essp-block { flex: none; grid-template-columns: 1fr 1fr auto; order: 2; }
