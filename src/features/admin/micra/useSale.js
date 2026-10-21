@@ -11,8 +11,10 @@ import { variantsOf } from './useMicraData.js';
 // siguiente tarjeta de Receta de esa variedad se publica con su pedido.
 
 const LINK_MS = 10 * 60 * 1000;
+const RETRY_MS = 2 * 60 * 1000;
 const UP = (t) => String(t || '').toLocaleUpperCase('es-CO');
 let nextKey = 1;
+const newRef = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 const newLine = (variety) => ({ key: nextKey++, varietyId: variety?.id ?? null, variantId: variantsOf(variety)[0]?.id ?? null, qty: 1 });
 
 export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'cash' }) {
@@ -23,6 +25,9 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
   const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
+  // Referencia del ticket: si la respuesta no llega y se reintenta el mismo
+  // ticket (en 2 min), la base devuelve el pedido ya creado en vez de cobrarlo dos veces
+  const ticketRef = useRef(null); // { sig, ref, at }
   const [error, setError] = useState(null);
   const [last, setLast] = useState(null); // { orderId, total, lines, stock:[{variantId, applied}], varietyIds, at, published }
   const [attached, setAttached] = useState(null); // venta pegada a la tarjeta del editor
@@ -68,6 +73,7 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
   const removeLine = useCallback((i) => setLines((cur) => (cur.length > 1 ? cur.filter((_, j) => j !== i) : cur)), []);
   // Ticket nuevo: el café del filtro, una unidad y sin el WhatsApp del cliente anterior
   const resetTicket = useCallback(() => {
+    ticketRef.current = null;
     setLines([newLine(varietyOf(varietyId) ?? varieties?.[0] ?? null)]);
     setPhone('');
     setError(null);
@@ -108,14 +114,19 @@ export function useSale({ varieties, varietyId, kind, onVariety, initialPay = 'c
     setBusy(true);
     setError(null);
     const payload = resolved.map((l) => ({ variant: l.variant, productName: l.variety?.name ?? '', qty: l.qty }));
+    const sig = JSON.stringify([payload.map((l) => [l.variant.id, l.qty]), payMethod, waDigits(phone)]);
+    const t = ticketRef.current;
+    if (t?.sig !== sig || Date.now() - t.at > RETRY_MS) ticketRef.current = { sig, ref: newRef(), at: Date.now() };
     try {
-      const r = await recordMicraSale({ lines: payload, paymentMethod: payMethod, phone: waDigits(phone) });
+      const r = await recordMicraSale({ lines: payload, paymentMethod: payMethod, phone: waDigits(phone), clientRef: ticketRef.current.ref });
+      ticketRef.current = null;
       const rec = {
         orderId: r.orderId,
         total: r.total,
         lines: payload.map((l) => ({ variantId: l.variant.id, qty: l.qty, label: `${l.productName} · ${l.variant.label}` })),
         stock: r.stock,
         stockError: r.stockError,
+        replay: r.replay,
         varietyIds: [...new Set(resolved.map((l) => String(l.varietyId)))],
         phone: waDigits(phone) || null, // para «Enviar a › WhatsApp» de esta tarjeta
         at: Date.now(),

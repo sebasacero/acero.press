@@ -1,0 +1,13 @@
+-- Un admin (cajero), un café con varias presentaciones, un producto inactivo y un pedido web.
+insert into admin_users (auth_user_id, role) values ('00000000-0000-0000-0000-0000000000a1', 'cashier');
+insert into products (id, name, active) values ('10000000-0000-0000-0000-000000000001', 'Castillo', true), ('10000000-0000-0000-0000-000000000002', 'Viejo', false);
+insert into product_variants (id, product_id, label, price, active) values
+ ('20000000-0000-0000-0000-000000000250', '10000000-0000-0000-0000-000000000001', '250 g', 32000, true),
+ ('20000000-0000-0000-0000-000000000500', '10000000-0000-0000-0000-000000000001', '500 g', 58000, true),
+ ('20000000-0000-0000-0000-00000000000e', '10000000-0000-0000-0000-000000000001', 'neg', 10000, true),
+ ('20000000-0000-0000-0000-00000000000f', '10000000-0000-0000-0000-000000000001', 'sin inventario', 5000, true),
+ ('20000000-0000-0000-0000-0000000000a0', '10000000-0000-0000-0000-000000000001', 'inactiva', 1, false),
+ ('20000000-0000-0000-0000-0000000000b0', '10000000-0000-0000-0000-000000000002', 'producto inactivo', 1, true);
+insert into inventory (variant_id, stock_qty) values
+ ('20000000-0000-0000-0000-000000000250', 3), ('20000000-0000-0000-0000-000000000500', 0), ('20000000-0000-0000-0000-00000000000e', -2);
+insert into orders (id, source, status, total) values ('30000000-0000-0000-0000-000000000001', 'web', 'completed', 1000);
