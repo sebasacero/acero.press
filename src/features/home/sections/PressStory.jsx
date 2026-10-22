@@ -56,7 +56,7 @@ function SheetCopy({ t, desc, stores }) {
     <div className="pb-copy">
       <div className="essp-tag">{t('press.tag')} <span className="essp-new">{t('press.badge')}</span></div>
       <h2 className="essp-title pb-title" id="ps-title">
-        {lines[0]}<br />{lines[1]}
+        {lines[0]}{' '}<br />{lines[1]}
         <span className="essp-script">{t('press.script')}</span>
       </h2>
       <div className="essp-loc">{t('press.loc')}</div>
@@ -307,6 +307,12 @@ export default function PressStory() {
                     <b>{appStep.title}</b>
                     <p>{appStep.desc}</p>
                   </div>
+                </div>
+
+                {/* Antes de empezar: invita a deslizar (se va con el primer toque de la escena) */}
+                <div className="pb-hint" data-on={view.scene === 'login' && view.beat === 'screen'}>
+                  <span className="pb-hint-track"><i /></span>
+                  <b>{t('press.hint')}</b>
                 </div>
               </div>
               <figcaption className="ps-sr">{t('press.phoneLabel')}</figcaption>

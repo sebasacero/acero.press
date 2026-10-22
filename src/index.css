@@ -1731,7 +1731,29 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 .pb-lede .jp{ display:block; margin-top:.4rem; }
 .pb-figure{ justify-self:center; }
 /* Como en la portada, el celular va apenas girado sobre la hoja */
-.pb-stage .pb-phone{ width:min(340px, calc((100svh - 180px) * 270 / 560)); transform:rotate(-2deg); }
+.pb-stage .pb-phone{ width:min(400px, calc((100svh - 170px) * 270 / 560)); transform:rotate(-2deg); }
+.pb-stage .essp-appicon-tile{ width:52px; height:52px; border-radius:12px; }
+.pb-stage .essp-appicon{ width:64px; }
+.pb-stage .essp-stores{ gap:18px; }
+
+/* «Desliza»: un dedo que sube sobre la pantalla de entrada, hasta que empieza el recorrido */
+.pb-hint{
+  position:absolute; left:50%; top:36%; z-index:6; transform:translate(-50%, -50%); pointer-events:none;
+  display:grid; justify-items:center; gap:10px; padding:16px 20px 14px; border-radius:18px;
+  background:rgba(14, 15, 19, .74); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  color:#fff; font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap;
+  opacity:0; transition:opacity .35s ease;
+}
+.pb-hint[data-on="true"]{ opacity:1; }
+.pb-hint-track{ position:relative; width:34px; height:74px; border-radius:17px; border:1.5px solid rgba(255, 255, 255, .35); }
+.pb-hint-track i{ position:absolute; left:50%; bottom:6px; width:22px; height:22px; margin-left:-11px; border-radius:50%; background:#fff; box-shadow:0 0 0 6px rgba(255, 255, 255, .18); animation:pb-swipe 1.6s ease-in-out infinite; }
+@keyframes pb-swipe{
+  0%{ transform:translateY(0); opacity:0; }
+  15%{ opacity:1; }
+  75%{ transform:translateY(-40px); opacity:1; }
+  100%{ transform:translateY(-40px); opacity:0; }
+}
+@media (prefers-reduced-motion:reduce){ .pb-hint-track i{ animation:none; transform:translateY(-20px); } }
 
 /* Panel oscuro: el paso de ahora en el odómetro y la lista para saltar */
 .pb-panel{ gap:9px; padding:18px 18px 16px; justify-self:end; }
@@ -1863,7 +1885,7 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
   .ps-stage.pb-stage{ padding:0; }
   .pb-stage .essp-sheet{ inset:8px; }
   .pb-stage .essp-sheet::after{ inset:7px; }
-  .pb-in{ padding:28px 24px 26px; gap:10px; }
+  .pb-in{ padding:24px 22px 22px; gap:8px; }
   .pb-stage.is-static .pb-in{ padding:30px 26px 30px; gap:12px; }
   .ps-stage.pb-stage .essp-dash{ display:none; }
   /* Celular: título arriba, el celular de la app lo más grande posible y los íconos
@@ -1871,15 +1893,20 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
   .pb-main, .ps-stage.pb-stage .pb-copy{ display:contents; }
   .ps-stage.pb-stage .essp-tag{ order:1; }
   .ps-stage.pb-stage .pb-title{ order:2; }
-  .ps-stage.pb-stage .essp-stores{ order:4; flex:none; height:74px; padding-top:6px; align-items:center; justify-content:center; gap:26px; flex-wrap:nowrap; }
-  .ps-stage.pb-stage .essp-appicon{ width:64px; gap:5px; }
-  .ps-stage.pb-stage .essp-appicon-tile{ width:52px; height:52px; border-radius:12px; }
-  .ps-stage.pb-stage .essp-appicon-name{ font-size:11px; }
+  .ps-stage.pb-stage .essp-stores{ order:4; flex:none; height:54px; align-items:center; justify-content:center; gap:22px; flex-wrap:nowrap; }
+  .ps-stage.pb-stage .essp-appicon{ width:56px; gap:3px; }
+  .ps-stage.pb-stage .essp-appicon-tile{ width:36px; height:36px; border-radius:9px; }
+  .ps-stage.pb-stage .essp-appicon-name{ font-size:9.5px; }
+  .ps-stage.pb-stage .essp-appicon-badge{ top:-6px; right:-16px; font-size:8px; padding:1px 5px; border-width:1.5px; }
   .ps-stage.pb-stage .essp-loc, .ps-stage.pb-stage .pb-lede{ display:none; }
-  .pb-copy .essp-tag{ font-size:10.5px; }
-  .pb-title{ font-size:clamp(1.6rem, 8cqi, 2rem); }
+  /* Texto en dos renglones cortos: la pantalla del celular es lo que se mira */
+  .pb-copy .essp-tag{ font-size:9.5px; gap:6px; }
+  .pb-copy .essp-tag .essp-new{ padding:1px 5px; }
+  .pb-title{ font-size:clamp(1.05rem, 5.8cqi, 1.4rem); line-height:1.05; }
+  .pb-title br{ display:none; }
+  .pb-title .essp-script{ font-size:15px; margin-top:2px; }
   .pb-figure{ order:3; flex:1 1 auto; min-height:0; display:grid; place-items:center; }
-  .pb-stage .pb-phone{ width:min(340px, 86vw, calc((100svh - 262px) * 270 / 560)); transform:none; }
+  .pb-stage .pb-phone{ width:min(360px, 90vw, calc((100svh - 184px) * 270 / 560)); transform:none; }
   .pb-side{ display:none; }
 }
 @media (prefers-reduced-motion:reduce){

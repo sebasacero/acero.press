@@ -35,6 +35,10 @@ test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scrol
   await expect(page.locator('#prensado .pb-panel .essp-badge')).toHaveText(/0[1-8] \/ 08/);
   await expect(page.locator('.pb-side .ps-step')).toHaveCount(8);
   await expect(page.locator('#prensado .essp-stores')).toHaveCount(1);
+  // Al llegar, antes de bajar, la pantalla invita a deslizar
+  await scrollTrack(page, 0);
+  await expect(page.locator('.pb-hint')).toHaveAttribute('data-on', 'true');
+  await expect(page.locator('.pb-hint')).toContainText('Desliza para ver la app');
 
   // Inicio de sesión: entrada → toque → cuenta → bienvenida → receta
   const beats = [];
@@ -85,7 +89,7 @@ test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scrol
   await page.context().close();
 });
 
-test('celular: el celular llena la pantalla, sin la lista y sobre los botones flotantes', async ({ browser }) => {
+test('celular: el celular llena la pantalla, sin la lista, con las tiendas debajo y el aviso de deslizar', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true } });
   await page.goto('/', { waitUntil: 'load' });
   await page.locator('#prensado').scrollIntoViewIfNeeded();
@@ -94,13 +98,19 @@ test('celular: el celular llena la pantalla, sin la lista y sobre los botones fl
   await expect.poll(() => videoTime(page)).toBeGreaterThan(5);
   const r = await page.evaluate(() => {
     const b = document.querySelector('.pb-phone').getBoundingClientRect();
-    return { sw: document.documentElement.scrollWidth, side: getComputedStyle(document.querySelector('.pb-side')).display, left: b.left, right: b.right, bottom: b.bottom, h: innerHeight };
+    const st = document.querySelector('#prensado .essp-stores').getBoundingClientRect();
+    return { sw: document.documentElement.scrollWidth, side: getComputedStyle(document.querySelector('.pb-side')).display, left: b.left, right: b.right, bottom: b.bottom, w: b.width, storesTop: st.top, storesBottom: st.bottom, h: innerHeight };
   });
   expect(r.sw).toBe(390);
   expect(r.side).toBe('none');
   expect(r.left).toBeGreaterThanOrEqual(0);
   expect(r.right).toBeLessThanOrEqual(390);
-  expect(r.bottom).toBeLessThanOrEqual(r.h - 90);
+  // Grande, sin tapar los íconos de las tiendas, y estos dentro del marco de la hoja
+  expect(r.w).toBeGreaterThanOrEqual(300);
+  expect(r.bottom).toBeLessThanOrEqual(r.storesTop + 8);
+  expect(r.storesBottom).toBeLessThanOrEqual(r.h - 18);
+  // Ya empezó el recorrido: el aviso de deslizar se fue
+  await expect(page.locator('.pb-hint')).toHaveAttribute('data-on', 'false');
   expect(errors).toEqual([]);
   await page.context().close();
 });
