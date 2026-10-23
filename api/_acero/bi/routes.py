@@ -73,8 +73,10 @@ async def brief(kind: Kind = Query("daily", description="daily: el del día · w
 Stage = Literal["prospecto", "piloto", "activo", "pausa", "salio"]
 Kit = Literal["ninguno", "prestamo", "arriendo", "propio"]
 # Ficha del estudio (migración 20261023140000_tintero_ficha_estudio): los mismos valores que el check de la base
-Localidad = Literal["Chapinero", "Usaquén", "Teusaquillo", "Barrios Unidos", "Fontibón",
-                    "Santa Fe", "La Candelaria", "Kennedy", "Bosa", "Otra"]
+# Las 20 localidades y «Otra» (migración 20261023160000_tintero_localidades)
+Localidad = Literal["Usaquén", "Chapinero", "Santa Fe", "San Cristóbal", "Usme", "Tunjuelito", "Bosa", "Kennedy",
+                    "Fontibón", "Engativá", "Suba", "Barrios Unidos", "Teusaquillo", "Los Mártires", "Antonio Nariño",
+                    "Puente Aranda", "La Candelaria", "Rafael Uribe Uribe", "Ciudad Bolívar", "Sumapaz", "Otra"]
 Formato = Literal["termos_a_pie", "carrito", "bicicleta", "puesto_fijo", "otro"]
 Recorrido = Literal["ruta", "mixto", "fijo"]
 Product = Literal["tinto", "perico", "aromatica", "chocolate", "agua_panela", "ponque", "galletas", "empanadas", "cigarrillos", "dulces"]

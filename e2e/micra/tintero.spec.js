@@ -103,7 +103,13 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
   await sheet.getByRole('option', { name: 'Chapinero' }).click();
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
   await expect(sheet.getByRole('alert')).toContainText('localidad');
+  // Están las 20 localidades: las que no eran del estudio van en su grupo
+  const resto = sheet.getByRole('listbox', { name: 'Localidad: las demás localidades' });
+  await expect(resto.getByRole('option')).toHaveCount(11);
+  await resto.getByRole('option', { name: 'Ciudad Bolívar' }).click();
+  await expect(resto.getByRole('option', { name: 'Ciudad Bolívar' })).toHaveAttribute('aria-selected', 'true');
   await sheet.getByRole('option', { name: 'Usaquén' }).click();
+  await expect(resto.getByRole('option', { name: 'Ciudad Bolívar' })).toHaveAttribute('aria-selected', 'false');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
   // La encuesta se puede dejar para después: la ficha ya quedó
   await page.getByRole('dialog', { name: 'Encuesta de Carrito de la 83' }).getByRole('button', { name: /Ahora no/ }).click();

@@ -19,8 +19,10 @@ export const ZONES = [
  * «objetivo»: donde están los oficinistas y universitarios que pagarían más
  * (el SAM). «volumen»: donde hay más vendedores según el IPES (2020–2023) y
  * el tinto más barato. `ipes` = vendedores caracterizados en esa localidad,
- * cuando el estudio lo cita. El sur no usa la cuadrícula de calles del norte,
- * por eso la cuadra es opcional en la ficha.
+ * cuando el estudio lo cita. «resto»: las otras once localidades de Bogotá,
+ * de norte a sur, porque hay tinteros en todas. «Otra» es fuera de Bogotá.
+ * El sur no usa la cuadrícula de calles del norte, por eso la cuadra es
+ * opcional en la ficha. Mismos valores que el check tinteros_localidad_check.
  */
 export const LOCALIDADES = [
   { id: 'Chapinero', group: 'objetivo' },
@@ -32,9 +34,20 @@ export const LOCALIDADES = [
   { id: 'La Candelaria', group: 'volumen', note: 'centro histórico' },
   { id: 'Kennedy', group: 'volumen', ipes: 1722 },
   { id: 'Bosa', group: 'volumen', ipes: 1736 },
-  { id: 'Otra', group: 'otra' },
+  { id: 'Suba', group: 'resto' },
+  { id: 'Engativá', group: 'resto' },
+  { id: 'Puente Aranda', group: 'resto' },
+  { id: 'Los Mártires', group: 'resto' },
+  { id: 'Antonio Nariño', group: 'resto' },
+  { id: 'San Cristóbal', group: 'resto' },
+  { id: 'Rafael Uribe Uribe', group: 'resto' },
+  { id: 'Tunjuelito', group: 'resto' },
+  { id: 'Ciudad Bolívar', group: 'resto' },
+  { id: 'Usme', group: 'resto' },
+  { id: 'Sumapaz', group: 'resto', note: 'rural' },
+  { id: 'Otra', group: 'otra', note: 'fuera de Bogotá' },
 ];
-export const LOCALIDAD_GROUPS = [['objetivo', 'Zonas objetivo'], ['volumen', 'Más vendedores']];
+export const LOCALIDAD_GROUPS = [['objetivo', 'Zonas objetivo'], ['volumen', 'Más vendedores'], ['resto', 'Las demás localidades']];
 export const isLocalidad = (v) => LOCALIDADES.some((l) => l.id === v);
 
 const RANGE = { carrera: [1, 120], calle: [1, 200] };

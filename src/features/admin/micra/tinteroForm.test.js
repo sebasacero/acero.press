@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EMPTY_TINTERO, TINTERO_OPTIONS, buildTintero, canUploadPhoto, fichaProgress, hourLabel, photoPath } from './tinteroForm.js';
-import { LOCALIDADES } from './place.js';
+import { LOCALIDADES, LOCALIDAD_GROUPS } from './place.js';
 
 const at = new Date('2026-10-22T14:00:00Z');
 const ok = { ...EMPTY_TINTERO, name: 'Don Jairo', localidad: 'Chapinero', place: { carrera: 13, calle: 72, zone: 'Chapinero' }, tinto_price: '1.500', cups_per_hour: '25', photo_consent: true };
@@ -57,9 +57,15 @@ test('lo primero que falta se dice en palabras de calle', () => {
   assert.match(buildTintero({ ...ok, place: { carrera: 13 } }).error, /carrera y calle/);
 });
 
-test('las localidades son las del estudio y las opciones no se repiten', () => {
+test('están las 20 localidades de Bogotá, más «Otra», y las opciones no se repiten', () => {
   const ids = LOCALIDADES.map((l) => l.id);
-  for (const l of ['Chapinero', 'Usaquén', 'Teusaquillo', 'Barrios Unidos', 'Fontibón', 'Santa Fe', 'Kennedy', 'Bosa']) assert.ok(ids.includes(l), l);
+  const bogota = ['Usaquén', 'Chapinero', 'Santa Fe', 'San Cristóbal', 'Usme', 'Tunjuelito', 'Bosa', 'Kennedy', 'Fontibón',
+    'Engativá', 'Suba', 'Barrios Unidos', 'Teusaquillo', 'Los Mártires', 'Antonio Nariño', 'Puente Aranda',
+    'La Candelaria', 'Rafael Uribe Uribe', 'Ciudad Bolívar', 'Sumapaz'];
+  assert.deepEqual([...ids].sort(), [...bogota, 'Otra'].sort());
+  // Cada una cae en un grupo que la ficha pinta (o es «Otra», que va aparte)
+  const groups = new Set(LOCALIDAD_GROUPS.map(([g]) => g));
+  for (const l of LOCALIDADES) assert.ok(groups.has(l.group) || l.id === 'Otra', l.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const [f, opts] of Object.entries(TINTERO_OPTIONS)) assert.equal(new Set(opts.map(([v]) => v)).size, opts.length, f);
 });
