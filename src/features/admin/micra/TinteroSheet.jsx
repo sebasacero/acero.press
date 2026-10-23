@@ -6,6 +6,8 @@ import { EMPTY_TINTERO, END_HOURS, START_HOURS, TINTERO_OPTIONS, buildTintero, c
 import SurveyForm, { Choice, Multi } from '../survey/SurveyForm.jsx';
 import { EMPTY_SURVEY, buildSurvey } from '../survey/survey.js';
 import { postSurvey } from '../survey/surveyApi.js';
+import { grantAdConsent } from './tinteroApi.js';
+import { adTexts } from './tinteroAd.js';
 
 // Ficha de campo de un tintero (estudio de calle), para levantar en dos
 // minutos parado frente al puesto: foto con la misma cámara de Micra, en qué
@@ -14,7 +16,9 @@ import { postSurvey } from '../survey/surveyApi.js';
 // foto va al bucket privado «estudio» y solo con permiso; la ficha entra por
 // la API de BI (la misma que usa el panel), así que aplican el owner y RLS.
 // Guardada la ficha, sigue la encuesta (dos minutos, con su permiso); se
-// puede dejar para después y hacerla desde Piloto.
+// puede dejar para después y hacerla desde Piloto. Al final, con su permiso de
+// publicidad, se toma la foto de su tarjeta «Tintero aliado», llena con la ficha
+// y la encuesta.
 
 const BUCKET = 'estudio';
 
@@ -33,12 +37,14 @@ async function postTintero(body) {
   return data;
 }
 
-export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onClearPhoto, canShoot, docked, onClose, onSaved }) {
+export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onClearPhoto, canShoot, docked, onClose, onSaved, onMakeCard, canCard = true }) {
   const [form, setForm] = useState(() => ({ ...EMPTY_TINTERO, place }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(null); // la ficha ya guardada: sigue la encuesta
   const [survey, setSurvey] = useState(EMPTY_SURVEY);
+  const [card, setCard] = useState(null); // después de la encuesta: { survey } con lo que sirve para su tarjeta
+  const [adOk, setAdOk] = useState(false);
   const nameRef = useRef(null);
   const set = (patch) => { setError(null); setForm((f) => ({ ...f, ...patch })); };
   const progress = fichaProgress(form);
@@ -78,13 +84,66 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
     setError(null);
     try {
       await postSurvey(saved.id, body);
-      finish(true);
+      setCard({ survey: { years_selling: body.years_selling, days_per_week: body.days_per_week, payments: body.payments }, surveyed: true });
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  // Tercer paso: la foto de su tarjeta, después de la encuesta (y solo con su permiso de publicidad)
+  if (saved && card) {
+    const consented = !!saved.ad_consent;
+    const preview = adTexts(saved, card.survey);
+    const shoot = async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const row = consented ? saved : { ...saved, ...(await grantAdConsent(saved.id)), ad_consent: true };
+        onMakeCard?.({ ...row, survey: card.survey });
+      } catch (err) {
+        setError(`No se guardó el permiso: ${err.message}`);
+      } finally {
+        setBusy(false);
+      }
+    };
+    return (
+      <Sheet
+        title="Su tarjeta"
+        onClose={() => finish(card.surveyed)}
+        docked={docked}
+        label={`Tarjeta de ${saved.name}`}
+        footer={(
+          <>
+            {error && <p className="msheet-notice is-err" role="alert">{error}</p>}
+            <button type="button" className="msheet-btn is-primary is-big" disabled={busy || !onMakeCard || !canCard || !(consented || adOk)} onClick={shoot}>
+              {busy ? 'Guardando…' : 'Tomar la foto de su tarjeta'}
+            </button>
+            <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => finish(card.surveyed)}>Listo, sin tarjeta</button>
+          </>
+        )}
+      >
+        <p className="msheet-notice is-ok" role="status">✓ {card.surveyed ? `La encuesta de ${saved.name} quedó guardada.` : `La ficha de ${saved.name} quedó guardada.`}</p>
+        <p className="msheet-fine">Su tarjeta «Tintero aliado» sale con esto (todo se puede editar después):</p>
+        <div className="tad-preview" data-testid="tintero-card-preview">
+          <b>{preview.title}</b>
+          <small>{preview.place}</small>
+          <p>{preview.announce}</p>
+        </div>
+        {!consented && (
+          <>
+            <p className="msheet-fine srv-say">Pregúntale: «¿Podemos publicar tu nombre, dónde estás y lo que vendes en las redes de ACERO.press?»</p>
+            <label className="msheet-switch">
+              <input type="checkbox" checked={adOk} onChange={(e) => setAdOk(e.target.checked)} />
+              <span>Aceptó salir en la publicidad</span>
+              <small>sin esto no hay tarjeta</small>
+            </label>
+          </>
+        )}
+      </Sheet>
+    );
+  }
 
   if (saved) {
     return (
@@ -101,7 +160,7 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
             <button type="button" className="msheet-btn is-primary is-big" disabled={busy || !survey.consent} onClick={saveSurvey}>
               {busy ? 'Guardando…' : 'Guardar encuesta'}
             </button>
-            <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => finish(false)}>Ahora no: la hago después desde Piloto</button>
+            <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => setCard({ survey: null, surveyed: false })}>Ahora no: la hago después desde Piloto</button>
           </>
         )}
       >

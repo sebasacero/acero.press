@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { adCaption, adHours, adPlace, adProducts, adTexts, canAdvertise } from './tinteroAd.js';
+import { adCaption, adHours, adPayments, adPlace, adProducts, adStory, adTexts, canAdvertise } from './tinteroAd.js';
 
 const T = {
   name: 'Don Jairo', localidad: 'Chapinero', zone: 'Chapinero', carrera: 13, calle: 72,
@@ -40,4 +40,24 @@ test('los textos caben en los huecos del editor y el pie de foto los usa', () =>
   const long = adTexts({ ...T, name: 'X'.repeat(90), products: ['tinto', 'perico', 'aromatica', 'chocolate', 'agua_panela', 'ponque', 'galletas', 'empanadas', 'cigarrillos', 'dulces'] });
   assert.ok(long.title.length <= 40 && long.announce.length <= 140 && long.place.length <= 30 && long.subtitle.length <= 48);
   assert.match(adCaption(T), /Don Jairo, tintero aliado de ACERO\.press[\s\S]*📍 Cl\. 72 # 13 · Chapinero/);
+});
+
+test('la encuesta completa la tarjeta: cómo le pagan, hace cuánto vende y qué días', () => {
+  const survey = { years_selling: 'mas_10', days_per_week: 6, payments: ['efectivo', 'nequi'], notes: 'privado', gender: 'mujer' };
+  const x = adTexts({ name: 'Doña Rosa', localidad: 'Bosa', products: ['tinto'], tinto_price: 1200, hora_inicio: 5 }, survey);
+  assert.equal(x.announce, 'Vende: Tinto $1.200\nDesde las 5 a. m.\nRecibe Efectivo · Nequi\nMás de 10 años en la calle · 6 días a la semana');
+  assert.doesNotMatch(JSON.stringify(x), /privado|mujer/);
+  // La que viene con la ficha desde la API, y sin encuesta queda lo que se vio
+  assert.equal(adTexts({ name: 'R', survey }).announce.includes('6 días a la semana'), true);
+  assert.equal(adPayments({ payments_seen: ['nequi', 'fiado'] }), 'Recibe Nequi');
+  assert.equal(adStory({ days_per_week: 7 }), 'Todos los días');
+  assert.equal(adStory(null), '');
+});
+
+test('si no cabe todo, se quedan los primeros renglones enteros', () => {
+  const survey = { years_selling: 'mas_10', days_per_week: 6, payments: ['efectivo', 'nequi', 'daviplata', 'bre_b', 'tarjeta'] };
+  const a = adTexts({ ...T, products: ['tinto', 'perico', 'aromatica', 'chocolate', 'agua_panela', 'galletas'] }, survey).announce;
+  assert.ok(a.length <= 140, a);
+  assert.match(a, /^Vende: /);
+  assert.ok(!a.endsWith('·'));
 });
