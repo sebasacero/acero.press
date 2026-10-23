@@ -23,7 +23,7 @@ trap 'rm -rf "$TMP"; "${ADMIN[@]}" -c "drop database if exists $DB" >/dev/null 2
 "${T[@]}" -f "$ROOT/supabase/migrations/20261022120000_micra_street_study.sql"
 "${T[@]}" -f "$HERE/test_street.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261022140000_tintero_surveys.sql"
-"${T[@]}" -f "$ROOT/supabase/migrations/20261023160000_survey_offer_choice.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261023170000_survey_offer_choice.sql"
 "${T[@]}" -f "$HERE/test_surveys.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261023120000_tintero_routes.sql"
 "${T[@]}" -f "$HERE/test_routes.sql"
