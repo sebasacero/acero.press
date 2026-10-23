@@ -1011,6 +1011,7 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.6); backdrop-fi
   color:var(--near-black, #1E1E1E); border-bottom:1px solid var(--grid-line, #D6CEB6); transition:color .2s, background .2s;
 }
 .nav-drawer-links a:hover{ color:var(--magenta-bright,#de1b1b); background:rgba(0,0,0,.02); }
+.nav-drawer-links a[aria-current="page"]{ color:var(--magenta-bright,#de1b1b); }
 .nav-drawer-footer{ border-top:1px solid var(--grid-line,#D6CEB6); padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px)); }
 .nav-drawer-social{ display:flex; gap:10px; justify-content:center; }
 .nav-drawer-social a{

@@ -136,7 +136,10 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
                   <a className="essp-btn is-ghost" href="#prensado">{base('cta2')}</a>
                 </>
               ) : (
-                <a className="essp-btn" href={whatsapp} target="_blank" rel="noopener noreferrer">{base('cta')}</a>
+                <>
+                  <a className="essp-btn" href={whatsapp} target="_blank" rel="noopener noreferrer">{base('cta')}</a>
+                  <a className="essp-btn is-ghost" href="/escuela">{base('cta2')}</a>
+                </>
               )}
             </div>
           </div>

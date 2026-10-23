@@ -82,6 +82,8 @@
 .navbar-sheet-logo img { height: 44px; width: auto; border-radius: 7px; display: block; }
 .navbar-sheet-logo .logo-press { font-size: 1.5rem; margin-bottom: -2px; }
 .nav-links .nav-app-link { border: 1.5px solid var(--magenta-bright); padding: 3px 8px; font-weight: 700 !important; }
+/* La página en la que estás (hoy: /escuela) */
+.navbar--sheet .nav-links.left a[aria-current='page'] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
 
 /* Contenido */
 .essp-in {
@@ -238,12 +240,15 @@ a.essp-appicon:active .essp-appicon-tile { transform: scale(.94); }
   .essp-main { grid-template-columns: minmax(0, 1fr) auto; }
   .essp-panel { grid-column: 1 / -1; justify-self: stretch; max-width: none; }
 }
+/* Con seis enlaces, el idioma y los íconos el menú no cabe por debajo de ~860 px: tres rayas */
+@container (max-width: 860px) {
+  .navbar--sheet .nav-links.left { display: none; }
+  .navbar--sheet .hamburger-btn { display: flex; align-items: center; grid-column: 2; grid-row: 1; justify-self: end; justify-content: flex-end; }
+}
 @container (max-width: 760px) {
   .essp-sheet { inset: 8px; }
   .essp-sheet::after { inset: 7px; }
   .navbar.navbar--sheet { top: 18px; left: 22px; right: 22px; padding: 8px 4px 0; }
-  .navbar--sheet .navbar-content { grid-template-columns: auto 1fr auto; }
-  .navbar--sheet .hamburger-btn { grid-column: 2; grid-row: 1; justify-self: end; justify-content: flex-end; }
   .navbar-sheet-logo img { height: 32px; }
   .navbar-sheet-logo .logo-press { font-size: 1.1rem; }
   .essp-in { padding: 78px 24px 28px; gap: 14px; }
@@ -260,7 +265,7 @@ a.essp-appicon:active .essp-appicon-tile { transform: scale(.94); }
   .essp-stores { flex-wrap: nowrap; gap: 10px; }
   /* Los dos llamados en una fila, para que el celular siga asomando */
   .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; }
+  .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

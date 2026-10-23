@@ -38,7 +38,8 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="hero-footer">
+      {/* «Contact» del menú llega aquí: las redes son el contacto, y el pie está en todas las páginas */}
+      <footer className="hero-footer" id="contact">
         <SectionEditButton section="Redes sociales" fig="FIG. — PIE DE PÁGINA" onSaved={socialLinks.reload} fields={SOCIAL_FIELDS} />
         <video className="footer-video-bg" autoPlay loop muted playsInline>
           <source src="/image/hero_main1.mp4" type="video/mp4" />
