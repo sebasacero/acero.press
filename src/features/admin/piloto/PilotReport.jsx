@@ -259,6 +259,7 @@ export function ReportDoc({ report: r, data }) {
           <div><h3 className="rep-h3">¿Vendería una taza de especialidad?</h3><Bars tally={r.attitude.wouldSell} label="Vendería especialidad" /></div>
           <div><h3 className="rep-h3">¿Le interesa un kit AeroPress?</h3><Bars tally={r.attitude.kitInterest} label="Interés en el kit" /></div>
           <div><h3 className="rep-h3">¿Cómo lo pagaría?</h3><Bars tally={r.attitude.kitPayment} label="Cómo pagaría el kit" /></div>
+          <div><h3 className="rep-h3">¿Preparación nueva o termo?</h3><Bars tally={r.attitude.offerChoice} label="Preparación o termo" />{r.attitude.thermoCups.n > 0 && <p className="rep-fine">Con termo venderían {r.attitude.thermoCups.median} tazas al día (mediana, n={r.attitude.thermoCups.n}).</p>}</div>
           <div><h3 className="rep-h3">¿Cómo le pagan hoy?</h3><Bars tally={r.tech.payments} label="Medios de pago" /></div>
           <div><h3 className="rep-h3">¿Tiene celular con datos?</h3><Bars tally={r.tech.smartphone} label="Celular con datos" /></div>
           <div><h3 className="rep-h3">Precio que le pondrían a la taza</h3><Figure label="Mediana" value={money(r.attitude.specialtyPrice.median)} foot={`${nNote(r.attitude.specialtyPrice.n)}${rangeOf(r.attitude.specialtyPrice) ? ` · ${rangeOf(r.attitude.specialtyPrice)}` : ''}`} /></div>

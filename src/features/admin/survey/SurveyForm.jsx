@@ -113,6 +113,10 @@ export default function SurveyForm({ form, onChange, name }) {
         <Amount label="¿A cuánto la vendería?" field="specialty_price" placeholder="$ por taza" inputMode="numeric" {...props} />
         <Choice label="¿Le interesa un kit AeroPress?" field="kit_interest" options={OPTIONS.kit_interest} {...props} />
         <Choice label="¿Cómo lo pagaría?" field="kit_payment" options={OPTIONS.kit_payment} {...props} />
+        <Choice label="¿Qué preferiría: una nueva preparación o un termo con café listo para vender?" field="offer_choice" options={OPTIONS.offer_choice} {...props} />
+        {form.offer_choice === 'termo' && (
+          <Amount label="¿Cuántas tazas del termo vendería al día?" field="thermo_cups_day" presets={PRESETS.thermo_cups_day} placeholder="Otro número" inputMode="numeric" {...props} />
+        )}
 
         <h3 className="srv-h">Celular y pagos</h3>
         <Choice label="¿Tiene celular con datos?" field="has_smartphone" options={OPTIONS.has_smartphone} {...props} />

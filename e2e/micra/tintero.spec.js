@@ -52,14 +52,19 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await enc.getByLabel('A cuánto compra la libra').fill('20.000');
   await enc.getByRole('group', { name: '¿Vendería una taza de especialidad?' }).getByRole('button', { name: 'Tal vez' }).click();
   await enc.getByLabel('¿A cuánto la vendería?').fill('4.000');
+  // Preparación o termo: las tazas del termo solo aparecen si elige el termo
+  const offer = enc.getByRole('group', { name: /nueva preparación o un termo/ });
+  await expect(enc.getByLabel('¿Cuántas tazas del termo vendería al día?')).toHaveCount(0);
+  await offer.getByRole('button', { name: 'Termo con café listo' }).click();
+  await enc.getByRole('group', { name: '¿Cuántas tazas del termo vendería al día?: valores rápidos' }).getByRole('button', { name: '30' }).click();
   await enc.getByRole('group', { name: '¿Cómo le pagan?' }).getByRole('button', { name: 'Nequi' }).click();
   await enc.getByRole('group', { name: 'Género' }).getByRole('button', { name: 'Prefiere no decir' }).click();
-  await expect(enc.locator('.srv-progress')).toContainText('9 de 17');
+  await expect(enc.locator('.srv-progress')).toContainText('10 de 18');
   await enc.getByRole('button', { name: 'Guardar encuesta' }).click();
   await expect(page.locator('.mst-toast')).toContainText('Don Jairo quedó en el estudio con su foto y su encuesta');
   const sv = api.all('/surveys', 'POST')[0];
   expect(sv.p).toBe(`/api/v1/bi/tinteros/${api.tinteros[0].id}/surveys`);
-  expect(sv.data).toMatchObject({ consent: true, cups_per_day: 80, days_per_week: 6, coffee_brand: 'Águila Roja', coffee_g_week: 1500, coffee_price_kg: 40000, would_sell_specialty: 'tal_vez', specialty_price: 4000, payments: ['nequi'], gender: 'prefiere_no' });
+  expect(sv.data).toMatchObject({ consent: true, cups_per_day: 80, days_per_week: 6, coffee_brand: 'Águila Roja', coffee_g_week: 1500, coffee_price_kg: 40000, would_sell_specialty: 'tal_vez', specialty_price: 4000, payments: ['nequi'], gender: 'prefiere_no', offer_choice: 'termo', thermo_cups_day: 30 });
 
   const upload = api.calls.find((c) => c.p.includes('/storage/v1/object/'));
   expect(upload.p).toContain('/object/estudio/tinteros/');

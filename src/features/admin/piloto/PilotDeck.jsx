@@ -123,6 +123,7 @@ export function buildSlides(r, data) {
         <div className="deck-cols">
           <div><h3 className="rep-h3">¿Vendería una taza de especialidad?</h3><Bars tally={r.attitude.wouldSell} label="Vendería especialidad" /></div>
           <div><h3 className="rep-h3">¿Le interesa un kit AeroPress?</h3><Bars tally={r.attitude.kitInterest} label="Interés en el kit" /></div>
+          <div><h3 className="rep-h3">¿Preparación nueva o termo?</h3><Bars tally={r.attitude.offerChoice} label="Preparación o termo" />{r.attitude.thermoCups.n > 0 && <p className="deck-fine">Con termo venderían {r.attitude.thermoCups.median} tazas al día (mediana, n={r.attitude.thermoCups.n}).</p>}</div>
           {quienes && <div><h3 className="rep-h3">Género</h3><Bars tally={r.people.gender} label="Género" /></div>}
           {quienes && <div><h3 className="rep-h3">Edad</h3><Bars tally={r.people.age} label="Edad" /></div>}
         </div>

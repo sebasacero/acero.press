@@ -98,6 +98,7 @@ const DATA = {
     cups_per_day: 80, days_per_week: 6, hours_per_day: 6, coffee_g_week: 1500, coffee_price_kg: 40000,
     coffee_brand: i < 3 ? 'Águila Roja' : 'Sello Rojo', buys_where: 'tienda',
     would_sell_specialty: i < 2 ? 'si' : 'tal_vez', specialty_price: 4000, kit_interest: 'si', kit_payment: 'cuotas',
+    offer_choice: i < 3 ? 'termo' : 'preparacion', thermo_cups_day: i < 3 ? 20 + 10 * i : undefined,
     has_smartphone: i !== 4, payments: ['efectivo', 'nequi'],
     gender: i < 4 ? 'mujer' : 'hombre', age_range: '45_54', main_income: 'si',
   })),
@@ -115,6 +116,12 @@ test('el informe: muestra, precio observado por zona y café declarado con su n'
   close(r.coffee.spendMonthTotal, 5 * 1.5 * WEEKS_PER_MONTH * 40000);
   assert.deepEqual(r.coffee.brands.rows.map((b) => [b.label, b.count]), [['Águila Roja', 3], ['Sello Rojo', 2]]);
   assert.equal(r.volume.cupsHourObserved.n, 3);
+});
+
+test('preparación o termo: conteo y mediana de tazas del termo con su n', () => {
+  const r = buildReport(DATA, {});
+  assert.deepEqual(r.attitude.offerChoice.rows.map((x) => [x.value, x.count]), [['preparacion', 2], ['termo', 3]]);
+  assert.deepEqual([r.attitude.thermoCups.n, r.attitude.thermoCups.median], [3, 30]);
 });
 
 test('la cuenta del tintero da el precio techo por kilo del distribuidor', () => {

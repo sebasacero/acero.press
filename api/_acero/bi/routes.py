@@ -178,6 +178,8 @@ class SurveyIn(BaseModel):
     specialty_price: float | None = Field(default=None, ge=0, le=50000)
     kit_interest: Si3 | None = None
     kit_payment: Literal["contado", "cuotas", "arriendo", "no_sabe"] | None = None
+    offer_choice: Literal["preparacion", "termo", "ninguna"] | None = None
+    thermo_cups_day: int | None = Field(default=None, ge=0, le=500)
     has_smartphone: bool | None = None
     payments: list[Literal["efectivo", "nequi", "daviplata", "bre_b", "tarjeta"]] | None = Field(default=None, max_length=5)
     gender: Literal["mujer", "hombre", "otro", "prefiere_no"] | None = None
