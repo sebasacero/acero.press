@@ -23,7 +23,7 @@ test('portada: la franja muestra el temario y lleva a la lección en la página 
 
   await rows.nth(2).click();
   await expect(page).toHaveURL(/\/escuela#leccion-3$/);
-  await expect(page.getByRole('tab', { name: /Medir y moler/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: /Medir el café/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page).toHaveTitle(/Escuela Acero/);
   expect(errors).toEqual([]);
   await page.context().close();
@@ -121,6 +121,17 @@ test('celular: el temario completo a la vista, una lección abierta a la vez y n
   for (let i = 0; i < 6; i += 1) await expect(heads.nth(i)).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByRole('tab')).toHaveCount(0);
 
+  // El botón del avance abre la lección y le pasa el foco; «Siguiente» deja el foco en el título de la nueva
+  await page.locator('.sp-progress').getByRole('button', { name: 'Empezar la lección 1' }).click();
+  await expect(heads.nth(0)).toHaveAttribute('aria-expanded', 'true');
+  await expect(heads.nth(0)).toBeFocused();
+  await page.getByRole('region', { name: /Conoce tu AeroPress/ }).getByRole('button', { name: /Siguiente lección/ }).click();
+  await expect(heads.nth(1)).toHaveAttribute('aria-expanded', 'true');
+  await expect(heads.nth(1)).toBeFocused();
+  await expect(heads.nth(0)).toHaveAttribute('aria-expanded', 'false');
+  await heads.nth(1).click();
+  await expect(heads.nth(1)).toHaveAttribute('aria-expanded', 'false');
+
   await heads.nth(1).click();
   await expect(heads.nth(1)).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByRole('region', { name: /Tu primera taza/ })).toContainText('Lo que necesitas');
@@ -137,6 +148,22 @@ test('celular: el temario completo a la vista, una lección abierta a la vez y n
   const box = await start.boundingBox();
   expect(box.height).toBeGreaterThanOrEqual(56);
   expect(box.y + box.height).toBeLessThanOrEqual(844);
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('el carrito sigue al pasar de la portada a la Escuela y volver', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.goto('/', { waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Añadir al carrito' }).first().click();
+  const badge = () => page.locator('.navbar .cart-count-badge').first();
+  await expect(badge()).toHaveText('1');
+  await page.locator('.navbar a[href="/escuela"]').first().click();
+  await expect(page).toHaveURL(/\/escuela$/);
+  await expect(badge()).toHaveText('1');
+  await page.locator('.navbar a[href="/#beans"]').first().click();
+  await expect(page).toHaveURL(/\/#beans$/);
+  await expect(badge()).toHaveText('1');
   expect(errors).toEqual([]);
   await page.context().close();
 });

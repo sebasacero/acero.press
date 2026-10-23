@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState, useEffect, useCallback } 
 import { recordWhatsAppOrder, recordCardOrderIntent } from '../../../shared/lib/orders.js';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import { useAuth } from '../../account/AuthContext.jsx';
+import { CART_KEY, parseCart, paidOnReturn } from './cartStorage.js';
 
 const CartContext = createContext(null);
 
@@ -43,9 +44,23 @@ export function sendToWhatsApp(message, number) {
   window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
+// El carrito sigue al pasar de la portada a /escuela (son páginas distintas) y al recargar;
+// sin almacenamiento (ventana privada estricta) vive solo en esta página, como antes.
+function loadCart() {
+  try {
+    if (paidOnReturn(window.location.search)) {
+      window.sessionStorage.removeItem(CART_KEY);
+      return [];
+    }
+    return parseCart(window.sessionStorage.getItem(CART_KEY));
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }) {
   const { isLoggedIn, customer, open: openAccount } = useAuth();
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(loadCart);
   const [isOpen, setIsOpen] = useState(false);
   const [cardStatus, setCardStatus] = useState('idle'); // idle | loading | error
   const [cardError, setCardError] = useState(null); // 'not-configured' | 'generic'
@@ -56,6 +71,10 @@ export function CartProvider({ children }) {
   useEffect(() => {
     fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then(setWhatsappNumber);
   }, []);
+
+  useEffect(() => {
+    try { window.sessionStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch { /* sin almacenamiento */ }
+  }, [cart]);
 
   const addItem = useCallback(({ name, price, variant, qty, image, variantId }) => {
     const id = slugify(name) + (variant ? '-' + slugify(variant) : '');

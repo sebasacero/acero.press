@@ -85,15 +85,16 @@ test('la meta de la barra suma 3 minutos y sus partes dan 1', async () => {
 test('los tres idiomas tienen las mismas lecciones, figuras y pasos', async () => {
   const { LESSONS } = await import('./lessons.js');
   const shape = (ls) => ls.map((l) => [l.key, l.mins, l.figure.kind, l.points.length, l.practice.length,
-    l.figure.steps?.length ?? 0, l.figure.scale?.length ?? 0, l.figure.stations?.length ?? 0, l.figure.time?.map((p) => p.s).join(',') ?? '']);
+    l.figure.steps?.length ?? 0, l.figure.readouts?.length ?? 0, l.figure.stations?.length ?? 0, l.figure.time?.map((p) => p.s).join(',') ?? '']);
   assert.deepEqual(shape(LESSONS.en), shape(LESSONS.es));
   assert.deepEqual(shape(LESSONS.ja), shape(LESSONS.es));
   // El despiece numera cuatro partes y la receta trae un texto por cada momento del cronómetro
   const es = LESSONS.es;
   assert.equal(es.find((l) => l.figure.kind === 'parts').points.length, 4);
   assert.equal(es.find((l) => l.figure.kind === 'brew').figure.steps.length, BREW_STEPS.length);
-  // Una sola molienda marcada: la de AeroPress
+  // Medir: dos lecturas de báscula (café y agua) en cada idioma; la molienda no se elige en ninguna lección
   for (const lang of ['es', 'en', 'ja']) {
-    assert.equal(LESSONS[lang].find((l) => l.figure.kind === 'grind').figure.scale.filter((g) => g.pick).length, 1);
+    assert.equal(LESSONS[lang].find((l) => l.figure.kind === 'measure').figure.readouts.length, 2);
+    assert.equal(LESSONS[lang].some((l) => l.figure.kind === 'grind'), false);
   }
 });

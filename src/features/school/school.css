@@ -92,6 +92,7 @@
 .sl-practice { margin: 0; padding-left: 22px; display: grid; gap: 5px; font-size: 15px; line-height: 1.5; }
 .sl-nav { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1.5px dashed rgba(42, 53, 80, .4); }
 .sl-nav .essp-btn:last-child { margin-left: auto; }
+.sl-nav .essp-btn[aria-disabled='true'] { opacity: .7; cursor: default; }
 
 /* --- Figuras: todas en la misma lámina --- */
 .sf {
@@ -137,22 +138,12 @@
 .sf-step-body span { font-size: 14px; line-height: 1.45; color: var(--school-soft); }
 .sf-open { justify-content: center; }
 
-/* Molienda: en filas de fina (arriba) a gruesa; en fila de izquierda a derecha si hay ancho */
-.sf-scale { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.sf-scale li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; padding: 5px 8px; border: 1.5px solid transparent; border-radius: 6px; }
-.sf-scale li.is-pick { border-color: var(--magenta-bright); background: rgba(255, 0, 0, .05); }
-.sf-grains { width: 40px; height: auto; }
-.sf-grains circle { fill: #4A2F1B; }
-.sf-scale-text { display: grid; gap: 1px; min-width: 0; }
-.sf-scale b { font: 700 13.5px/1.25 'Archivo', sans-serif; }
-.sf-scale-text > span { font: 11.5px/1.3 'JetBrains Mono', monospace; color: var(--school-soft); }
-.sf-scale em { font: 700 11px/1.3 'JetBrains Mono', monospace; font-style: normal; color: var(--ink); }
-@container (min-width: 460px) {
-  .sf-scale { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .sf-scale li { grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: start; align-items: start; text-align: center; padding: 8px 3px; gap: 6px; }
-  .sf-grains { width: 100%; max-width: 54px; }
-}
-.sf-scale em::before { content: '✓ '; color: var(--magenta-bright); }
+/* Medir: las dos lecturas de la báscula y la proporción */
+.sf-readouts { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; }
+.sf-readout { display: grid; gap: 4px; padding: 10px 12px; background: #0E0F13; color: #F2F2F0; border-radius: 4px; }
+.sf-readout span { font: 11px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 255, 255, .7); }
+.sf-readout b { font: 600 28px/1 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+.sf-plus { font: 700 22px 'Space Grotesk', sans-serif; color: var(--ink); }
 .sf-ratio { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed rgba(42, 53, 80, .35); }
 .sf-ratio strong { font: 700 34px/1 'Space Grotesk', sans-serif; }
 .sf-ratio span { font-size: 14px; }
@@ -224,7 +215,7 @@
 .school-cta { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .school-cta > div { padding: 14px 18px; }
 .school-cta > div:first-child { display: grid; gap: 4px; }
-.school-cta > div:first-child b { font-family: 'Space Grotesk', sans-serif; font-size: 20px; text-transform: uppercase; }
+.school-cta > div:first-child b { font-family: 'Space Grotesk', sans-serif; font-size: 20px; text-transform: uppercase; white-space: normal; overflow: visible; text-overflow: clip; }
 .school-cta > div:first-child span { font-family: 'Archivo', sans-serif; font-size: 14px; letter-spacing: 0; line-height: 1.5; color: var(--school-soft); }
 
 /* --- Modo preparar: pantalla completa --- */

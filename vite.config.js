@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react'
 // index.html ya armado con esas etiquetas cambiadas; vercel.json lo sirve en /escuela.
 const SCHOOL_URL = 'https://www.aceropress.com/escuela'
 const SCHOOL_TITLE = 'Escuela Acero — Aprende a ser barista con AeroPress'
-const SCHOOL_DESC = 'Seis lecciones cortas y gratis para empezar como barista con una AeroPress: la receta base, medir y moler, ajustar el sabor, tu barra en la calle y cuánto cobrar.'
+const SCHOOL_DESC = 'Seis lecciones cortas y gratis para empezar como barista con una AeroPress: la receta base, medir el café, ajustar el sabor, tu barra en la calle y cuánto cobrar.'
 
 function schoolHtml() {
   return {

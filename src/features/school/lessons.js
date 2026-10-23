@@ -1,12 +1,12 @@
 // Lecciones de la Escuela: de cero a vender tu primera taza con AeroPress.
 // Español es la fuente; un idioma que falte cae al español (como translations.js).
 // Cada lección trae una figura (`figure.kind`) que la muestra en vez de contarla:
-//   parts  despiece numerado (los números son los de `points`)
-//   brew   la receta con sus pasos cronometrados (los tiempos están en school.js)
-//   grind  escala de molienda y proporción
-//   taste  escala de extracción: qué cambiar según el sabor
-//   bar    la barra en orden y la meta de tiempo por taza
-//   cost   la cuenta de la taza (calculadora)
+//   parts    despiece numerado (los números son los de `points`)
+//   brew     la receta con sus pasos cronometrados (los tiempos están en school.js)
+//   measure  lo que se pesa para una taza (café y agua) y la proporción
+//   taste    escala de sabor: qué cambiar según lo que se siente
+//   bar      la barra en orden y la meta de tiempo por taza
+//   cost     la cuenta de la taza (calculadora)
 
 const es = [
   {
@@ -33,12 +33,12 @@ const es = [
     lead: 'La receta base de la Escuela: 15 g de café, 230 g de agua a 90 °C y dos minutos. Úsala hasta que te salga igual tres días seguidos.',
     pointsLabel: 'Lo que necesitas',
     points: [
-      '15 g de café en molienda media-fina, como sal de mesa.',
+      '15 g de café molido para AeroPress.',
       '230 g de agua a 90 °C: hierve y espera 30 segundos.',
       'Un filtro de papel enjuagado en la tapa.',
       'Una taza firme y, si tienes, una báscula de cocina.',
     ],
-    tip: 'Presiona con el peso del brazo, no con fuerza. Si cuesta mucho, la molienda está muy fina.',
+    tip: 'Presiona con el peso del brazo, no con fuerza: si cuesta, ve más despacio.',
     practice: ['Prepárala con «Preparar ahora»: el cronómetro te dice cada paso.', 'Pruébala tibia: a 50 °C se notan mejor los sabores.'],
     figure: {
       kind: 'brew',
@@ -56,28 +56,22 @@ const es = [
   {
     key: 'measure',
     mins: 4,
-    title: 'Medir y moler',
-    lead: 'La taza cambia más por la medida y la molienda que por cualquier truco. Con una báscula de cocina y café recién molido ya estás por encima del promedio.',
+    title: 'Medir el café',
+    lead: 'La taza cambia más por la medida que por cualquier truco. Con una báscula de cocina y café molido para AeroPress, te sale igual cada vez.',
     pointsLabel: 'Cómo hacerlo',
     points: [
       'Proporción: 1 g de café por cada 15 g de agua (1:15). Más café, taza más intensa.',
       'Pesa café y agua: la cuchara y las líneas de la cámara son aproximadas.',
-      'Muele justo antes de preparar; el café molido pierde aroma en días.',
-      'Sin molino, pide el café molido «para AeroPress» o «medio-fino».',
-      'Guarda el grano en un frasco cerrado, lejos del sol y del calor.',
+      'Usa siempre café molido para AeroPress; si lo compras en grano, pide que te lo muelan así.',
+      'El café molido pierde aroma en días: compra bolsas pequeñas y ciérralas bien.',
+      'Guarda el café en un frasco cerrado, lejos del sol y del calor.',
     ],
     tip: 'Si sirves en la calle, deja dosis de 15 g listas en bolsitas o frascos: sirves más rápido y siempre igual.',
-    practice: ['Pesa 15 g tres veces con la cuchara y mira cuánto varía.', 'Prepara la misma receta con dos moliendas y compara.'],
+    practice: ['Pesa 15 g tres veces con la cuchara y mira cuánto varía.', 'Prepara tres tazas seguidas pesando café y agua: deben saber igual.'],
     figure: {
-      kind: 'grind',
-      caption: 'Molienda y proporción',
-      scale: [
-        { label: 'Muy fina', use: 'Espresso' },
-        { label: 'Fina', use: 'Moka' },
-        { label: 'Media-fina', use: 'AeroPress', pick: true, note: 'Como sal de mesa' },
-        { label: 'Media', use: 'Goteo' },
-        { label: 'Gruesa', use: 'Prensa francesa' },
-      ],
+      kind: 'measure',
+      caption: 'Una taza, pesada',
+      readouts: ['Café', 'Agua'],
       ratio: { value: '1 : 15', text: '15 g de café ≈ 230 g de agua' },
     },
   },
@@ -89,21 +83,21 @@ const es = [
     pointsLabel: 'Qué cambiar',
     points: [
       'Prueba la taza tibia y di lo primero que sientes: agrio, amargo, débil o fuerte.',
-      'Agrio o aguado: muele más fino o espera 15 segundos más antes de presionar.',
-      'Amargo o áspero: muele más grueso o presiona 15 segundos antes.',
-      'Débil o muy fuerte: cambia la dosis, no la molienda (1 a 2 g de café).',
+      'Agrio o aguado: espera 15 segundos más antes de presionar.',
+      'Amargo o áspero: presiona 15 segundos antes.',
+      'Débil o muy fuerte: sube o baja 1 a 2 g de café.',
       'Usa agua de botellón o filtrada: el cloro de la llave se nota.',
     ],
     tip: 'Si cambias dos cosas a la vez, no sabrás cuál arregló la taza.',
-    practice: ['Haz tres tazas cambiando solo la molienda.', 'Pídele a alguien que las pruebe sin decirle cuál es cuál.'],
+    practice: ['Haz tres tazas cambiando solo el tiempo antes de presionar.', 'Pídele a alguien que las pruebe sin decirle cuál es cuál.'],
     figure: {
       kind: 'taste',
-      caption: 'Escala de extracción',
+      caption: 'Escala de sabor',
       under: { label: 'Agrio · aguado', hint: 'Le faltó' },
       ok: { label: 'Dulce y redondo', hint: 'Así' },
       over: { label: 'Amargo · áspero', hint: 'Se pasó' },
-      fixUnder: 'Muele más fino o espera 15 s más',
-      fixOver: 'Muele más grueso o presiona 15 s antes',
+      fixUnder: 'Espera 15 s más antes de presionar',
+      fixOver: 'Presiona 15 s antes',
       dose: '¿Débil o muy fuerte? Eso es la dosis: sube o baja 1 a 2 g.',
     },
   },
@@ -173,12 +167,12 @@ const en = [
     lead: 'The School base recipe: 15 g of coffee, 230 g of water at 90 °C and two minutes. Use it until it tastes the same three days in a row.',
     pointsLabel: 'What you need',
     points: [
-      '15 g of coffee, medium-fine grind, like table salt.',
+      '15 g of coffee ground for AeroPress.',
       '230 g of water at 90 °C: boil and wait 30 seconds.',
       'A rinsed paper filter in the cap.',
       'A sturdy mug and, if you have one, a kitchen scale.',
     ],
-    tip: 'Press with the weight of your arm, not force. If it is hard, the grind is too fine.',
+    tip: 'Press with the weight of your arm, not force: if it is hard, go slower.',
     practice: ['Brew it with “Brew now”: the timer calls each step.', 'Taste it warm: at 50 °C flavors show better.'],
     figure: {
       kind: 'brew', caption: 'The base recipe, step by step',
@@ -193,27 +187,21 @@ const en = [
     },
   },
   {
-    key: 'measure', mins: 4, title: 'Measure and grind',
-    lead: 'The cup changes more with dose and grind than with any trick. A kitchen scale and freshly ground coffee already put you above average.',
+    key: 'measure', mins: 4, title: 'Measure your coffee',
+    lead: 'The cup changes more with the dose than with any trick. With a kitchen scale and coffee ground for AeroPress, it comes out the same every time.',
     pointsLabel: 'How to',
     points: [
       'Ratio: 1 g of coffee for every 15 g of water (1:15). More coffee, a more intense cup.',
       'Weigh coffee and water: the scoop and the chamber marks are approximate.',
-      'Grind right before brewing; ground coffee loses aroma within days.',
-      'No grinder? Ask for coffee ground "for AeroPress" or "medium-fine".',
-      'Keep beans in a closed jar, away from sun and heat.',
+      'Always use coffee ground for AeroPress; if you buy beans, ask for that grind.',
+      'Ground coffee loses aroma within days: buy small bags and close them well.',
+      'Keep coffee in a closed jar, away from sun and heat.',
     ],
     tip: 'Selling on the street? Keep 15 g doses ready in bags or jars: you serve faster and always the same.',
-    practice: ['Weigh 15 g three times with the scoop and see how much it varies.', 'Brew the same recipe with two grinds and compare.'],
+    practice: ['Weigh 15 g three times with the scoop and see how much it varies.', 'Brew three cups in a row weighing coffee and water: they should taste the same.'],
     figure: {
-      kind: 'grind', caption: 'Grind and ratio',
-      scale: [
-        { label: 'Extra fine', use: 'Espresso' },
-        { label: 'Fine', use: 'Moka pot' },
-        { label: 'Medium-fine', use: 'AeroPress', pick: true, note: 'Like table salt' },
-        { label: 'Medium', use: 'Drip' },
-        { label: 'Coarse', use: 'French press' },
-      ],
+      kind: 'measure', caption: 'One cup, weighed',
+      readouts: ['Coffee', 'Water'],
       ratio: { value: '1 : 15', text: '15 g coffee ≈ 230 g water' },
     },
   },
@@ -223,20 +211,20 @@ const en = [
     pointsLabel: 'What to change',
     points: [
       'Taste the cup warm and name the first thing you notice: sour, bitter, weak or strong.',
-      'Sour or watery: grind finer or wait 15 seconds more before pressing.',
-      'Bitter or harsh: grind coarser or press 15 seconds earlier.',
-      'Weak or too strong: change the dose, not the grind (1 to 2 g of coffee).',
+      'Sour or watery: wait 15 seconds more before pressing.',
+      'Bitter or harsh: press 15 seconds earlier.',
+      'Weak or too strong: add or remove 1 to 2 g of coffee.',
       'Use bottled or filtered water: chlorinated tap water shows.',
     ],
     tip: 'Change two things at once and you will not know which one fixed the cup.',
-    practice: ['Make three cups changing only the grind.', 'Ask someone to taste them blind.'],
+    practice: ['Make three cups changing only the time before pressing.', 'Ask someone to taste them blind.'],
     figure: {
-      kind: 'taste', caption: 'Extraction scale',
+      kind: 'taste', caption: 'Taste scale',
       under: { label: 'Sour · watery', hint: 'Not enough' },
       ok: { label: 'Sweet and round', hint: 'Just right' },
       over: { label: 'Bitter · harsh', hint: 'Too much' },
-      fixUnder: 'Grind finer or wait 15 s more',
-      fixOver: 'Grind coarser or press 15 s earlier',
+      fixUnder: 'Wait 15 s more before pressing',
+      fixOver: 'Press 15 s earlier',
       dose: 'Weak or too strong? That is the dose: go up or down 1 to 2 g.',
     },
   },
@@ -295,8 +283,8 @@ const ja = [
     key: 'first', mins: 5, title: '最初の一杯',
     lead: 'スクールの基本レシピ：コーヒー15 g、90 °Cのお湯230 g、2分。3日続けて同じ味になるまで使いましょう。',
     pointsLabel: '用意するもの',
-    points: ['コーヒー15 g、中細挽き（食卓塩くらい）。', '90 °Cのお湯230 g（沸騰後30秒待つ）。', 'すすいだペーパーフィルターをキャップに。', 'しっかりしたカップ、あればキッチンスケール。'],
-    tip: '力ではなく腕の重さで押す。重すぎるなら挽き目が細かすぎます。',
+    points: ['エアロプレス用に挽いたコーヒー15 g。', '90 °Cのお湯230 g（沸騰後30秒待つ）。', 'すすいだペーパーフィルターをキャップに。', 'しっかりしたカップ、あればキッチンスケール。'],
+    tip: '力ではなく腕の重さで押す。重いときはゆっくり。',
     practice: ['「今すぐ淹れる」で淹れる。タイマーが手順を知らせます。', '少し冷めてから味わう。50 °Cくらいで味がよく分かります。'],
     figure: {
       kind: 'brew', caption: '基本レシピの手順',
@@ -311,21 +299,15 @@ const ja = [
     },
   },
   {
-    key: 'measure', mins: 4, title: '量る・挽く',
-    lead: 'カップの味を変えるのは小技より分量と挽き目です。キッチンスケールと挽きたての豆があれば、それだけで平均以上。',
+    key: 'measure', mins: 4, title: 'コーヒーを量る',
+    lead: 'カップの味を変えるのは小技より分量です。キッチンスケールとエアロプレス用に挽いた粉があれば、毎回同じ味になります。',
     pointsLabel: 'やり方',
-    points: ['比率：お湯15 gにコーヒー1 g（1:15）。豆を増やすと濃くなる。', 'コーヒーとお湯は量る。スクープや目盛りは目安です。', '淹れる直前に挽く。挽いた粉は数日で香りが落ちます。', 'ミルがなければ「エアロプレス用」「中細挽き」で頼む。', '豆は密閉びんに入れ、日光と熱を避けて保存。'],
+    points: ['比率：お湯15 gにコーヒー1 g（1:15）。豆を増やすと濃くなる。', 'コーヒーとお湯は量る。スクープや目盛りは目安です。', 'いつもエアロプレス用に挽いた粉を使う。豆で買うならその挽き目を頼む。', '挽いた粉は数日で香りが落ちる。小さい袋で買い、しっかり閉じる。', '密閉びんに入れ、日光と熱を避けて保存。'],
     tip: '路上で売るなら15 gずつ小分けにしておくと、速く、いつも同じに出せます。',
-    practice: ['スクープで15 gを3回量り、ばらつきを見る。', '同じレシピを2つの挽き目で淹れ比べる。'],
+    practice: ['スクープで15 gを3回量り、ばらつきを見る。', 'コーヒーとお湯を量って3杯続けて淹れる。同じ味になるはず。'],
     figure: {
-      kind: 'grind', caption: '挽き目と比率',
-      scale: [
-        { label: '極細挽き', use: 'エスプレッソ' },
-        { label: '細挽き', use: 'マキネッタ' },
-        { label: '中細挽き', use: 'エアロプレス', pick: true, note: '食卓塩くらい' },
-        { label: '中挽き', use: 'ドリップ' },
-        { label: '粗挽き', use: 'フレンチプレス' },
-      ],
+      kind: 'measure', caption: '一杯分を量る',
+      readouts: ['コーヒー', 'お湯'],
       ratio: { value: '1 : 15', text: 'コーヒー15 g ≈ お湯230 g' },
     },
   },
@@ -333,16 +315,16 @@ const ja = [
     key: 'taste', mins: 4, title: '味を調整する',
     lead: '味見して直すのがバリスタの仕事。一度に変えるのは一つだけ、結果をメモしましょう。',
     pointsLabel: '何を変えるか',
-    points: ['少し冷めてから飲み、最初に感じたことを言う：酸っぱい、苦い、弱い、濃い。', '酸っぱい・薄い：細かく挽くか、押す前に15秒長く待つ。', '苦い・えぐい：粗く挽くか、15秒早く押す。', '弱い・濃すぎる：挽き目ではなく豆の量を1〜2 g変える。', 'ボトル水か浄水を。塩素の多い水道水は味に出ます。'],
+    points: ['少し冷めてから飲み、最初に感じたことを言う：酸っぱい、苦い、弱い、濃い。', '酸っぱい・薄い：押す前に15秒長く待つ。', '苦い・えぐい：15秒早く押す。', '弱い・濃すぎる：豆を1〜2 g増やすか減らす。', 'ボトル水か浄水を。塩素の多い水道水は味に出ます。'],
     tip: '2つ同時に変えると、どちらが効いたか分かりません。',
-    practice: ['挽き目だけを変えて3杯淹れる。', '誰かに目隠しで飲み比べてもらう。'],
+    practice: ['押す前の時間だけを変えて3杯淹れる。', '誰かに目隠しで飲み比べてもらう。'],
     figure: {
-      kind: 'taste', caption: '抽出のものさし',
+      kind: 'taste', caption: '味のものさし',
       under: { label: '酸っぱい・薄い', hint: '足りない' },
       ok: { label: '甘くまろやか', hint: 'ちょうどいい' },
       over: { label: '苦い・えぐい', hint: '出すぎ' },
-      fixUnder: '細かく挽くか15秒長く',
-      fixOver: '粗く挽くか15秒早く押す',
+      fixUnder: '押す前に15秒長く待つ',
+      fixOver: '15秒早く押す',
       dose: '弱い・濃すぎる？それは豆の量：1〜2 g増減。',
     },
   },

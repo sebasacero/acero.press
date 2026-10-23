@@ -58,7 +58,8 @@ function LessonBody({ lesson, index, count, isSeen, t, timer, onOpenTimer, onPre
         {index < count - 1 ? (
           <button type="button" className="essp-btn" onClick={onNext}>{t('school.next')} →</button>
         ) : (
-          <button type="button" className="essp-btn" onClick={onFinish} disabled={isSeen}>
+          // aria-disabled y no disabled: el botón conserva el foco después de terminar
+          <button type="button" className="essp-btn" onClick={isSeen ? undefined : onFinish} aria-disabled={isSeen || undefined}>
             {isSeen ? `✓ ${t('school.seen')}` : t('school.finish')}
           </button>
         )}
@@ -78,8 +79,12 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   const [cookOpen, setCookOpen] = useState(false);
   const timer = useBrewTimer();
   const tabRefs = useRef([]);
-  // A dónde llevar la vista después de pintar: al llegar con #leccion-3, ya en el primer cuadro
-  const scrollTo = useRef(lessonFromHash(window.location.hash, lessons.length));
+  // A dónde llevar la vista (y el foco) después de pintar. Es estado y no ref: pedir la lección que
+  // ya está abierta también tiene que mover la vista. Al llegar con #leccion-3, desde el primer cuadro.
+  const [scrollReq, setScrollReq] = useState(() => {
+    const i = lessonFromHash(window.location.hash, lessons.length);
+    return i === null ? null : { i, focus: false };
+  });
   const touched = useRef(false);
   const shown = active ?? (narrow ? null : 0);
   const brew = lessons.find((l) => l.figure.kind === 'brew');
@@ -96,24 +101,27 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   // La dirección dice qué lección está abierta (se puede copiar y mandar); solo cuando la persona cambia de lección
   useEffect(() => {
     if (!touched.current) return;
-    const url = shown === null ? window.location.pathname : `${window.location.pathname}${lessonHash(shown)}`;
-    window.history.replaceState(null, '', url);
+    const { pathname, search } = window.location; // con ?utm=… de Instagram o WhatsApp intactos
+    window.history.replaceState(null, '', `${pathname}${search}${shown === null ? '' : lessonHash(shown)}`);
   }, [shown]);
 
-  // Llevar la vista a la lección elegida (al llegar con #leccion-3, con «Siguiente» o desde el avance)
+  // Llevar la vista a la lección pedida (al llegar con #leccion-3, con «Siguiente» o desde el avance)
   useEffect(() => {
-    if (scrollTo.current === null) return;
-    const i = scrollTo.current;
-    scrollTo.current = null;
+    if (!scrollReq) return;
+    const { i, focus } = scrollReq;
     const el = document.getElementById(narrow ? `leccion-${i + 1}` : 'temario');
-    if (!el) return;
-    const top = el.getBoundingClientRect().top;
-    if (top < 0 || top > window.innerHeight * 0.6) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' });
-  });
-  const open = useCallback((i, { scroll = true } = {}) => {
+    if (el) {
+      const top = el.getBoundingClientRect().top;
+      // 'instant' y no 'auto': la página tiene scroll-behavior: smooth y 'auto' lo seguiría
+      if (top < 0 || top > window.innerHeight * 0.6) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'instant' : 'smooth' });
+    }
+    // En el celular el botón que tenía el foco se fue con la lección cerrada: el foco pasa al título de la nueva
+    if (focus && narrow) document.getElementById(`sa-btn-${lessons[i].key}`)?.focus({ preventScroll: true });
+  }, [scrollReq, narrow, lessons]);
+  const open = useCallback((i, { scroll = true, focus = false } = {}) => {
     touched.current = true;
-    if (scroll) scrollTo.current = i;
     setActive(i);
+    if (scroll && i !== null) setScrollReq({ i, focus });
   }, []);
   // Un enlace a otra lección estando ya en /escuela (o atrás y adelante) solo cambia el #: abrir esa
   useEffect(() => {
@@ -130,8 +138,8 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
     writeSeen(next);
     return next;
   }), []);
-  const goNext = (i) => { markSeen(lessons[i].key); open(i + 1); };
-  const goPrev = (i) => open(i - 1);
+  const goNext = (i) => { markSeen(lessons[i].key); open(i + 1, { focus: true }); };
+  const goPrev = (i) => open(i - 1, { focus: true });
   const closeCook = useCallback(() => setCookOpen(false), []);
 
   // Pestañas del temario (computador): flechas, Inicio y Fin, como pide el patrón de pestañas
@@ -203,7 +211,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
               <p className="sp-progress-text">
                 {resume === -1 ? t('school.allDone') : t('school.progress').replace('{n}', done).replace('{total}', lessons.length)}
               </p>
-              <button type="button" className="essp-btn" onClick={() => open(progressCta.to)}>{progressCta.label}</button>
+              <button type="button" className="essp-btn" onClick={() => open(progressCta.to, { focus: true })}>{progressCta.label}</button>
             </aside>
           </header>
 

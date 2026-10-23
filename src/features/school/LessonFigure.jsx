@@ -93,48 +93,23 @@ function Brew({ fig, figure, t, timer, onOpen }) {
   );
 }
 
-// Granos dibujados con una semilla fija: la misma molienda se ve igual cada vez
-function grains(level) {
-  const r = [1.1, 1.8, 2.6, 3.5, 4.6][level];
-  const step = r * 2.6;
-  let seed = level * 9301 + 49297;
-  const rand = () => { seed = (seed * 233280 + 49297) % 233280; return seed / 233280; };
-  const out = [];
-  for (let y = r + 2; y < 52 - r; y += step) {
-    for (let x = r + 2; x < 52 - r; x += step) {
-      out.push({ x: x + (rand() - 0.5) * r, y: y + (rand() - 0.5) * r, r: r * (0.75 + rand() * 0.45) });
-    }
-  }
-  return out;
-}
-
-/** Escala de molienda (de muy fina a gruesa) con la de AeroPress marcada, y la proporción a escala. */
-function Grind({ fig, figure }) {
-  const coffee = 15;
-  const water = 230;
+/** Una taza, pesada: lo que marca la báscula para el café y el agua, y la proporción a escala. */
+function Measure({ fig, figure }) {
+  const [coffee, water] = figure.readouts;
   return (
-    <Plate fig={fig} caption={figure.caption} className="sf-grind">
-      <ol className="sf-scale">
-        {figure.scale.map((g, i) => (
-          <li key={g.label} className={g.pick ? 'is-pick' : undefined}>
-            <svg viewBox="0 0 54 54" aria-hidden="true" className="sf-grains">
-              {grains(i).map((p, k) => <circle key={k} cx={p.x} cy={p.y} r={p.r} />)}
-            </svg>
-            <span className="sf-scale-text">
-              <b>{g.label}</b>
-              <span>{g.use}</span>
-              {g.pick && <em>{g.note}</em>}
-            </span>
-          </li>
-        ))}
-      </ol>
+    <Plate fig={fig} caption={figure.caption} className="sf-measure">
+      <div className="sf-readouts">
+        <div className="sf-readout"><span>{coffee}</span><b>{BASE_RECIPE.coffee} g</b></div>
+        <span className="sf-plus" aria-hidden="true">+</span>
+        <div className="sf-readout"><span>{water}</span><b>{BASE_RECIPE.water} g</b></div>
+      </div>
       <div className="sf-ratio">
         <strong>{figure.ratio.value}</strong>
         <span>{figure.ratio.text}</span>
         {/* A escala: el café es 1 de cada 16 partes de lo que entra a la cámara */}
         <div className="sf-ratio-bar" aria-hidden="true">
-          <i className="is-coffee" style={{ flexGrow: coffee }} />
-          <i className="is-water" style={{ flexGrow: water }} />
+          <i className="is-coffee" style={{ flexGrow: BASE_RECIPE.coffee }} />
+          <i className="is-water" style={{ flexGrow: BASE_RECIPE.water }} />
         </div>
       </div>
     </Plate>
@@ -235,7 +210,7 @@ export default function LessonFigure({ lesson, index, t, timer, onOpenTimer }) {
   switch (figure.kind) {
     case 'parts': return <Parts fig={fig} figure={figure} points={lesson.points} />;
     case 'brew': return <Brew fig={fig} figure={figure} t={t} timer={timer} onOpen={onOpenTimer} />;
-    case 'grind': return <Grind fig={fig} figure={figure} />;
+    case 'measure': return <Measure fig={fig} figure={figure} />;
     case 'taste': return <Taste fig={fig} figure={figure} />;
     case 'bar': return <Bar fig={fig} figure={figure} />;
     case 'cost': return <Cost fig={fig} figure={figure} t={t} />;

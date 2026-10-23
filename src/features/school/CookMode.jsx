@@ -70,14 +70,15 @@ export default function CookMode({ open, onClose, timer, figure, t }) {
 
   useWakeLock(open && timer.running);
 
-  // Un toque en cada paso: se puede preparar sin mirar la pantalla
+  // Un toque en cada paso: se puede preparar sin mirar la pantalla. «Listo» llega en el mismo
+  // instante en que el reloj se detiene, así que cuenta también el reloj ya terminado.
   useEffect(() => {
-    if (!open || !timer.running) { lastStep.current = i; return; }
+    if (!open || !(timer.running || timer.done)) { lastStep.current = i; return; }
     if (i !== lastStep.current) {
       if (lastStep.current !== -1) navigator.vibrate?.(i === BREW_STEPS.length - 1 ? [90, 60, 90] : 70);
       lastStep.current = i;
     }
-  }, [i, open, timer.running]);
+  }, [i, open, timer.running, timer.done]);
 
   // Diálogo: foco adentro, Esc cierra, la página de atrás no se mueve; al cerrar, el foco vuelve
   useEffect(() => {
