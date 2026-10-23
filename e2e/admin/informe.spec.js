@@ -31,7 +31,7 @@ const INFORME = {
 
 async function openInforme(page) {
   await page.goto('/admin', { waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
   await page.getByRole('tab', { name: 'Informe y presentación' }).click();
   await expect(page.getByRole('article', { name: 'Informe del piloto' })).toBeVisible();
 }
@@ -129,7 +129,7 @@ test('imprimir: el PDF trae solo el documento, en varias páginas A4', async ({ 
   await page.emulateMedia({ media: 'print' });
   await expect(page.locator('.ax-side')).toBeHidden();
   await expect(page.locator('.rep-tools')).toBeHidden();
-  await expect(page.getByRole('tab', { name: 'Estudio' })).toBeHidden();
+  await expect(page.getByRole('tab', { name: 'Datos y mapa' })).toBeHidden();
   await expect(page.getByRole('article', { name: 'Informe del piloto' })).toBeVisible();
   const pdf = await page.pdf({ format: 'A4', printBackground: true });
   const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
@@ -139,14 +139,14 @@ test('imprimir: el PDF trae solo el documento, en varias páginas A4', async ({ 
   await page.context().close();
 });
 
-test('desde Piloto se encuesta a un tintero que no tenía encuesta', async ({ browser }) => {
+test('desde Estudio se completa la encuesta de un tintero que no la tenía', async ({ browser }) => {
   const { page, api, errors } = await openPage(browser, desk);
   api.opts.piloto = INFORME;
   await page.goto('/admin', { waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
   const card = page.locator('.piloto-tintero', { hasText: 'Don Ernesto' });
   await expect(card).toContainText('Sin encuesta');
-  await card.getByRole('button', { name: 'Encuestar' }).click();
+  await card.getByRole('button', { name: 'Completar encuesta' }).click();
   const dialog = page.getByRole('dialog', { name: 'Encuesta de Don Ernesto' });
   await expect(dialog.getByRole('button', { name: 'Guardar encuesta' })).toBeDisabled();
   await dialog.getByLabel('Aceptó responder').check();
@@ -165,16 +165,16 @@ test('sin la migración: Piloto lo avisa, no ofrece encuestar y los supuestos qu
   api.opts.piloto = { ...INFORME, surveys: [], surveysReady: false, scenarioReady: false };
   api.opts.surveysDown = true;
   await page.goto('/admin', { waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
   await expect(page.getByRole('note')).toContainText('20261022140000_tintero_surveys');
-  await expect(page.getByRole('button', { name: 'Encuestar' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Completar encuesta' })).toHaveCount(0);
   await page.getByRole('tab', { name: 'Informe y presentación' }).click();
   const sc = page.getByRole('region', { name: 'Supuestos del informe' });
   await sc.getByLabel('Costo del kit por tintero').fill('250.000');
   await expect(sc.getByRole('status')).toHaveText(/Guardado solo en este navegador/);
   // Se recuerda al volver aunque la base no lo guarde
   await page.reload({ waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
   await page.getByRole('tab', { name: 'Informe y presentación' }).click();
   await expect(page.getByRole('region', { name: 'Supuestos del informe' }).getByLabel('Costo del kit por tintero')).toHaveValue('250.000');
   expect(errors).toEqual([]);

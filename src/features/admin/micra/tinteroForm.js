@@ -9,6 +9,7 @@
 // cuenta con calma (ingresos, proveedor, café) va en la encuesta.
 
 import { parsePlace, isValidPlace, isLocalidad } from './place.js';
+import { gpsPayload } from './gps.js';
 
 /** Opciones de la ficha: [valor guardado, texto en pantalla]. Los valores son los del check de la base. */
 export const TINTERO_OPTIONS = {
@@ -26,7 +27,7 @@ export const END_HOURS = [9, 10, 11, 12, 14, 16, 18, 20];
 export const hourLabel = (h) => (h === 12 ? '12 m.' : h < 12 ? `${h} a. m.` : `${h - 12} p. m.`);
 
 export const EMPTY_TINTERO = {
-  name: '', localidad: null, place: null,
+  name: '', localidad: null, gps: null, referencia: '', place: null,
   formato: null, recorrido: null, hora_inicio: null, hora_fin: null, termos: '',
   products: [], tinto_price: '', perico_price: '', aromatica_price: '', cups_per_hour: '',
   client_mix: null, client_types: [], payments_seen: [], ipes: null,
@@ -82,12 +83,16 @@ export function buildTintero(form, { surveyedAt = new Date() } = {}) {
   const end = form.hora_fin ?? null;
   if (start !== null && end !== null && end <= start) return { error: 'La hora en que termina tiene que ser después de la de empezar.' };
 
+  const referencia = String(form.referencia ?? '').trim();
+  if (referencia.length > 80) return { error: 'La referencia es muy larga: algo corto como «puerta principal de Plaza de las Américas».' };
   const notes = String(form.notes ?? '').trim().slice(0, 500) || null;
   const lists = Object.fromEntries(['products', 'client_types', 'payments_seen'].map((f) => [f, someOf(f, form[f])]));
   const body = {
     name,
     localidad: form.localidad,
-    zone: isValidPlace(place) && place.zone ? place.zone : form.localidad,
+    zone: referencia || (isValidPlace(place) && place.zone ? place.zone : form.localidad),
+    referencia: referencia || null,
+    ...gpsPayload(form.gps),
     carrera: isValidPlace(place) ? place.carrera : null,
     calle: isValidPlace(place) ? place.calle : null,
     stage: 'prospecto',
@@ -112,7 +117,7 @@ export function buildTintero(form, { surveyedAt = new Date() } = {}) {
 }
 
 /** Cuántos de los datos del estudio quedaron anotados (para el contador de la hoja). */
-export const FICHA_FIELDS = ['localidad', 'formato', 'recorrido', 'hora_inicio', 'hora_fin', 'termos', 'products', 'tinto_price', 'cups_per_hour', 'client_mix', 'client_types', 'payments_seen', 'ipes'];
+export const FICHA_FIELDS = ['localidad', 'gps', 'formato', 'recorrido', 'hora_inicio', 'hora_fin', 'termos', 'products', 'tinto_price', 'cups_per_hour', 'client_mix', 'client_types', 'payments_seen', 'ipes'];
 export function fichaProgress(form) {
   const done = FICHA_FIELDS.filter((f) => {
     const v = form[f];

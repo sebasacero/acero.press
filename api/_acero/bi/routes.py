@@ -119,12 +119,20 @@ class TinteroIn(BaseModel):
     client_types: list[ClientType] | None = Field(default=None, max_length=9)
     payments_seen: list[PaymentSeen] | None = Field(default=None, max_length=5)
     ipes: Ipes | None = None
+    # Dónde está, con el GPS del celular (la cuadra es opcional)
+    lat: float | None = Field(default=None, ge=3.7, le=4.85)
+    lng: float | None = Field(default=None, ge=-74.5, le=-73.95)
+    gps_accuracy_m: int | None = Field(default=None, ge=0, le=5000)
+    located_at: datetime | None = None
+    referencia: str | None = Field(default=None, max_length=80)
 
     @model_validator(mode="after")
     def _place_complete(self):
         # Las dos coordenadas o ninguna: el check de la base lo exige igual
         if (self.carrera is None) != (self.calle is None):
             raise ValueError("El lugar necesita carrera y calle.")
+        if (self.lat is None) != (self.lng is None):
+            raise ValueError("El GPS necesita latitud y longitud.")
         if self.hora_inicio is not None and self.hora_fin is not None and self.hora_fin <= self.hora_inicio:
             raise ValueError("La hora en que termina tiene que ser después de la de empezar.")
         return self
@@ -145,6 +153,12 @@ class TinteroPatch(BaseModel):
     photo_url: str | None = Field(default=None, pattern=r"^https://", max_length=500)
     photo_consent: bool | None = None
     ad_consent: bool | None = None
+    lat: float | None = Field(default=None, ge=3.7, le=4.85)
+    lng: float | None = Field(default=None, ge=-74.5, le=-73.95)
+    gps_accuracy_m: int | None = Field(default=None, ge=0, le=5000)
+    located_at: datetime | None = None
+    referencia: str | None = Field(default=None, max_length=80)
+    localidad: Localidad | None = None
     tinto_price: float | None = Field(default=None, ge=0, le=50000)
     cups_per_hour: float | None = Field(default=None, ge=0, le=500)
     surveyed_at: datetime | None = None

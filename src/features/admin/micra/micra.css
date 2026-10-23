@@ -546,3 +546,6 @@
 .tad-preview b{ font-size:16px; }
 .tad-preview small{ font-size:12px; color:rgba(255,255,255,.65); }
 .tad-preview p{ margin:4px 0 0; font-size:13px; line-height:1.45; white-space:pre-line; }
+.msheet-place-field.is-wide{ display:flex; flex-direction:column; gap:4px; width:100%; }
+.mtin-cuadra summary{ cursor:pointer; font-size:13px; color:rgba(255,255,255,.75); padding:6px 0; }
+.mtin-cuadra[open] summary{ margin-bottom:6px; }

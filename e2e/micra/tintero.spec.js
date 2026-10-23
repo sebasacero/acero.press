@@ -1,9 +1,12 @@
 // Estudio de calle: registrar un tintero desde la cámara de Micra en dos minutos.
 import { test, expect } from '@playwright/test';
-import { openPage, openMicraFromHome } from './fixtures.js';
+import { openPage, openMicraFromHome, PHONE } from './fixtures.js';
+
+// Frente a la estación de la 72 (Chapinero), con 9 m de precisión
+const GPS = { ...PHONE, permissions: [...PHONE.permissions, 'geolocation'], geolocation: { latitude: 4.6577, longitude: -74.0634, accuracy: 9 } };
 
 test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la API de BI', async ({ browser }) => {
-  const { page, api, errors } = await openPage(browser);
+  const { page, api, errors } = await openPage(browser, { context: GPS });
   await openMicraFromHome(page);
   await page.waitForFunction(() => document.querySelector('.mc-video')?.readyState >= 2);
   await page.getByRole('button', { name: 'Registrar un tintero' }).click();
@@ -17,10 +20,13 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await sheet.getByLabel('Dio permiso para la foto').check();
 
   await sheet.getByPlaceholder(/Don Jairo/).fill('Don Jairo');
-  await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('0 de 13');
+  await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('0 de 14');
   await sheet.getByRole('option', { name: 'Chapinero' }).click();
-  await sheet.getByLabel('Calle').fill('72');
-  await sheet.getByLabel('Carrera').fill('13');
+  // Dónde está: el GPS del celular y una referencia; la cuadra no hace falta
+  await expect(sheet.getByLabel('Calle')).toBeHidden();
+  await sheet.getByRole('button', { name: '📍 Usar mi ubicación' }).click();
+  await expect(sheet.getByTestId('tintero-gps')).toContainText('Marcado · ±9 m');
+  await sheet.getByLabel('Referencia').fill('Salida de la estación de la 72');
   // Lo que el estudio necesita: cómo vende, su ruta, horario, productos, clientes y pagos
   await sheet.getByRole('group', { name: 'Cómo vende' }).getByRole('button', { name: 'Termos a pie' }).click();
   await sheet.getByRole('group', { name: '¿Se mueve?' }).getByRole('button', { name: 'Hace una ruta' }).click();
@@ -36,7 +42,7 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await sheet.getByRole('group', { name: 'Quiénes le compran' }).getByRole('button', { name: 'Porteros' }).click();
   await sheet.getByRole('group', { name: 'Cómo le pagan' }).getByRole('button', { name: 'Fiado' }).click();
   await sheet.getByRole('group', { name: '¿Registrado en el IPES?' }).getByRole('button', { name: 'No sabe' }).click();
-  await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('13 de 13');
+  await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('14 de 14');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
 
   // Guardada la ficha, sigue la encuesta: sin el permiso no se puede marcar ni guardar
@@ -66,7 +72,7 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   const card = page.getByRole('dialog', { name: 'Tarjeta de Don Jairo' });
   const preview = card.getByTestId('tintero-card-preview');
   await expect(preview).toContainText('Don Jairo');
-  await expect(preview).toContainText('Cl. 72 # 13 · Chapinero');
+  await expect(preview).toContainText('Salida de la estación de la 72');
   await expect(preview).toContainText('Vende: Tinto $1.500 · Perico $1.700');
   await expect(preview).toContainText('Recibe Nequi');
   await expect(preview).toContainText('6 días a la semana');
@@ -90,7 +96,7 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   expect(upload.p).not.toContain('marketing');
   const post = api.find('/api/v1/bi/tinteros', 'POST');
   expect(post.data).toMatchObject({
-    name: 'Don Jairo', localidad: 'Chapinero', zone: 'Chapinero', carrera: 13, calle: 72, tinto_price: 1500, perico_price: 1700, cups_per_hour: 25,
+    name: 'Don Jairo', localidad: 'Chapinero', zone: 'Salida de la estación de la 72', referencia: 'Salida de la estación de la 72', lat: 4.6577, lng: -74.0634, gps_accuracy_m: 9, tinto_price: 1500, perico_price: 1700, cups_per_hour: 25,
     photo_consent: true, stage: 'prospecto', formato: 'termos_a_pie', recorrido: 'ruta', hora_inicio: 6, hora_fin: 11, termos: 3,
     products: ['tinto', 'perico'], client_mix: 'fijos', client_types: ['porteros'], payments_seen: ['fiado'], ipes: 'no_sabe',
   });
@@ -114,6 +120,7 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
 
   // Sin nombre: se explica y no sale ninguna petición
   await sheet.getByRole('option', { name: 'Chapinero' }).click();
+  await sheet.getByText('Sé la cuadra (opcional)').click();
   await sheet.getByLabel('Calle').fill('83');
   await sheet.getByLabel('Carrera').fill('13');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();

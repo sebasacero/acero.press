@@ -10,7 +10,8 @@ const PilotReport = lazy(() => import('../piloto/PilotReport.jsx'));
 const SurveyDialog = lazy(() => import('../survey/SurveyDialog.jsx'));
 const shortDate = (iso) => new Date(iso).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' });
 
-// Piloto del estudio de calle: la página que se abre en la reunión. Mapa con
+// Estudio de calle (el MVP con datos reales): donde queda lo que se levanta en
+// la calle con «Tintero» en Micra (ficha, encuesta, GPS). Mapa con
 // las ventas y los tinteros reales, los números de la semana y las fichas con
 // foto. Todo sale de /api/v1/bi/piloto (solo el owner); las fotos viven en el
 // bucket privado «estudio» y se piden firmadas con la sesión de quien mira.
@@ -19,7 +20,11 @@ const STAGE_LABEL = { prospecto: 'Prospecto', piloto: 'Piloto', activo: 'Activo'
 const money = (n) => `$${Math.round(n ?? 0).toLocaleString('es-CO')}`;
 const num = (n, d = 0) => (n ?? 0).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
 const when = (iso) => new Date(iso).toLocaleString('es-CO', { timeZone: 'America/Bogota', weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
-const cuadra = (r) => (r.carrera == null ? (r.zone ?? '—') : `Calle ${r.calle} con ${r.carrera}${r.zone ? ` · ${r.zone}` : ''}`);
+const cuadra = (r) => {
+  const gps = r.lat != null ? ` · GPS${r.gps_accuracy_m != null ? ` ±${r.gps_accuracy_m} m` : ''}` : '';
+  if (r.referencia) return `${r.referencia}${gps}`;
+  return r.carrera == null ? `${r.zone ?? '—'}${gps}` : `Calle ${r.calle} con ${r.carrera}${r.zone ? ` · ${r.zone}` : ''}${gps}`;
+};
 const delta = (cur, prev) => (!prev ? null : Math.round(((cur - prev) / prev) * 100));
 const label = (field, v) => TINTERO_OPTIONS[field]?.find(([x]) => x === v)?.[1] ?? null;
 /** Lo que el estudio sabe de cómo vende: «Termos a pie · hace una ruta · 6 a. m. a 11 a. m. · 3 termos». */
@@ -137,11 +142,11 @@ export default function PilotoPage() {
     <div className="admin-page esp dash piloto">
       <header className="esp-head">
         <div className="esp-cota">
-          <span>FIG. 05 — PILOTO CHAPINERO / ESTUDIO DE CALLE</span>
+          <span>FIG. 05 — ESTUDIO DE CALLE · MVP</span>
           <span className="esp-badge">API DE ACERO · DATOS REALES</span>
         </div>
-        <h1 className="esp-title">Piloto.</h1>
-        <p className="esp-sub">Cada taza vendida en la calle queda con su cuadra y su hora; cada tintero mapeado, con su ficha. Esta página es la que se abre en la reunión: nada aquí es ejemplo.</p>
+        <h1 className="esp-title">Estudio.</h1>
+        <p className="esp-sub">Lo que levantas en la calle con «Tintero» en Micra llega aquí: cada tintero con su ficha, su encuesta y su punto de GPS en el mapa; cada taza vendida, con su lugar y su hora. Nada aquí es ejemplo.</p>
         <div className="esp-chips" role="group" aria-label="Ventana">
           {[[30, '30 días'], [90, '90 días'], [365, 'Un año']].map(([d, label]) => (
             <button key={d} type="button" className={`esp-chip ${days === d ? 'active' : ''}`} aria-pressed={days === d} onClick={() => setDays(d)}>{label}</button>
@@ -150,14 +155,14 @@ export default function PilotoPage() {
         </div>
       </header>
 
-      {error && <p className="esp-notice" role="alert">No se pudo leer el piloto: {error}</p>}
+      {error && <p className="esp-notice" role="alert">No se pudo leer el estudio: {error}</p>}
       {notice && <p className="esp-notice ok" role="status">{notice}</p>}
       {data?.surveysReady === false && <p className="esp-notice" role="note">La encuesta y el informe completo se activan al aplicar en Supabase la migración de encuestas (20261022140000_tintero_surveys). Mientras tanto se ve lo de la ficha y las ventas.</p>}
       {!data && loading && <p className="dash-booting">LEYENDO EL ESTUDIO…</p>}
 
       {data && (
-        <div className="piloto-tabs" role="tablist" aria-label="Vista del piloto">
-          {[['estudio', 'Estudio'], ['informe', 'Informe y presentación']].map(([id, label]) => (
+        <div className="piloto-tabs" role="tablist" aria-label="Vista del estudio">
+          {[['estudio', 'Datos y mapa'], ['informe', 'Informe y presentación']].map(([id, label]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : undefined} onClick={() => setTab(id)}>{label}</button>
           ))}
         </div>
@@ -184,7 +189,7 @@ export default function PilotoPage() {
               <PilotoMap sales={data.sales} tinteros={data.tinteros} routes={data.routes} fallbackView={view} label="Mapa de Bogotá con el calor de las ventas en la calle y los tinteros mapeados" />
             </div>
             {!view.real && <p className="esp-muted">El mapa se llena solo: elige «Hoy vendo en» en la venta de Micra y registra tinteros con el botón «Tintero» de la cámara.</p>}
-            {view.real && <p className="esp-muted piloto-geo-note">Ubicación por cuadra (calle y carrera), con una o dos cuadras de margen. Toca un tintero para ver su ficha.</p>}
+            {view.real && <p className="esp-muted piloto-geo-note">Los tinteros van en su punto de GPS; los que solo tienen cuadra, con una o dos cuadras de margen. Toca un tintero para ver su ficha.</p>}
           </section>
 
           <div className="piloto-cols">
@@ -221,7 +226,8 @@ export default function PilotoPage() {
                           {t.notes && <small>{t.notes}</small>}
                           <span className={`piloto-survey ${sv ? 'is-done' : ''}`}>{sv ? `Encuestado el ${shortDate(sv.surveyed_at)}` : 'Sin encuesta'}</span>
                           {data.surveysReady !== false && (
-                            <button type="button" className="esp-chip piloto-survey-btn" onClick={() => { setNotice(null); setSurveying(t); }}>{sv ? 'Encuestar de nuevo' : 'Encuestar'}</button>
+                            // La encuesta se hace en la calle con «Tintero» en Micra; aquí solo se completa la que quedó pendiente
+                            <button type="button" className="esp-chip piloto-survey-btn" onClick={() => { setNotice(null); setSurveying(t); }}>{sv ? 'Corregir encuesta' : 'Completar encuesta'}</button>
                           )}
                           {data.routesReady && (t.linked ? (
                             <span className="piloto-survey is-done">Usa Mi ruta{t.tracking_consent_at ? '' : ' · sin permiso de ubicación'}</span>

@@ -37,7 +37,9 @@ export function tinterosGeoJSON(tinteros, { withNames = false } = {}) {
   return {
     type: 'FeatureCollection',
     features: (tinteros ?? []).flatMap((t) => {
-      const at = toLngLat(t.carrera, t.calle);
+      // El GPS de la ficha manda; si no hay, la cuadra (con su margen de una o dos cuadras)
+      const gps = t.lat != null && t.lng != null && Number.isFinite(+t.lat) && Number.isFinite(+t.lng) ? [+t.lng, +t.lat] : null;
+      const at = gps ?? toLngLat(t.carrera, t.calle);
       if (!at) return [];
       const rate = t.cups_per_hour != null && Number.isFinite(+t.cups_per_hour) ? `${Math.round(+t.cups_per_hour)}/h` : null;
       const tag = STAGE_LABEL[t.stage] ?? 'Tintero';
@@ -50,12 +52,21 @@ export function tinterosGeoJSON(tinteros, { withNames = false } = {}) {
           stage: t.stage ?? 'prospecto',
           active: t.stage === 'activo',
           detail: [STAGE_LABEL[t.stage] ?? t.stage, t.tinto_price ? `tinto a $${Math.round(t.tinto_price).toLocaleString('es-CO')}` : null, rate ? `${rate.replace('/h', ' tazas/h')}` : null].filter(Boolean).join(' · '),
-          place: `Calle ${Math.round(t.calle)} con ${Math.round(t.carrera)}${t.zone ? ` · ${t.zone}` : ''}`,
+          place: placeText(t, !!gps),
+          gps: !!gps,
           ...(withNames ? { name: t.name ?? null, notes: t.notes ?? null } : {}),
         },
       }];
     }),
   };
+}
+
+/** Dónde está, en palabras: la referencia o la cuadra, con la localidad. */
+function placeText(t, gps) {
+  const where = t.referencia || (t.carrera != null && t.calle != null ? `Calle ${Math.round(t.calle)} con ${Math.round(t.carrera)}` : null);
+  const area = t.localidad && t.localidad !== where ? t.localidad : t.zone !== where ? t.zone : null;
+  const acc = gps && t.gps_accuracy_m != null ? `GPS ±${t.gps_accuracy_m} m` : gps ? 'GPS' : null;
+  return [where, area, acc].filter(Boolean).join(' · ');
 }
 
 /** [[oeste, sur], [este, norte]] que encierra todos los puntos, o null si no hay. */

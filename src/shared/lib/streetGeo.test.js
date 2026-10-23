@@ -53,3 +53,14 @@ test('routesGeoJSON: una línea por recorrido y un punto por parada, con el nomb
   assert.match(g.stops.features[0].properties.label, /^Marlene · parada 1 · 6:30.* · 4 min · Calle 52 con 9$/);
   assert.deepEqual(routesGeoJSON(null), { lines: { type: 'FeatureCollection', features: [] }, stops: { type: 'FeatureCollection', features: [] } });
 });
+
+test('con GPS el tintero va en su punto exacto, con la referencia y la precisión', () => {
+  const t = [{ id: 't2', name: 'Sra. Julia', stage: 'prospecto', lat: '4.618612', lng: '-74.135988', gps_accuracy_m: 12, referencia: 'Puerta principal Plaza de las Américas', localidad: 'Kennedy', zone: 'Puerta principal Plaza de las Américas', carrera: null, calle: null }];
+  const f = tinterosGeoJSON(t, { withNames: true }).features[0];
+  assert.deepEqual(f.geometry.coordinates, [-74.135988, 4.618612]);
+  assert.equal(f.properties.place, 'Puerta principal Plaza de las Américas · Kennedy · GPS ±12 m');
+  assert.equal(f.properties.gps, true);
+  // El GPS manda sobre una cuadra mal anotada
+  const both = tinterosGeoJSON([{ ...t[0], carrera: 30, calle: 30 }]).features[0];
+  assert.deepEqual(both.geometry.coordinates, [-74.135988, 4.618612]);
+});

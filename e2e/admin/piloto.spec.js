@@ -22,8 +22,8 @@ const FILLED = {
 
 async function openPiloto(page) {
   await page.goto('/admin', { waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
-  await expect(page.locator('.piloto .esp-title')).toHaveText('Piloto.');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
+  await expect(page.locator('.piloto .esp-title')).toHaveText('Estudio.');
 }
 
 test('con datos: KPIs de la semana, mapa real, ventas con cuadra y hora, y la foto del tintero viene firmada del bucket privado', async ({ browser }) => {
@@ -147,7 +147,7 @@ test('el mapa real se viste como la app: plano por defecto, noche y calles, y re
 
   // Se recuerda al volver
   await page.reload({ waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
   await expect(page.locator('.piloto-geo')).toHaveAttribute('data-theme', 'calles');
   expect(errors).toEqual([]);
   await page.context().close();
