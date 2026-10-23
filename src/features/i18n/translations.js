@@ -3,7 +3,7 @@
 
 const translations = {
   es: {
-    nav: { home: 'Home', beans: 'Beans', championship: 'Champions', school: 'Escuela', contact: 'Contact', app: 'App' },
+    nav: { home: 'Home', beans: 'Beans', championship: 'Champions', school: 'Aprende', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2.600 msnm',
     essp: {
       tabsLabel: 'Banners de Micra',
@@ -359,7 +359,7 @@ const translations = {
   },
 
   en: {
-    nav: { home: 'Home', beans: 'Beans', championship: 'Champions', school: 'School', contact: 'Contact', app: 'App' },
+    nav: { home: 'Home', beans: 'Beans', championship: 'Champions', school: 'Learn', contact: 'Contact', app: 'App' },
     location: 'Bogotá, 2,600 masl',
     essp: {
       tabsLabel: 'Micra banners',
@@ -713,7 +713,7 @@ const translations = {
   },
 
   ja: {
-    nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', school: 'スクール', contact: 'お問い合わせ', app: 'アプリ' },
+    nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', school: '学ぶ', contact: 'お問い合わせ', app: 'アプリ' },
     essp: {
       tabsLabel: 'Micraのバナー',
       store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },

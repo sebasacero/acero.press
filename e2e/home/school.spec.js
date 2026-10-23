@@ -17,7 +17,7 @@ test('portada: la franja muestra el temario y lleva a la lección en la página 
   await expect(rows).toHaveCount(6);
   await expect(rows.nth(2)).toHaveAttribute('href', '/escuela#leccion-3');
   // Se llega también desde el menú y desde el banner «Ser barista»; el curso no va en la portada
-  await expect(page.locator('.navbar a[href="/escuela"]').first()).toHaveText('Escuela');
+  await expect(page.locator('.navbar a[href="/escuela"]').first()).toHaveText('Aprende');
   await expect(page.locator('.essp-slide a[href="/escuela"]')).toHaveText('Aprende a preparar');
   await expect(page.locator('.sl, .sa')).toHaveCount(0);
 
