@@ -162,6 +162,7 @@ test('panel › Piloto: invitar a un tintero, sus recorridos en la lista y en el
     tinteros: [
       { id: 't1', name: 'Marlene Rojas', stage: 'piloto', carrera: 9, calle: 52, zone: 'Chapinero', linked: true, tracking_consent_at: '2026-10-22T12:00:00Z' },
       { id: 't2', name: 'Don Jairo', stage: 'prospecto', carrera: 13, calle: 72, zone: 'Chapinero', linked: false },
+      { id: 't3', name: 'Doña Luz', stage: 'prospecto', localidad: 'Kennedy', zone: 'Kennedy', formato: 'carrito', recorrido: 'ruta', hora_inicio: 5, hora_fin: 12, termos: 4, client_mix: 'fijos', client_types: ['obreros', 'taxistas'], payments_seen: ['efectivo', 'fiado'], linked: false },
     ],
     routes: [{
       id: 'r1', tintero_id: 't1', started_at: '2026-10-27T11:30:00Z', ended_at: '2026-10-27T15:10:00Z', points_n: 410, distance_m: 3640,
@@ -180,6 +181,11 @@ test('panel › Piloto: invitar a un tintero, sus recorridos en la lista y en el
   await expect(page.locator('.piloto-geo')).toHaveAttribute('data-routes', '1');
   await expect(page.locator('.piloto-geo')).toHaveAttribute('data-stops', '1');
 
+  // La ficha del estudio: localidad sin cuadra (sur), cómo vende y quién le compra
+  const luz = page.locator('.piloto-tintero', { hasText: 'Doña Luz' });
+  await expect(luz).toContainText('Kennedy');
+  await expect(luz).toContainText('Carrito · hace una ruta · 5 a. m. a 12 m. · 4 termos');
+  await expect(luz).toContainText('Casi todos fijos · obreros, taxistas · fía');
   const jairo = page.locator('.piloto-tintero', { hasText: 'Don Jairo' });
   await expect(page.locator('.piloto-tintero', { hasText: 'Marlene Rojas' })).toContainText('Usa Mi ruta');
   await jairo.getByRole('button', { name: 'Invitar a Mi ruta' }).click();

@@ -3,6 +3,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import PilotoMap from './PilotoMap.jsx';
 import { heatFromSales, pinsFromTinteros } from '../../../shared/lib/streetMap.js';
 import { latestByTintero } from '../survey/survey.js';
+import { TINTERO_OPTIONS, hourLabel } from '../micra/tinteroForm.js';
 
 // El informe y la presentación pesan (gráficas, diapositivas): se cargan al abrir la pestaña
 const PilotReport = lazy(() => import('../piloto/PilotReport.jsx'));
@@ -18,8 +19,22 @@ const STAGE_LABEL = { prospecto: 'Prospecto', piloto: 'Piloto', activo: 'Activo'
 const money = (n) => `$${Math.round(n ?? 0).toLocaleString('es-CO')}`;
 const num = (n, d = 0) => (n ?? 0).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
 const when = (iso) => new Date(iso).toLocaleString('es-CO', { timeZone: 'America/Bogota', weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
-const cuadra = (r) => (r.carrera == null ? '—' : `Calle ${r.calle} con ${r.carrera}${r.zone ? ` · ${r.zone}` : ''}`);
+const cuadra = (r) => (r.carrera == null ? (r.zone ?? '—') : `Calle ${r.calle} con ${r.carrera}${r.zone ? ` · ${r.zone}` : ''}`);
 const delta = (cur, prev) => (!prev ? null : Math.round(((cur - prev) / prev) * 100));
+const label = (field, v) => TINTERO_OPTIONS[field]?.find(([x]) => x === v)?.[1] ?? null;
+/** Lo que el estudio sabe de cómo vende: «Termos a pie · hace una ruta · 6 a. m. a 11 a. m. · 3 termos». */
+const howSells = (t) => [
+  label('formato', t.formato),
+  label('recorrido', t.recorrido)?.toLowerCase(),
+  t.hora_inicio != null && t.hora_fin != null ? `${hourLabel(t.hora_inicio)} a ${hourLabel(t.hora_fin)}` : null,
+  t.termos ? `${t.termos} termos` : null,
+].filter(Boolean).join(' · ');
+const whoBuys = (t) => [
+  label('client_mix', t.client_mix),
+  (t.client_types ?? []).map((v) => label('client_types', v)?.toLowerCase()).filter(Boolean).join(', ') || null,
+  (t.payments_seen ?? []).includes('fiado') ? 'fía' : null,
+  t.ipes === 'si' ? 'registrado en el IPES' : null,
+].filter(Boolean).join(' · ');
 const km = (m) => `${(Math.round((m ?? 0) / 100) / 10).toLocaleString('es-CO', { minimumFractionDigits: 1 })} km`;
 const span = (a, b) => (b ? `${Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 60000))} min` : 'en curso');
 
@@ -199,7 +214,9 @@ export default function PilotoPage() {
                         {t.photo_consent ? <Photo url={t.photo_url} alt={`Puesto de ${t.name}`} /> : <div className="piloto-nophoto">Sin permiso de foto</div>}
                         <div>
                           <b>{t.name}</b>
-                          <span>{cuadra(t)}</span>
+                          <span>{t.localidad && t.localidad !== t.zone ? `${t.localidad} · ` : ''}{cuadra(t)}</span>
+                          {howSells(t) && <span>{howSells(t)}</span>}
+                          {whoBuys(t) && <span>{whoBuys(t)}</span>}
                           <span>{STAGE_LABEL[t.stage] ?? t.stage}{t.tinto_price ? ` · tinto a ${money(t.tinto_price)}` : ''}{t.cups_per_hour ? ` · ${t.cups_per_hour} tazas/h` : ''}</span>
                           {t.notes && <small>{t.notes}</small>}
                           <span className={`piloto-survey ${sv ? 'is-done' : ''}`}>{sv ? `Encuestado el ${shortDate(sv.surveyed_at)}` : 'Sin encuesta'}</span>

@@ -72,6 +72,16 @@ async def brief(kind: Kind = Query("daily", description="daily: el del día · w
 # ── Red de tinteros ──────────────────────────────────────────────────────
 Stage = Literal["prospecto", "piloto", "activo", "pausa", "salio"]
 Kit = Literal["ninguno", "prestamo", "arriendo", "propio"]
+# Ficha del estudio (migración 20261023140000_tintero_ficha_estudio): los mismos valores que el check de la base
+Localidad = Literal["Chapinero", "Usaquén", "Teusaquillo", "Barrios Unidos", "Fontibón",
+                    "Santa Fe", "La Candelaria", "Kennedy", "Bosa", "Otra"]
+Formato = Literal["termos_a_pie", "carrito", "bicicleta", "puesto_fijo", "otro"]
+Recorrido = Literal["ruta", "mixto", "fijo"]
+Product = Literal["tinto", "perico", "aromatica", "chocolate", "agua_panela", "ponque", "galletas", "empanadas", "cigarrillos", "dulces"]
+ClientMix = Literal["fijos", "mitad", "de_paso"]
+ClientType = Literal["oficinistas", "porteros", "obreros", "taxistas", "conductores", "estudiantes", "vendedores", "vecinos", "transeuntes"]
+PaymentSeen = Literal["efectivo", "nequi", "daviplata", "bre_b", "fiado"]
+Ipes = Literal["si", "no", "no_sabe"]
 
 
 class TinteroIn(BaseModel):
@@ -92,12 +102,28 @@ class TinteroIn(BaseModel):
     tinto_price: float | None = Field(default=None, ge=0, le=50000, description="Precio del tinto en el puesto (COP)")
     cups_per_hour: float | None = Field(default=None, ge=0, le=500, description="Tazas por hora observadas")
     surveyed_at: datetime | None = None
+    # Lo que el estudio de mercado necesita saber de cada tintero
+    localidad: Localidad | None = None
+    formato: Formato | None = None
+    recorrido: Recorrido | None = None
+    hora_inicio: int | None = Field(default=None, ge=0, le=23)
+    hora_fin: int | None = Field(default=None, ge=1, le=24)
+    termos: int | None = Field(default=None, ge=0, le=20)
+    products: list[Product] | None = Field(default=None, max_length=10)
+    perico_price: float | None = Field(default=None, ge=0, le=50000)
+    aromatica_price: float | None = Field(default=None, ge=0, le=50000)
+    client_mix: ClientMix | None = None
+    client_types: list[ClientType] | None = Field(default=None, max_length=9)
+    payments_seen: list[PaymentSeen] | None = Field(default=None, max_length=5)
+    ipes: Ipes | None = None
 
     @model_validator(mode="after")
     def _place_complete(self):
         # Las dos coordenadas o ninguna: el check de la base lo exige igual
         if (self.carrera is None) != (self.calle is None):
             raise ValueError("El lugar necesita carrera y calle.")
+        if self.hora_inicio is not None and self.hora_fin is not None and self.hora_fin <= self.hora_inicio:
+            raise ValueError("La hora en que termina tiene que ser después de la de empezar.")
         return self
 
 
@@ -290,6 +316,8 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
             "tinto_price_avg": round(sum(prices) / len(prices)) if prices else None,
             "cups_per_hour_avg": round(sum(rates) / len(rates), 1) if rates else None,
             "zones": sorted({t["zone"] for t in surveyed if t.get("zone")}),
+            "localidades": {loc: sum(1 for t in tinteros if t.get("localidad") == loc)
+                            for loc in sorted({t["localidad"] for t in tinteros if t.get("localidad")})},
         },
     }
 

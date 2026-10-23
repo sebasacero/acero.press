@@ -7,7 +7,7 @@ import './survey.css';
 
 const fmtLb = (v) => (v === 0.5 ? '½' : String(v).replace('.', ','));
 
-function Choice({ label, field, options, form, set, grid = false }) {
+export function Choice({ label, field, options, form, set, grid = false }) {
   return (
     <div className="msheet-group">
       <span className="msheet-label" id={`srv-${field}`}>{label}</span>
@@ -23,7 +23,7 @@ function Choice({ label, field, options, form, set, grid = false }) {
   );
 }
 
-function Multi({ label, field, options, form, set }) {
+export function Multi({ label, field, options, form, set }) {
   const list = form[field] ?? [];
   return (
     <div className="msheet-group">
