@@ -256,6 +256,12 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
     signups, _ = await _optional(lambda: sb.select("app_waitlist", {"select": "role"}), [])
     scenario_rows, scenario_ready = await _optional(
         lambda: sb.select("pilot_scenarios", {"select": "data,updated_at", "key": f"eq.{SCENARIO_KEY}"}), [])
+    # Recorridos de los tinteros con la app Mi ruta (resumen, sin los puntos crudos)
+    routes, routes_ready = await _optional(
+        lambda: sb.select("tintero_routes", {
+            "select": "id,tintero_id,started_at,ended_at,points_n,distance_m,stops,path",
+            "started_at": f"gte.{since}", "order": "started_at.desc", "limit": "300",
+        }), [])
     waitlist = {"cliente": 0, "barista": 0}
     for r in signups:
         if r.get("role") in waitlist:
@@ -268,7 +274,11 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
         "generatedAt": now.isoformat(), "days": days,
         "week": {"from": _week(now, 0)[0].isoformat(), "to": _week(now, 0)[1].isoformat(), "cur": cur, "prev": prev},
         "sales": sales,
-        "tinteros": [{k: v for k, v in t.items() if k != "phone"} for t in tinteros],
+        # Sin teléfono ni la cuenta enlazada: basta saber si ya usa la app
+        "tinteros": [{**{k: v for k, v in t.items() if k not in ("phone", "user_id")}, "linked": bool(t.get("user_id"))}
+                     for t in tinteros],
+        "routes": routes,
+        "routesReady": routes_ready,
         "surveys": [{k: v for k, v in s.items() if k != "surveyed_by"} for s in surveys],
         "surveysReady": surveys_ready,
         "waitlist": waitlist,

@@ -1,0 +1,101 @@
+/* Micra · Mi ruta: la app del tintero. Letra grande, botones de un pulgar,
+   contraste alto (se usa en la calle, con sol). Misma hoja de papel del sitio. */
+.ruta {
+  --r-paper: #EDE6D3;
+  --r-cream: #F7F3E8;
+  --r-ink: #2A3550;
+  --r-ink-soft: #6B7290;
+  --r-black: #1E1E1E;
+  --r-red: #de1b1b;
+  --r-green: #2E8B57;
+  --r-line: #D6CEB6;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--r-cream);
+  background-image: linear-gradient(var(--r-line) 1px, transparent 1px), linear-gradient(90deg, var(--r-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--r-black);
+  font-family: 'Archivo', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+.ruta-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(14px, env(safe-area-inset-top)) 18px 12px;
+  background: var(--r-black);
+  color: var(--r-cream);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  letter-spacing: .08em;
+}
+.ruta-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: .12em; }
+.ruta-brand::after { content: ' ●'; color: var(--r-red); }
+.ruta-body {
+  flex: 1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 22px 18px max(28px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ruta-title { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; line-height: 1.05; margin: 8px 0 0; color: var(--r-ink); }
+.ruta-lede { font-size: 1.08rem; line-height: 1.45; margin: 0; }
+.ruta-muted { color: var(--r-ink-soft); font-size: .95rem; margin: 0; }
+.ruta-h2 { font-family: 'JetBrains Mono', monospace; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--r-ink-soft); margin: 8px 0; }
+.ruta-error { background: #fff; border: 2px solid var(--r-red); color: var(--r-red); border-radius: 10px; padding: 10px 12px; margin: 0; font-weight: 600; }
+
+.ruta-btn {
+  appearance: none;
+  border: 2px solid var(--r-black);
+  background: var(--r-black);
+  color: var(--r-cream);
+  border-radius: 14px;
+  min-height: 56px;
+  padding: 14px 18px;
+  font: 700 1.1rem 'Archivo', sans-serif;
+  cursor: pointer;
+}
+.ruta-btn:disabled { opacity: .5; cursor: default; }
+.ruta-btn:focus-visible, .ruta-link:focus-visible, .ruta-code:focus-visible { outline: 3px solid var(--r-red); outline-offset: 3px; }
+.ruta-btn-big { min-height: 88px; font-size: 1.35rem; background: var(--r-green); border-color: var(--r-green); }
+.ruta-btn-stop { min-height: 72px; background: var(--r-red); border-color: var(--r-red); }
+.ruta-link { appearance: none; background: none; border: 0; padding: 6px 0; color: var(--r-ink); text-decoration: underline; font: inherit; cursor: pointer; }
+.ruta-link.is-danger { color: var(--r-red); font-weight: 700; }
+
+.ruta-form { display: flex; flex-direction: column; gap: 10px; }
+.ruta-form label { font-family: 'JetBrains Mono', monospace; font-size: .78rem; text-transform: uppercase; color: var(--r-ink-soft); }
+.ruta-code {
+  font: 700 2rem 'JetBrains Mono', monospace;
+  letter-spacing: .3em;
+  text-align: center;
+  padding: 12px;
+  border: 2px solid var(--r-black);
+  border-radius: 12px;
+  background: #fff;
+  text-transform: uppercase;
+}
+
+.ruta-terms { margin: 0; padding: 14px 16px 14px 32px; background: #fff; border: 1.5px solid var(--r-line); border-radius: 12px; line-height: 1.45; display: grid; gap: 8px; }
+
+.ruta-clock { font: 700 3.6rem 'JetBrains Mono', monospace; text-align: center; color: var(--r-ink); margin-top: 8px; }
+.ruta-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.ruta-stats div { background: #fff; border: 1.5px solid var(--r-line); border-radius: 12px; padding: 10px; text-align: center; }
+.ruta-stats dt { font-family: 'JetBrains Mono', monospace; font-size: .68rem; text-transform: uppercase; color: var(--r-ink-soft); }
+.ruta-stats dd { margin: 4px 0 0; font: 700 1.35rem 'Space Grotesk', sans-serif; }
+.ruta-gps { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1.5px solid var(--r-line); font-weight: 600; }
+.ruta-gps.is-ok { border-color: var(--r-green); color: var(--r-green); }
+.ruta-gps.is-silent, .ruta-gps.is-denied, .ruta-gps.is-unavailable, .ruta-gps.is-unsupported { border-color: var(--r-red); color: var(--r-red); }
+
+.ruta-routes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ruta-route { display: flex; justify-content: space-between; gap: 10px; background: #fff; border: 1.5px solid var(--r-line); border-radius: 12px; padding: 10px 12px; }
+.ruta-route b { display: block; }
+.ruta-route b::first-letter { text-transform: uppercase; }
+.ruta-route span { font-size: .9rem; color: var(--r-ink-soft); }
+.ruta-stops { margin: 6px 0 0; padding-left: 18px; font-size: .85rem; }
+.ruta-confirm { display: flex; flex-direction: column; align-items: flex-end; }
+.ruta-foot { margin-top: auto; padding-top: 16px; font-size: .9rem; }
+.ruta-foot p { margin: 0; }

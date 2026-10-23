@@ -48,6 +48,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   const stock = new Map((inventory ?? DEFAULT_STOCK(coffee)).map((r) => [r.variant_id, { ...r }]));
   const priceOf = new Map(coffee.flatMap((c) => c.product_variants.map((v) => [v.id, v.price])));
   const orders = new Map();
+  // Mi ruta: código de invitación vigente, el tintero enlazado, recorridos y puntos subidos
+  const ruta = { code: 'ABC234', me: null, routes: [], points: [], summary: null, down: false };
   const byRef = new Map();
   let orderN = 0;
 
@@ -159,6 +161,44 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     try { data = req.postDataJSON(); } catch { data = req.postData(); }
     if (m !== 'GET') calls.push({ m, p, q: u.search, data });
 
+    // Mi ruta (supabase/migrations/20261023120000_tintero_routes.sql), en memoria
+    const rpc = p.match(/\/rpc\/(tintero_\w+)$/)?.[1];
+    if (rpc) {
+      const r = ruta;
+      const meOf = () => (r.me ? { ...r.me, open_route: r.routes.find((x) => !x.ended_at) ?? null } : null);
+      const fail = (code, message) => json(400, { code, message, details: null, hint: null });
+      if (r.down) return route.abort('failed');
+      if (rpc === 'tintero_me') return json(200, meOf());
+      if (rpc === 'tintero_claim') {
+        if (String(data.p_code).toUpperCase() !== r.code) return fail('22023', 'Ese código no sirve o ya venció. Pídele uno nuevo al equipo de Micra.');
+        r.me = { id: 'tintero-1', name: 'Marlene Rojas', zone: 'Chapinero', consent_at: null };
+        return json(200, meOf());
+      }
+      if (rpc === 'tintero_consent') { r.me.consent_at = data.p_accept ? new Date().toISOString() : null; if (!data.p_accept) r.routes.forEach((x) => { x.ended_at ??= new Date().toISOString(); }); return json(200, meOf()); }
+      if (rpc === 'tintero_route_start') {
+        if (!r.me?.consent_at) return fail('42501', 'Primero acepta compartir tu ubicación.');
+        let row = r.routes.find((x) => x.client_ref === data.p_client_ref) ?? r.routes.find((x) => !x.ended_at);
+        if (!row) { row = { id: `ruta-${r.routes.length + 1}`, client_ref: data.p_client_ref, started_at: data.p_started_at, ended_at: null, points_n: 0, distance_m: null, stops: null }; r.routes.push(row); }
+        return json(200, row);
+      }
+      if (rpc === 'tintero_route_add_points') {
+        const row = r.routes.find((x) => x.id === data.p_route_id);
+        const seen = new Set(r.points.filter((x) => x.route === row.id).map((x) => x.t));
+        const fresh = data.p_points.filter((x) => !seen.has(x.t));
+        fresh.forEach((x) => r.points.push({ ...x, route: row.id }));
+        row.points_n += fresh.length;
+        return json(200, { accepted: fresh.length, sent: data.p_points.length, points_n: row.points_n });
+      }
+      if (rpc === 'tintero_route_end') {
+        const row = r.routes.find((x) => x.id === data.p_route_id);
+        if (!row.ended_at) Object.assign(row, { ended_at: data.p_ended_at, distance_m: Math.round(data.p_summary.distance_m), stops: data.p_summary.stops, path: data.p_summary.path });
+        r.summary = data.p_summary;
+        return json(200, { id: row.id, started_at: row.started_at, ended_at: row.ended_at, points_n: row.points_n, distance_m: row.distance_m, stops: (row.stops ?? []).length });
+      }
+      if (rpc === 'tintero_route_delete') { const n = r.routes.length; r.routes = r.routes.filter((x) => x.id !== data.p_route_id); return json(200, r.routes.length < n); }
+      if (rpc === 'tintero_invite') { r.code = 'K7M2QX'; return json(200, { code: r.code, expires_at: new Date(Date.now() + 7 * 864e5).toISOString() }); }
+    }
+    if (p.endsWith('/tintero_routes') && m === 'GET') return json(200, ruta.routes.filter((x) => x.ended_at).sort((a, b) => b.started_at.localeCompare(a.started_at)));
     if (p.endsWith('/rpc/micra_street_map')) return json(200, opts.streetMap ?? { days: 90, sales: [], tinteros: [] });
     if (p.endsWith('/rpc/micra_record_sale') || p.endsWith('/rpc/micra_void_sale')) {
       if (!atomic) return json(404, { code: 'PGRST202', details: null, hint: null, message: `Could not find the function public.${p.split('/').pop()} in the schema cache` });
@@ -208,6 +248,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     stock,
     tinteros,
     surveys,
+    ruta,
     clear: () => { calls.length = 0; },
     find: (path, method) => calls.find((c) => c.p.endsWith(path) && (!method || c.m === method)),
     all: (path, method) => calls.filter((c) => c.p.endsWith(path) && (!method || c.m === method)),

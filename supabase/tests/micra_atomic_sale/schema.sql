@@ -5,6 +5,7 @@ do $$ begin create role anon nologin; exception when duplicate_object then null;
 do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
 create schema auth;
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+create table auth.users (id uuid primary key);
 grant usage on schema auth to anon, authenticated;
 create type admin_role as enum ('owner','cashier','staff');
 create type movement_reason as enum ('sale','restock','adjustment','waste');

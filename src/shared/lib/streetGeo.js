@@ -66,3 +66,32 @@ export function boundsOf(...collections) {
   const lat = pts.map((p) => p[1]);
   return [[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]];
 }
+
+const hhmm = (iso) => new Date(iso).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' });
+
+/**
+ * Recorridos de la app Mi ruta → una línea por recorrido y un punto por
+ * parada. Solo para el panel: lleva el nombre del tintero si se le pasa la
+ * lista de tinteros. Un trazo con menos de dos puntos no se dibuja.
+ */
+export function routesGeoJSON(routes, tinteros = []) {
+  const names = new Map((tinteros ?? []).map((t) => [t.id, t.name]));
+  const lines = [];
+  const stops = [];
+  for (const r of routes ?? []) {
+    const path = (r.path ?? []).filter((p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite));
+    const who = names.get(r.tintero_id) ?? 'Tintero';
+    if (path.length >= 2) {
+      lines.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: path }, properties: { id: r.id, who, open: !r.ended_at } });
+    }
+    (r.stops ?? []).forEach((s, i) => {
+      if (!Number.isFinite(s?.lng) || !Number.isFinite(s?.lat)) return;
+      stops.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+        properties: { route: r.id, who, n: i + 1, minutes: s.minutes ?? 0, label: `${who} · parada ${i + 1} · ${hhmm(s.from)} · ${s.minutes ?? 0} min${s.calle ? ` · Calle ${s.calle} con ${s.carrera}` : ''}` },
+      });
+    });
+  }
+  return { lines: { type: 'FeatureCollection', features: lines }, stops: { type: 'FeatureCollection', features: stops } };
+}

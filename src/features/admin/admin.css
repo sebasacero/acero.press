@@ -1546,3 +1546,5 @@
 .piloto-survey{ font:600 10.5px 'JetBrains Mono', monospace; color:var(--esp-red, #fa2525); }
 .piloto-survey.is-done{ color:#2E8B57; }
 .piloto-survey-btn{ align-self:flex-start; margin-top:.3rem; }
+.piloto-invite{ display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; margin-top:.4rem; padding:.5rem .6rem; border:1.5px dashed var(--a-border); border-radius:10px; font-size:.85rem; }
+.piloto-invite b{ font-family:'JetBrains Mono', monospace; letter-spacing:.15em; font-size:1rem; }

@@ -63,6 +63,11 @@ suscripción a ofertas, envío mensual, historial de pedidos).
 No requiere ninguna variable de entorno en tu código — todo queda configurado
 del lado de Supabase.
 
+5. **Mi ruta** (`/ruta`, la app del tintero) vuelve de Google a `/ruta`. En
+   **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**
+   agrega `https://tu-dominio.com/ruta` (y `http://localhost:5173/ruta` para
+   probar en local). Sin eso, Supabase devuelve al tintero a la portada.
+
 ### 1.4 Crear tu primer usuario admin (panel `/admin`)
 No lo puedo hacer yo por ti (mis herramientas no crean usuarios de auth):
 
