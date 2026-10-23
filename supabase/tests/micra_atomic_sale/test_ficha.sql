@@ -23,3 +23,13 @@ do $t$ begin
   delete from tinteros where id in ('50000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000003');
   raise notice 'ficha del estudio: OK';
 end $t$;
+
+-- Permiso de publicidad (filtro «Tintero aliado»): apagado por defecto
+do $$
+declare t uuid;
+begin
+  insert into tinteros (name) values ('Prueba publicidad') returning id into t;
+  assert (select ad_consent from tinteros where id = t) = false, 'publicidad apagada por defecto';
+  assert (select ad_consent_at from tinteros where id = t) is null, 'sin fecha de permiso';
+  delete from tinteros where id = t;
+end $$;

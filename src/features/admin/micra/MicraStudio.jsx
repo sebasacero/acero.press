@@ -16,6 +16,8 @@ import ToolRail from './ToolRail.jsx';
 import TextEditor from './TextEditor.jsx';
 import SaleSheet from './SaleSheet.jsx';
 import TinteroSheet from './TinteroSheet.jsx';
+import TinteroAdSheet from './TinteroAdSheet.jsx';
+import { adCaption, adTexts } from './tinteroAd.js';
 import ShareSheet from './ShareSheet.jsx';
 import StickerTray from './StickerTray.jsx';
 import LayersSheet from './LayersSheet.jsx';
@@ -119,6 +121,18 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     return () => window.removeEventListener(MICRA_INTENT_EVENT, onIntent);
   }, []);
 
+  // Filtro «Tintero aliado»: el tintero de la tarjeta. Su ubicación tapa la de la barra
+  // mientras dura el filtro; al salir de él, la de la barra vuelve.
+  const [adTintero, setAdTintero] = useState(null);
+  const barPlace = useRef(undefined);
+  const pickTintero = (t) => {
+    if (barPlace.current === undefined) barPlace.current = texts.place;
+    setAdTintero(t);
+    look.act({ type: 'texts', patch: adTexts(t) });
+    setCaption(null);
+    setSheet(null);
+  };
+
   // Cambiar de filtro borra los textos propios del filtro (título, subtítulo, nota)
   const filterId = `${kind}:${variety?.id ?? ''}:${preset?.id ?? ''}`;
   const firstFilter = useRef(true);
@@ -128,6 +142,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       if (preset?.freeText) look.act({ type: 'filterChanged', freeText: preset.freeText });
       return;
     }
+    if (barPlace.current !== undefined) {
+      look.act({ type: 'texts', patch: { place: barPlace.current, announce: '' } });
+      barPlace.current = undefined;
+    }
+    setAdTintero(null);
     look.act({ type: 'filterChanged', freeText: preset?.freeText });
     setCaption(null);
     sale.releaseCard();
@@ -138,7 +157,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   // Preferencias del celular (formato, modo, pago, etiquetas, diseño y lugar), sin escribir en cada tecla
   const pendingPrefs = useRef(null);
   useEffect(() => {
-    pendingPrefs.current = { format, camMode, pay: sale.payMethod, hashtags, overrides: look.overrides, texts, place: sale.place && !sale.place.error ? sale.place : null };
+    // La ubicación de un tintero aliado no se recuerda como la de la barra
+    pendingPrefs.current = { format, camMode, pay: sale.payMethod, hashtags, overrides: look.overrides, texts: barPlace.current !== undefined ? { ...texts, place: barPlace.current } : texts, place: sale.place && !sale.place.error ? sale.place : null };
     const id = setTimeout(() => { savePrefs(pendingPrefs.current); pendingPrefs.current = null; }, 400);
     return () => clearTimeout(id);
   }, [format, camMode, sale.payMethod, hashtags, look.overrides, texts, sale.place]);
@@ -188,7 +208,10 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     return line?.variant ?? variantsOf(variety)[0] ?? null;
   }, [sale.lines, variety]);
   const filterExtra = kind === 'recipe' && firstVariant ? `${firstVariant.label} ${money(firstVariant.price)}` : null;
-  const autoCaption = useMemo(() => buildCaption({ kind, preset, text: kindText, variety, weather, now }), [kind, preset, kindText, variety, weather, now]);
+  const autoCaption = useMemo(
+    () => (preset?.usesTintero && adTintero ? adCaption(adTintero) : buildCaption({ kind, preset, text: kindText, variety, weather, now })),
+    [kind, preset, kindText, variety, weather, now, adTintero]
+  );
   const captionBase = caption ?? autoCaption;
   const altText = useMemo(() => buildAltText({
     formatLabel: FORMATS[format].label,
@@ -637,6 +660,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             }}
           />
         );
+      case 'tinteroAd':
+        return <TinteroAdSheet selectedId={adTintero?.id} onPick={pickTintero} onClose={closeSheet} docked={docked} />;
       case 'format':
         return <FormatSheet format={format} onFormat={setFormat} onClose={closeSheet} docked={docked} />;
       case 'share':
@@ -780,6 +805,8 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             onEditText={(key) => setTextKey(key)}
             onOpenSale={() => setSheet('sale')}
             onOpenTintero={() => setSheet('tintero')}
+            adTinteroName={preset?.usesTintero ? adTintero?.name ?? '' : null}
+            onPickTintero={() => setSheet('tinteroAd')}
             ticketLabel={ticketLabel}
             onExit={exit}
             onRecording={(r) => { recordingRef.current = r; }}
@@ -791,6 +818,11 @@ export default function MicraStudio({ onExit, onOpenTool }) {
               <button type="button" className="mst-filterchip" onClick={() => setSheet('filter')} aria-label={`Filtro: ${filterLabel}. Cambiar`}>
                 <span>{filterLabel}</span> ▾
               </button>
+              {preset?.usesTintero && (
+                <button type="button" className="mc-pill" onClick={() => setSheet('tinteroAd')} aria-label={adTintero ? `Tintero: ${adTintero.name}. Cambiar` : 'Elegir tintero'}>
+                  {adTintero ? adTintero.name : 'Elegir tintero'} ▾
+                </button>
+              )}
               <button type="button" className="mc-pill" onClick={() => setSheet('format')} aria-label={`Formato: ${FORMATS[format].label}. Cambiar`}>
                 <i className="mc-ratio" style={{ '--r': FORMATS[format].w / FORMATS[format].h }} aria-hidden="true" />{FORMATS[format].short}
               </button>

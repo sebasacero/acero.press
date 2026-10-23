@@ -145,6 +145,11 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
         <span className="msheet-label">Nombre del puesto o de la persona</span>
         <input ref={nameRef} className="msheet-input" type="text" autoComplete="off" placeholder="Don Jairo · carrito calle 72" value={form.name} onChange={(e) => set({ name: e.target.value })} />
       </label>
+      <label className="msheet-switch">
+        <input type="checkbox" checked={form.ad_consent} onChange={(e) => set({ ad_consent: e.target.checked })} />
+        <span>Aceptó salir en la publicidad</span>
+        <small>su nombre, dónde está y lo que vende en las redes de ACERO.press</small>
+      </label>
 
       <div className="msheet-group" data-testid="tintero-place">
         <span className="msheet-label" id="tin-localidad">Dónde está · localidad</span>

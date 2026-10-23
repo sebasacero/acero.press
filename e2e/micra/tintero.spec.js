@@ -14,7 +14,7 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await sheet.getByRole('button', { name: 'Tomar foto' }).click();
   await expect(sheet.getByRole('img', { name: 'Foto del puesto' })).toBeVisible();
   await expect(page.locator('.mstudio.is-edit')).toHaveCount(0); // la foto de ficha no abre el editor
-  await sheet.getByRole('checkbox').check();
+  await sheet.getByLabel('Dio permiso para la foto').check();
 
   await sheet.getByPlaceholder(/Don Jairo/).fill('Don Jairo');
   await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('0 de 13');
@@ -127,6 +127,40 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
   expect(post.data.photo_consent).toBe(false);
   expect(post.data.photo_url).toBeUndefined();
   expect(post.data).toMatchObject({ localidad: 'Usaquén', zone: 'Usaquén', carrera: 13, calle: 83 });
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('filtro «Tintero aliado»: la tarjeta sale de su ficha y solo con su permiso de publicidad', async ({ browser }) => {
+  const { page, api, errors } = await openPage(browser);
+  api.tinteros.push(
+    { id: 'tintero-1', name: 'Don Jairo', localidad: 'Chapinero', zone: 'Chapinero', carrera: 13, calle: 72, products: ['tinto', 'perico'], tinto_price: 1500, perico_price: 2000, hora_inicio: 6, hora_fin: 12, ad_consent: true },
+    { id: 'tintero-2', name: 'Doña Rosa', localidad: 'Bosa', products: ['tinto', 'aromatica'], tinto_price: 1200, ad_consent: false },
+  );
+  await openMicraFromHome(page);
+  await page.click('.mc-kinds button:has-text("Anuncio")');
+  await page.getByRole('option', { name: 'Tintero aliado' }).click();
+  const pick = page.locator('.mc-text', { hasText: 'Elegir tintero' });
+  await expect(pick).toBeVisible();
+  await pick.click();
+
+  const sheet = page.getByRole('dialog', { name: 'Tintero aliado' });
+  await expect(sheet.getByRole('listitem')).toHaveCount(2);
+  await sheet.getByRole('button', { name: /Don Jairo/ }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.locator('.mc-text', { hasText: 'Tintero: Don Jairo' })).toBeVisible();
+  await expect(page.locator('.mc-text', { hasText: 'Anuncio:' })).toContainText('Vende: Tinto $1.500 · Perico $2.000');
+
+  // Sin permiso no se usa: se le pregunta y queda anotado en su ficha
+  await page.locator('.mc-text', { hasText: 'Tintero: Don Jairo' }).click();
+  await sheet.getByRole('button', { name: /Doña Rosa/ }).click();
+  await expect(sheet.getByRole('button', { name: /Doña Rosa/ })).toContainText('Falta su permiso');
+  await expect(page.locator('.mc-text', { hasText: 'Tintero: Don Jairo' })).toBeVisible(); // sigue el anterior
+  await sheet.getByRole('button', { name: 'Aceptó: usar en la tarjeta' }).click();
+  await expect(sheet).toHaveCount(0);
+  expect(api.find('/api/v1/bi/tinteros/tintero-2', 'PATCH').data).toEqual({ ad_consent: true });
+  await expect(page.locator('.mc-text', { hasText: 'Tintero: Doña Rosa' })).toBeVisible();
+  await expect(page.locator('.mc-text', { hasText: 'Anuncio:' })).toContainText('Vende: Tinto $1.200 · Aromática');
   expect(errors).toEqual([]);
   await page.context().close();
 });

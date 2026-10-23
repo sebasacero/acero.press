@@ -30,7 +30,7 @@ export const EMPTY_TINTERO = {
   formato: null, recorrido: null, hora_inicio: null, hora_fin: null, termos: '',
   products: [], tinto_price: '', perico_price: '', aromatica_price: '', cups_per_hour: '',
   client_mix: null, client_types: [], payments_seen: [], ipes: null,
-  photo_consent: false, notes: '',
+  photo_consent: false, ad_consent: false, notes: '',
 };
 
 const money = (v) => {
@@ -101,6 +101,7 @@ export function buildTintero(form, { surveyedAt = new Date() } = {}) {
     client_mix: oneOf('client_mix', form.client_mix),
     ipes: oneOf('ipes', form.ipes),
     photo_consent: !!form.photo_consent,
+    ad_consent: !!form.ad_consent,
     surveyed_at: surveyedAt.toISOString(),
   };
   // Listas vacías y campos sin respuesta no viajan: «no se anotó» no es «no tiene»

@@ -53,6 +53,12 @@ export const PRESETS = {
       textLabel: 'Anuncio', placeholder: 'Ej.: campeonato AeroPress el sábado',
     },
     {
+      // La tarjeta se llena con la ficha de un tintero que aceptó salir en la publicidad (micra/tinteroAd.js)
+      id: 'tintero', name: 'Tintero aliado', glyph: '◉', badge: 'TINTERO ALIADO', usesTintero: true,
+      textLabel: 'Anuncio', placeholder: 'Qué vende y a qué hora',
+      layout: { place: { visible: true }, drawing: { visible: false } }, // sin la receta dibujada: no es una preparación
+    },
+    {
       id: 'aviso', name: 'Aviso', glyph: '!', badge: 'AVISO',
       textLabel: 'Anuncio', placeholder: 'Ej.: hoy cerramos a las 3 p. m.',
       layout: { drawing: { visible: false } },

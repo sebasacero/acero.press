@@ -11,7 +11,7 @@ test('una ficha mínima queda lista para la API, con la hora del levantamiento',
   assert.equal(error, undefined);
   assert.deepEqual(body, {
     name: 'Don Jairo', localidad: 'Chapinero', zone: 'Chapinero', carrera: 13, calle: 72, stage: 'prospecto',
-    tinto_price: 1500, cups_per_hour: 25, photo_consent: true, surveyed_at: '2026-10-22T14:00:00.000Z',
+    tinto_price: 1500, cups_per_hour: 25, photo_consent: true, ad_consent: false, surveyed_at: '2026-10-22T14:00:00.000Z',
   });
 });
 
@@ -25,7 +25,7 @@ test('la ficha completa del estudio: ruta, horario, productos, precios, clientes
     name: 'Don Jairo', localidad: 'Chapinero', zone: 'Chapinero', carrera: 13, calle: 72, stage: 'prospecto',
     formato: 'termos_a_pie', recorrido: 'ruta', hora_inicio: 6, hora_fin: 11, termos: 3,
     tinto_price: 1500, perico_price: 1700, aromatica_price: 1200, cups_per_hour: 25,
-    client_mix: 'fijos', ipes: 'no_sabe', photo_consent: true, surveyed_at: '2026-10-22T14:00:00.000Z',
+    client_mix: 'fijos', ipes: 'no_sabe', photo_consent: true, ad_consent: false, surveyed_at: '2026-10-22T14:00:00.000Z',
     products: ['tinto', 'perico'], client_types: ['porteros', 'obreros'], payments_seen: ['efectivo', 'fiado'],
   });
 });
