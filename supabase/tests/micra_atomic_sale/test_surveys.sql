@@ -32,6 +32,10 @@ begin
   exception when check_violation then null; end;
   begin insert into tintero_surveys (tintero_id, consent, coffee_brand) values (t, true, ''); assert false, 'marca vacía';
   exception when check_violation then null; end;
+  begin insert into tintero_surveys (tintero_id, consent, offer_choice) values (t, true, 'otra'); assert false, 'preparación o termo';
+  exception when check_violation then null; end;
+  begin insert into tintero_surveys (tintero_id, consent, offer_choice, thermo_cups_day) values (t, true, 'termo', 900); assert false, 'tazas del termo';
+  exception when check_violation then null; end;
   assert (select count(*) from tintero_surveys) = 2, 'dos encuestas';
 
   -- 4. Escenario privado: se guarda y se reemplaza

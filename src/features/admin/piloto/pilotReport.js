@@ -304,6 +304,8 @@ export function buildReport(data, scenarioRaw, { now = new Date() } = {}) {
     wouldSell: tally(answers('would_sell_specialty'), OPTIONS.would_sell_specialty, { order: 'options' }),
     kitInterest: tally(answers('kit_interest'), OPTIONS.kit_interest, { order: 'options' }),
     kitPayment: tally(answers('kit_payment'), OPTIONS.kit_payment),
+    offerChoice: tally(answers('offer_choice'), OPTIONS.offer_choice, { order: 'options' }),
+    thermoCups: stat(answers('thermo_cups_day')),
     specialtyPrice: specialtyStat,
   };
   const tech = {

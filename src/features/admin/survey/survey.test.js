@@ -53,9 +53,21 @@ test('los números se leen como se escriben en Colombia', () => {
 });
 
 test('el avance cuenta preguntas respondidas y las etiquetas salen de las opciones', () => {
-  assert.deepEqual(surveyProgress(EMPTY_SURVEY), { answered: 0, total: 17 });
-  assert.equal(surveyProgress(full).answered, 17);
+  assert.deepEqual(surveyProgress(EMPTY_SURVEY), { answered: 0, total: 18 });
+  assert.equal(surveyProgress(full).answered, 17); // falta qué preferiría
   assert.equal(optionLabel('age_range', '45_54'), '45 a 54');
   assert.equal(optionLabel('has_smartphone', false), 'No');
   assert.equal(optionLabel('gender', 'nada'), null);
+});
+
+test('preparación o termo: las tazas del termo solo viajan si eligió el termo', () => {
+  const termo = buildSurvey({ ...full, offer_choice: 'termo', thermo_cups_day: '30' }).body;
+  assert.equal(termo.offer_choice, 'termo');
+  assert.equal(termo.thermo_cups_day, 30);
+  const prep = buildSurvey({ ...full, offer_choice: 'preparacion', thermo_cups_day: '30' }).body;
+  assert.equal(prep.offer_choice, 'preparacion');
+  assert.equal('thermo_cups_day' in prep, false);
+  assert.match(buildSurvey({ ...full, offer_choice: 'termo', thermo_cups_day: '900' }).error, /termo/);
+  assert.match(buildSurvey({ ...full, offer_choice: 'otra' }).error, /offer_choice/);
+  assert.equal(optionLabel('offer_choice', 'termo'), 'Termo con café listo');
 });

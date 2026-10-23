@@ -14,6 +14,8 @@ export const OPTIONS = {
   buys_where: [['tienda', 'Tienda de barrio'], ['supermercado', 'Supermercado'], ['plaza', 'Plaza de mercado'], ['distribuidor', 'Distribuidor'], ['otro', 'Otro']],
   would_sell_specialty: YES3,
   kit_interest: YES3,
+  // Qué le ofrecemos: preparar él mismo (kit) o recibir el café ya hecho en termo para venderlo
+  offer_choice: [['preparacion', 'Nueva preparación'], ['termo', 'Termo con café listo'], ['ninguna', 'Ninguna']],
   kit_payment: [['contado', 'De contado'], ['cuotas', 'En cuotas'], ['arriendo', 'Arrendado'], ['no_sabe', 'No sabe']],
   has_smartphone: [[true, 'Sí'], [false, 'No']],
   payments: [['efectivo', 'Efectivo'], ['nequi', 'Nequi'], ['daviplata', 'Daviplata'], ['bre_b', 'Bre-B'], ['tarjeta', 'Tarjeta']],
@@ -33,13 +35,14 @@ export const PRESETS = {
   hours_per_day: [4, 6, 8, 10, 12],
   libras_week: [0.5, 1, 2, 3, 5, 10],
   days_per_week: [1, 2, 3, 4, 5, 6, 7],
+  thermo_cups_day: [10, 20, 30, 50, 80],
 };
 
 export const EMPTY_SURVEY = {
   consent: false,
   cups_per_day: '', hours_per_day: '', days_per_week: null, years_selling: null,
   coffee_brand: '', libras_week: '', price_libra: '', buys_where: null,
-  would_sell_specialty: null, specialty_price: '', kit_interest: null, kit_payment: null,
+  would_sell_specialty: null, specialty_price: '', kit_interest: null, kit_payment: null, offer_choice: null, thermo_cups_day: '',
   has_smartphone: null, payments: [],
   gender: null, age_range: null, main_income: null,
   notes: '',
@@ -62,7 +65,7 @@ export function parseDecimal(v) {
 }
 
 const QUESTION_KEYS = ['cups_per_day', 'hours_per_day', 'days_per_week', 'years_selling', 'coffee_brand', 'libras_week', 'price_libra', 'buys_where',
-  'would_sell_specialty', 'specialty_price', 'kit_interest', 'kit_payment', 'has_smartphone', 'payments', 'gender', 'age_range', 'main_income'];
+  'would_sell_specialty', 'specialty_price', 'kit_interest', 'kit_payment', 'offer_choice', 'has_smartphone', 'payments', 'gender', 'age_range', 'main_income'];
 
 const answered = (form, k) => {
   const v = form[k];
@@ -125,7 +128,9 @@ export function buildSurvey(form, { surveyedAt = new Date() } = {}) {
       if (p === null || p > 50000) return 'Precio de la taza de especialidad: hasta $50.000.';
       body.specialty_price = p;
       return null;
-    })();
+    })()
+    // Las tazas del termo solo cuentan si eligió el termo
+    || (form.offer_choice === 'termo' ? int('thermo_cups_day', 'Tazas del termo al día', 0, 500) : null);
   if (err) return { error: err };
 
   const brand = String(form.coffee_brand ?? '').trim();
@@ -133,7 +138,7 @@ export function buildSurvey(form, { surveyedAt = new Date() } = {}) {
     if (brand.length > 60) return { error: 'La marca del café: máximo 60 letras.' };
     body.coffee_brand = brand;
   }
-  for (const key of ['years_selling', 'buys_where', 'would_sell_specialty', 'kit_interest', 'kit_payment', 'gender', 'age_range', 'main_income']) {
+  for (const key of ['years_selling', 'buys_where', 'would_sell_specialty', 'kit_interest', 'kit_payment', 'offer_choice', 'gender', 'age_range', 'main_income']) {
     if (form[key] === null || form[key] === undefined) continue;
     if (!OPTIONS[key].some(([v]) => v === form[key])) return { error: `Respuesta no válida en ${key}.` };
     body[key] = form[key];
