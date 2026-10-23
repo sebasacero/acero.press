@@ -15,7 +15,7 @@ Datos reales hoy (oct. 2026): 13 productos, 31 presentaciones, 8 pedidos, 4 clie
 - Idiomas: es/en/ja en `src/features/i18n/translations.js`. Español es el idioma fuente.
 
 ## Mapa
-- `src/App.jsx`: orden de las secciones del inicio. `src/features/<área>/` por funcionalidad; `src/shared/lib/` clientes y lógica compartida; `src/shared/layout/` navbar, drawer, footer.
+- `src/App.jsx`: orden de las secciones del inicio. `src/features/<área>/` por funcionalidad; `src/shared/lib/` clientes y lógica compartida; `src/shared/layout/` navbar, drawer, footer: los enlaces del menú (arriba y de tres rayas) salen de una sola lista, `navLinks.js`, y llegar a `/#sección` desde otra página lo resuelve `useHashLanding` (el navegador busca la sección antes de que React la pinte y se queda arriba).
 - `src/features/esspresale/`: la portada de la app Micra (el nombre viejo quedó en carpetas, enum `order_source='esspresale'` y ruta de storage `esspresale/`; no lo cambies sin migrar datos).
 - `src/features/admin/`: `AdminShell.jsx` + `adminTools.js` (lista de herramientas), `pages/*`, y `micra/` (`MicraStudio.jsx` orquesta; `useSale.js` venta; `useCardOutput.js` salida; `cardModel.js`/`cardLayout.js`/`captions.js` lógica pura con tests; `espresaleCard.js` dibuja la tarjeta).
 - `src/shared/lib/instagram.js`: escritura de ventas de Micra (RPC) y publicación.

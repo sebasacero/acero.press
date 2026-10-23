@@ -19,6 +19,7 @@ import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
 import PressStory from './features/home/sections/PressStory.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
+import { useHashLanding } from './shared/layout/useHashLanding.js';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda una franja que lleva a ella. Las dos van en archivos aparte.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
@@ -28,6 +29,8 @@ const isSchoolRoute = () => /^\/escuela\/?$/.test(window.location.pathname);
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
   const school = isSchoolRoute();
+  // /#beans desde otra página: la Escuela lleva sus #leccion-N por su cuenta
+  useHashLanding(!school);
 
   useEffect(() => {
     document.body.style.overflow = navOpen ? 'hidden' : '';

@@ -1,7 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 import LanguageSwitcher from '../../features/i18n/LanguageSwitcher.jsx';
 import { useSocialLinks } from '../lib/useSocialLinks.js';
-import { homeLink } from './homeLink.js';
+import { navItems } from './navLinks.js';
 
 const socialIcons = [
   {
@@ -29,11 +30,29 @@ const socialIcons = [
 export default function NavDrawer({ isOpen, onClose }) {
   const { t } = useLanguage();
   const socialLinks = useSocialLinks();
+  const ref = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  // Cerrado no recibe el foco del teclado (está fuera de la pantalla, no oculto); abierto,
+  // el foco entra al primer enlace, Esc lo cierra y al cerrar vuelve a donde estaba.
+  useEffect(() => {
+    if (ref.current) ref.current.inert = !isOpen;
+    if (!isOpen) return undefined;
+    const before = document.activeElement;
+    ref.current?.querySelector('.nav-drawer-links a')?.focus();
+    const onKey = (e) => { if (e.key === 'Escape') closeRef.current(); };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (before && typeof before.focus === 'function' && document.contains(before)) before.focus();
+    };
+  }, [isOpen]);
 
   return (
     <>
       <div className={`nav-overlay ${isOpen ? 'open' : ''}`} onClick={onClose} />
-      <aside className={`nav-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
+      <aside ref={ref} className={`nav-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen} aria-label={t('nav.menu')}>
         <div className="nav-drawer-header">
           <img src="/image/logo_aceropress.png" alt="ACEROPRESS" className="nav-drawer-logo" />
           <button className="cart-close-btn" aria-label="Cerrar menú" onClick={onClose}>
@@ -45,12 +64,9 @@ export default function NavDrawer({ isOpen, onClose }) {
         </div>
 
         <nav className="nav-drawer-links">
-          <a href={homeLink('#home')} onClick={onClose}>{t('nav.home')}</a>
-          <a href={homeLink('#beans')} onClick={onClose}>{t('nav.beans')}</a>
-          <a href={homeLink('#championship')} onClick={onClose}>{t('nav.championship')}</a>
-          <a href="/escuela" onClick={onClose}>{t('nav.school')}</a>
-          <a href={homeLink('#contact')} onClick={onClose}>{t('nav.contact')}</a>
-          <a href={homeLink('#prensado')} onClick={onClose}>{t('nav.app')}</a>
+          {navItems().map((it) => (
+            <a key={it.key} href={it.href} onClick={onClose} aria-current={it.current ? 'page' : undefined}>{t(`nav.${it.key}`)}</a>
+          ))}
         </nav>
 
         <div className="nav-drawer-footer">
