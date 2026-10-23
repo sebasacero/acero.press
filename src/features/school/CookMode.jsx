@@ -86,7 +86,18 @@ export default function CookMode({ open, onClose, timer, figure, t }) {
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     dialogRef.current?.focus();
-    const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); closeRef.current(); } };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); closeRef.current(); return; }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      // Tab da la vuelta dentro del diálogo: la página de atrás no recibe el foco
+      const items = [...dialogRef.current.querySelectorAll('button:not([disabled]), [href], input')];
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const at = document.activeElement;
+      if (e.shiftKey && (at === first || at === dialogRef.current)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (at === last || !dialogRef.current.contains(at))) { e.preventDefault(); first.focus(); }
+    };
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);

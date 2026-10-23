@@ -72,6 +72,11 @@ test('escritorio: temario con teclado, figura por lección, modo preparar, enlac
   await cook.getByRole('button', { name: 'Pausar' }).click();
   await page.clock.runFor(5_000);
   await expect(cook.locator('.cook-clock')).toHaveText('0:12');
+  // Tab no se escapa del diálogo
+  for (let k = 0; k < 5; k += 1) {
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
+  }
   await page.keyboard.press('Escape');
   await expect(cook).toHaveCount(0);
   const back = page.getByRole('button', { name: /Volver al cronómetro · 0:12/ });
