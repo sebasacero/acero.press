@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import MapCanvas from '../../esspresale/MapCanvas.jsx';
-import { salesGeoJSON, tinterosGeoJSON, boundsOf } from '../../../shared/lib/streetGeo.js';
+import { salesGeoJSON, tinterosGeoJSON, boundsOf, routesGeoJSON } from '../../../shared/lib/streetGeo.js';
 import { themeChanges } from '../../../shared/lib/mapTheme.js';
 
 // Mapa real del piloto (MapLibre + OpenStreetMap): calor de las ventas por
@@ -36,7 +36,28 @@ function applyTheme(map, theme) {
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 
-function addLayers(map, sales) {
+function addLayers(map, sales, routes) {
+  // Recorridos de Mi ruta debajo del calor: la línea es el camino, el punto la parada
+  map.addSource('rutas', { type: 'geojson', data: routes.lines });
+  map.addSource('paradas', { type: 'geojson', data: routes.stops });
+  map.addLayer({
+    id: 'rutas-linea',
+    type: 'line',
+    source: 'rutas',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: { 'line-color': '#2A3550', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2, 16, 5], 'line-opacity': 0.75 },
+  });
+  map.addLayer({
+    id: 'rutas-paradas',
+    type: 'circle',
+    source: 'paradas',
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['get', 'minutes'], 3, 5, 20, 11],
+      'circle-color': '#F7F3E8',
+      'circle-stroke-color': '#2A3550',
+      'circle-stroke-width': 2.5,
+    },
+  });
   map.addSource('ventas', { type: 'geojson', data: sales });
   map.addLayer({
     id: 'ventas-calor',
@@ -80,7 +101,7 @@ function pinElement(f) {
   return el;
 }
 
-export default function PilotoMap({ sales, tinteros, fallbackView, label, withNames = true }) {
+export default function PilotoMap({ sales, tinteros, routes, fallbackView, label, withNames = true }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const baseRef = useRef(null); // el estilo base en uso (OpenFreeMap u OpenStreetMap)
@@ -92,7 +113,10 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label, withNa
   const salesGeo = salesGeoJSON(sales);
   // En la presentación (la ve el distribuidor) los pines no llevan nombres
   const tinterosGeo = tinterosGeoJSON(tinteros, { withNames });
-  const dataKey = JSON.stringify([salesGeo, tinterosGeo]);
+  // Los recorridos solo en el panel (llevan el nombre del tintero)
+  const routesGeo = routesGeoJSON(withNames ? routes : [], tinteros);
+  const routePoints = { features: routesGeo.lines.features.flatMap((f) => f.geometry.coordinates.map((c) => ({ geometry: { coordinates: c } }))) };
+  const dataKey = JSON.stringify([salesGeo, tinterosGeo, routesGeo]);
 
   useEffect(() => {
     let map = null;
@@ -110,7 +134,7 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label, withNa
       if (cancelled) return;
       if (!lib.hasWebGL()) { setState('fallback'); return; }
       const { default: ml, STYLE_URL, OSM_STYLE } = lib;
-      const bounds = boundsOf(salesGeo, tinterosGeo);
+      const bounds = boundsOf(salesGeo, tinterosGeo, routePoints);
       baseRef.current = STYLE_URL;
       try {
         map = new ml.Map({
@@ -144,7 +168,7 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label, withNa
         clearTimeout(styleTimer);
         loaded = true;
         applyTheme(map, themeRef.current);
-        if (!map.getSource('ventas')) addLayers(map, salesGeo);
+        if (!map.getSource('ventas')) addLayers(map, salesGeo, routesGeo);
         if (framed) return;
         framed = true;
         if (bounds) {
@@ -160,6 +184,11 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label, withNa
           );
           markers.push(new ml.Marker({ element: pinElement(f), anchor: 'bottom' }).setLngLat(f.geometry.coordinates).setPopup(popup).addTo(map));
         }
+        // Tocar una parada: quién, a qué hora y cuánto se quedó
+        map.on('click', 'rutas-paradas', (e) => {
+          const f = e.features?.[0];
+          if (f) new ml.Popup({ offset: 10, className: 'piloto-popup' }).setLngLat(f.geometry.coordinates).setHTML(`<span>${esc(f.properties.label)}</span>`).addTo(map);
+        });
         mapRef.current = map;
         if (box.current) box.current.__map = map; // para las pruebas de navegador
         setState('ready');
@@ -191,6 +220,8 @@ export default function PilotoMap({ sales, tinteros, fallbackView, label, withNa
       data-theme={theme}
       data-sales={salesGeo.features.length}
       data-tinteros={tinterosGeo.features.length}
+      data-routes={routesGeo.lines.features.length}
+      data-stops={routesGeo.stops.features.length}
       role="region"
       aria-label={label}
     >

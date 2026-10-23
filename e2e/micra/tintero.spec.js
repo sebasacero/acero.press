@@ -17,10 +17,26 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await sheet.getByRole('checkbox').check();
 
   await sheet.getByPlaceholder(/Don Jairo/).fill('Don Jairo');
+  await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('0 de 13');
   await sheet.getByRole('option', { name: 'Chapinero' }).click();
   await sheet.getByLabel('Calle').fill('72');
+  await sheet.getByLabel('Carrera').fill('13');
+  // Lo que el estudio necesita: cómo vende, su ruta, horario, productos, clientes y pagos
+  await sheet.getByRole('group', { name: 'Cómo vende' }).getByRole('button', { name: 'Termos a pie' }).click();
+  await sheet.getByRole('group', { name: '¿Se mueve?' }).getByRole('button', { name: 'Hace una ruta' }).click();
+  await sheet.getByRole('group', { name: 'Empieza a vender' }).getByRole('button', { name: '6 a. m.' }).click();
+  await sheet.getByRole('group', { name: 'Termina' }).getByRole('button', { name: '11 a. m.' }).click();
+  await sheet.getByRole('group', { name: 'Qué vende' }).getByRole('button', { name: 'Tinto' }).click();
+  await sheet.getByRole('group', { name: 'Qué vende' }).getByRole('button', { name: 'Perico' }).click();
   await sheet.getByLabel('Precio del tinto').fill('1.500');
+  await sheet.getByLabel('Precio del perico').fill('1.700');
+  await sheet.getByLabel('Termos').fill('3');
   await sheet.getByLabel('Tazas por hora').fill('25');
+  await sheet.getByRole('group', { name: 'Sus clientes' }).getByRole('button', { name: 'Casi todos fijos' }).click();
+  await sheet.getByRole('group', { name: 'Quiénes le compran' }).getByRole('button', { name: 'Porteros' }).click();
+  await sheet.getByRole('group', { name: 'Cómo le pagan' }).getByRole('button', { name: 'Fiado' }).click();
+  await sheet.getByRole('group', { name: '¿Registrado en el IPES?' }).getByRole('button', { name: 'No sabe' }).click();
+  await expect(sheet.getByLabel('Datos del estudio anotados')).toHaveText('13 de 13');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
 
   // Guardada la ficha, sigue la encuesta: sin el permiso no se puede marcar ni guardar
@@ -49,7 +65,11 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   expect(upload.p).toContain('/object/estudio/tinteros/');
   expect(upload.p).not.toContain('marketing');
   const post = api.find('/api/v1/bi/tinteros', 'POST');
-  expect(post.data).toMatchObject({ name: 'Don Jairo', zone: 'Chapinero', carrera: 13, calle: 72, tinto_price: 1500, cups_per_hour: 25, photo_consent: true, stage: 'prospecto' });
+  expect(post.data).toMatchObject({
+    name: 'Don Jairo', localidad: 'Chapinero', zone: 'Chapinero', carrera: 13, calle: 72, tinto_price: 1500, perico_price: 1700, cups_per_hour: 25,
+    photo_consent: true, stage: 'prospecto', formato: 'termos_a_pie', recorrido: 'ruta', hora_inicio: 6, hora_fin: 11, termos: 3,
+    products: ['tinto', 'perico'], client_mix: 'fijos', client_types: ['porteros'], payments_seen: ['fiado'], ipes: 'no_sabe',
+  });
   expect(post.data.photo_url).toMatch(/^https:\/\/.+\/estudio\/tinteros\//);
   expect(post.data.surveyed_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   expect(api.tinteros).toHaveLength(1);
@@ -69,7 +89,9 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
   await expect(sheet.getByRole('img', { name: 'Foto del puesto' })).toBeVisible();
 
   // Sin nombre: se explica y no sale ninguna petición
-  await sheet.getByRole('option', { name: 'Zona T' }).click();
+  await sheet.getByRole('option', { name: 'Chapinero' }).click();
+  await sheet.getByLabel('Calle').fill('83');
+  await sheet.getByLabel('Carrera').fill('13');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
   await expect(sheet.getByRole('alert')).toContainText('nombre');
   expect(api.find('/api/v1/bi/tinteros', 'POST')).toBeUndefined();
@@ -77,6 +99,17 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
 
   // Con nombre pero sin permiso: la ficha sí, la foto no
   await sheet.getByPlaceholder(/Don Jairo/).fill('Carrito de la 83');
+  // Sin localidad tampoco: es lo mínimo que pide el estudio
+  await sheet.getByRole('option', { name: 'Chapinero' }).click();
+  await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
+  await expect(sheet.getByRole('alert')).toContainText('localidad');
+  // Están las 20 localidades: las que no eran del estudio van en su grupo
+  const resto = sheet.getByRole('listbox', { name: 'Localidad: las demás localidades' });
+  await expect(resto.getByRole('option')).toHaveCount(11);
+  await resto.getByRole('option', { name: 'Ciudad Bolívar' }).click();
+  await expect(resto.getByRole('option', { name: 'Ciudad Bolívar' })).toHaveAttribute('aria-selected', 'true');
+  await sheet.getByRole('option', { name: 'Usaquén' }).click();
+  await expect(resto.getByRole('option', { name: 'Ciudad Bolívar' })).toHaveAttribute('aria-selected', 'false');
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
   // La encuesta se puede dejar para después: la ficha ya quedó
   await page.getByRole('dialog', { name: 'Encuesta de Carrito de la 83' }).getByRole('button', { name: /Ahora no/ }).click();
@@ -88,7 +121,7 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
   const post = api.find('/api/v1/bi/tinteros', 'POST');
   expect(post.data.photo_consent).toBe(false);
   expect(post.data.photo_url).toBeUndefined();
-  expect(post.data).toMatchObject({ zone: 'Zona T', carrera: 13, calle: 83 });
+  expect(post.data).toMatchObject({ localidad: 'Usaquén', zone: 'Usaquén', carrera: 13, calle: 83 });
   expect(errors).toEqual([]);
   await page.context().close();
 });

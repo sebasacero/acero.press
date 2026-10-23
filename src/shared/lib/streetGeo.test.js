@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { salesGeoJSON, tinterosGeoJSON, boundsOf } from './streetGeo.js';
+import { salesGeoJSON, tinterosGeoJSON, boundsOf, routesGeoJSON } from './streetGeo.js';
 import { toLngLat } from './bogotaGeo.js';
 
 test('las ventas se agrupan por cuadra y el peso es relativo a la que más vendió', () => {
@@ -39,4 +39,17 @@ test('los límites encierran ventas y tinteros; sin puntos no hay límites', () 
   const [[w, south], [e, north]] = boundsOf(s, t);
   assert.ok(w < e && south < north);
   assert.equal(boundsOf(salesGeoJSON([]), tinterosGeoJSON([])), null);
+});
+
+test('routesGeoJSON: una línea por recorrido y un punto por parada, con el nombre solo si se pasa', () => {
+  const routes = [
+    { id: 'r1', tintero_id: 't1', ended_at: '2026-10-27T15:00:00Z', path: [[-74.0636, 4.6431], [-74.0645, 4.644]], stops: [{ lat: 4.6431, lng: -74.0636, from: '2026-10-27T11:30:00Z', minutes: 4, carrera: 9, calle: 52 }] },
+    { id: 'r2', tintero_id: 't2', ended_at: null, path: [[-74.06, 4.64]], stops: [{ lat: 'x' }] },
+  ];
+  const g = routesGeoJSON(routes, [{ id: 't1', name: 'Marlene' }]);
+  assert.equal(g.lines.features.length, 1);
+  assert.equal(g.lines.features[0].properties.who, 'Marlene');
+  assert.equal(g.stops.features.length, 1);
+  assert.match(g.stops.features[0].properties.label, /^Marlene · parada 1 · 6:30.* · 4 min · Calle 52 con 9$/);
+  assert.deepEqual(routesGeoJSON(null), { lines: { type: 'FeatureCollection', features: [] }, stops: { type: 'FeatureCollection', features: [] } });
 });
