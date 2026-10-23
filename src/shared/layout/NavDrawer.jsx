@@ -47,6 +47,7 @@ export default function NavDrawer({ isOpen, onClose }) {
           <a href="#home" onClick={onClose}>{t('nav.home')}</a>
           <a href="#beans" onClick={onClose}>{t('nav.beans')}</a>
           <a href="#championship" onClick={onClose}>{t('nav.championship')}</a>
+          <a href="#escuela" onClick={onClose}>{t('nav.school')}</a>
           <a href="#contact" onClick={onClose}>{t('nav.contact')}</a>
           <a href="#home" onClick={onClose}>{t('nav.app')}</a>
         </nav>

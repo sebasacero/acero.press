@@ -17,6 +17,7 @@ export default function Navbar({ onOpenNavDrawer, navOpen, variant = 'overlay', 
           <a href="#home">{t('nav.home')}</a>
           <a href="#beans">{t('nav.beans')}</a>
           <a href="#championship">{t('nav.championship')}</a>
+          <a href="#escuela">{t('nav.school')}</a>
           <a href="#contact">{t('nav.contact')}</a>
           <a href="#home" className="nav-app-link">{t('nav.app')}</a>
         </div>

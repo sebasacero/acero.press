@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { CartProvider } from './features/cart/context/CartContext.jsx';
 import { AuthProvider } from './features/account/AuthContext.jsx';
 import { LanguageProvider } from './features/i18n/LanguageContext.jsx';
@@ -19,6 +19,8 @@ import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
 import WacBanner from './features/home/sections/WacBanner.jsx';
 import PressStory from './features/home/sections/PressStory.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
+// La Escuela trae sus lecciones en tres idiomas: va en su propio archivo, después de lo de arriba
+const SchoolSection = lazy(() => import('./features/school/SchoolSection.jsx'));
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -49,6 +51,10 @@ export default function App() {
             <RecipeArchive />
 
             <PressStory />
+
+            <Suspense fallback={null}>
+              <SchoolSection />
+            </Suspense>
 
             <Marquee />
 

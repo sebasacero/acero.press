@@ -1,0 +1,137 @@
+/* === Escuela: la hoja de plano de la portada (esspresale.css) con lecciones ===
+   Las piezas .essp-* (cota, título con marcador, panel, cajetín) leen estos colores. */
+.school {
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink); --essp-block: rgba(237, 230, 211, .95);
+  color: var(--ink); scroll-margin-top: 12px;
+}
+.school-sheet {
+  position: relative; overflow: hidden; container-type: inline-size;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(42, 53, 80, .09) 0 1px, transparent 1px 135px),
+    repeating-linear-gradient(90deg, rgba(42, 53, 80, .09) 0 1px, transparent 1px 135px),
+    linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: auto, auto, 27px 27px, 27px 27px;
+}
+.school-sheet .essp-sheet { z-index: 1; }
+.school-in { position: relative; z-index: 2; display: grid; gap: 22px; padding: 52px 58px 50px; }
+
+.school-head { display: grid; gap: 12px; justify-items: start; max-width: 760px; }
+.school-title { font-size: clamp(2rem, 4.2cqi, 4.2rem); }
+/* La frase es larga: girada, sin este aire se monta sobre la última línea */
+.school-title .essp-script { margin-top: .45em; }
+.school-lede { max-width: 54ch; }
+.school-progress { display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .06em; color: var(--ink-soft); }
+.school-progress-bar { display: flex; gap: 4px; }
+.school-progress-bar i { width: 22px; height: 8px; background: rgba(42, 53, 80, .15); }
+.school-progress-bar i.on { background: var(--magenta-bright); }
+
+/* Lista | lección | herramienta */
+.school-body { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 26px; align-items: start; }
+.school-body.has-tool { grid-template-columns: 250px minmax(0, 1fr) minmax(0, 340px); }
+
+.school-list { display: grid; gap: 4px; }
+.school-list button {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; width: 100%; padding: 9px 10px;
+  font: inherit; color: inherit; text-align: left; cursor: pointer; background: none;
+  border: 0; border-left: 3px solid transparent; border-radius: 2px 10px 10px 2px; opacity: .6;
+  transition: opacity .2s ease, background-color .2s ease;
+}
+.school-list button:hover { opacity: 1; }
+.school-list button[aria-selected='true'] { opacity: 1; border-left-color: var(--magenta-bright); background: rgba(247, 243, 232, .92); box-shadow: 2px 3px 0 0 rgba(42, 53, 80, .12); }
+.school-list button.is-seen { opacity: .85; }
+.school-list button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 2px; }
+.school-num {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem; font-weight: 700; line-height: 1.2;
+  border: 2px solid var(--ink); border-radius: 2px; padding: .15rem .4rem; background: var(--cream);
+}
+.school-list button[aria-selected='true'] .school-num { background: var(--ink); color: var(--cream); }
+.school-list button.is-seen .school-num { border-color: var(--magenta-bright); }
+.school-list-body { display: grid; gap: 2px; min-width: 0; }
+.school-list-body b { font-family: 'Space Grotesk', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: .02em; }
+.school-list-body small { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-soft); }
+
+/* La lección: una ficha de papel */
+.school-lesson {
+  display: grid; gap: 14px; padding: 22px 24px 22px; background: rgba(247, 243, 232, .96);
+  border: 2px solid var(--ink); border-radius: 8px 14px 8px 14px; box-shadow: 4px 5px 0 0 rgba(42, 53, 80, .14);
+  scroll-margin-top: 16px;
+}
+.school-fig { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--ink-soft); }
+.school-lesson h3 { margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.4rem, 2.4cqi, 2rem); text-transform: uppercase; color: var(--ink); }
+.school-lead { margin: 0; font-size: 16px; line-height: 1.6; font-weight: 500; max-width: 62ch; }
+.school-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.school-points li { position: relative; padding-left: 22px; font-size: 15px; line-height: 1.55; color: var(--ink); }
+.school-points li::before { content: ''; position: absolute; left: 2px; top: .55em; width: 9px; height: 9px; border-radius: 50%; background: var(--magenta-bright); }
+.school-tip { display: grid; gap: 4px; padding: 12px 14px; border-left: 3px solid var(--magenta-bright); background: rgba(249, 31, 31, .06); }
+.school-tip b, .school-practice b { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; }
+.school-tip p { margin: 0; font-size: 14.5px; line-height: 1.55; }
+.school-practice { display: grid; gap: 6px; }
+.school-practice ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); }
+.school-lesson-actions { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+
+/* Herramientas: el panel oscuro de la portada */
+.school-tool {
+  display: grid; gap: 12px; padding: 18px 18px 16px; min-width: 0;
+  background: rgba(14, 15, 19, .94); color: #F2F2F0; border: 1.5px solid rgba(255, 255, 255, .18);
+  font-family: 'JetBrains Mono', monospace;
+}
+.school-tool .essp-btn { box-shadow: none; }
+.school-tool .essp-btn.is-ghost { color: #F2F2F0; }
+.school-clock { font-size: 64px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.school-now { margin: 0; display: grid; gap: 4px; min-height: 48px; }
+.school-now b { font-family: 'Archivo', sans-serif; font-size: 17px; font-weight: 800; color: #fff; }
+.school-now span { font-size: 11px; color: rgba(255, 255, 255, .6); }
+.school-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; border-top: 1px dashed rgba(255, 255, 255, .25); padding-top: 10px; }
+.school-steps li { display: grid; grid-template-columns: 38px 1fr; gap: 8px; font-size: 11.5px; color: rgba(255, 255, 255, .5); }
+.school-steps li span { color: rgba(255, 255, 255, .45); }
+.school-steps li.is-done { color: rgba(255, 255, 255, .75); }
+.school-steps li.is-on { color: #fff; }
+.school-steps li.is-on span { color: var(--magenta-bright); font-weight: 700; }
+.school-tool-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.school-fields { display: grid; gap: 10px; }
+.school-field { display: grid; gap: 4px; }
+.school-field span { font-size: 10.5px; letter-spacing: .06em; color: rgba(255, 255, 255, .6); }
+.school-field input {
+  font: 600 18px 'JetBrains Mono', monospace; color: #fff; background: rgba(255, 255, 255, .06);
+  border: 1.5px solid rgba(255, 255, 255, .22); border-radius: 2px; padding: 8px 10px; width: 100%;
+}
+.school-field input:focus { outline: none; border-color: var(--magenta-bright); }
+.school-results b { font-size: 18px; }
+.school-empty, .school-cost-foot { margin: 0; font-size: 11.5px; line-height: 1.5; color: rgba(255, 255, 255, .6); }
+
+/* Cierre: el cajetín con la invitación al piloto */
+.school-cta { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.school-cta > div { padding: 14px 18px; }
+.school-cta > div:first-child { display: grid; gap: 4px; }
+.school-cta > div:first-child b { font-family: 'Space Grotesk', sans-serif; font-size: 20px; text-transform: uppercase; }
+.school-cta > div:first-child span { font-family: 'Archivo', sans-serif; font-size: 14px; letter-spacing: 0; line-height: 1.5; color: var(--ink-soft); }
+
+@media (max-width: 1100px) {
+  .school-body.has-tool { grid-template-columns: 220px minmax(0, 1fr); }
+  .school-body.has-tool .school-tool { grid-column: 2; }
+}
+@media (max-width: 760px) {
+  .school-sheet .essp-sheet { inset: 8px; }
+  .school-sheet .essp-sheet::after { inset: 7px; }
+  .school-in { padding: 30px 24px 32px; gap: 16px; }
+  .school-sheet .essp-dash { display: none; }
+  .school-title { font-size: clamp(1.9rem, 9cqi, 2.4rem); }
+  .school-body, .school-body.has-tool { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .school-body.has-tool .school-tool { grid-column: auto; }
+  /* Lecciones en una fila que se desliza, como pestañas */
+  .school-list { display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 6px; scrollbar-width: none; }
+  .school-list::-webkit-scrollbar { display: none; }
+  .school-list button { flex: 0 0 auto; width: auto; max-width: 210px; scroll-snap-align: start; border: 1.5px solid rgba(42, 53, 80, .3); border-radius: 10px; }
+  .school-list button[aria-selected='true'] { border-color: var(--magenta-bright); border-left-width: 1.5px; }
+  .school-list-body b { font-size: 13px; white-space: nowrap; }
+  .school-lesson { padding: 18px 16px; }
+  .school-clock { font-size: 56px; }
+  .school-cta { grid-template-columns: minmax(0, 1fr); }
+  .school-cta > div + div { border-left: 0; border-top: 1.5px solid var(--essp-line); }
+  .school-cta .essp-ctas { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .school-list button { transition: none; }
+}
