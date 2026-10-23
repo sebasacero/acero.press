@@ -3,6 +3,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import PilotoMap from './PilotoMap.jsx';
 import { heatFromSales, pinsFromTinteros } from '../../../shared/lib/streetMap.js';
 import { latestByTintero } from '../survey/survey.js';
+import { TINTERO_OPTIONS, hourLabel } from '../micra/tinteroForm.js';
 
 // El informe y la presentación pesan (gráficas, diapositivas): se cargan al abrir la pestaña
 const PilotReport = lazy(() => import('../piloto/PilotReport.jsx'));
@@ -18,8 +19,28 @@ const STAGE_LABEL = { prospecto: 'Prospecto', piloto: 'Piloto', activo: 'Activo'
 const money = (n) => `$${Math.round(n ?? 0).toLocaleString('es-CO')}`;
 const num = (n, d = 0) => (n ?? 0).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
 const when = (iso) => new Date(iso).toLocaleString('es-CO', { timeZone: 'America/Bogota', weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
-const cuadra = (r) => (r.carrera == null ? '—' : `Calle ${r.calle} con ${r.carrera}${r.zone ? ` · ${r.zone}` : ''}`);
+const cuadra = (r) => (r.carrera == null ? (r.zone ?? '—') : `Calle ${r.calle} con ${r.carrera}${r.zone ? ` · ${r.zone}` : ''}`);
 const delta = (cur, prev) => (!prev ? null : Math.round(((cur - prev) / prev) * 100));
+const label = (field, v) => TINTERO_OPTIONS[field]?.find(([x]) => x === v)?.[1] ?? null;
+/** Lo que el estudio sabe de cómo vende: «Termos a pie · hace una ruta · 6 a. m. a 11 a. m. · 3 termos». */
+const howSells = (t) => [
+  label('formato', t.formato),
+  label('recorrido', t.recorrido)?.toLowerCase(),
+  t.hora_inicio != null && t.hora_fin != null ? `${hourLabel(t.hora_inicio)} a ${hourLabel(t.hora_fin)}` : null,
+  t.termos ? `${t.termos} termos` : null,
+].filter(Boolean).join(' · ');
+const whoBuys = (t) => [
+  label('client_mix', t.client_mix),
+  (t.client_types ?? []).map((v) => label('client_types', v)?.toLowerCase()).filter(Boolean).join(', ') || null,
+  (t.payments_seen ?? []).includes('fiado') ? 'fía' : null,
+  t.ipes === 'si' ? 'registrado en el IPES' : null,
+].filter(Boolean).join(' · ');
+const km = (m) => `${(Math.round((m ?? 0) / 100) / 10).toLocaleString('es-CO', { minimumFractionDigits: 1 })} km`;
+const span = (a, b) => (b ? `${Math.max(0, Math.round((Date.parse(b) - Date.parse(a)) / 60000))} min` : 'en curso');
+
+/** El enlace que se le manda al tintero: abre Mi ruta con el código ya escrito. */
+const inviteLink = (code) => `${window.location.origin}/ruta?codigo=${code}`;
+const inviteText = (name, code) => `Hola ${name.split(' ')[0]}, este es tu enlace para Micra · Mi ruta: ${inviteLink(code)} (código ${code}, vence en 7 días). Entra con tu cuenta de Google.`;
 
 async function api(path) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -74,6 +95,14 @@ export default function PilotoPage() {
   const [tab, setTab] = useState('estudio'); // estudio · informe
   const [surveying, setSurveying] = useState(null); // el tintero que se está encuestando
   const [notice, setNotice] = useState(null);
+  const [invite, setInvite] = useState(null); // { tintero, code } recién generado
+
+  const makeInvite = async (t) => {
+    setNotice(null);
+    const { data: res, error: err } = await supabase.rpc('tintero_invite', { p_tintero_id: t.id });
+    if (err) { setError(err.message); return; }
+    setInvite({ tintero: t, code: res.code });
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -152,7 +181,7 @@ export default function PilotoPage() {
           <section className="dash-sheet piloto-map" aria-label="Mapa del estudio">
             <div className="esp-cota"><span>MAPA · {view.real ? `ventas y tinteros de los últimos ${data.days} días` : 'todavía sin puntos reales'}</span><span>{data.study.zones.join(' · ') || '—'}</span></div>
             <div className="piloto-map-box">
-              <PilotoMap sales={data.sales} tinteros={data.tinteros} fallbackView={view} label="Mapa de Bogotá con el calor de las ventas en la calle y los tinteros mapeados" />
+              <PilotoMap sales={data.sales} tinteros={data.tinteros} routes={data.routes} fallbackView={view} label="Mapa de Bogotá con el calor de las ventas en la calle y los tinteros mapeados" />
             </div>
             {!view.real && <p className="esp-muted">El mapa se llena solo: elige «Hoy vendo en» en la venta de Micra y registra tinteros con el botón «Tintero» de la cámara.</p>}
             {view.real && <p className="esp-muted piloto-geo-note">Ubicación por cuadra (calle y carrera), con una o dos cuadras de margen. Toca un tintero para ver su ficha.</p>}
@@ -185,12 +214,26 @@ export default function PilotoPage() {
                         {t.photo_consent ? <Photo url={t.photo_url} alt={`Puesto de ${t.name}`} /> : <div className="piloto-nophoto">Sin permiso de foto</div>}
                         <div>
                           <b>{t.name}</b>
-                          <span>{cuadra(t)}</span>
+                          <span>{t.localidad && t.localidad !== t.zone ? `${t.localidad} · ` : ''}{cuadra(t)}</span>
+                          {howSells(t) && <span>{howSells(t)}</span>}
+                          {whoBuys(t) && <span>{whoBuys(t)}</span>}
                           <span>{STAGE_LABEL[t.stage] ?? t.stage}{t.tinto_price ? ` · tinto a ${money(t.tinto_price)}` : ''}{t.cups_per_hour ? ` · ${t.cups_per_hour} tazas/h` : ''}</span>
                           {t.notes && <small>{t.notes}</small>}
                           <span className={`piloto-survey ${sv ? 'is-done' : ''}`}>{sv ? `Encuestado el ${shortDate(sv.surveyed_at)}` : 'Sin encuesta'}</span>
                           {data.surveysReady !== false && (
                             <button type="button" className="esp-chip piloto-survey-btn" onClick={() => { setNotice(null); setSurveying(t); }}>{sv ? 'Encuestar de nuevo' : 'Encuestar'}</button>
+                          )}
+                          {data.routesReady && (t.linked ? (
+                            <span className="piloto-survey is-done">Usa Mi ruta{t.tracking_consent_at ? '' : ' · sin permiso de ubicación'}</span>
+                          ) : (
+                            <button type="button" className="esp-chip piloto-survey-btn" onClick={() => makeInvite(t)}>Invitar a Mi ruta</button>
+                          ))}
+                          {invite?.tintero.id === t.id && (
+                            <div className="piloto-invite" role="status">
+                              <span>Código <b data-testid="invite-code">{invite.code}</b> · vence en 7 días</span>
+                              <a className="esp-chip" href={`https://wa.me/?text=${encodeURIComponent(inviteText(t.name, invite.code))}`} target="_blank" rel="noreferrer">Enviar por WhatsApp</a>
+                              <button type="button" className="esp-chip esp-chip-ghost" onClick={() => navigator.clipboard?.writeText(inviteLink(invite.code)).then(() => setNotice(`✓ Enlace de ${t.name} copiado.`), () => {})}>Copiar enlace</button>
+                            </div>
                           )}
                         </div>
                       </li>
@@ -200,6 +243,24 @@ export default function PilotoPage() {
               )}
             </section>
           </div>
+
+          {data.routesReady && (
+            <section className="dash-sheet" aria-label="Recorridos">
+              <div className="esp-cota"><span>RECORRIDOS · MI RUTA</span><span>{data.routes.length}</span></div>
+              {data.routes.length === 0 ? <p className="esp-muted">Aún no hay recorridos. Invita a un tintero a Mi ruta desde su ficha.</p> : (
+                <ul className="piloto-list">
+                  {data.routes.slice(0, 40).map((r) => (
+                    <li key={r.id}>
+                      <b>{data.tinteros.find((t) => t.id === r.tintero_id)?.name ?? 'Tintero'}</b>
+                      <span>{when(r.started_at)} · {span(r.started_at, r.ended_at)} · {km(r.distance_m)} · {(r.stops ?? []).length} {(r.stops ?? []).length === 1 ? 'parada' : 'paradas'}</span>
+                      {(r.stops ?? []).length > 0 && <small>{r.stops.map((p) => `${p.minutes} min${p.calle ? ` en Calle ${p.calle} con ${p.carrera}` : ''}`).join(' · ')}</small>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+          {data.routesReady === false && <p className="esp-notice" role="note">Los recorridos de Mi ruta se activan al aplicar en Supabase la migración 20261023120000_tintero_routes.</p>}
         </>
       )}
 

@@ -1,0 +1,16 @@
+{
+  "name": "Micra · Mi ruta",
+  "short_name": "Mi ruta",
+  "description": "El recorrido del tintero: por dónde camina, dónde se detiene y cuánto vende.",
+  "lang": "es-CO",
+  "start_url": "/ruta",
+  "scope": "/ruta",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F3E8",
+  "theme_color": "#1E1E1E",
+  "icons": [
+    { "src": "/image/ruta-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/image/ruta-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

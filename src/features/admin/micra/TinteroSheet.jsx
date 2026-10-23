@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import Sheet from './Sheet.jsx';
-import { ZONES, isValidPlace, placeLabel, placeOfZone, editPlace } from './place.js';
-import { EMPTY_TINTERO, buildTintero, canUploadPhoto, photoPath } from './tinteroForm.js';
-import SurveyForm from '../survey/SurveyForm.jsx';
+import { LOCALIDADES, LOCALIDAD_GROUPS, isValidPlace, placeLabel, editPlace } from './place.js';
+import { EMPTY_TINTERO, END_HOURS, START_HOURS, TINTERO_OPTIONS, buildTintero, canUploadPhoto, fichaProgress, hourLabel, photoPath } from './tinteroForm.js';
+import SurveyForm, { Choice, Multi } from '../survey/SurveyForm.jsx';
 import { EMPTY_SURVEY, buildSurvey } from '../survey/survey.js';
 import { postSurvey } from '../survey/surveyApi.js';
 
 // Ficha de campo de un tintero (estudio de calle), para levantar en dos
-// minutos parado frente al puesto: foto con la misma cámara de Micra, dónde
-// está, a cuánto vende el tinto y cuántas tazas por hora se le vieron. La
+// minutos parado frente al puesto: foto con la misma cámara de Micra, en qué
+// localidad del estudio está, cómo vende (termos, carrito, ruta), a qué
+// horas, qué vende y a cuánto, qué clientes tiene y cómo le pagan. La
 // foto va al bucket privado «estudio» y solo con permiso; la ficha entra por
 // la API de BI (la misma que usa el panel), así que aplican el owner y RLS.
 // Guardada la ficha, sigue la encuesta (dos minutos, con su permiso); se
@@ -40,6 +41,7 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
   const [survey, setSurvey] = useState(EMPTY_SURVEY);
   const nameRef = useRef(null);
   const set = (patch) => { setError(null); setForm((f) => ({ ...f, ...patch })); };
+  const progress = fichaProgress(form);
 
   // El lugar de la venta y el de la ficha son el mismo mientras se está en la calle
   useEffect(() => { setForm((f) => ({ ...f, place })); }, [place]);
@@ -119,7 +121,7 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
   );
 
   return (
-    <Sheet title="Nuevo tintero" aside={<span className="msheet-total">Estudio</span>} onClose={onClose} docked={docked} size="tall" footer={footer} label="Ficha de un tintero">
+    <Sheet title="Nuevo tintero" aside={<span className="msheet-total" aria-label="Datos del estudio anotados">{progress.done} de {progress.total}</span>} onClose={onClose} docked={docked} size="tall" footer={footer} label="Ficha de un tintero">
       <div className="msheet-group" data-testid="tintero-photo">
         <span className="msheet-label">Foto del puesto</span>
         {photo ? (
@@ -145,15 +147,25 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
       </label>
 
       <div className="msheet-group" data-testid="tintero-place">
-        <span className="msheet-label">Dónde está</span>
-        <div className="msheet-chips" role="listbox" aria-label="Zona">
-          {ZONES.map((z) => {
-            const on = isValidPlace(form.place) && form.place.zone === z.id;
-            return (
-              <button key={z.id} type="button" role="option" aria-selected={on} className={`msheet-chip ${on ? 'on' : ''}`} onClick={() => setPlace(on ? null : placeOfZone(z))}>{z.id}</button>
-            );
-          })}
+        <span className="msheet-label" id="tin-localidad">Dónde está · localidad</span>
+        {LOCALIDAD_GROUPS.map(([group, title]) => (
+          <div key={group} className="mtin-locs">
+            <small className="msheet-fine">{title}</small>
+            <div className="msheet-chips" role="listbox" aria-label={`Localidad: ${title.toLowerCase()}`}>
+              {LOCALIDADES.filter((l) => l.group === group).map((l) => {
+                const on = form.localidad === l.id;
+                return (
+                  <button key={l.id} type="button" role="option" aria-selected={on} title={[l.note, l.ipes ? `${l.ipes.toLocaleString('es-CO')} vendedores en el IPES` : null].filter(Boolean).join(' · ') || undefined}
+                    className={`msheet-chip ${on ? 'on' : ''}`} onClick={() => set({ localidad: on ? null : l.id })}>{l.id}</button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <div className="msheet-chips" role="listbox" aria-label="Localidad: otra">
+          <button type="button" role="option" aria-selected={form.localidad === 'Otra'} className={`msheet-chip ${form.localidad === 'Otra' ? 'on' : ''}`} onClick={() => set({ localidad: form.localidad === 'Otra' ? null : 'Otra' })}>Otra</button>
         </div>
+        <span className="msheet-label">Cuadra donde lo encontraste (opcional)</span>
         <div className="msheet-row is-place">
           <label className="msheet-place-field"><span>Calle</span>
             <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="72" aria-label="Calle" value={form.place?.calle ?? ''} onChange={(e) => setPlace(editPlace(form.place, { calle: e.target.value }))} />
@@ -163,18 +175,40 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
             <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="13" aria-label="Carrera" value={form.place?.carrera ?? ''} onChange={(e) => setPlace(editPlace(form.place, { carrera: e.target.value }))} />
           </label>
         </div>
-        <small className={`msheet-fine ${form.place?.error ? 'is-warn' : ''}`}>{form.place?.error ?? (isValidPlace(form.place) ? placeLabel(form.place) : 'La cuadra donde se para el puesto.')}</small>
+        <small className={`msheet-fine ${form.place?.error ? 'is-warn' : ''}`}>{form.place?.error ?? (isValidPlace(form.place) ? placeLabel(form.place) : 'Con la cuadra sale en el mapa. En el sur basta la localidad.')}</small>
       </div>
 
+      <Choice label="Cómo vende" field="formato" options={TINTERO_OPTIONS.formato} form={form} set={set} />
+      <Choice label="¿Se mueve?" field="recorrido" options={TINTERO_OPTIONS.recorrido} form={form} set={set} />
+      <Choice label="Empieza a vender" field="hora_inicio" options={START_HOURS.map((h) => [h, hourLabel(h)])} form={form} set={set} />
+      <Choice label="Termina" field="hora_fin" options={END_HOURS.map((h) => [h, hourLabel(h)])} form={form} set={set} />
+
+      <Multi label="Qué vende" field="products" options={TINTERO_OPTIONS.products} form={form} set={set} />
       <div className="msheet-row is-place">
         <label className="msheet-place-field"><span>Tinto a</span>
           <input className="msheet-input" inputMode="numeric" autoComplete="off" placeholder="1.500" aria-label="Precio del tinto" value={form.tinto_price} onChange={(e) => set({ tinto_price: e.target.value })} />
+        </label>
+        <label className="msheet-place-field"><span>Perico a</span>
+          <input className="msheet-input" inputMode="numeric" autoComplete="off" placeholder="1.700" aria-label="Precio del perico" value={form.perico_price} onChange={(e) => set({ perico_price: e.target.value })} />
+        </label>
+        <label className="msheet-place-field"><span>Aromática a</span>
+          <input className="msheet-input" inputMode="numeric" autoComplete="off" placeholder="1.200" aria-label="Precio de la aromática" value={form.aromatica_price} onChange={(e) => set({ aromatica_price: e.target.value })} />
+        </label>
+      </div>
+      <div className="msheet-row is-place">
+        <label className="msheet-place-field"><span>Termos</span>
+          <input className="msheet-input" inputMode="numeric" autoComplete="off" placeholder="3" aria-label="Termos" value={form.termos} onChange={(e) => set({ termos: e.target.value })} />
         </label>
         <label className="msheet-place-field"><span>Tazas por hora</span>
           <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="25" aria-label="Tazas por hora" value={form.cups_per_hour} onChange={(e) => set({ cups_per_hour: e.target.value })} />
         </label>
       </div>
-      <small className="msheet-fine">Lo que viste en el rato que estuviste: es la línea base del estudio.</small>
+      <small className="msheet-fine">Tazas por hora: las que viste en el rato que estuviste. Es la línea base del estudio.</small>
+
+      <Choice label="Sus clientes" field="client_mix" options={TINTERO_OPTIONS.client_mix} form={form} set={set} />
+      <Multi label="Quiénes le compran" field="client_types" options={TINTERO_OPTIONS.client_types} form={form} set={set} />
+      <Multi label="Cómo le pagan" field="payments_seen" options={TINTERO_OPTIONS.payments_seen} form={form} set={set} />
+      <Choice label="¿Registrado en el IPES?" field="ipes" options={TINTERO_OPTIONS.ipes} form={form} set={set} />
 
       <label className="msheet-group">
         <span className="msheet-label">Nota (opcional)</span>
