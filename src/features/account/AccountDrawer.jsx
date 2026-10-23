@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { fetchMyOrders } from '../../shared/lib/orders.js';
+import { homeLink } from '../../shared/layout/navLinks.js';
 
 const STATUS_LABEL = {
   pending: { es: 'Pendiente', en: 'Pending', ja: '保留中' },
@@ -131,8 +132,8 @@ export default function AccountDrawer() {
               </div>
 
               <div className="account-links">
-                <a href="#beans" onClick={close}>{t('account.linkBeans')}</a>
-                <a href="#championship" onClick={close}>{t('account.linkChampionship')}</a>
+                <a href={homeLink('#beans')} onClick={close}>{t('account.linkBeans')}</a>
+                <a href={homeLink('#metodo')} onClick={close}>{t('account.linkChampionship')}</a>
                 <a href="#contact" onClick={close}>{t('account.linkContact')}</a>
               </div>
 
