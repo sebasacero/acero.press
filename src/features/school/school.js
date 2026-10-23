@@ -58,3 +58,26 @@ export function cupMath({ libra, grams, extras = 0, price }) {
   const cupsPerLibra = grams ? Math.floor(LIBRA_G / grams) : null;
   return { coffee, cost, profit, margin, cupsPerLibra };
 }
+
+/** Lección por la que seguir: la primera sin ver (0 si no hay ninguna vista; -1 si ya vio todas). */
+export const resumeIndex = (lessons, seen) => lessons.findIndex((l) => !seen.includes(l.key));
+
+/** Minutos de todo el temario. */
+export const totalMinutes = (lessons) => lessons.reduce((n, l) => n + (l.mins || 0), 0);
+
+/** Enlace a una lección: /escuela#leccion-3 (se puede mandar por WhatsApp). */
+export const lessonHash = (i) => `#leccion-${i + 1}`;
+
+/** "#leccion-3" → 2; cualquier otra cosa o fuera de rango → null. */
+export function lessonFromHash(hash, count) {
+  const m = /^#leccion-(\d{1,2})$/.exec(hash || '');
+  if (!m) return null;
+  const i = Number(m[1]) - 1;
+  return i >= 0 && i < count ? i : null;
+}
+
+/** Partes de la meta de tiempo de la barra como fracción del total (para la barra apilada). */
+export function shares(parts) {
+  const total = parts.reduce((n, p) => n + p.s, 0);
+  return { total, parts: parts.map((p) => ({ ...p, share: total ? p.s / total : 0 })) };
+}

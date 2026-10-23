@@ -1,6 +1,7 @@
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 import LanguageSwitcher from '../../features/i18n/LanguageSwitcher.jsx';
 import { useSocialLinks } from '../lib/useSocialLinks.js';
+import { homeLink } from './homeLink.js';
 
 const socialIcons = [
   {
@@ -44,12 +45,12 @@ export default function NavDrawer({ isOpen, onClose }) {
         </div>
 
         <nav className="nav-drawer-links">
-          <a href="#home" onClick={onClose}>{t('nav.home')}</a>
-          <a href="#beans" onClick={onClose}>{t('nav.beans')}</a>
-          <a href="#championship" onClick={onClose}>{t('nav.championship')}</a>
-          <a href="#escuela" onClick={onClose}>{t('nav.school')}</a>
-          <a href="#contact" onClick={onClose}>{t('nav.contact')}</a>
-          <a href="#home" onClick={onClose}>{t('nav.app')}</a>
+          <a href={homeLink('#home')} onClick={onClose}>{t('nav.home')}</a>
+          <a href={homeLink('#beans')} onClick={onClose}>{t('nav.beans')}</a>
+          <a href={homeLink('#championship')} onClick={onClose}>{t('nav.championship')}</a>
+          <a href="/escuela" onClick={onClose}>{t('nav.school')}</a>
+          <a href={homeLink('#contact')} onClick={onClose}>{t('nav.contact')}</a>
+          <a href={homeLink('#prensado')} onClick={onClose}>{t('nav.app')}</a>
         </nav>
 
         <div className="nav-drawer-footer">

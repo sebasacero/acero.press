@@ -260,7 +260,7 @@ a.essp-appicon:active .essp-appicon-tile { transform: scale(.94); }
   .essp-stores { flex-wrap: nowrap; gap: 10px; }
   /* Los dos llamados en una fila, para que el celular siga asomando */
   .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; }
+  .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

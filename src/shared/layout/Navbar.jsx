@@ -2,6 +2,7 @@ import { useCart } from '../../features/cart/context/CartContext.jsx';
 import { useAuth } from '../../features/account/AuthContext.jsx';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 import LanguageSwitcher from '../../features/i18n/LanguageSwitcher.jsx';
+import { homeLink } from './homeLink.js';
 
 // variant 'sheet': va dentro del banner de la app Micra (hoja de plano), con el
 // logo ACERO + .press a la izquierda; tone 'paper' (tinta) o 'photo' (crema).
@@ -14,12 +15,12 @@ export default function Navbar({ onOpenNavDrawer, navOpen, variant = 'overlay', 
     <nav className={variant === 'sheet' ? `navbar navbar--sheet navbar--${tone}` : 'navbar'}>
       <div className="navbar-content">
         <div className="nav-links left">
-          <a href="#home">{t('nav.home')}</a>
-          <a href="#beans">{t('nav.beans')}</a>
-          <a href="#championship">{t('nav.championship')}</a>
-          <a href="#escuela">{t('nav.school')}</a>
-          <a href="#contact">{t('nav.contact')}</a>
-          <a href="#home" className="nav-app-link">{t('nav.app')}</a>
+          <a href={homeLink('#home')}>{t('nav.home')}</a>
+          <a href={homeLink('#beans')}>{t('nav.beans')}</a>
+          <a href={homeLink('#championship')}>{t('nav.championship')}</a>
+          <a href="/escuela">{t('nav.school')}</a>
+          <a href={homeLink('#contact')}>{t('nav.contact')}</a>
+          <a href={homeLink('#prensado')} className="nav-app-link">{t('nav.app')}</a>
         </div>
 
         <button
@@ -38,7 +39,7 @@ export default function Navbar({ onOpenNavDrawer, navOpen, variant = 'overlay', 
 
         <div className="nav-logo" id="home">
           {variant === 'sheet' ? (
-            <a href="#home" className="navbar-sheet-logo" aria-label="ACERO.press">
+            <a href={homeLink('#home')} className="navbar-sheet-logo" aria-label="ACERO.press">
               <img src="/image/logo.png" alt="" />
               <span className="logo-press">.press</span>
             </a>

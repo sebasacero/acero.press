@@ -53,3 +53,47 @@ test('sin precio de venta no inventa ganancia; sin libra no inventa costo', () =
   assert.equal(b.cost, null);
   assert.equal(b.margin, null);
 });
+
+test('retomar: la primera lección sin ver; -1 si ya vio todas', async () => {
+  const { resumeIndex } = await import('./school.js');
+  const ls = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
+  assert.equal(resumeIndex(ls, []), 0);
+  assert.equal(resumeIndex(ls, ['a']), 1);
+  assert.equal(resumeIndex(ls, ['a', 'c']), 1);
+  assert.equal(resumeIndex(ls, ['a', 'b', 'c']), -1);
+});
+
+test('enlace por lección: ida y vuelta, y nada raro se acepta', async () => {
+  const { lessonHash, lessonFromHash } = await import('./school.js');
+  assert.equal(lessonHash(2), '#leccion-3');
+  assert.equal(lessonFromHash('#leccion-3', 6), 2);
+  assert.equal(lessonFromHash('#leccion-7', 6), null);
+  assert.equal(lessonFromHash('#leccion-0', 6), null);
+  assert.equal(lessonFromHash('#beans', 6), null);
+  assert.equal(lessonFromHash('', 6), null);
+});
+
+test('la meta de la barra suma 3 minutos y sus partes dan 1', async () => {
+  const { shares } = await import('./school.js');
+  const { LESSONS } = await import('./lessons.js');
+  const bar = LESSONS.es.find((l) => l.figure.kind === 'bar').figure;
+  const r = shares(bar.time);
+  assert.equal(r.total, 180);
+  assert.ok(Math.abs(r.parts.reduce((n, p) => n + p.share, 0) - 1) < 1e-9);
+});
+
+test('los tres idiomas tienen las mismas lecciones, figuras y pasos', async () => {
+  const { LESSONS } = await import('./lessons.js');
+  const shape = (ls) => ls.map((l) => [l.key, l.mins, l.figure.kind, l.points.length, l.practice.length,
+    l.figure.steps?.length ?? 0, l.figure.scale?.length ?? 0, l.figure.stations?.length ?? 0, l.figure.time?.map((p) => p.s).join(',') ?? '']);
+  assert.deepEqual(shape(LESSONS.en), shape(LESSONS.es));
+  assert.deepEqual(shape(LESSONS.ja), shape(LESSONS.es));
+  // El despiece numera cuatro partes y la receta trae un texto por cada momento del cronómetro
+  const es = LESSONS.es;
+  assert.equal(es.find((l) => l.figure.kind === 'parts').points.length, 4);
+  assert.equal(es.find((l) => l.figure.kind === 'brew').figure.steps.length, BREW_STEPS.length);
+  // Una sola molienda marcada: la de AeroPress
+  for (const lang of ['es', 'en', 'ja']) {
+    assert.equal(LESSONS[lang].find((l) => l.figure.kind === 'grind').figure.scale.filter((g) => g.pick).length, 1);
+  }
+});
