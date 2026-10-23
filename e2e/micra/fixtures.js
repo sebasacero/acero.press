@@ -120,6 +120,18 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     tinteros.push(row);
     return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(row) });
   });
+  // Cambiar una ficha (PATCH /api/v1/bi/tinteros/{id}): p. ej. el permiso de publicidad
+  await page.route('**/api/v1/bi/tinteros/*', async (route) => {
+    const req = route.request();
+    if (req.method() !== 'PATCH') return route.fallback();
+    const id = req.url().split('/').pop();
+    const body = req.postDataJSON();
+    calls.push({ m: 'PATCH', p: `/api/v1/bi/tinteros/${id}`, q: '', data: body });
+    const row = tinteros.find((t) => t.id === id);
+    if (!row) return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ detail: 'No existe ese tintero.' }) });
+    Object.assign(row, body, 'ad_consent' in body ? { ad_consent_at: body.ad_consent ? new Date().toISOString() : null } : {});
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(row) });
+  });
   // Encuesta (POST /api/v1/bi/tinteros/{id}/surveys) y escenario de la reunión (PUT /api/v1/bi/piloto/escenario).
   // opts.surveysDown simula que la migración de la encuesta aún no se aplicó.
   const surveys = [];

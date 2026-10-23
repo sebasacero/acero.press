@@ -25,7 +25,7 @@ const typing = (el) => !!el?.closest?.('input, textarea, select, [contenteditabl
 const MicraCamera = forwardRef(function MicraCamera({
   varieties, variety, onVariety, kind, onKind, presetId, onPreset,
   format, onOpenFormat, weather, elements, texts, priceText, filterExtra, cobrand,
-  mode, onMode, paused, onCapture, onEditText, onOpenSale, onOpenTintero, ticketLabel, onExit, note, onRecording,
+  mode, onMode, paused, onCapture, onEditText, onOpenSale, onOpenTintero, adTinteroName = null, onPickTintero, ticketLabel, onExit, note, onRecording,
 }, ref) {
   const videoRef = useRef(null);
   const cardRef = useRef(null);
@@ -340,6 +340,12 @@ const MicraCamera = forwardRef(function MicraCamera({
       <div className="mc-under">
         {shownNote && <p className="mc-note">{shownNote}</p>}
 
+        {adTinteroName !== null && (
+          <button type="button" className="mc-text" onClick={onPickTintero} disabled={recording}>
+            <b aria-hidden="true">◉</b>
+            <span>{adTinteroName ? `Tintero: ${adTinteroName}` : 'Elegir tintero'}</span>
+          </button>
+        )}
         {kind !== 'recipe' && preset && (
           <button type="button" className="mc-text" onClick={() => onEditText(kind)} disabled={recording}>
             <b aria-hidden="true">Aa</b>

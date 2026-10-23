@@ -29,6 +29,7 @@ trap 'rm -rf "$TMP"; "${ADMIN[@]}" -c "drop database if exists $DB" >/dev/null 2
 "${T[@]}" -f "$HERE/test_routes.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261023140000_tintero_ficha_estudio.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261023160000_tintero_localidades.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261023180000_tintero_ad_consent.sql"
 "${T[@]}" -f "$HERE/test_ficha.sql"
 "${T[@]}" -f "$HERE/seed.sql"
 "${T[@]}" -f "$HERE/test.sql"

@@ -101,6 +101,7 @@ class TinteroIn(BaseModel):
     calle: float | None = Field(default=None, ge=1, le=200)
     photo_url: str | None = Field(default=None, pattern=r"^https://", max_length=500)
     photo_consent: bool = False
+    ad_consent: bool = Field(default=False, description="Aceptó salir en la publicidad de ACERO.press (nombre, lugar, lo que vende)")
     tinto_price: float | None = Field(default=None, ge=0, le=50000, description="Precio del tinto en el puesto (COP)")
     cups_per_hour: float | None = Field(default=None, ge=0, le=500, description="Tazas por hora observadas")
     surveyed_at: datetime | None = None
@@ -143,6 +144,7 @@ class TinteroPatch(BaseModel):
     calle: float | None = Field(default=None, ge=1, le=200)
     photo_url: str | None = Field(default=None, pattern=r"^https://", max_length=500)
     photo_consent: bool | None = None
+    ad_consent: bool | None = None
     tinto_price: float | None = Field(default=None, ge=0, le=50000)
     cups_per_hour: float | None = Field(default=None, ge=0, le=500)
     surveyed_at: datetime | None = None
@@ -348,6 +350,13 @@ async def create_survey(tintero_id: UUID, body: SurveyIn, sb: Supabase = Depends
         raise db_error(err, SURVEYS_MIGRATION) from err
 
 
+def _with_ad_stamp(values: dict) -> dict:
+    """El permiso de publicidad queda con su fecha (la pone el servidor); retirarlo la borra."""
+    if "ad_consent" in values:
+        values["ad_consent_at"] = datetime.now(BOGOTA).isoformat() if values["ad_consent"] else None
+    return values
+
+
 @router.get("/tinteros", summary="Tinteros y sus últimos 30 días")
 async def list_tinteros(sb: Supabase = Depends(owner)):
     since = (datetime.now(BOGOTA).date() - timedelta(days=29)).isoformat()
@@ -365,7 +374,7 @@ async def list_tinteros(sb: Supabase = Depends(owner)):
 @router.post("/tinteros", status_code=201, summary="Registrar un tintero")
 async def create_tintero(body: TinteroIn, sb: Supabase = Depends(owner)):
     try:
-        return await sb.insert("tinteros", body.model_dump(mode="json", exclude_none=True))
+        return await sb.insert("tinteros", _with_ad_stamp(body.model_dump(mode="json", exclude_none=True)))
     except SupabaseError as err:
         raise db_error(err) from err
 
@@ -376,7 +385,7 @@ async def update_tintero(tintero_id: UUID, body: TinteroPatch, sb: Supabase = De
     if not values:
         raise HTTPException(422, "No hay cambios.")
     try:
-        rows = await sb.update("tinteros", {"id": str(tintero_id)}, values)
+        rows = await sb.update("tinteros", {"id": str(tintero_id)}, _with_ad_stamp(values))
     except SupabaseError as err:
         raise db_error(err) from err
     if not rows:
