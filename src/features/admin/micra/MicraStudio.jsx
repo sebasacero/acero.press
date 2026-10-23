@@ -125,6 +125,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
   // mientras dura el filtro; al salir de él, la de la barra vuelve.
   const [adTintero, setAdTintero] = useState(null);
   const barPlace = useRef(undefined);
+  const pendingAd = useRef(null); // tintero que llega del final de la encuesta, para después del cambio de filtro
   const pickTintero = (t) => {
     if (barPlace.current === undefined) barPlace.current = texts.place;
     setAdTintero(t);
@@ -148,6 +149,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
     }
     setAdTintero(null);
     look.act({ type: 'filterChanged', freeText: preset?.freeText });
+    if (pendingAd.current) { pickTintero(pendingAd.current); pendingAd.current = null; }
     setCaption(null);
     sale.releaseCard();
     cardIdRef.current += 1;
@@ -651,8 +653,22 @@ export default function MicraStudio({ onExit, onOpenTool }) {
             onTakePhoto={takeSnap}
             onClearPhoto={clearSnap}
             canShoot={stage === 'camera' && camMode !== 'plain'}
+            canCard={stage === 'camera'}
             docked={docked}
             onClose={() => { clearSnap(); closeSheet(); }}
+            onMakeCard={(t) => {
+              // Después de la encuesta: la cámara en «Tintero aliado» con su tarjeta ya llena, lista para la foto
+              clearSnap();
+              if (camMode === 'plain') setCamMode('photo');
+              if (kind === 'announce' && preset?.usesTintero) pickTintero(t);
+              else {
+                pendingAd.current = t;
+                setKind('announce');
+                setPresetIds((p) => ({ ...p, announce: 'tintero' }));
+                closeSheet();
+              }
+              showToast({ text: `Tarjeta de ${t.name} lista: toma la foto.`, ttl: 5000 });
+            }}
             onSaved={(t) => {
               clearSnap();
               closeSheet();

@@ -111,7 +111,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   const tinteros = [];
   await page.route('**/api/v1/bi/tinteros', async (route) => {
     const req = route.request();
-    if (req.method() !== 'POST') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(tinteros.map((t) => ({ ...t, days: [] }))) });
+    if (req.method() !== 'POST') {
+      // Como la API: de la última encuesta, solo lo que puede salir en publicidad
+      const latest = (id) => surveys.filter((s) => s.tintero_id === id).at(-1);
+      const pub = (s) => (s ? { years_selling: s.years_selling ?? null, days_per_week: s.days_per_week ?? null, payments: s.payments ?? null } : null);
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(tinteros.map((t) => ({ survey: pub(latest(t.id)), ...t, days: [] }))) });
+    }
     if (!(req.headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
     const body = req.postDataJSON();
     calls.push({ m: 'POST', p: '/api/v1/bi/tinteros', q: '', data: body });

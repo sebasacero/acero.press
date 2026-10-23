@@ -1,26 +1,12 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../../shared/lib/supabaseClient.js';
 import Sheet from './Sheet.jsx';
 import { adPlace, adProducts, canAdvertise } from './tinteroAd.js';
+import { biApi, grantAdConsent } from './tinteroApi.js';
 
 // Filtro «Tintero aliado»: elegir de qué tintero es la tarjeta. Salen los que
-// tienen ficha; solo se usan los que aceptaron salir en la publicidad. A los
-// demás se les puede preguntar ahí mismo y anotar que aceptaron.
-
-async function api(path, { method = 'GET', body } = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(`/api/v1/bi${path}`, {
-    method,
-    headers: { Authorization: `Bearer ${session?.access_token ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    const detail = data?.detail;
-    throw new Error(Array.isArray(detail) ? detail.map((d) => d.msg).join(' · ') : detail || 'La API de Acero no respondió.');
-  }
-  return data;
-}
+// tienen ficha (con lo publicable de su última encuesta); solo se usan los que
+// aceptaron salir en la publicidad. A los demás se les puede preguntar ahí
+// mismo y anotar que aceptaron.
 
 export default function TinteroAdSheet({ selectedId, onPick, onClose, docked }) {
   const [list, setList] = useState(null);
@@ -30,7 +16,7 @@ export default function TinteroAdSheet({ selectedId, onPick, onClose, docked }) 
 
   useEffect(() => {
     let alive = true;
-    api('/tinteros')
+    biApi('/tinteros')
       .then((rows) => { if (alive) setList(rows ?? []); })
       .catch((e) => { if (alive) { setError(e.message); setList([]); } });
     return () => { alive = false; };
@@ -40,7 +26,7 @@ export default function TinteroAdSheet({ selectedId, onPick, onClose, docked }) 
     setBusy(true);
     setError(null);
     try {
-      const row = await api(`/tinteros/${t.id}`, { method: 'PATCH', body: { ad_consent: true } });
+      const row = await grantAdConsent(t.id);
       const next = { ...t, ...row, ad_consent: true };
       setList((l) => l.map((x) => (x.id === t.id ? next : x)));
       setAsking(null);

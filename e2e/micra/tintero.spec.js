@@ -61,7 +61,26 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await enc.getByRole('group', { name: 'Género' }).getByRole('button', { name: 'Prefiere no decir' }).click();
   await expect(enc.locator('.srv-progress')).toContainText('10 de 18');
   await enc.getByRole('button', { name: 'Guardar encuesta' }).click();
-  await expect(page.locator('.mst-toast')).toContainText('Don Jairo quedó en el estudio con su foto y su encuesta');
+
+  // Después de la encuesta, su tarjeta: llena con la ficha y la encuesta, y solo con su permiso de publicidad
+  const card = page.getByRole('dialog', { name: 'Tarjeta de Don Jairo' });
+  const preview = card.getByTestId('tintero-card-preview');
+  await expect(preview).toContainText('Don Jairo');
+  await expect(preview).toContainText('Cl. 72 # 13 · Chapinero');
+  await expect(preview).toContainText('Vende: Tinto $1.500 · Perico $1.700');
+  await expect(preview).toContainText('Recibe Nequi');
+  await expect(preview).toContainText('6 días a la semana');
+  await expect(preview).not.toContainText('Prefiere no decir');
+  const shoot = card.getByRole('button', { name: 'Tomar la foto de su tarjeta' });
+  await expect(shoot).toBeDisabled();
+  await card.getByLabel('Aceptó salir en la publicidad').check();
+  await shoot.click();
+  await expect(card).toHaveCount(0);
+  expect(api.find(`/api/v1/bi/tinteros/${api.tinteros[0].id}`, 'PATCH').data).toEqual({ ad_consent: true });
+  await expect(page.locator('.mst-toast')).toContainText('Tarjeta de Don Jairo lista');
+  await expect(page.locator('.mc-text', { hasText: 'Tintero: Don Jairo' })).toBeVisible();
+  await expect(page.locator('.mc-text', { hasText: 'Anuncio:' })).toContainText('Vende: Tinto $1.500 · Perico $1.700');
+  await expect(page.locator('.mc-filter-name')).toContainText('Tintero aliado');
   const sv = api.all('/surveys', 'POST')[0];
   expect(sv.p).toBe(`/api/v1/bi/tinteros/${api.tinteros[0].id}/surveys`);
   expect(sv.data).toMatchObject({ consent: true, cups_per_day: 80, days_per_week: 6, coffee_brand: 'Águila Roja', coffee_g_week: 1500, coffee_price_kg: 40000, would_sell_specialty: 'tal_vez', specialty_price: 4000, payments: ['nequi'], gender: 'prefiere_no', offer_choice: 'termo', thermo_cups_day: 30 });
@@ -118,6 +137,7 @@ test('sin permiso la foto no sube; sin nombre no se guarda nada', async ({ brows
   await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
   // La encuesta se puede dejar para después: la ficha ya quedó
   await page.getByRole('dialog', { name: 'Encuesta de Carrito de la 83' }).getByRole('button', { name: /Ahora no/ }).click();
+  await page.getByRole('dialog', { name: 'Tarjeta de Carrito de la 83' }).getByRole('button', { name: 'Listo, sin tarjeta' }).click();
   await expect(page.locator('.mst-toast')).toContainText('Carrito de la 83 quedó en el estudio');
   await expect(page.locator('.mst-toast')).not.toContainText('con su foto');
   await expect(page.locator('.mst-toast')).not.toContainText('encuesta');

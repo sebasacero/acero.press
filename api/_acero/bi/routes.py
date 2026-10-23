@@ -224,6 +224,8 @@ class ScenarioIn(BaseModel):
     distributorPriceKg: float | None = Field(default=None, ge=0, le=1_000_000)
 
 
+AD_SURVEY_FIELDS = ("years_selling", "days_per_week", "payments")
+
 # ── Piloto (estudio de calle) ────────────────────────────────────────────
 GRAMS_PER_CUP = 18  # receta de la barra: 18 g por taza
 SCENARIO_KEY = "reunion"
@@ -368,7 +370,15 @@ async def list_tinteros(sb: Supabase = Depends(owner)):
     days: dict[str, list[dict]] = {}
     for d in logged:
         days.setdefault(d["tintero_id"], []).append(d)
-    return [{**t, "days": days.get(t["id"], [])} for t in tinteros]
+    # Para la tarjeta «Tintero aliado»: de su última encuesta, solo lo que puede salir en publicidad
+    # (nunca notas, género, edad ni ingresos)
+    surveys, _ = await _optional(lambda: sb.select("tintero_surveys", {
+        "select": f"tintero_id,surveyed_at,{','.join(AD_SURVEY_FIELDS)}", "order": "surveyed_at.desc", "limit": "2000",
+    }), [])
+    latest: dict[str, dict] = {}
+    for s in surveys:
+        latest.setdefault(s["tintero_id"], {k: s.get(k) for k in AD_SURVEY_FIELDS})
+    return [{**t, "days": days.get(t["id"], []), "survey": latest.get(t["id"])} for t in tinteros]
 
 
 @router.post("/tinteros", status_code=201, summary="Registrar un tintero")
