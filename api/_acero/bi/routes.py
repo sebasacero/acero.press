@@ -316,7 +316,10 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
         if r.get("role") in waitlist:
             waitlist[r["role"]] += 1
 
-    surveyed = [t for t in tinteros if t.get("carrera") is not None]
+    # Todas las fichas cuentan; «en el mapa» son las que tienen GPS o cuadra (antes solo se
+    # contaban las de cuadra y las de GPS no aparecían en ninguna cifra)
+    surveyed = tinteros
+    located = [t for t in tinteros if t.get("lat") is not None or t.get("carrera") is not None]
     prices = [float(t["tinto_price"]) for t in surveyed if t.get("tinto_price")]
     rates = [float(t["cups_per_hour"]) for t in surveyed if t.get("cups_per_hour")]
     return {
@@ -334,11 +337,11 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
         "scenario": scenario_rows[0]["data"] if scenario_rows else None,
         "scenarioReady": scenario_ready,
         "study": {
-            "surveyed": len(surveyed), "with_photo": sum(1 for t in surveyed if t.get("photo_url")),
+            "surveyed": len(surveyed), "located": len(located), "with_photo": sum(1 for t in surveyed if t.get("photo_url")),
             "consented": sum(1 for t in surveyed if t.get("photo_consent")),
             "tinto_price_avg": round(sum(prices) / len(prices)) if prices else None,
             "cups_per_hour_avg": round(sum(rates) / len(rates), 1) if rates else None,
-            "zones": sorted({t["zone"] for t in surveyed if t.get("zone")}),
+            "zones": sorted({t.get("localidad") or t["zone"] for t in surveyed if t.get("localidad") or t.get("zone")}),
             "localidades": {loc: sum(1 for t in tinteros if t.get("localidad") == loc)
                             for loc in sorted({t["localidad"] for t in tinteros if t.get("localidad")})},
         },

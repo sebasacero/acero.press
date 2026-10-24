@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import MapCanvas from '../../esspresale/MapCanvas.jsx';
-import { salesGeoJSON, tinterosGeoJSON, boundsOf, routesGeoJSON } from '../../../shared/lib/streetGeo.js';
+import { salesGeoJSON, tinterosGeoJSON, tinterosHeatGeoJSON, groupPins, boundsOf, routesGeoJSON } from '../../../shared/lib/streetGeo.js';
 import { themeChanges } from '../../../shared/lib/mapTheme.js';
 
-// Mapa real del piloto (MapLibre + OpenStreetMap): calor de las ventas por
-// cuadra y un pin por tintero con su ficha. Es la vista que tendrá la app.
+// Mapa real del estudio (MapLibre + OpenStreetMap): mapa de calor de los tinteros
+// (dónde se concentra el tinto) o de las ventas, y un pin por tintero con su ficha.
+// Con `placing`, tocar el mapa ubica a un tintero que no tiene GPS ni cuadra.
 // Sin WebGL o si MapLibre no carga, queda el mapa ilustrado de la portada.
 
 const CHAPINERO = [-74.0585, 4.6565];
@@ -36,7 +37,13 @@ function applyTheme(map, theme) {
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 
-function addLayers(map, sales, routes) {
+// Degradado térmico del mapa ilustrado (azul → rojo), para los dos calores
+const THERMAL = ['interpolate', ['linear'], ['heatmap-density'],
+  0, 'rgba(43,43,209,0)', 0.15, 'rgb(43,43,209)', 0.3, 'rgb(0,179,230)', 0.5, 'rgb(38,208,124)',
+  0.68, 'rgb(245,225,0)', 0.84, 'rgb(255,140,0)', 1, 'rgb(255,31,31)'];
+const HEATS = [['tinteros', 'Calor: tinteros'], ['ventas', 'Calor: ventas']];
+
+function addLayers(map, sales, routes, tinterosHeat, heat) {
   // Recorridos de Mi ruta debajo del calor: la línea es el camino, el punto la parada
   map.addSource('rutas', { type: 'geojson', data: routes.lines });
   map.addSource('paradas', { type: 'geojson', data: routes.stops });
@@ -70,11 +77,25 @@ function addLayers(map, sales, routes) {
       'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 11, 1.6, 14, 2.4, 16, 3.2],
       'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 11, 22, 14, 48, 16, 80],
       'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.85, 17, 0.45],
-      // Mismo degradado térmico que el mapa ilustrado (azul → rojo)
-      'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-        0, 'rgba(43,43,209,0)', 0.15, 'rgb(43,43,209)', 0.3, 'rgb(0,179,230)', 0.5, 'rgb(38,208,124)',
-        0.68, 'rgb(245,225,0)', 0.84, 'rgb(255,140,0)', 1, 'rgb(255,31,31)'],
+      'heatmap-color': THERMAL,
     },
+    layout: { visibility: heat === 'ventas' ? 'visible' : 'none' },
+  });
+  // Dónde se concentran los tinteros: varios puestos juntos se ven rojos
+  map.addSource('tinteros-calor', { type: 'geojson', data: tinterosHeat });
+  map.addLayer({
+    id: 'tinteros-calor',
+    type: 'heatmap',
+    source: 'tinteros-calor',
+    maxzoom: 18,
+    paint: {
+      'heatmap-weight': ['get', 'weight'],
+      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 13, 1.8, 16, 2.6],
+      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 18, 13, 36, 16, 70],
+      'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.9, 18, 0.5],
+      'heatmap-color': THERMAL,
+    },
+    layout: { visibility: heat === 'tinteros' ? 'visible' : 'none' },
   });
   // De cerca, cada cuadra como un punto con su tamaño por tazas
   map.addLayer({
@@ -89,6 +110,7 @@ function addLayers(map, sales, routes) {
       'circle-stroke-color': '#fff',
       'circle-stroke-width': 2,
     },
+    layout: { visibility: heat === 'ventas' ? 'visible' : 'none' },
   });
 }
 
@@ -101,7 +123,7 @@ function pinElement(f) {
   return el;
 }
 
-export default function PilotoMap({ sales, tinteros, routes, fallbackView, label, withNames = true }) {
+export default function PilotoMap({ sales, tinteros, routes, fallbackView, label, withNames = true, placing = null, onPlace }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const baseRef = useRef(null); // el estilo base en uso (OpenFreeMap u OpenStreetMap)
@@ -110,11 +132,17 @@ export default function PilotoMap({ sales, tinteros, routes, fallbackView, label
   const [theme, setTheme] = useState(savedTheme);
   const themeRef = useRef(theme);
   themeRef.current = theme;
+  const [heat, setHeat] = useState('tinteros');
+  const heatRef = useRef(heat);
+  heatRef.current = heat;
+  const placeRef = useRef(null);
+  placeRef.current = placing && onPlace ? onPlace : null;
   const salesGeo = salesGeoJSON(sales);
   // En la presentación (la ve el distribuidor) los pines no llevan nombres
   const tinterosGeo = tinterosGeoJSON(tinteros, { withNames });
   // Los recorridos solo en el panel (llevan el nombre del tintero)
   const routesGeo = routesGeoJSON(withNames ? routes : [], tinteros);
+  const tinterosHeat = tinterosHeatGeoJSON(tinteros);
   const routePoints = { features: routesGeo.lines.features.flatMap((f) => f.geometry.coordinates.map((c) => ({ geometry: { coordinates: c } }))) };
   const dataKey = JSON.stringify([salesGeo, tinterosGeo, routesGeo]);
 
@@ -168,7 +196,7 @@ export default function PilotoMap({ sales, tinteros, routes, fallbackView, label
         clearTimeout(styleTimer);
         loaded = true;
         applyTheme(map, themeRef.current);
-        if (!map.getSource('ventas')) addLayers(map, salesGeo, routesGeo);
+        if (!map.getSource('ventas')) addLayers(map, salesGeo, routesGeo, tinterosHeat, heatRef.current);
         if (framed) return;
         framed = true;
         if (bounds) {
@@ -177,13 +205,17 @@ export default function PilotoMap({ sales, tinteros, routes, fallbackView, label
           if (single) map.jumpTo({ center: [w, s], zoom: 15 });
           else map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 0 });
         }
-        for (const f of tinterosGeo.features) {
+        const card = (p) => `<b>${esc(p.name ?? p.label)}</b><span>${esc(p.place)}</span><span>${esc(p.detail)}</span>${p.notes ? `<small>${esc(p.notes)}</small>` : ''}`;
+        for (const f of groupPins(tinterosGeo.features)) {
           const p = f.properties;
+          // Varios puestos pegados: un pin y en su ficha todos, uno debajo del otro
           const popup = new ml.Popup({ offset: 18, closeButton: true, className: 'piloto-popup' }).setHTML(
-            `<b>${esc(p.name ?? p.label)}</b><span>${esc(p.place)}</span><span>${esc(p.detail)}</span>${p.notes ? `<small>${esc(p.notes)}</small>` : ''}`,
+            p.group ? p.group.map(card).join('<hr />') : card(p),
           );
           markers.push(new ml.Marker({ element: pinElement(f), anchor: 'bottom' }).setLngLat(f.geometry.coordinates).setPopup(popup).addTo(map));
         }
+        // Ubicar a mano: el toque en el mapa es el lugar del tintero
+        map.on('click', (e) => { placeRef.current?.({ lat: e.lngLat.lat, lng: e.lngLat.lng }); });
         // Tocar una parada: quién, a qué hora y cuánto se quedó
         map.on('click', 'rutas-paradas', (e) => {
           const f = e.features?.[0];
@@ -203,6 +235,19 @@ export default function PilotoMap({ sales, tinteros, routes, fallbackView, label
     };
   }, [dataKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Calor de tinteros o de ventas: solo se prende y apaga la capa
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map?.getLayer('tinteros-calor')) return;
+    map.setLayoutProperty('tinteros-calor', 'visibility', heat === 'tinteros' ? 'visible' : 'none');
+    for (const id of ['ventas-calor', 'ventas-cuadras']) map.setLayoutProperty(id, 'visibility', heat === 'ventas' ? 'visible' : 'none');
+  }, [heat, state]);
+  // Ubicando a un tintero: cursor de mira
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map) map.getCanvas().style.cursor = placing ? 'crosshair' : '';
+  }, [placing, state]);
+
   // Cambiar de tema: se recarga el estilo base y style.load lo viste de nuevo
   const firstTheme = useRef(true);
   useEffect(() => {
@@ -220,6 +265,7 @@ export default function PilotoMap({ sales, tinteros, routes, fallbackView, label
       data-theme={theme}
       data-sales={salesGeo.features.length}
       data-tinteros={tinterosGeo.features.length}
+      data-heat={heat}
       data-routes={routesGeo.lines.features.length}
       data-stops={routesGeo.stops.features.length}
       role="region"
@@ -235,6 +281,12 @@ export default function PilotoMap({ sales, tinteros, routes, fallbackView, label
               <button key={id} type="button" aria-pressed={theme === id} className={theme === id ? 'on' : undefined} onClick={() => setTheme(id)}>{name}</button>
             ))}
           </div>
+          <div className="piloto-geo-themes piloto-geo-heat" role="group" aria-label="Mapa de calor">
+            {HEATS.map(([id, name]) => (
+              <button key={id} type="button" aria-pressed={heat === id} className={heat === id ? 'on' : undefined} onClick={() => setHeat(id)}>{name}</button>
+            ))}
+          </div>
+          {placing && <p className="piloto-geo-placing" role="status">Toca el mapa donde está {placing}</p>}
         </>
       )}
     </div>

@@ -152,3 +152,44 @@ test('el mapa real se viste como la app: plano por defecto, noche y calles, y re
   expect(errors).toEqual([]);
   await page.context().close();
 });
+
+test('mapa de calor de tinteros: los de GPS salen en el mapa y los que no tienen lugar se ubican tocándolo', async ({ browser }) => {
+  const { page, api, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } }, session: { coach: true } });
+  const REF = 'Puerta principal Plaza de las Américas';
+  api.opts.piloto = {
+    ...FILLED,
+    sales: [],
+    tinteros: [
+      { id: 'g1', name: 'Prueba gps', stage: 'prospecto', localidad: 'Bosa', lat: 4.614192, lng: -74.174394, gps_accuracy_m: 34, carrera: null, calle: null },
+      { id: 'j1', name: 'Sra. Julia', stage: 'prospecto', localidad: 'Kennedy', referencia: REF, zone: REF, carrera: null, calle: null, tinto_price: 1300, cups_per_hour: 13 },
+      { id: 'j2', name: 'Don Álvaro', stage: 'prospecto', localidad: 'Kennedy', referencia: REF, zone: REF, carrera: null, calle: null, tinto_price: 1300 },
+    ],
+    study: { surveyed: 3, located: 1, with_photo: 0, consented: 0, tinto_price_avg: 1300, cups_per_hour_avg: 13, zones: ['Bosa', 'Kennedy'] },
+  };
+  await openPiloto(page);
+  await expect(page.locator('.dash-kpis')).toContainText('1 en el mapa');
+  const geo = page.locator('.piloto-geo');
+  await expect(geo).toHaveAttribute('data-state', 'ready');
+  await expect(geo).toHaveAttribute('data-tinteros', '1');
+  await expect(geo).toHaveAttribute('data-heat', 'tinteros');
+  await expect(page.locator('.piloto-map')).not.toContainText('todavía sin puntos');
+  expect(await geo.locator('.piloto-geo-map').evaluate((el) => el.__map.getLayoutProperty('tinteros-calor', 'visibility'))).toBe('visible');
+  await geo.getByRole('button', { name: 'Calor: ventas' }).click();
+  await expect(geo).toHaveAttribute('data-heat', 'ventas');
+  expect(await geo.locator('.piloto-geo-map').evaluate((el) => el.__map.getLayoutProperty('tinteros-calor', 'visibility'))).toBe('none');
+  await geo.getByRole('button', { name: 'Calor: tinteros' }).click();
+
+  // Sra. Julia no tiene lugar: se ubica tocando el mapa y su vecino con la misma referencia también
+  const card = page.locator('.piloto-tintero', { hasText: 'Sra. Julia' });
+  await card.getByRole('button', { name: '📍 Ubicar en el mapa' }).click();
+  await expect(geo.getByRole('status')).toContainText('Toca el mapa donde está Sra. Julia');
+  const box = await geo.locator('canvas.maplibregl-canvas').boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect.poll(() => api.all('/api/v1/bi/tinteros/j2', 'PATCH').length).toBe(1);
+  const a = api.find('/api/v1/bi/tinteros/j1', 'PATCH').data;
+  expect(Object.keys(a).sort()).toEqual(['lat', 'lng']);
+  expect(a.lat).toBeGreaterThan(4.5);
+  await expect(page.locator('.esp-notice.ok')).toContainText('Sra. Julia, Don Álvaro quedaron en el mapa');
+  expect(errors).toEqual([]);
+  await page.context().close();
+});

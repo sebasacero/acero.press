@@ -47,9 +47,13 @@ const span = (a, b) => (b ? `${Math.max(0, Math.round((Date.parse(b) - Date.pars
 const inviteLink = (code) => `${window.location.origin}/ruta?codigo=${code}`;
 const inviteText = (name, code) => `Hola ${name.split(' ')[0]}, este es tu enlace para Micra · Mi ruta: ${inviteLink(code)} (código ${code}, vence en 7 días). Entra con tu cuenta de Google.`;
 
-async function api(path) {
+async function api(path, { method = 'GET', body } = {}) {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(`/api/v1/bi${path}`, { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } });
+  const res = await fetch(`/api/v1/bi${path}`, {
+    method,
+    headers: { Authorization: `Bearer ${session?.access_token ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw Object.assign(new Error(data?.detail || 'La API de Acero no respondió.'), { status: res.status });
   return data;
@@ -101,6 +105,26 @@ export default function PilotoPage() {
   const [surveying, setSurveying] = useState(null); // el tintero que se está encuestando
   const [notice, setNotice] = useState(null);
   const [invite, setInvite] = useState(null); // { tintero, code } recién generado
+  const [placing, setPlacing] = useState(null); // tintero sin GPS ni cuadra que se ubica tocando el mapa
+
+  // Ubicar a mano: el punto tocado va a ese tintero y a los vecinos sin lugar con la misma
+  // referencia (los carritos pegados de Plaza de las Américas), corridos unos metros para verse
+  const place = async ({ lat, lng }) => {
+    const t = placing;
+    if (!t) return;
+    setPlacing(null);
+    const same = data.tinteros.filter((x) => x.id === t.id
+      || (t.referencia && x.referencia === t.referencia && x.lat == null && x.carrera == null));
+    try {
+      for (const [i, x] of same.entries()) {
+        await api(`/tinteros/${x.id}`, { method: 'PATCH', body: { lat: +(lat + i * 0.00003).toFixed(6), lng: +(lng + i * 0.00003).toFixed(6) } });
+      }
+      setNotice(`✓ ${same.map((x) => x.name).join(', ')} ${same.length === 1 ? 'quedó' : 'quedaron'} en el mapa.`);
+      load();
+    } catch (e) {
+      setError(`No se guardó el lugar: ${e.message}`);
+    }
+  };
 
   const makeInvite = async (t) => {
     setNotice(null);
@@ -127,11 +151,12 @@ export default function PilotoPage() {
     }
     const heatPoints = heatFromSales([...byBlock.values()]);
     const pinPoints = pinsFromTinteros(data.tinteros);
+    const gpsCount = data.tinteros.filter((t) => t.lat != null).length;
     const all = [...byBlock.values(), ...data.tinteros.filter((t) => t.carrera != null)];
     // Centrar en lo que hay; sin datos, Chapinero
     const c = all.length ? all.reduce((n, r) => n + +r.carrera, 0) / all.length : 12;
     const k = all.length ? all.reduce((n, r) => n + +r.calle, 0) / all.length : 72;
-    return { style: 'plano', c, k, ax: 0.5, ay: 0.5, s: 10, heat: 1, labels: 1.1, heatPoints, pinPoints, pins: pinPoints.length > 0, real: heatPoints.length + pinPoints.length > 0 };
+    return { style: 'plano', c, k, ax: 0.5, ay: 0.5, s: 10, heat: 1, labels: 1.1, heatPoints, pinPoints, pins: pinPoints.length > 0, real: heatPoints.length + pinPoints.length + gpsCount > 0 };
   }, [data]);
 
   const w = data?.week;
@@ -180,13 +205,13 @@ export default function PilotoPage() {
             <Kpi label={`Tazas en la calle · ${w.from} → ${w.to}`} value={num(w.cur.cups)} foot={cupsDelta === null ? `Semana anterior: ${num(w.prev.cups)}` : `${cupsDelta >= 0 ? '▲' : '▼'} ${Math.abs(cupsDelta)} % vs. ${num(w.prev.cups)} la semana anterior`} warn={cupsDelta !== null && cupsDelta < 0} />
             <Kpi label="Ingreso de la semana" value={money(w.cur.income)} foot={`${w.cur.sales} ventas · ${num(w.cur.kg, 2)} kg de café`} />
             <Kpi label="Cuadras con venta" value={num(w.cur.blocks)} foot={w.cur.zones.length ? w.cur.zones.join(' · ') : 'Aún sin lugar en las ventas'} />
-            <Kpi label="Tinteros mapeados" value={num(data.study.surveyed)} foot={data.study.surveyed ? `${data.study.with_photo} con foto · tinto a ${data.study.tinto_price_avg ? money(data.study.tinto_price_avg) : '—'} · ${data.study.cups_per_hour_avg ?? '—'} tazas/h` : 'Registra el primero desde Micra › Tintero'} />
+            <Kpi label="Tinteros" value={num(data.study.surveyed)} foot={data.study.surveyed ? `${num(data.study.located ?? 0)} en el mapa · ${data.study.with_photo} con foto · tinto a ${data.study.tinto_price_avg ? money(data.study.tinto_price_avg) : '—'} · ${data.study.cups_per_hour_avg ?? '—'} tazas/h` : 'Registra el primero desde Micra › Tintero'} />
           </section>
 
           <section className="dash-sheet piloto-map" aria-label="Mapa del estudio">
             <div className="esp-cota"><span>MAPA · {view.real ? `ventas y tinteros de los últimos ${data.days} días` : 'todavía sin puntos reales'}</span><span>{data.study.zones.join(' · ') || '—'}</span></div>
             <div className="piloto-map-box">
-              <PilotoMap sales={data.sales} tinteros={data.tinteros} routes={data.routes} fallbackView={view} label="Mapa de Bogotá con el calor de las ventas en la calle y los tinteros mapeados" />
+              <PilotoMap sales={data.sales} tinteros={data.tinteros} routes={data.routes} fallbackView={view} placing={placing?.name ?? null} onPlace={place} label="Mapa de Bogotá con el calor de los tinteros y de las ventas en la calle" />
             </div>
             {!view.real && <p className="esp-muted">El mapa se llena solo: elige «Hoy vendo en» en la venta de Micra y registra tinteros con el botón «Tintero» de la cámara.</p>}
             {view.real && <p className="esp-muted piloto-geo-note">Los tinteros van en su punto de GPS; los que solo tienen cuadra, con una o dos cuadras de margen. Toca un tintero para ver su ficha.</p>}
@@ -228,6 +253,12 @@ export default function PilotoPage() {
                           {data.surveysReady !== false && (
                             // La encuesta se hace en la calle con «Tintero» en Micra; aquí solo se completa la que quedó pendiente
                             <button type="button" className="esp-chip piloto-survey-btn" onClick={() => { setNotice(null); setSurveying(t); }}>{sv ? 'Corregir encuesta' : 'Completar encuesta'}</button>
+                          )}
+                          {t.lat == null && t.carrera == null && (
+                            <button type="button" className="esp-chip piloto-survey-btn" aria-pressed={placing?.id === t.id}
+                              onClick={() => { setNotice(null); setPlacing(placing?.id === t.id ? null : t); document.querySelector('.piloto-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>
+                              {placing?.id === t.id ? 'Cancelar: no ubicar' : '📍 Ubicar en el mapa'}
+                            </button>
                           )}
                           {data.routesReady && (t.linked ? (
                             <span className="piloto-survey is-done">Usa Mi ruta{t.tracking_consent_at ? '' : ' · sin permiso de ubicación'}</span>

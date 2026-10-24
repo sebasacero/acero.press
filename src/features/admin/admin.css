@@ -1548,3 +1548,7 @@
 .piloto-survey-btn{ align-self:flex-start; margin-top:.3rem; }
 .piloto-invite{ display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; margin-top:.4rem; padding:.5rem .6rem; border:1.5px dashed var(--a-border); border-radius:10px; font-size:.85rem; }
 .piloto-invite b{ font-family:'JetBrains Mono', monospace; letter-spacing:.15em; font-size:1rem; }
+
+/* Calor de tinteros o ventas, y el aviso al ubicar un tintero a mano */
+.piloto-geo-heat{ top:auto; bottom:26px; }
+.piloto-geo-placing{ position:absolute; top:26px; left:50%; transform:translateX(-50%); z-index:4; margin:0; padding:8px 14px; border-radius:999px; background:#E8201C; color:#fff; font:700 12px/1.2 'Space Grotesk', sans-serif; box-shadow:0 6px 18px rgba(0,0,0,.25); pointer-events:none; }

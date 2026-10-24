@@ -61,6 +61,51 @@ export function tinterosGeoJSON(tinteros, { withNames = false } = {}) {
   };
 }
 
+/**
+ * Calor de tinteros: un punto por tintero ubicado, con peso por tazas por hora
+ * (sin dato, peso medio). Muestra dónde se concentra el tinto en la calle.
+ */
+export function tinterosHeatGeoJSON(tinteros) {
+  const pts = tinterosGeoJSON(tinteros).features;
+  const rates = (tinteros ?? []).map((t) => +t.cups_per_hour).filter((n) => Number.isFinite(n) && n > 0);
+  const max = Math.max(1, ...rates);
+  const byId = new Map((tinteros ?? []).map((t) => [t.id, t]));
+  return {
+    type: 'FeatureCollection',
+    features: pts.map((f) => {
+      const r = +byId.get(f.properties.id)?.cups_per_hour;
+      return { type: 'Feature', geometry: f.geometry, properties: { weight: Number.isFinite(r) && r > 0 ? 0.3 + 0.7 * (r / max) : 0.5 } };
+    }),
+  };
+}
+
+/**
+ * Pines que caen casi en el mismo punto (unos 20 m: los carritos pegados) en uno
+ * solo, «Sra. Julia y 3 más», para que las etiquetas no se monten.
+ */
+export function groupPins(features, meters = 20) {
+  const groups = [];
+  for (const f of features ?? []) {
+    const [lng, lat] = f.geometry.coordinates;
+    const g = groups.find((x) => Math.hypot((x.lng - lng) * 111320 * Math.cos((lat * Math.PI) / 180), (x.lat - lat) * 110540) <= meters);
+    if (g) g.items.push(f);
+    else groups.push({ lng, lat, items: [f] });
+  }
+  return groups.map((g) => {
+    const [first, ...rest] = g.items;
+    if (!rest.length) return first;
+    return {
+      ...first,
+      properties: {
+        ...first.properties,
+        label: `${first.properties.label.split(' · ')[0]} y ${rest.length} más`,
+        group: g.items.map((f) => f.properties),
+        active: g.items.some((f) => f.properties.active),
+      },
+    };
+  });
+}
+
 /** Dónde está, en palabras: la referencia o la cuadra, con la localidad. */
 function placeText(t, gps) {
   const where = t.referencia || (t.carrera != null && t.calle != null ? `Calle ${Math.round(t.calle)} con ${Math.round(t.carrera)}` : null);

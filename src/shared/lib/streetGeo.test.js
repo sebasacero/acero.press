@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { salesGeoJSON, tinterosGeoJSON, boundsOf, routesGeoJSON } from './streetGeo.js';
+import { salesGeoJSON, tinterosGeoJSON, tinterosHeatGeoJSON, groupPins, boundsOf, routesGeoJSON } from './streetGeo.js';
 import { toLngLat } from './bogotaGeo.js';
 
 test('las ventas se agrupan por cuadra y el peso es relativo a la que más vendió', () => {
@@ -63,4 +63,29 @@ test('con GPS el tintero va en su punto exacto, con la referencia y la precisió
   // El GPS manda sobre una cuadra mal anotada
   const both = tinterosGeoJSON([{ ...t[0], carrera: 30, calle: 30 }]).features[0];
   assert.deepEqual(both.geometry.coordinates, [-74.135988, 4.618612]);
+});
+
+test('el calor de tinteros pesa por tazas por hora y salta a los que no tienen lugar', () => {
+  const t = [
+    { id: 'a', lat: 4.6186, lng: -74.1359, cups_per_hour: 13 },
+    { id: 'b', lat: 4.6187, lng: -74.1360 },
+    { id: 'c', carrera: null, calle: null },
+  ];
+  const h = tinterosHeatGeoJSON(t);
+  assert.equal(h.features.length, 2);
+  assert.equal(h.features[0].properties.weight, 1);
+  assert.equal(h.features[1].properties.weight, 0.5);
+});
+
+test('los puestos pegados van en un solo pin con todos adentro', () => {
+  const t = [
+    { id: 'a', name: 'Sra. Julia', lat: 4.6186, lng: -74.1357, cups_per_hour: 13 },
+    { id: 'b', name: 'Don Álvaro', lat: 4.61863, lng: -74.13567 },
+    { id: 'c', name: 'Prueba gps', lat: 4.614192, lng: -74.174394 },
+  ];
+  const pins = groupPins(tinterosGeoJSON(t, { withNames: true }).features);
+  assert.equal(pins.length, 2);
+  assert.equal(pins[0].properties.label, 'Sra. Julia y 1 más');
+  assert.deepEqual(pins[0].properties.group.map((p) => p.name), ['Sra. Julia', 'Don Álvaro']);
+  assert.equal(pins[1].properties.label, 'Prueba gps');
 });
