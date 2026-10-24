@@ -61,3 +61,8 @@ test('si no cabe todo, se quedan los primeros renglones enteros', () => {
   assert.match(a, /^Vende: /);
   assert.ok(!a.endsWith('·'));
 });
+
+test('con referencia, la ubicación de la tarjeta es la referencia', () => {
+  assert.equal(adPlace({ referencia: 'Frente al Éxito', localidad: 'Kennedy' }), 'Frente al Éxito · Kennedy');
+  assert.equal(adPlace({ referencia: 'Puerta principal de Plaza de las Américas', localidad: 'Kennedy', carrera: 30, calle: 30 }), 'Puerta principal de Plaza de…');
+});

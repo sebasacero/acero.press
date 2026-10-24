@@ -647,8 +647,6 @@ export default function MicraStudio({ onExit, onOpenTool }) {
       case 'tintero':
         return (
           <TinteroSheet
-            place={sale.place}
-            onPlace={sale.setPlace}
             photo={snap}
             onTakePhoto={takeSnap}
             onClearPhoto={clearSnap}

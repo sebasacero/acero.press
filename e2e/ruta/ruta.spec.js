@@ -173,7 +173,7 @@ test('panel › Piloto: invitar a un tintero, sus recorridos en la lista y en el
     study: { surveyed: 2, with_photo: 0, consented: 0, tinto_price_avg: null, cups_per_hour_avg: null, zones: ['Chapinero'] },
   };
   await page.goto('/admin', { waitUntil: 'load' });
-  await page.click('.ax-side .ax-item:has-text("Piloto")');
+  await page.click('.ax-side .ax-item:has-text("Estudio")');
   const list = page.getByRole('region', { name: 'Recorridos' });
   await expect(list).toContainText('Marlene Rojas');
   await expect(list).toContainText('220 min · 3,6 km · 1 parada');

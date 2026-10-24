@@ -8,6 +8,7 @@ import { EMPTY_SURVEY, buildSurvey } from '../survey/survey.js';
 import { postSurvey } from '../survey/surveyApi.js';
 import { grantAdConsent } from './tinteroApi.js';
 import { adTexts } from './tinteroAd.js';
+import { gpsErrorText, gpsFix, gpsLabel, gpsMapUrl, gpsQuality } from './gps.js';
 
 // Ficha de campo de un tintero (estudio de calle), para levantar en dos
 // minutos parado frente al puesto: foto con la misma cámara de Micra, en qué
@@ -16,7 +17,7 @@ import { adTexts } from './tinteroAd.js';
 // foto va al bucket privado «estudio» y solo con permiso; la ficha entra por
 // la API de BI (la misma que usa el panel), así que aplican el owner y RLS.
 // Guardada la ficha, sigue la encuesta (dos minutos, con su permiso); se
-// puede dejar para después y hacerla desde Piloto. Al final, con su permiso de
+// puede dejar para después y completarla en Estudio. Al final, con su permiso de
 // publicidad, se toma la foto de su tarjeta «Tintero aliado», llena con la ficha
 // y la encuesta.
 
@@ -37,8 +38,8 @@ async function postTintero(body) {
   return data;
 }
 
-export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onClearPhoto, canShoot, docked, onClose, onSaved, onMakeCard, canCard = true }) {
-  const [form, setForm] = useState(() => ({ ...EMPTY_TINTERO, place }));
+export default function TinteroSheet({ photo, onTakePhoto, onClearPhoto, canShoot, docked, onClose, onSaved, onMakeCard, canCard = true }) {
+  const [form, setForm] = useState(() => ({ ...EMPTY_TINTERO }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(null); // la ficha ya guardada: sigue la encuesta
@@ -49,9 +50,28 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
   const set = (patch) => { setError(null); setForm((f) => ({ ...f, ...patch })); };
   const progress = fichaProgress(form);
 
-  // El lugar de la venta y el de la ficha son el mismo mientras se está en la calle
-  useEffect(() => { setForm((f) => ({ ...f, place })); }, [place]);
-  const setPlace = (p) => { onPlace?.(p); set({ place: p }); };
+  // La cuadra de la ficha es solo de la ficha: antes se copiaba la de la última venta y
+  // un tintero de Kennedy quedaba en el Parque 93
+  const setPlace = (p) => set({ place: p });
+
+  // GPS del celular: un toque marca dónde está el puesto
+  const [locating, setLocating] = useState(false);
+  const [gpsError, setGpsError] = useState(null);
+  const locate = () => {
+    if (!navigator.geolocation) { setGpsError('Este celular no tiene GPS en el navegador.'); return; }
+    setLocating(true);
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const fix = gpsFix(pos);
+        if (fix.error) setGpsError(fix.error);
+        else set({ gps: fix });
+      },
+      (err) => { setLocating(false); setGpsError(gpsErrorText(err)); },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
 
   const save = async () => {
     const { body, error: e } = buildTintero(form);
@@ -160,7 +180,7 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
             <button type="button" className="msheet-btn is-primary is-big" disabled={busy || !survey.consent} onClick={saveSurvey}>
               {busy ? 'Guardando…' : 'Guardar encuesta'}
             </button>
-            <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => setCard({ survey: null, surveyed: false })}>Ahora no: la hago después desde Piloto</button>
+            <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => setCard({ survey: null, surveyed: false })}>Ahora no: queda pendiente en Estudio</button>
           </>
         )}
       >
@@ -229,7 +249,23 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
         <div className="msheet-chips" role="listbox" aria-label="Localidad: otra">
           <button type="button" role="option" aria-selected={form.localidad === 'Otra'} className={`msheet-chip ${form.localidad === 'Otra' ? 'on' : ''}`} onClick={() => set({ localidad: form.localidad === 'Otra' ? null : 'Otra' })}>Otra</button>
         </div>
-        <span className="msheet-label">Cuadra donde lo encontraste (opcional)</span>
+        <span className="msheet-label">Dónde está exactamente</span>
+        <button type="button" className={`msheet-btn ${form.gps ? 'is-ghost' : ''}`} disabled={locating} onClick={locate}>
+          {locating ? 'Buscando la señal del GPS…' : form.gps ? 'Marcar de nuevo' : '📍 Usar mi ubicación'}
+        </button>
+        {form.gps && (
+          <p className={`msheet-fine ${gpsQuality(form.gps.accuracy) === 'debil' ? 'is-warn' : ''}`} role="status" data-testid="tintero-gps">
+            ✓ {gpsLabel(form.gps)}
+            {gpsQuality(form.gps.accuracy) === 'debil' && ' · señal débil: espera unos segundos y marca de nuevo'}
+            {' · '}<a href={gpsMapUrl(form.gps)} target="_blank" rel="noreferrer">Ver en el mapa</a>
+          </p>
+        )}
+        {gpsError && <p className="msheet-fine is-warn" role="alert">{gpsError}</p>}
+        <label className="msheet-place-field is-wide"><span>Referencia</span>
+          <input className="msheet-input" type="text" autoComplete="off" maxLength={80} placeholder="Puerta principal de Plaza de las Américas" aria-label="Referencia" value={form.referencia} onChange={(e) => set({ referencia: e.target.value })} />
+        </label>
+        <details className="mtin-cuadra">
+        <summary>Sé la cuadra (opcional)</summary>
         <div className="msheet-row is-place">
           <label className="msheet-place-field"><span>Calle</span>
             <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="72" aria-label="Calle" value={form.place?.calle ?? ''} onChange={(e) => setPlace(editPlace(form.place, { calle: e.target.value }))} />
@@ -239,7 +275,8 @@ export default function TinteroSheet({ place, onPlace, photo, onTakePhoto, onCle
             <input className="msheet-input" inputMode="decimal" autoComplete="off" placeholder="13" aria-label="Carrera" value={form.place?.carrera ?? ''} onChange={(e) => setPlace(editPlace(form.place, { carrera: e.target.value }))} />
           </label>
         </div>
-        <small className={`msheet-fine ${form.place?.error ? 'is-warn' : ''}`}>{form.place?.error ?? (isValidPlace(form.place) ? placeLabel(form.place) : 'Con la cuadra sale en el mapa. En el sur basta la localidad.')}</small>
+        <small className={`msheet-fine ${form.place?.error ? 'is-warn' : ''}`}>{form.place?.error ?? (isValidPlace(form.place) ? placeLabel(form.place) : 'Solo si es una avenida o calle principal que conozcas.')}</small>
+        </details>
       </div>
 
       <Choice label="Cómo vende" field="formato" options={TINTERO_OPTIONS.formato} form={form} set={set} />

@@ -33,3 +33,20 @@ begin
   assert (select ad_consent_at from tinteros where id = t) is null, 'sin fecha de permiso';
   delete from tinteros where id = t;
 end $$;
+
+-- GPS de la ficha: el punto completo, dentro de Bogotá, con precisión razonable
+do $$
+declare t uuid;
+begin
+  insert into tinteros (name, localidad, lat, lng, gps_accuracy_m, referencia)
+    values ('Sra. Julia', 'Kennedy', 4.618612, -74.135988, 12, 'Puerta principal Plaza de las Américas') returning id into t;
+  assert (select lat from tinteros where id = t) = 4.618612, 'latitud';
+  begin insert into tinteros (name, lat) values ('x', 4.6); assert false, 'solo latitud';
+  exception when check_violation then null; end;
+  begin insert into tinteros (name, lat, lng) values ('x', 6.24, -75.58); assert false, 'fuera de Bogotá';
+  exception when check_violation then null; end;
+  begin insert into tinteros (name, referencia) values ('x', ''); assert false, 'referencia vacía';
+  exception when check_violation then null; end;
+  delete from tinteros where id = t;
+  raise notice 'GPS de la ficha: OK';
+end $$;

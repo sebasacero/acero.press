@@ -31,7 +31,7 @@ export const ADMIN_TOOLS = [
   { id: 'waitlist', label: 'Lista de espera', group: 'ops', desc: 'Quienes se apuntaron a la app Micra', Component: AppWaitlistPage },
   { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
   { id: 'algorithm', label: 'Algoritmo', group: 'biz', desc: 'Plan Micra: qué hacer hoy y red de tinteros', Component: AlgorithmPage },
-  { id: 'piloto', label: 'Piloto', group: 'biz', desc: 'Estudio de calle: mapa, ventas con lugar y tinteros', Component: PilotoPage },
+  { id: 'piloto', label: 'Estudio', group: 'biz', desc: 'Estudio de calle (MVP): tinteros con ficha, encuesta y GPS en el mapa', Component: PilotoPage },
   { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
   { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, marcas y precios', Component: CatalogPage },
   { id: 'publications', label: 'Publicaciones', group: 'brand', desc: 'Contenido listo para redes', Component: PublicationsPage },

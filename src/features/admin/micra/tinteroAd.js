@@ -16,12 +16,25 @@ import { OPTIONS } from '../survey/survey.js';
 const label = (field, v) => TINTERO_OPTIONS[field]?.find(([x]) => x === v)?.[1] ?? null;
 const fmt = (n) => (Number.isInteger(n) ? String(n) : String(n).replace('.', ','));
 
+/** Corta en una palabra entera con «…» para que quepa. */
+const shorten = (s, max) => {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(' ') > 0 ? cut.lastIndexOf(' ') : cut.length)}…`;
+};
+
 /** Puede salir en una publicación: aceptó la publicidad. */
 export const canAdvertise = (t) => !!t?.ad_consent;
 
 /** Dónde encontrarlo, corto para la pieza «Ubicación» (máx. 30). */
 export function adPlace(t) {
   const area = t?.localidad || t?.zone || '';
+  // La referencia («puerta principal de Plaza de las Américas») es lo que la gente entiende
+  const ref = String(t?.referencia ?? '').trim();
+  if (ref) {
+    const full = area && !ref.includes(area) ? `${ref} · ${area}` : ref;
+    return full.length <= 30 ? full : shorten(ref, 30);
+  }
   if (t?.carrera && t?.calle) {
     const cuadra = `Cl. ${fmt(Number(t.calle))} # ${fmt(Number(t.carrera))}`;
     const full = area ? `${cuadra} · ${area}` : cuadra;

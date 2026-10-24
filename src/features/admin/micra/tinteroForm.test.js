@@ -71,7 +71,7 @@ test('están las 20 localidades de Bogotá, más «Otra», y las opciones no se 
 });
 
 test('progreso de la ficha y horas legibles', () => {
-  assert.deepEqual(fichaProgress(EMPTY_TINTERO), { done: 0, total: 13 });
+  assert.deepEqual(fichaProgress(EMPTY_TINTERO), { done: 0, total: 14 });
   assert.equal(fichaProgress({ ...ok, products: ['tinto'], hora_inicio: 6 }).done, 5);
   assert.equal(hourLabel(6), '6 a. m.');
   assert.equal(hourLabel(12), '12 m.');
@@ -93,4 +93,14 @@ test('la ruta de la foto es segura y lleva el nombre', () => {
   assert.equal(photoPath('Don Jairo · Calle 72', 1700000000000), 'tinteros/1700000000000-don-jairo-calle-72.jpg');
   assert.equal(photoPath('   ', 1), 'tinteros/1-puesto.jpg');
   assert.ok(photoPath('ñ'.repeat(100), 1).length < 70);
+});
+
+test('con GPS y referencia, la cuadra sobra: la referencia es la zona que se lee', () => {
+  const gps = { lat: 4.618612, lng: -74.135988, accuracy: 12, at: '2026-10-24T15:00:00.000Z' };
+  const { body } = buildTintero({ ...EMPTY_TINTERO, name: 'Sra. Julia', localidad: 'Kennedy', gps, referencia: ' Puerta principal Plaza de las Américas ' });
+  assert.equal(body.zone, 'Puerta principal Plaza de las Américas');
+  assert.equal(body.referencia, 'Puerta principal Plaza de las Américas');
+  assert.deepEqual([body.lat, body.lng, body.gps_accuracy_m, body.located_at], [4.618612, -74.135988, 12, '2026-10-24T15:00:00.000Z']);
+  assert.equal('carrera' in body, false);
+  assert.match(buildTintero({ ...EMPTY_TINTERO, name: 'X1', localidad: 'Kennedy', referencia: 'x'.repeat(81) }).error, /referencia/);
 });
