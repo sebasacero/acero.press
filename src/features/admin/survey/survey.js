@@ -11,6 +11,8 @@ const YES3 = [['si', 'Sí'], ['tal_vez', 'Tal vez'], ['no', 'No']];
 
 export const OPTIONS = {
   years_selling: [['menos_1', 'Menos de 1 año'], ['1_3', '1 a 3 años'], ['3_10', '3 a 10 años'], ['mas_10', 'Más de 10']],
+  // En este punto: el estudio separa al que ya tiene su esquina del que está probando sitio
+  years_here: [['menos_1m', 'Menos de un mes'], ['1_6m', '1 a 6 meses'], ['6_12m', '6 meses a 1 año'], ['1_3', '1 a 3 años'], ['mas_3', 'Más de 3 años']],
   buys_where: [['tienda', 'Tienda de barrio'], ['supermercado', 'Supermercado'], ['plaza', 'Plaza de mercado'], ['distribuidor', 'Distribuidor'], ['otro', 'Otro']],
   would_sell_specialty: YES3,
   kit_interest: YES3,
@@ -40,7 +42,7 @@ export const PRESETS = {
 
 export const EMPTY_SURVEY = {
   consent: false,
-  cups_per_day: '', hours_per_day: '', days_per_week: null, years_selling: null,
+  cups_per_day: '', hours_per_day: '', days_per_week: null, years_selling: null, years_here: null,
   coffee_brand: '', libras_week: '', price_libra: '', buys_where: null,
   would_sell_specialty: null, specialty_price: '', kit_interest: null, kit_payment: null, offer_choice: null, thermo_cups_day: '',
   has_smartphone: null, payments: [],
@@ -64,7 +66,7 @@ export function parseDecimal(v) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-const QUESTION_KEYS = ['cups_per_day', 'hours_per_day', 'days_per_week', 'years_selling', 'coffee_brand', 'libras_week', 'price_libra', 'buys_where',
+const QUESTION_KEYS = ['cups_per_day', 'hours_per_day', 'days_per_week', 'years_selling', 'years_here', 'coffee_brand', 'libras_week', 'price_libra', 'buys_where',
   'would_sell_specialty', 'specialty_price', 'kit_interest', 'kit_payment', 'offer_choice', 'has_smartphone', 'payments', 'gender', 'age_range', 'main_income'];
 
 const answered = (form, k) => {
@@ -138,7 +140,7 @@ export function buildSurvey(form, { surveyedAt = new Date() } = {}) {
     if (brand.length > 60) return { error: 'La marca del café: máximo 60 letras.' };
     body.coffee_brand = brand;
   }
-  for (const key of ['years_selling', 'buys_where', 'would_sell_specialty', 'kit_interest', 'kit_payment', 'offer_choice', 'gender', 'age_range', 'main_income']) {
+  for (const key of ['years_selling', 'years_here', 'buys_where', 'would_sell_specialty', 'kit_interest', 'kit_payment', 'offer_choice', 'gender', 'age_range', 'main_income']) {
     if (form[key] === null || form[key] === undefined) continue;
     if (!OPTIONS[key].some(([v]) => v === form[key])) return { error: `Respuesta no válida en ${key}.` };
     body[key] = form[key];

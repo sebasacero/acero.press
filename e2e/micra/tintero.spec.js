@@ -63,9 +63,11 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await expect(enc.getByLabel('¿Cuántas tazas del termo vendería al día?')).toHaveCount(0);
   await offer.getByRole('button', { name: 'Termo con café listo' }).click();
   await enc.getByRole('group', { name: '¿Cuántas tazas del termo vendería al día?: valores rápidos' }).getByRole('button', { name: '30' }).click();
+  await enc.getByRole('group', { name: '¿Hace cuánto vende café?' }).getByRole('button', { name: 'Más de 10' }).click();
+  await enc.getByRole('group', { name: '¿Y en este lugar?' }).getByRole('button', { name: 'Más de 3 años' }).click();
   await enc.getByRole('group', { name: '¿Cómo le pagan?' }).getByRole('button', { name: 'Nequi' }).click();
   await enc.getByRole('group', { name: 'Género' }).getByRole('button', { name: 'Prefiere no decir' }).click();
-  await expect(enc.locator('.srv-progress')).toContainText('10 de 18');
+  await expect(enc.locator('.srv-progress')).toContainText('12 de 19');
   await enc.getByRole('button', { name: 'Guardar encuesta' }).click();
 
   // Después de la encuesta, su tarjeta: llena con la ficha y la encuesta, y solo con su permiso de publicidad
@@ -74,8 +76,8 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await expect(preview).toContainText('Don Jairo');
   await expect(preview).toContainText('Salida de la estación de la 72');
   await expect(preview).toContainText('Vende: Tinto $1.500 · Perico $1.700');
-  await expect(preview).toContainText('Recibe Nequi');
   await expect(preview).toContainText('6 días a la semana');
+  await expect(preview).toContainText('+10 años vendiendo · +3 años aquí · 6 días a la semana');
   await expect(preview).not.toContainText('Prefiere no decir');
   const shoot = card.getByRole('button', { name: 'Tomar la foto de su tarjeta' });
   await expect(shoot).toBeDisabled();
@@ -89,7 +91,7 @@ test('tintero con foto y permiso: la foto va al bucket privado y la ficha a la A
   await expect(page.locator('.mc-filter-name')).toContainText('Tintero aliado');
   const sv = api.all('/surveys', 'POST')[0];
   expect(sv.p).toBe(`/api/v1/bi/tinteros/${api.tinteros[0].id}/surveys`);
-  expect(sv.data).toMatchObject({ consent: true, cups_per_day: 80, days_per_week: 6, coffee_brand: 'Águila Roja', coffee_g_week: 1500, coffee_price_kg: 40000, would_sell_specialty: 'tal_vez', specialty_price: 4000, payments: ['nequi'], gender: 'prefiere_no', offer_choice: 'termo', thermo_cups_day: 30 });
+  expect(sv.data).toMatchObject({ consent: true, cups_per_day: 80, days_per_week: 6, coffee_brand: 'Águila Roja', coffee_g_week: 1500, coffee_price_kg: 40000, would_sell_specialty: 'tal_vez', specialty_price: 4000, payments: ['nequi'], gender: 'prefiere_no', years_selling: 'mas_10', years_here: 'mas_3', offer_choice: 'termo', thermo_cups_day: 30 });
 
   const upload = api.calls.find((c) => c.p.includes('/storage/v1/object/'));
   expect(upload.p).toContain('/object/estudio/tinteros/');

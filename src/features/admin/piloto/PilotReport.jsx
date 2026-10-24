@@ -271,7 +271,8 @@ export function ReportDoc({ report: r, data }) {
           <div><h3 className="rep-h3">Género</h3><Bars tally={r.people.gender} label="Género" /></div>
           <div><h3 className="rep-h3">Edad</h3><Bars tally={r.people.age} label="Edad" /></div>
           <div><h3 className="rep-h3">¿Es su ingreso principal?</h3><Bars tally={r.people.mainIncome} label="Ingreso principal" /></div>
-          <div><h3 className="rep-h3">Hace cuánto vende tinto</h3><Bars tally={r.volume.years} label="Años vendiendo" /></div>
+          <div><h3 className="rep-h3">Hace cuánto vende café</h3><Bars tally={r.volume.years} label="Años vendiendo" /></div>
+          <div><h3 className="rep-h3">Y en ese lugar</h3><Bars tally={r.volume.yearsHere} label="Tiempo en el mismo lugar" /></div>
         </div>
       </Section>
 
