@@ -20,6 +20,8 @@ import WacBanner from './features/home/sections/WacBanner.jsx';
 import PressStory from './features/home/sections/PressStory.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
+import ConsentBanner from './shared/layout/ConsentBanner.jsx';
+import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda una franja que lleva a ella. Las dos van en archivos aparte.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
@@ -35,6 +37,8 @@ export default function App() {
   useEffect(() => {
     document.body.style.overflow = navOpen ? 'hidden' : '';
   }, [navOpen]);
+  // Cada toque a un enlace de WhatsApp (pedido, cold brew, Escuela, botón flotante) cuenta como contacto
+  useEffect(() => trackWhatsAppClicks(), []);
 
   return (
     <LanguageProvider>
@@ -83,6 +87,7 @@ export default function App() {
 
             <AdminDock />
             <AdminOverlayHost />
+            <ConsentBanner />
           </AdminUIProvider>
         </CartProvider>
       </AuthProvider>

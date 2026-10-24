@@ -281,6 +281,7 @@ export async function signIn(page, { coach = false, camera, prefs } = {}) {
   await page.addInitScript(({ coach, camera, prefs }) => {
     localStorage.setItem('sb-mock-auth-token', JSON.stringify({ access_token: 'x', refresh_token: 'y', token_type: 'bearer', expires_in: 360000, expires_at: Math.floor(Date.now() / 1000) + 360000, user: { id: 'u1' } }));
     localStorage.setItem('acero-press-lang', 'es');
+    if (!localStorage.getItem('acero.consent')) localStorage.setItem('acero.consent', 'granted'); // sin aviso de cookies encima (e2e/home/analytics.spec.js lo prueba)
     if (coach) localStorage.setItem('micra_coach_v1', '1');
     if (prefs === null) localStorage.removeItem('micra_prefs_v1');
     else if (prefs) localStorage.setItem('micra_prefs_v1', JSON.stringify(prefs));

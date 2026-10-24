@@ -27,12 +27,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Archivo:wght@400;500;600;700;800&family=Permanent+Marker&display=swap" rel="stylesheet" />
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6F6S72KWWQ"></script>
+  <!-- Google Analytics 4: solo en el sitio público (no en /admin ni /ruta), sin contar al
+       equipo, y con Consent Mode: sin cookies hasta que la persona acepta (src/shared/lib/analytics.js) -->
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-6F6S72KWWQ');
+    (function () {
+      if (/^\/(admin|ruta)(\/|$)/.test(location.pathname)) return;
+      var ls = null; try { ls = window.localStorage; } catch (e) {}
+      if (ls && ls.getItem('acero.team') === '1') window['ga-disable-G-6F6S72KWWQ'] = true;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      var c = ls && ls.getItem('acero.consent') === 'granted' ? 'granted' : 'denied';
+      gtag('consent', 'default', { analytics_storage: c, ad_storage: c, ad_user_data: c, ad_personalization: c, wait_for_update: 500 });
+      gtag('js', new Date());
+      gtag('config', 'G-6F6S72KWWQ');
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-6F6S72KWWQ';
+      document.head.appendChild(s);
+    })();
   </script>
 </head>
 <body>

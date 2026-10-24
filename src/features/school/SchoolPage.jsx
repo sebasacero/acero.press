@@ -9,6 +9,7 @@ import { resumeIndex, totalMinutes, lessonHash, lessonFromHash } from './school.
 import { readSeen, writeSeen } from './progress.js';
 import LessonFigure from './LessonFigure.jsx';
 import CookMode, { useBrewTimer } from './CookMode.jsx';
+import { track } from '../../shared/lib/analytics.js';
 import './school.css';
 
 // /escuela: la Escuela en su propia página, en la hoja de plano de la portada.
@@ -71,6 +72,8 @@ function LessonBody({ lesson, index, count, isSeen, t, timer, onOpenTimer, onPre
 export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   const { t, lang } = useLanguage();
   const lessons = lessonsFor(lang);
+  const keysRef = useRef([]);
+  keysRef.current = lessons.map((l) => l.key); // para medir sin rehacer open() en cada render
   const narrow = useNarrow();
   const [seen, setSeen] = useState(() => readSeen());
   // En celular puede no haber ninguna abierta (se ve el temario entero); en computador siempre hay una
@@ -121,6 +124,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   const open = useCallback((i, { scroll = true, focus = false } = {}) => {
     touched.current = true;
     setActive(i);
+    if (i !== null && keysRef.current[i]) track('school_lesson', { lesson: keysRef.current[i], index: i + 1 });
     if (scroll && i !== null) setScrollReq({ i, focus });
   }, []);
   // Un enlace a otra lección estando ya en /escuela (o atrás y adelante) solo cambia el #: abrir esa
@@ -134,6 +138,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   }, [lessons.length, open]);
   const markSeen = useCallback((key) => setSeen((s) => {
     if (s.includes(key)) return s;
+    track('school_lesson_done', { lesson: key, seen: s.length + 1 });
     const next = [...s, key];
     writeSeen(next);
     return next;
@@ -172,7 +177,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
     isSeen: seen.includes(lessons[i].key),
     t,
     timer,
-    onOpenTimer: () => setCookOpen(true),
+    onOpenTimer: () => { track('school_timer'); setCookOpen(true); },
     onPrev: () => goPrev(i),
     onNext: () => goNext(i),
     onFinish: () => markSeen(lessons[i].key),
