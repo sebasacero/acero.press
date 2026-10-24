@@ -226,6 +226,7 @@ export function buildReport(data, scenarioRaw, { now = new Date() } = {}) {
     hoursDay: stat(answers('hours_per_day')),
     cupsHourObserved: stat(tinteros.map((t) => t.cups_per_hour)),
     years: tally(answers('years_selling'), OPTIONS.years_selling, { order: 'options' }),
+    yearsHere: tally(answers('years_here'), OPTIONS.years_here, { order: 'options' }),
   };
 
   // ── Su café hoy (declarado) ──

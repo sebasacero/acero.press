@@ -67,7 +67,8 @@ export function adHours(t) {
   return '';
 }
 
-const YEARS = { menos_1: 'Nuevo en la calle', '1_3': '1 a 3 años en la calle', '3_10': 'Más de 3 años en la calle', mas_10: 'Más de 10 años en la calle' };
+// Corto: el anuncio tiene 140 letras y la historia del tintero va antes que los pagos
+const YEARS = { menos_1: 'Nuevo en la calle', '1_3': '1 a 3 años vendiendo', '3_10': '+3 años vendiendo', mas_10: '+10 años vendiendo' };
 
 /** Cómo le pagan: lo que dijo en la encuesta, o lo que se vio en la ficha. */
 export function adPayments(t, survey = t?.survey) {
@@ -77,10 +78,12 @@ export function adPayments(t, survey = t?.survey) {
   return list.length ? `Recibe ${list.join(' · ')}` : '';
 }
 
-/** Lo que cuenta la encuesta: «Más de 10 años en la calle · 6 días a la semana». */
+const HERE = { '1_3': '+1 año aquí', mas_3: '+3 años aquí' };
+
+/** Lo que cuenta la encuesta: «+10 años vendiendo · +3 años aquí · 6 días a la semana». */
 export function adStory(survey) {
   const d = survey?.days_per_week;
-  return [YEARS[survey?.years_selling], d === 7 ? 'Todos los días' : d ? `${d} días a la semana` : null].filter(Boolean).join(' · ');
+  return [YEARS[survey?.years_selling], HERE[survey?.years_here], d === 7 ? 'Todos los días' : d ? `${d} días a la semana` : null].filter(Boolean).join(' · ');
 }
 
 /** Junta renglones mientras quepan (los primeros son los que más importan). */
@@ -102,7 +105,7 @@ export function adTexts(t, survey = t?.survey) {
   const name = String(t?.name ?? '').trim().slice(0, 40);
   const how = [label('formato', t?.formato), t?.recorrido === 'ruta' ? 'Hace ruta' : null, adHours(t)].filter(Boolean).join(' · ');
   const sells = adProducts(t);
-  const announce = fit([sells ? `Vende: ${sells}` : 'Tinto en la calle', how, adPayments(t, survey), adStory(survey)], 140);
+  const announce = fit([sells ? `Vende: ${sells}` : 'Tinto en la calle', how, adStory(survey), adPayments(t, survey)], 140);
   return {
     title: name,
     subtitle: `TINTERO ALIADO · ${String(t?.localidad || t?.zone || 'Bogotá').toLocaleUpperCase('es-CO')}`.slice(0, 48),

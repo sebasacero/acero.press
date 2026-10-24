@@ -186,6 +186,7 @@ class SurveyIn(BaseModel):
     hours_per_day: float | None = Field(default=None, gt=0, le=24)
     days_per_week: int | None = Field(default=None, ge=1, le=7)
     years_selling: Literal["menos_1", "1_3", "3_10", "mas_10"] | None = None
+    years_here: Literal["menos_1m", "1_6m", "6_12m", "1_3", "mas_3"] | None = None
     coffee_brand: str | None = Field(default=None, max_length=60)
     coffee_g_week: int | None = Field(default=None, ge=0, le=200000)
     coffee_price_kg: float | None = Field(default=None, ge=0, le=500000)
@@ -238,7 +239,7 @@ class ScenarioIn(BaseModel):
     distributorPriceKg: float | None = Field(default=None, ge=0, le=1_000_000)
 
 
-AD_SURVEY_FIELDS = ("years_selling", "days_per_week", "payments")
+AD_SURVEY_FIELDS = ("years_selling", "years_here", "days_per_week", "payments")
 
 # ── Piloto (estudio de calle) ────────────────────────────────────────────
 GRAMS_PER_CUP = 18  # receta de la barra: 18 g por taza

@@ -53,7 +53,7 @@ test('los números se leen como se escriben en Colombia', () => {
 });
 
 test('el avance cuenta preguntas respondidas y las etiquetas salen de las opciones', () => {
-  assert.deepEqual(surveyProgress(EMPTY_SURVEY), { answered: 0, total: 18 });
+  assert.deepEqual(surveyProgress(EMPTY_SURVEY), { answered: 0, total: 19 });
   assert.equal(surveyProgress(full).answered, 17); // falta qué preferiría
   assert.equal(optionLabel('age_range', '45_54'), '45 a 54');
   assert.equal(optionLabel('has_smartphone', false), 'No');
@@ -70,4 +70,10 @@ test('preparación o termo: las tazas del termo solo viajan si eligió el termo'
   assert.match(buildSurvey({ ...full, offer_choice: 'termo', thermo_cups_day: '900' }).error, /termo/);
   assert.match(buildSurvey({ ...full, offer_choice: 'otra' }).error, /offer_choice/);
   assert.equal(optionLabel('offer_choice', 'termo'), 'Termo con café listo');
+});
+
+test('hace cuánto vende en ese lugar: opción válida o error', () => {
+  assert.equal(buildSurvey({ ...full, years_here: '6_12m' }).body.years_here, '6_12m');
+  assert.match(buildSurvey({ ...full, years_here: 'siempre' }).error, /years_here/);
+  assert.equal(optionLabel('years_here', 'mas_3'), 'Más de 3 años');
 });

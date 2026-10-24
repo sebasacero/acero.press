@@ -104,7 +104,7 @@ export default function TinteroSheet({ photo, onTakePhoto, onClearPhoto, canShoo
     setError(null);
     try {
       await postSurvey(saved.id, body);
-      setCard({ survey: { years_selling: body.years_selling, days_per_week: body.days_per_week, payments: body.payments }, surveyed: true });
+      setCard({ survey: { years_selling: body.years_selling, years_here: body.years_here, days_per_week: body.days_per_week, payments: body.payments }, surveyed: true });
     } catch (err) {
       setError(err.message);
     } finally {

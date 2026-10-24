@@ -100,7 +100,8 @@ export default function SurveyForm({ form, onChange, name }) {
         <Amount label="Tazas al día" field="cups_per_day" presets={PRESETS.cups_per_day} placeholder="Otro número" inputMode="numeric" {...props} />
         <Amount label="Horas al día" field="hours_per_day" presets={PRESETS.hours_per_day} placeholder="Otro número" {...props} />
         <Choice label="Días a la semana" field="days_per_week" options={PRESETS.days_per_week.map((d) => [d, String(d)])} grid {...props} />
-        <Choice label="Hace cuánto vende tinto" field="years_selling" options={OPTIONS.years_selling} {...props} />
+        <Choice label="¿Hace cuánto vende café?" field="years_selling" options={OPTIONS.years_selling} {...props} />
+        <Choice label="¿Y en este lugar?" field="years_here" options={OPTIONS.years_here} {...props} />
 
         <h3 className="srv-h">Su café</h3>
         <Brand {...props} />
