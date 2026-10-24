@@ -4,6 +4,7 @@ import { useAuth } from '../account/AuthContext.jsx';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import { detectCardBrand, formatCardNumber, isValidLuhn } from '../../shared/lib/cardBrand.js';
 import { tokenizeWompiCard, PSE_BANKS } from '../../shared/lib/wompi.js';
+import { commerce, track } from '../../shared/lib/analytics.js';
 import { recordLocalOrderIntent } from '../../shared/lib/orders.js';
 
 // Función serverless que crea la transacción en Wompi (ver /api/create-local-payment.js).
@@ -78,6 +79,7 @@ export default function CheckoutModal() {
   async function submitLocalPayment(method, extraPayload) {
     setLocalStatus('loading');
     setLocalError(null);
+    track('begin_checkout', commerce(paymentItems, { payment_type: method }));
     try {
       const orderId = await recordLocalOrderIntent(paymentItems, method, customer?.id);
       const res = await fetch(LOCAL_PAYMENT_ENDPOINT, {

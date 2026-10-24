@@ -5,6 +5,7 @@ const translations = {
   es: {
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', school: 'Aprende', contact: 'Contact', app: 'App', menu: 'Menú' },
     location: 'Bogotá, 2.600 msnm',
+    consent: { label: 'Aviso de cookies', text: 'Usamos cookies para saber cómo llegas y qué te sirve de la tienda. Nada se vende ni se publica con tu nombre.', accept: 'Aceptar', decline: 'Solo lo necesario' },
     essp: {
       tabsLabel: 'Banners de Micra',
       store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
@@ -361,6 +362,7 @@ const translations = {
   en: {
     nav: { home: 'Home', beans: 'Beans', championship: 'Champions', school: 'Learn', contact: 'Contact', app: 'App', menu: 'Menu' },
     location: 'Bogotá, 2,600 masl',
+    consent: { label: 'Cookie notice', text: 'We use cookies to learn how you found us and what helps you in the shop. Nothing is sold or published with your name.', accept: 'Accept', decline: 'Only the essentials' },
     essp: {
       tabsLabel: 'Micra banners',
       store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
@@ -714,6 +716,7 @@ const translations = {
 
   ja: {
     nav: { home: 'ホーム', beans: '豆', championship: 'チャンピオン', school: '学ぶ', contact: 'お問い合わせ', app: 'アプリ', menu: 'メニュー' },
+    consent: { label: 'Cookieのお知らせ', text: 'どこから来て、ショップの何が役に立つかを知るためにCookieを使います。名前を売ったり公開したりはしません。', accept: '同意する', decline: '必要なものだけ' },
     essp: {
       tabsLabel: 'Micraのバナー',
       store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },

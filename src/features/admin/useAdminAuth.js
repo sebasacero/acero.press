@@ -1,4 +1,5 @@
 import { useSyncExternalStore, useCallback } from 'react';
+import { markTeam } from '../../shared/lib/analytics.js';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 
 // Estado de sesión compartido: antes cada lápiz/dock/botón llamaba a
@@ -26,6 +27,7 @@ async function checkAdmin(session) {
     .maybeSingle();
 
   if (error) console.error('Error verificando admin:', error.message);
+  if (!error && data) markTeam(); // el equipo no cuenta como visita del sitio
   setState({ session, isAdmin: !error && !!data, adminInfo: error ? null : data, loading: false });
 }
 

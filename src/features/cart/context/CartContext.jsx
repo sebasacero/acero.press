@@ -3,6 +3,7 @@ import { recordWhatsAppOrder, recordCardOrderIntent } from '../../../shared/lib/
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import { useAuth } from '../../account/AuthContext.jsx';
 import { CART_KEY, parseCart, paidOnReturn } from './cartStorage.js';
+import { commerce, track } from '../../../shared/lib/analytics.js';
 
 const CartContext = createContext(null);
 
@@ -49,6 +50,7 @@ export function sendToWhatsApp(message, number) {
 function loadCart() {
   try {
     if (paidOnReturn(window.location.search)) {
+      trackReturn(parseCart(window.sessionStorage.getItem(CART_KEY)));
       window.sessionStorage.removeItem(CART_KEY);
       return [];
     }
@@ -56,6 +58,16 @@ function loadCart() {
   } catch {
     return [];
   }
+}
+
+// Vuelta del pago: Stripe confirma (success); Wompi vuelve «pending» y lo confirma su webhook.
+// El carrito se borra al volver, así que se mide con lo que tenía, una sola vez por vuelta.
+function trackReturn(paid) {
+  const key = `acero.ga.return:${window.location.search}`;
+  if (!paid.length || window.sessionStorage.getItem(key)) return;
+  window.sessionStorage.setItem(key, '1');
+  const ok = /[?&]payment=success(&|$)/.test(window.location.search);
+  track(ok ? 'purchase' : 'payment_pending', commerce(paid, ok ? { transaction_id: `web-${Date.now()}` } : {}));
 }
 
 export function CartProvider({ children }) {
@@ -78,6 +90,7 @@ export function CartProvider({ children }) {
 
   const addItem = useCallback(({ name, price, variant, qty, image, variantId }) => {
     const id = slugify(name) + (variant ? '-' + slugify(variant) : '');
+    track('add_to_cart', commerce([{ id, name, price, variant, qty, variantId }]));
     setCart((prev) => {
       const existing = prev.find((i) => i.id === id);
       if (existing) {
@@ -105,6 +118,7 @@ export function CartProvider({ children }) {
     // No se espera (await) a propósito: si abrimos WhatsApp después de una
     // pausa asíncrona, el navegador puede bloquear la ventana emergente por
     // no considerarla ya "en respuesta directa" al clic del usuario.
+    track('begin_checkout', commerce(cart, { payment_type: 'whatsapp' }));
     recordWhatsAppOrder(cart, customer?.id);
     sendToWhatsApp(buildOrderMessage(cart), whatsappNumber);
   }, [cart, customer, whatsappNumber]);
@@ -133,6 +147,7 @@ export function CartProvider({ children }) {
     if (!items || items.length === 0) return;
     setCardStatus('loading');
     setCardError(null);
+    track('begin_checkout', commerce(items, { payment_type: 'tarjeta' }));
     try {
       const orderId = await recordCardOrderIntent(items, customer?.id);
 
@@ -176,6 +191,7 @@ export function CartProvider({ children }) {
     }
     setPaymentItems(cart);
     setPaymentModalOpen(true);
+    track('view_payment_options', commerce(cart));
   }, [cart, isLoggedIn, openAccount]);
 
   const buyNowCard = useCallback(
