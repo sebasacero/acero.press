@@ -38,6 +38,23 @@ const translations = {
       cta: 'Vendo café en la calle',
       waMsg: '¡Hola! Vendo café en la calle y quiero conocer Micra.',
       cta2: 'Empezar la Escuela',
+      store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
+      promos: {
+        order: {
+          tag: 'FIG. 01 — HOY VENDEMOS EN', badge: 'EN LA CALLE',
+          title: ['Pide café', 'en AeroPress'], script: 'a domicilio',
+          loc: 'BOGOTÁ, 2.600 MSNM · BARRA PORTÁTIL',
+          lede: 'Una barra de café que cabe en una mochila.',
+          cta: 'Ver la tienda', cta2: 'Cómo se prepara',
+        },
+        barista: {
+          tag: 'FIG. 02 — SER BARISTA', badge: 'CONVOCATORIA',
+          title: ['Vive', 'del café.'], script: 'con tu AeroPress',
+          loc: 'BOGOTÁ, 2.600 MSNM · PILOTO EN CHAPINERO',
+          lede: 'Si ya vendes café en la calle, tu barra cabe en una AeroPress: el kit, la receta campeona y las cuadras donde el mapa dice que se vende. Tú preparas; el café lo ponemos nosotros.',
+          cta: 'Escríbenos por WhatsApp', waMsg: '¡Hola! Vendo café en la calle y quiero vivir del café con mi AeroPress.', cta2: 'Aprende a preparar',
+        },
+      },
     },
     posts: {
       label: 'Nuestras redes',
@@ -363,6 +380,23 @@ const translations = {
       cta: 'I sell coffee on the street',
       waMsg: 'Hi! I sell coffee on the street and want to know about Micra.',
       cta2: 'Start the School',
+      store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
+      promos: {
+        order: {
+          tag: 'FIG. 01 — SELLING TODAY AT', badge: 'ON THE STREET',
+          title: ['AeroPress coffee,', 'delivered'], script: 'to your door',
+          loc: 'BOGOTÁ, 2,600 MASL · PORTABLE BAR',
+          lede: 'A coffee bar that fits in a backpack.',
+          cta: 'Visit the shop', cta2: 'How we brew it',
+        },
+        barista: {
+          tag: 'FIG. 02 — BE A BARISTA', badge: 'NOW RECRUITING',
+          title: ['Make a living', 'from coffee.'], script: 'with your AeroPress',
+          loc: 'BOGOTÁ, 2,600 MASL · PILOT IN CHAPINERO',
+          lede: 'If you already sell coffee on the street, your bar fits in an AeroPress: the kit, the championship recipe and the blocks where the map says coffee sells. You brew; we bring the coffee.',
+          cta: 'Message us on WhatsApp', waMsg: 'Hi! I sell coffee on the street and want to make a living from coffee with my AeroPress.', cta2: 'Learn to brew',
+        },
+      },
     },
     posts: {
       label: 'Our socials',
@@ -687,6 +721,23 @@ const translations = {
       cta: '路上でコーヒーを売っています',
       waMsg: 'こんにちは！路上でコーヒーを売っていて、Micraについて知りたいです。',
       cta2: 'スクールを始める',
+      store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },
+      promos: {
+        order: {
+          tag: '図01 — 本日の出店場所', badge: '路上で',
+          title: ['エアロプレスの一杯を', 'お届け'], script: 'デリバリー',
+          loc: 'ボゴタ · 標高2,600m · 持ち運べるバー',
+          lede: 'リュックに収まるコーヒーバー。',
+          cta: 'ショップを見る', cta2: '淹れ方を見る',
+        },
+        barista: {
+          tag: '図02 — バリスタになる', badge: '募集中',
+          title: ['コーヒーで', '生きる。'], script: 'エアロプレスで',
+          loc: 'ボゴタ · 標高2,600m · チャピネロで試験運用',
+          lede: '路上でコーヒーを売っているなら、あなたのバーはエアロプレスひとつに収まります。キット、チャンピオンレシピ、そして地図が示す売れる街区。あなたは淹れる、コーヒーは私たちが用意します。',
+          cta: 'WhatsAppで連絡する', waMsg: 'こんにちは！路上でコーヒーを売っていて、エアロプレスでコーヒーを仕事にしたいです。', cta2: '淹れ方を学ぶ',
+        },
+      },
     },
     posts: {
       label: 'ソーシャル',

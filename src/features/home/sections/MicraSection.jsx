@@ -4,6 +4,8 @@ import Navbar from '../../../shared/layout/Navbar.jsx';
 import { StreetPhone } from '../../esspresale/AppPhones.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import SocialBanners from './SocialBanners.jsx';
+import MicraPromos from './MicraPromos.jsx';
+import StoreButtons from '../../esspresale/StoreButtons.jsx';
 import { useStreetMap } from '../../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../../shared/layout/WhatsAppButton.jsx';
@@ -11,15 +13,19 @@ import '../../esspresale/esspresale.css';
 import './home.css';
 
 // Primera sección de la portada (lleva el menú y el h1): qué es Micra, el celular con el mapa del
-// estudio y, debajo, las fichas de redes con video. Los textos viven en translations (micra.*): las
-// llaves viejas de app_config (essp_*) decían «a domicilio» y aquí ya no se leen.
+// estudio, los dos banners de siempre (pedir café, vivir del café) y las fichas de redes con video.
+// Arriba, pequeños, los botones de App Store y Google Play (app_config app_store_url / play_store_url;
+// sin enlace dicen «Pronto»). Los textos viven en translations (micra.*).
 
 export default function MicraSection({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
   const { layers, summary: street } = useStreetMap();
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
+  const [stores, setStores] = useState({ apple: '', google: '' });
   useEffect(() => {
     fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setNumber(n || FALLBACK_WHATSAPP_NUMBER));
+    Promise.all([fetchAppConfig('app_store_url', ''), fetchAppConfig('play_store_url', '')])
+      .then(([apple, google]) => setStores({ apple: apple || '', google: google || '' }));
   }, []);
   const wa = (msg) => `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
 
@@ -33,6 +39,7 @@ export default function MicraSection({ navOpen, onOpenNavDrawer }) {
       <div className="micra-in">
         <div className="micra-head">
           <div className="micra-copy">
+            <StoreButtons appStoreUrl={stores.apple} playStoreUrl={stores.google} />
             <div className="essp-tag">{t('micra.tag')} <span className="essp-new">{t('micra.badge')}</span></div>
             <h1 className="essp-title micra-title" id="micra-title">
               {t('micra.title')}
@@ -47,6 +54,8 @@ export default function MicraSection({ navOpen, onOpenNavDrawer }) {
           </div>
           <StreetPhone className="micra-phone" street={street} layers={layers} />
         </div>
+
+        <MicraPromos wa={wa} />
 
         <SocialBanners />
       </div>
