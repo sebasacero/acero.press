@@ -19,7 +19,7 @@ test('con ventas y baristas reales, las cifras salen en el frente de hoy y en el
   await page.goto('/', { waitUntil: 'load' });
   const micra = page.locator('#micra');
   await micra.scrollIntoViewIfNeeded();
-  await expect(micra.getByRole('heading', { level: 2 })).toContainText('Micra.');
+  await expect(micra.getByRole('heading', { level: 1 })).toContainText('Micra.');
   await expect(micra.locator('.essp-script').first()).toHaveText('la app que fomenta el barismo');
   // Los cuatro frentes, cada uno con lo que es hoy: nada se da por hecho
   const steps = micra.locator('.micra-steps > li');

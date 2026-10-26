@@ -5,7 +5,7 @@ import { openPage } from '../micra/fixtures.js';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
-const LINKS_ES = ['Recetas', 'Micra', 'Tienda', 'Publicaciones', 'Aprende', 'Campeones'];
+const LINKS_ES = ['Micra', 'Tienda', 'Recetas', 'Aprende', 'Campeones', 'Publicaciones'];
 
 /** La sección del ancla existe y quedó a la vista cuando el scroll (suave) ya se detuvo. */
 async function inView(page, id) {
@@ -72,9 +72,9 @@ test('escritorio: idioma, cuenta y carrito desde el menú', async ({ browser }) 
   await page.goto('/', { waitUntil: 'load' });
   const lang = page.locator('.navbar .lang-btn');
   await lang.click(); // ES → EN
-  await expect(menu(page).getByRole('link')).toHaveText(['Recipes', 'Micra', 'Shop', 'Posts', 'Learn', 'Champions']);
+  await expect(menu(page).getByRole('link')).toHaveText(['Micra', 'Shop', 'Recipes', 'Learn', 'Champions', 'Posts']);
   await lang.click(); // EN → JA
-  await expect(menu(page).getByRole('link').nth(4)).toHaveText('学ぶ');
+  await expect(menu(page).getByRole('link').nth(3)).toHaveText('学ぶ');
   await lang.click(); // JA → ES
   await expect(menu(page).getByRole('link')).toHaveText(LINKS_ES);
 

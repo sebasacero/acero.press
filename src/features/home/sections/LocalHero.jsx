@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
-import Navbar from '../../../shared/layout/Navbar.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
 import { fetchSection } from '../../../shared/lib/pageSections.js';
-import { storyFor, wrapIndex } from '../lib/houseRecipes.js';
+import { wrapIndex } from '../lib/houseRecipes.js';
 import '../../esspresale/esspresale.css';
 import './home.css';
 
-// Primera sección: la marca y la foto de la barra que tuvimos en Chapinero. Las recetas de la casa
+// Después de la tienda: la marca y la foto de la barra que tuvimos en Chapinero. Las recetas de la casa
 // se ven como el banner de la barra (video y cuadro de la receta) dentro del vidrio de la vitrina. Se cambian con las pestañas o deslizando, nunca
 // solas (un carrusel que avanza solo se ignora). El contenido lo edita el owner con el lápiz
 // (page_sections 'cold_brew', el mismo de la vieja barra); esto es solo el respaldo.
@@ -68,7 +67,6 @@ const PRICE_LABEL = { es: 'PRECIO', en: 'PRICE', ja: '価格' };
 function WindowBanner({ slide, index, total, lang, t }) {
   const ref = useRef(null);
   const name = slide.title1?.[lang] ?? slide.title1?.es ?? '';
-  const story = storyFor(slide, lang, t('brand.stories'));
   const filled = Math.round(((Number(slide.ratioPercent) || 0) / 100) * SEGMENTS);
   const price = Number(slide.price) > 0 ? money(slide.price) : null;
   useEffect(() => { ref.current?.play?.().catch(() => {}); }, [slide.video]);
@@ -77,10 +75,16 @@ function WindowBanner({ slide, index, total, lang, t }) {
       <video ref={ref} key={slide.video} className="lh-banner-video" src={slide.video || '/image/cans.mp4'} muted loop playsInline autoPlay preload="metadata" aria-hidden="true" />
       <div className="lh-banner-shade" aria-hidden="true" />
       <div className="lh-banner-in">
-        <div className="lh-banner-count">{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</div>
-        <h3 className="lh-banner-name">{name}</h3>
-        {story && <p className="lh-banner-story">{story}</p>}
-        <div className="odometer-panel lh-banner-panel">
+        {/* El banner original de la barra: título con el logo, cuadro oscuro y botón crema */}
+        <h3 className="hero-h">
+          {name}<br />
+          <span className="logo-unit" aria-hidden="true">
+            <img src="/image/logo.png" alt="" className="logo-acero1" />
+            <span className="logo-press">.press</span>
+          </span>
+        </h3>
+        <div className="bar-panel-col">
+        <div className="odometer-panel">
           <div className="cota cota-top">
             <span className="annot">{slide.figLabel?.[lang] ?? slide.figLabel?.es}</span>
             <span className="cota-badge">{slide.ratio?.[lang] ?? slide.ratio?.es}</span>
@@ -104,13 +108,14 @@ function WindowBanner({ slide, index, total, lang, t }) {
             </div>
           )}
         </div>
-        <a className="bar-order-btn lh-banner-cta" href="#beans">{t('brand.poster.cta')} <span aria-hidden="true">→</span></a>
+        <a className="bar-order-btn" href="#beans">{t('brand.poster.cta')} <span aria-hidden="true">→</span></a>
+        </div>
       </div>
     </article>
   );
 }
 
-export default function LocalHero({ navOpen, onOpenNavDrawer }) {
+export default function LocalHero() {
   const { t, lang } = useLanguage();
   const [slides, setSlides] = useState(FALLBACK_SLIDES);
   const [index, setIndex] = useState(0);
@@ -130,21 +135,20 @@ export default function LocalHero({ navOpen, onOpenNavDrawer }) {
   const slide = slides[wrapIndex(index, slides.length)];
 
   return (
-    <header className="lh" aria-labelledby="lh-title">
+    <section className="lh" aria-labelledby="lh-title">
       <SheetFrame />
-      <Navbar variant="sheet" tone="paper" navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="lh-in">
         <div className="lh-copy">
           <div className="essp-tag">{t('brand.tag')} <span className="essp-new">{t('brand.badge')}</span></div>
-          <h1 className="essp-title lh-title" id="lh-title">
+          <h2 className="essp-title lh-title" id="lh-title">
             {title[0]}<br />{title[1]}
             <span className="essp-script">{t('brand.script')}</span>
-          </h1>
+          </h2>
           <div className="essp-loc">{t('brand.loc')}</div>
           <p className="essp-lede lh-lede">{t('brand.lede')}</p>
           <div className="essp-ctas">
             <a className="essp-btn" href="#beans">{t('brand.cta')}</a>
-            <a className="essp-btn is-ghost" href="#micra">{t('brand.cta2')}</a>
+            <a className="essp-btn is-ghost" href="/escuela">{t('brew.cta2')}</a>
           </div>
         </div>
 
@@ -161,7 +165,7 @@ export default function LocalHero({ navOpen, onOpenNavDrawer }) {
             }}
           >
             <div className="lh-photo">
-              <img src="/image/local.webp" alt={t('brand.photoAlt')} width="907" height="893" fetchpriority="high" />
+              <img src="/image/local.webp" alt={t('brand.photoAlt')} width="907" height="893" loading="lazy" />
               {/* El banner va en el vidrio de la vitrina grande (coordenadas de la foto) */}
               <div className="lh-window" aria-live="polite">
                 {slide && <WindowBanner key={wrapIndex(index, slides.length)} slide={slide} index={wrapIndex(index, slides.length)} total={slides.length} lang={lang} t={t} />}
@@ -182,6 +186,6 @@ export default function LocalHero({ navOpen, onOpenNavDrawer }) {
           <figcaption className="lh-caption">{t('brand.caption')}</figcaption>
         </figure>
       </div>
-    </header>
+    </section>
   );
 }

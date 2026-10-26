@@ -13,7 +13,6 @@ const translations = {
       loc: 'BOGOTÁ, 2.600 MSNM · NACIMOS EN CHAPINERO',
       lede: 'ACERO.press es barismo hecho con AeroPress: la forma más sencilla de servir café de especialidad sin una máquina de millones. Lo aprendimos en nuestra barra de Chapinero y ahora lo llevamos a la calle, con quienes venden café caminando.',
       cta: 'Comprar café',
-      cta2: 'Conoce Micra',
       caption: 'Nuestra barra en Chapinero. En la vitrina, las recetas de la casa.',
       photoAlt: 'La barra de ACERO.press en Chapinero: vitrina de vidrio, tres AeroPress sobre una barra de acero y lámparas colgantes.',
       recipes: 'Recetas de la casa',
@@ -26,12 +25,6 @@ const translations = {
         cta: 'Prepárala en casa',
         prev: 'Receta anterior',
         next: 'Receta siguiente',
-      },
-      stories: {
-        'cold brew': 'El café también se toma frío. Concentrado en AeroPress sobre hielo: dulce, limpio y sin amargor.',
-        latte: 'Lo de siempre, bien hecho. La taza que convence a quien dice que no le gusta el café.',
-        americano: 'Sin trucos. Agua, buen café colombiano y la medida exacta: si el grano es bueno, no hace falta más.',
-        'matcha mambe': 'Lo nuestro también es de especialidad. Mambé amazónico batido como matcha, con respeto por su uso tradicional.',
       },
     },
     micra: {
@@ -405,7 +398,6 @@ const translations = {
       loc: 'BOGOTÁ, 2,600 M · BORN IN CHAPINERO',
       lede: 'ACERO.press is barista craft made with an AeroPress: the simplest way to serve specialty coffee without an expensive machine. We learned it at our Chapinero bar and now we take it to the street, with the people who sell coffee on foot.',
       cta: 'Shop coffee',
-      cta2: 'Meet Micra',
       caption: 'Our bar in Chapinero. In the window, the house recipes.',
       photoAlt: 'The ACERO.press bar in Chapinero: glass storefront, three AeroPress on a steel counter and pendant lights.',
       recipes: 'House recipes',
@@ -418,12 +410,6 @@ const translations = {
         cta: 'Make it at home',
         prev: 'Previous recipe',
         next: 'Next recipe',
-      },
-      stories: {
-        'cold brew': 'Coffee can be cold too. AeroPress concentrate over ice: sweet, clean and never bitter.',
-        latte: 'The classic, done right. The cup that wins over people who say they do not like coffee.',
-        americano: 'No tricks. Water, good Colombian coffee and the exact measure: with good beans, nothing else is needed.',
-        'matcha mambe': 'Ours is specialty too. Amazonian mambé whisked like matcha, respecting its traditional use.',
       },
     },
     micra: {
@@ -796,7 +782,6 @@ const translations = {
       loc: 'ボゴタ 標高2,600 m · チャピネロ生まれ',
       lede: 'ACERO.pressはエアロプレスでつくるバリスタの仕事です。高価なマシンなしでスペシャルティコーヒーを出す、いちばんシンプルな方法。チャピネロのバーで学び、いまは歩いてコーヒーを売る人たちと一緒に街へ持ち出しています。',
       cta: 'コーヒーを買う',
-      cta2: 'Micraを見る',
       caption: 'チャピネロの私たちのバー。ショーウィンドウには店のレシピ。',
       photoAlt: 'チャピネロのACERO.pressのバー：ガラスの店先、ステンレスのカウンターに3台のエアロプレスとペンダントライト。',
       recipes: '店のレシピ',
@@ -809,12 +794,6 @@ const translations = {
         cta: '家でつくる',
         prev: '前のレシピ',
         next: '次のレシピ',
-      },
-      stories: {
-        'cold brew': 'コーヒーは冷たくてもいい。氷の上にエアロプレスの濃縮液：甘く、クリアで苦くない。',
-        latte: '定番をきちんと。コーヒーが苦手という人も納得する一杯。',
-        americano: '小細工なし。水、良いコロンビアのコーヒー、正確な分量。豆が良ければそれで十分。',
-        'matcha mambe': '私たちのものもスペシャルティ。アマゾンのマンベを抹茶のように点てて、伝統的な使い方に敬意を。',
       },
     },
     micra: {

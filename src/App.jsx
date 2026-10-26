@@ -13,8 +13,6 @@ import CheckoutModal from './features/payment/CheckoutModal.jsx';
 import AccountDrawer from './features/account/AccountDrawer.jsx';
 import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
-import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
-import { useIsOwner } from './features/admin/useAdminAuth.js';
 import LocalHero from './features/home/sections/LocalHero.jsx';
 import MicraSection from './features/home/sections/MicraSection.jsx';
 import PostsSection from './features/home/sections/PostsSection.jsx';
@@ -25,10 +23,6 @@ import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda la receta oficial en cinco pasos (BrewGuide), que lleva a ella.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
-// La meta de ventas es del equipo: en público era un «0 %» flotando sobre la tienda
-function OwnerOnly({ children }) {
-  return useIsOwner() ? children : null;
-}
 
 const isSchoolRoute = () => /^\/escuela\/?$/.test(window.location.pathname);
 
@@ -55,18 +49,19 @@ export default function App() {
               </Suspense>
             ) : (
               <>
-                {/* La marca: la barra de Chapinero con las recetas de la casa en la vitrina */}
-                <LocalHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
-
-                <MicraSection />
+                {/* Primero la app (con el menú), luego la tienda y la barra de Chapinero con las
+                    recetas en la vitrina; al final la Escuela, los campeones y las redes */}
+                <MicraSection navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
 
                 <ProductSection />
 
-                <PostsSection />
+                <LocalHero />
 
                 <BrewGuide />
 
                 <RecipeArchive />
+
+                <PostsSection />
               </>
             )}
 
@@ -77,7 +72,6 @@ export default function App() {
             <CartDrawer />
             <CheckoutModal />
             <AccountDrawer />
-            <OwnerOnly><SalesFloatButton /></OwnerOnly>
             <ActiveFloatWidget />
 
             <AdminDock />

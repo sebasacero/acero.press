@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
+import Navbar from '../../../shared/layout/Navbar.jsx';
 import { StreetPhone } from '../../esspresale/AppPhones.jsx';
 import { SheetFrame, Segs } from '../../esspresale/parts.jsx';
 import { useStreetMap } from '../../../shared/lib/useStreetMap.js';
@@ -8,7 +9,7 @@ import { FALLBACK_WHATSAPP_NUMBER } from '../../../shared/layout/WhatsAppButton.
 import '../../esspresale/esspresale.css';
 import './home.css';
 
-// Micra presentada en la portada: qué es (la app que fomenta el barismo) y sus cuatro frentes, el
+// Primera sección de la portada (lleva el menú y el h1). Micra presentada: qué es (la app que fomenta el barismo) y sus cuatro frentes, el
 // primero en marcha (el estudio del café informal, con las cifras reales de micra_street_map) y los
 // demás marcados como lo que son: en diseño, próximamente, buscando aliados. Nada se da por hecho.
 // Los textos viven en translations (micra.*): las llaves viejas de app_config (essp_*) decían
@@ -16,7 +17,7 @@ import './home.css';
 
 const show = (n) => (n === null || n === undefined ? '—' : String(n));
 
-export default function MicraSection() {
+export default function MicraSection({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
   const { layers, summary: street } = useStreetMap();
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
@@ -29,19 +30,20 @@ export default function MicraSection() {
   const real = !!layers;
 
   return (
-    <section className="micra" id="micra" aria-labelledby="micra-title">
+    <header className="micra" id="micra" aria-labelledby="micra-title">
       {/* Los enlaces viejos (/#tinteros, /#baristas: menús anteriores, mensajes enviados) llegan aquí */}
       <span id="tinteros" className="micra-anchor" aria-hidden="true" />
       <span id="baristas" className="micra-anchor" aria-hidden="true" />
       <SheetFrame />
+      <Navbar variant="sheet" tone="paper" navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="micra-in">
         <div className="micra-head">
           <div className="micra-copy">
             <div className="essp-tag">{t('micra.tag')} <span className="essp-new">{t('micra.badge')}</span></div>
-            <h2 className="essp-title micra-title" id="micra-title">
+            <h1 className="essp-title micra-title" id="micra-title">
               {t('micra.title')}
               <span className="essp-script">{t('micra.script')}</span>
-            </h2>
+            </h1>
             <div className="essp-loc">{t('micra.loc')}</div>
             <p className="essp-lede micra-lede">{t('micra.lede')}</p>
             <div className="essp-ctas">
@@ -79,6 +81,6 @@ export default function MicraSection() {
           ))}
         </ol>
       </div>
-    </section>
+    </header>
   );
 }
