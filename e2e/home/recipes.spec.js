@@ -33,13 +33,25 @@ test('banner y hoja: foto del campeón con crédito, receta oficial, final y vid
   const sheet = page.locator('dialog[open] .rs');
   await expect(sheet.getByRole('link', { name: 'Receta oficial (WAC) ↗' })).toHaveAttribute('href', 'https://worldaeropresschampionship.com/pages/recipes');
   await expect(sheet.getByRole('link', { name: 'La final de 2024 ↗' })).toHaveAttribute('target', '_blank');
-  await expect(sheet.getByRole('link', { name: /Video de la final/ })).toHaveCount(0);
+  await expect(sheet.getByRole('link', { name: /Ver la final/ })).toHaveCount(0);
+  await expect(slide.locator('.champ-play')).toHaveCount(0);
   await page.keyboard.press('Escape');
 
   // 2025 sí tiene el video oficial de la final
   await page.getByRole('tab', { name: '2025' }).click();
   await first.getByRole('button', { name: /Ver receta completa/ }).click();
-  await expect(page.locator('dialog[open] .rs').getByRole('link', { name: 'Video de la final ↗' })).toHaveAttribute('href', /youtube\.com\/watch\?v=/);
+  await expect(page.locator('dialog[open] .rs').getByRole('link', { name: 'Ver la final ↗' })).toHaveAttribute('href', /youtube\.com\/watch\?v=/);
+  await page.keyboard.press('Escape');
+  // En el banner, el botón ▶ abre el video ahí mismo (YouTube sin cookies, solo al abrir)
+  await expect(page.locator('iframe')).toHaveCount(0);
+  // Sin red en las pruebas: el reproductor responde una página vacía
+  await page.route('https://www.youtube-nocookie.com/**', (r) => r.fulfill({ contentType: 'text/html', body: '<!doctype html><title>video</title>' }));
+  await first.getByRole('button', { name: /Ver la final/ }).click();
+  const player = page.getByRole('dialog', { name: /Ver la final · Némo Pop 2025/ });
+  await expect(player.locator('iframe')).toHaveAttribute('src', /^https:\/\/www\.youtube-nocookie\.com\/embed\/G1e1FfR162c/);
+  await expect(player.getByRole('link', { name: /World AeroPress Championship ↗/ })).toHaveAttribute('href', /youtube\.com\/watch/);
+  await player.getByRole('button', { name: /Cerrar/ }).click();
+  await expect(page.locator('iframe')).toHaveCount(0);
   expect(errors).toEqual([]);
   await page.context().close();
 });

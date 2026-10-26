@@ -1,5 +1,5 @@
 // Micra en la portada: qué es, el celular con las cifras reales del estudio (micra_street_map) y las
-// fichas de redes con video; vacío, el mapa del celular dice que es de ejemplo.
+// dos banners de siempre, las fichas de redes con video y los botones de las tiendas; vacío, el mapa del celular dice que es de ejemplo.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
@@ -33,8 +33,19 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
   await expect(micra.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
   await expect(micra.locator('.essp-phone-who')).toContainText('1 cuadras · 2 baristas');
-  // En público se dice «baristas»; ni domicilios ni nombres
-  await expect(micra).not.toContainText(/tintero|domicilio|Laura|en camino/i);
+  // En público se dice «baristas»; sin nombres
+  await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
+  // Arriba, pequeños, los botones de las tiendas (sin enlace todavía: «Pronto»)
+  const stores = micra.getByRole('group', { name: 'Descarga la app Micra' });
+  await expect(stores.getByRole('img', { name: 'Muy pronto en App Store' })).toBeVisible();
+  await expect(stores.getByRole('img', { name: 'Muy pronto en Google Play' })).toBeVisible();
+  // Los dos banners de siempre: pedir café a domicilio y vivir del café con la AeroPress
+  const promos = micra.locator('.micra-promo');
+  await expect(promos).toHaveCount(2);
+  await expect(promos.nth(0).getByRole('heading', { level: 2 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
+  await expect(promos.nth(0).getByRole('link', { name: 'Ver la tienda' })).toHaveAttribute('href', '#beans');
+  await expect(promos.nth(1).getByRole('heading', { level: 2 })).toContainText(/Vive\s*del café\.\s*con tu AeroPress/);
+  await expect(promos.nth(1).getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /wa\.me\/\d+\?text=/);
   // Un aliado no se nombra antes de serlo
   await expect(page.locator('body')).not.toContainText(/Amor Perfecto/i);
   // Los llamados: WhatsApp con el mensaje listo y la Escuela

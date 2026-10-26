@@ -200,17 +200,24 @@
   .posts-banner { aspect-ratio: 16 / 7; }
 }
 
-/* --- 4. Aprende: la hoja de instrucciones de AeroPress Go --- */
+/* --- 4. Aprende: la hoja de AeroPress Go contada con el scroll --- */
+/* La sección mide una pantalla más un tramo por paso; adentro, el panel queda fijo (sticky) y el
+   avance elige el paso. overflow: clip (no hidden) para que sticky funcione. */
 .brew {
-  position: relative; overflow: hidden; background: #fff; color: var(--ink);
-  container-type: inline-size;
+  position: relative; overflow: clip; background: #fff; color: var(--ink);
+  container-type: inline-size; height: calc(100svh + var(--brew-steps, 10) * 26svh);
   --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
 }
+.brew-pin { position: sticky; top: 0; height: 100svh; }
 .brew .essp-sheet { z-index: 1; }
-.brew-in { position: relative; z-index: 2; padding: 70px 58px 56px; display: grid; gap: 32px; }
-.brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 40px; align-items: end; }
+.brew-in {
+  position: relative; z-index: 2; box-sizing: border-box; height: 100%;
+  padding: 56px 58px 32px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 16px;
+}
+.brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 40px; align-items: end; }
 .brew-head .essp-tag { grid-column: 1 / -1; }
-.brew-title { font-size: clamp(2.2rem, 4.6cqi, 4.2rem); }
+.brew-title { font-size: clamp(1.9rem, 3.6cqi, 3.4rem); }
+.brew-title .essp-script { margin-top: .5em; }
 .brew-legend { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; }
 .brew-legend li { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 7px 10px; border: 1.5px solid currentColor; }
 .brew-legend .is-hot { color: var(--red); }
@@ -218,54 +225,66 @@
 .brew .is-hot { color: var(--red); }
 .brew b.is-cold, .brew .brew-serve .is-cold { color: var(--ink); }
 
-/* La hoja: papel cuadriculado de 12 px, cuatro columnas, cada paso con su dibujo a trazo */
+/* La hoja: papel cuadriculado de 12 px; los diez pasos apilados en la misma celda, solo uno visible */
 .brew-sheet {
-  list-style: none; margin: 0; padding: 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 22px;
+  list-style: none; margin: 0; padding: 22px 28px; display: grid; min-height: 0;
   border: 2px solid var(--ink);
   background-color: #fff;
   background-image: linear-gradient(rgba(42, 53, 80, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 53, 80, .09) 1px, transparent 1px);
   background-size: 12px 12px;
 }
-.brew-sheet li { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-content: start; min-width: 0; }
-.brew-draw { grid-column: 1 / -1; width: 100%; max-width: 220px; height: auto; justify-self: center; color: var(--ink); overflow: visible; }
-.brew-notes {
-  position: absolute; top: 0; right: 0; display: grid; gap: 1px; max-width: 46%; text-align: right;
-  font: 600 9.5px/1.25 'JetBrains Mono', monospace; color: var(--ink-soft);
+.brew-sheet li {
+  grid-area: 1 / 1; position: relative; min-width: 0; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: center; gap: 6px 36px;
+  opacity: 0; transform: translateY(14px); transition: opacity .35s ease, transform .35s ease; pointer-events: none;
 }
-.is-notes-left .brew-notes { right: auto; left: 0; text-align: left; }
+.brew-sheet li.is-active { opacity: 1; transform: none; pointer-events: auto; }
+.brew-draw { grid-column: 1; grid-row: 1 / 4; width: 100%; max-width: 520px; max-height: 100%; height: auto; justify-self: center; align-self: center; color: var(--ink); overflow: visible; }
+.brew-notes {
+  position: absolute; top: 0; left: 0; display: grid; gap: 1px; max-width: 30%;
+  font: 600 11px/1.3 'JetBrains Mono', monospace; color: var(--ink-soft);
+}
 .brew-notes span:nth-child(even) { color: var(--ink); font-weight: 700; margin-bottom: 4px; }
-.brew-num { font: 800 30px/1 'Archivo', sans-serif; color: var(--ink); }
-.brew-sheet p { margin: 0; font: 600 14px/1.45 'Archivo', sans-serif; align-self: center; }
+.brew-num { grid-column: 2; align-self: end; font: 800 clamp(48px, 6cqi, 88px)/1 'Archivo', sans-serif; color: var(--ink); }
+.brew-num small { font-size: .28em; font-weight: 600; color: var(--ink-soft); margin-left: 4px; font-family: 'JetBrains Mono', monospace; }
+.brew-sheet p { grid-column: 2; margin: 0; font: 600 clamp(17px, 1.8cqi, 23px)/1.4 'Archivo', sans-serif; max-width: 30ch; }
 .brew-sheet b { font-weight: 800; }
-.brew-sheet li.is-serve { grid-column: span 2; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.4fr); }
-.brew-sheet li.is-serve .brew-draw { grid-column: 1; grid-row: 1 / 4; }
-.brew-sheet li.is-serve .brew-num { grid-column: 2; }
-.brew-sheet li.is-serve p { grid-column: 3; grid-row: 1; }
-.brew-serve { grid-column: 2 / 4; margin: 4px 0 0; display: grid; gap: 4px; font: 500 13.5px/1.4 'Archivo', sans-serif; }
+.brew-serve { grid-column: 2; margin: 6px 0 0; display: grid; gap: 4px; font: 500 clamp(14px, 1.3cqi, 17px)/1.4 'Archivo', sans-serif; align-self: start; }
 .brew-serve dt { display: inline; font-weight: 800; color: var(--red); }
 .brew-serve .is-cold dt { color: var(--ink); }
 .brew-serve dd { display: inline; margin: 0; }
-.brew-foot { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; }
+
+/* Puntos de avance: cada uno salta a su paso (área de 44 px, punto de 10) */
+.brew-dots { display: flex; justify-content: center; gap: 2px; }
+.brew-dots button { width: 34px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.brew-dots button::before { content: ''; width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--ink); transition: width .25s ease, background .25s ease; }
+.brew-dots button.is-done::before { background: var(--ink); }
+.brew-dots button.is-on::before { width: 26px; background: var(--red); border-color: var(--red); }
+.brew-dots button:focus-visible { outline: 2px solid var(--red); outline-offset: -4px; }
+.brew-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px 18px; flex-wrap: wrap; }
 .brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); }
 
+@media (prefers-reduced-motion: reduce) {
+  .brew-sheet li, .brew-dots button::before { transition: none; }
+}
 @container (max-width: 1100px) {
   .brew-head { grid-template-columns: 1fr; }
-  .brew-sheet { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .brew-sheet li.is-serve { grid-column: span 3; }
+  .brew-legend { display: none; } /* cada paso ya dice «Caliente» y «Cold brew» en su color */
 }
 @container (max-width: 760px) {
-  .brew-sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 16px 14px; }
-  .brew-sheet li.is-serve { grid-column: span 2; grid-template-columns: auto minmax(0, 1fr); }
-  .brew-sheet li.is-serve .brew-draw { grid-column: 1 / -1; grid-row: auto; max-width: 200px; }
-  .brew-sheet li.is-serve .brew-num, .brew-sheet li.is-serve p { grid-column: auto; grid-row: auto; }
-  .brew-serve { grid-column: 1 / -1; }
-  .brew-num { font-size: 24px; }
-  .brew-sheet p { font-size: 13px; }
-  .brew-notes { display: none; } /* las cotas no caben junto al dibujo en dos columnas */
-}
-@container (max-width: 700px) {
-  .brew-in { padding: 54px 24px 40px; gap: 24px; }
-  .brew-sheet { margin: 0 -8px; }
+  .brew-in { padding: 40px 22px 18px; gap: 10px; }
+  .brew-head .essp-script { display: none; }
+  .brew-title { font-size: clamp(1.6rem, 7.4cqi, 2.2rem); }
+  .brew-sheet { padding: 14px; }
+  .brew-sheet li { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto auto; align-content: stretch; gap: 4px; }
+  .brew-draw { grid-column: 1; grid-row: 1; max-width: 300px; max-height: 100%; }
+  .brew-num, .brew-sheet p, .brew-serve { grid-column: 1; }
+  .brew-num { font-size: 40px; }
+  .brew-sheet p { font-size: 16px; max-width: none; }
+  .brew-serve { font-size: 14px; }
+  .brew-notes { display: none; }
+  .brew-dots button { width: 28px; }
+  .brew-foot { justify-content: center; }
   .brew .essp-ctas { width: 100%; flex-wrap: nowrap; gap: 10px; }
   .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
