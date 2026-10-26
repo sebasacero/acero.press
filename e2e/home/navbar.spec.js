@@ -5,7 +5,7 @@ import { openPage } from '../micra/fixtures.js';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
-const LINKS_ES = ['Inicio', 'Café', 'Campeones', 'Aprende', 'Contacto', 'Tinteros'];
+const LINKS_ES = ['Inicio', 'Café', 'Campeones', 'Aprende', 'Contacto', 'Baristas'];
 
 /** La sección del ancla existe y quedó a la vista cuando el scroll (suave) ya se detuvo. */
 async function inView(page, id) {
@@ -37,16 +37,20 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await expect(menu(page).getByRole('link')).toHaveText(LINKS_ES);
 
   // En la portada son saltos dentro de la página
-  for (const [name, id] of [['Café', 'beans'], ['Campeones', 'metodo'], ['Tinteros', 'tinteros'], ['Contacto', 'contact'], ['Inicio', 'home']]) {
+  for (const [name, id] of [['Café', 'beans'], ['Campeones', 'metodo'], ['Baristas', 'baristas'], ['Contacto', 'contact'], ['Inicio', 'home']]) {
     await toTop(page);
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/#${id}$`));
     await inView(page, id);
   }
 
-  // Tinteros abre la pestaña «Para tinteros» del banner
-  await menu(page).getByRole('link', { name: 'Tinteros', exact: true }).click();
-  await expect(page.locator('.essp-slide:not([aria-hidden="true"]) .essp-tabs [aria-selected="true"]').first()).toHaveText(/tinteros/i);
+  // Baristas abre la pestaña «Para baristas» del banner
+  await menu(page).getByRole('link', { name: 'Baristas', exact: true }).click();
+  await expect(page.locator('.essp-slide:not([aria-hidden="true"]) .essp-tabs [aria-selected="true"]').first()).toHaveText(/baristas/i);
+  // Los enlaces viejos a #tinteros siguen abriendo la misma pestaña (sin recargar: el contador del owner no se corta)
+  await page.locator('.essp-slide:not([aria-hidden="true"]) .essp-tabs [role="tab"]').first().click();
+  await page.evaluate(() => { location.hash = '#tinteros'; });
+  await expect(page.locator('.essp-slide:not([aria-hidden="true"]) .essp-tabs [aria-selected="true"]').first()).toHaveText(/baristas/i);
 
   // Aprende abre la Escuela, y ahí queda marcado como la página en la que estás
   await toTop(page);
@@ -59,7 +63,7 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await menu(page).getByRole('link', { name: 'Contacto', exact: true }).click();
   await expect(page).toHaveURL(/\/escuela#contact$/);
   await inView(page, 'contact');
-  for (const [name, id] of [['Campeones', 'metodo'], ['Café', 'beans'], ['Tinteros', 'tinteros']]) {
+  for (const [name, id] of [['Campeones', 'metodo'], ['Café', 'beans'], ['Baristas', 'baristas']]) {
     await page.goto('/escuela', { waitUntil: 'load' });
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`^[^#]*/#${id}$`));
@@ -69,7 +73,8 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await page.getByRole('link', { name: 'ACERO.press' }).click();
   await expect(page).toHaveURL(/\/#home$/);
   await expect(menu(page).getByRole('link', { name: 'Aprende' })).not.toHaveAttribute('aria-current', 'page');
-  expect(errors).toEqual([]);
+  // Cambiar de página corta el contador de ventas que iba en camino («Failed to fetch»): eso no es un error de la página
+  expect(errors.filter((e) => !/de ventas: TypeError: Failed to fetch/.test(e))).toEqual([]);
   await page.context().close();
 });
 
@@ -78,7 +83,7 @@ test('escritorio: idioma, cuenta y carrito desde el menú', async ({ browser }) 
   await page.goto('/', { waitUntil: 'load' });
   const lang = page.locator('.navbar .lang-btn');
   await lang.click(); // ES → EN
-  await expect(menu(page).getByRole('link')).toHaveText(['Home', 'Beans', 'Champions', 'Learn', 'Contact', 'Vendors']);
+  await expect(menu(page).getByRole('link')).toHaveText(['Home', 'Beans', 'Champions', 'Learn', 'Contact', 'Baristas']);
   await lang.click(); // EN → JA
   await expect(menu(page).getByRole('link').nth(3)).toHaveText('学ぶ');
   await lang.click(); // JA → ES
