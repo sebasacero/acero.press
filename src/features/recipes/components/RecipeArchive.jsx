@@ -33,9 +33,6 @@ export default function RecipeArchive() {
         <h2 className="sec-h2">{text('recipes_title', t('section.title'))}</h2>
         <p className="sec-desc">
           {text('recipes_desc', t('section.desc'))}
-          <span className="jp" style={{ display: 'block', marginTop: '.4rem' }}>
-            {t('section.descJp')}
-          </span>
         </p>
       </div>
 

@@ -419,10 +419,10 @@ export default function DashboardPage() {
     <div className="admin-page esp dash">
       <header className="esp-head">
         <div className="esp-cota">
-          <span>FIG. 00 — DASHBOARD / OPERACIÓN EN VIVO</span>
+          <span>FIG. 00 — AGENTE / OPERACIÓN EN VIVO</span>
           <span className="esp-badge">BOGOTÁ · {clockStr}</span>
         </div>
-        <h1 className="esp-title">Dashboard.</h1>
+        <h1 className="esp-title">Agente.</h1>
         <p className="esp-sub">Toda la operación de AceroPress con datos en vivo de Supabase: ventas, inventario, clientes y redes.</p>
       </header>
 

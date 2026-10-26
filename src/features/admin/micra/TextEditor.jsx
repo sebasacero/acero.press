@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const AUTO_KEYS = ['title', 'subtitle', 'note', 'fig', 'sign'];
 const FREE_FONTS = [['marker', 'Marcador'], ['mono', 'Plano'], ['grotesk', 'Titular']];
-const FREE_COLORS = [['red', 'Rojo', '#fa2525'], ['theme', 'Tinta', '#F7F3E8']];
+const FREE_COLORS = [['red', 'Rojo', '#DE1B1B'], ['theme', 'Tinta', '#F7F3E8']];
 const ALIGN_NEXT = { left: 'center', center: 'right', right: 'left' };
 const ALIGN_GLYPH = { left: '⟸', center: '≡', right: '⟹' };
 
@@ -78,7 +78,7 @@ export default function TextEditor({ targets, initialKey, values, autos, placeho
         <textarea
           ref={inputRef}
           className={`mtext-input ${fontClass} ${active === 'free' && free.bg ? 'has-bg' : ''}`}
-          style={active === 'free' ? { color: freeColor, textAlign: free.align } : active === 'title' && tColor === 'red' ? { color: '#fa2525' } : undefined}
+          style={active === 'free' ? { color: freeColor, textAlign: free.align } : active === 'title' && tColor === 'red' ? { color: '#DE1B1B' } : undefined}
           aria-label={target?.label}
           rows={target?.multiline ? 3 : 1}
           maxLength={target?.max}
@@ -108,7 +108,7 @@ export default function TextEditor({ targets, initialKey, values, autos, placeho
       {active === 'title' && (
         <div className="mtext-tools">
           <div className="mtext-row">
-            {[['auto', 'Auto', '#F7F3E8'], ['red', 'Rojo', '#fa2525']].map(([id, label, hex]) => (
+            {[['auto', 'Auto', '#F7F3E8'], ['red', 'Rojo', '#DE1B1B']].map(([id, label, hex]) => (
               <button key={id} type="button" className={`mtext-tool ${tColor === id ? 'on' : ''}`} aria-pressed={tColor === id} onClick={() => setTColor(id)}>
                 <i className="mtext-swatch" style={{ background: hex }} aria-hidden="true" />{label}
               </button>

@@ -21,15 +21,6 @@ const GLYPHS = {
       <path d="M8 5.5h3v2.5H8zM13 5.5h3v2.5h-3z" />
     </g>
   ),
-  // Lista de espera: personas
-  waitlist: () => (
-    <g {...S}>
-      <circle cx="9" cy="8.5" r="3" />
-      <path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5" />
-      <circle cx="16.5" cy="9.5" r="2.4" />
-      <path d="M15.5 14.2c2.4-.2 4.4 1.3 5 4.3" />
-    </g>
-  ),
   // Agente: el reactor del HUD
   dashboard: () => (
     <g {...S}>

@@ -231,7 +231,7 @@ export function drawBogotaMap(canvas, view) {
     const y = Y(k);
     ctx.font = `700 ${9 * z}px ${MONO}`;
     const w = ctx.measureText(text).width + 12;
-    ctx.fillStyle = home ? '#fa2525' : P.pin;
+    ctx.fillStyle = home ? '#DE1B1B' : P.pin;
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(x - w / 2, y - 25, w, 17, view.style === 'plano' ? 0 : 9);
     else ctx.rect(x - w / 2, y - 25, w, 17);

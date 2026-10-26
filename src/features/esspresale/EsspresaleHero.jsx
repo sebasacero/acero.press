@@ -78,6 +78,8 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
   const base = (key) => t(`essp.${kind}.${key}`);
   const k = (key) => text(`essp_${kind}_${key}`, base(key));
   const isOrder = kind === 'order';
+  // Un solo h1 en la portada: el de la primera diapositiva; la otra es un h2
+  const Title = isOrder ? 'h1' : 'h2';
   const title = [text(`essp_${kind}_title1`, base('title')[0]), text(`essp_${kind}_title2`, base('title')[1])];
   const specs = base('specs');
   // Datos reales del estudio (null hasta que lleguen): tazas, cuadras con venta, tinteros
@@ -126,10 +128,10 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
         <div className="essp-main">
           <div className="essp-copy">
             <div className="essp-tag">{k('tag')} <span className="essp-new">{k('badge')}</span></div>
-            <h1 className="essp-title">
+            <Title className="essp-title">
               {title[0]}<br />{title[1]}
               <span className="essp-script">{k('script')}</span>
-            </h1>
+            </Title>
             <div className="essp-loc">{k('loc')}</div>
             <p className="essp-lede">{k('lede')}</p>
             <div className="essp-ctas">
@@ -176,8 +178,14 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
 export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
   const { layers: streetLayers, summary: street } = useStreetMap();
-  const [index, setIndex] = useState(0);
+  // #tinteros (el menú, un enlace compartido) abre «Para tinteros»
+  const [index, setIndex] = useState(() => (window.location.hash === '#tinteros' ? 1 : 0));
   const select = useCallback((i) => setIndex(i), []);
+  useEffect(() => {
+    const onHash = () => { if (window.location.hash === '#tinteros') setIndex(1); };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   // «Para tinteros» escribe al WhatsApp del negocio (el mismo del botón flotante), con el mensaje listo
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
@@ -189,7 +197,7 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const tone = index === 0 ? 'paper' : 'photo';
 
   return (
-    <header className={`essp-hero essp-hero--${tone}`}>
+    <header className={`essp-hero essp-hero--${tone}`} id="tinteros">
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} />

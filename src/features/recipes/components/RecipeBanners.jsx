@@ -89,7 +89,8 @@ function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onO
           <div className="rb-tag"><span className="rb-dot" />{t('recipesBanner.fig').replace('{year}', recipe.year)} <span className="rb-flag">{recipe.flag}</span></div>
           <h3 className="rb-name">{recipe.name}</h3>
           <div className="rb-place">{recipe.place[lang]}</div>
-          <div className="rb-jp">世界チャンピオン · {recipe.year}年</div>
+          {/* El subtítulo japonés solo en japonés: en español era un tercer idioma a la vista */}
+          {lang === 'ja' && <div className="rb-jp">世界チャンピオン · {recipe.year}年</div>}
         </div>
 
         <div className="rb-col">

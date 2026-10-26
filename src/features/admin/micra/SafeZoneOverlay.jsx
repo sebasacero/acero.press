@@ -84,7 +84,7 @@ function Ghost({ id, F }) {
     const cut = (w - (h * 3) / 4) / 2;
     body = (
       <>
-        <rect x={cut} y={2} width={w - cut * 2} height={h - 4} fill="none" stroke="#fa2525" strokeWidth="4" strokeDasharray="18 12" />
+        <rect x={cut} y={2} width={w - cut * 2} height={h - 4} fill="none" stroke="#DE1B1B" strokeWidth="4" strokeDasharray="18 12" />
         <rect x={0} y={0} width={cut} height={h} fill="rgba(0,0,0,.5)" />
         <rect x={w - cut} y={0} width={cut} height={h} fill="rgba(0,0,0,.5)" />
         {txt(w / 2, h - 40, 30, 'Cuadrícula del perfil (3:4)', 'middle', 700)}
@@ -95,7 +95,7 @@ function Ghost({ id, F }) {
       <>
         <rect x={0} y={h - 150} width={w} height={150} fill="rgba(0,0,0,.45)" />
         <rect x={60} y={h - 120} width={w - 120} height={8} rx={4} fill="rgba(255,255,255,.4)" />
-        <rect x={60} y={h - 120} width={(w - 120) * 0.32} height={8} rx={4} fill="#fa2525" />
+        <rect x={60} y={h - 120} width={(w - 120) * 0.32} height={8} rx={4} fill="#DE1B1B" />
         {txt(60, h - 50, 40, '▶   ⏭   🔊   0:12 / 0:45', 'start', 600)}
         {txt(w - 60, h - 50, 40, '⚙   ⛶', 'end', 600)}
       </>

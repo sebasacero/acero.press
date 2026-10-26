@@ -136,7 +136,7 @@ export default function PublicationsPage() {
                   <button className="admin-btn-ghost admin-btn-sm" onClick={() => remove(it.id)}>Borrar</button>
                 </div>
                 {igRes && (
-                  <p className="admin-fineprint" style={{ color: igRes.ok ? '#0f7d4d' : '#de1b1b' }}>
+                  <p className="admin-fineprint" style={{ color: igRes.ok ? '#0f7d4d' : 'var(--red)' }}>
                     {igRes.message}
                   </p>
                 )}

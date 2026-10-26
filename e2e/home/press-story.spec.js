@@ -1,5 +1,5 @@
-// Banner de la app Micra: el celular inicia sesión con Google y abre la receta,
-// donde la animación del AeroPress sigue al scroll (y sin movimiento, pasos con foto).
+// Receta guiada: la animación del AeroPress sigue al scroll en cinco pasos
+// (y sin movimiento, pasos con foto). Sin inicio de sesión ni tiendas: la app aún no existe.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
@@ -11,7 +11,6 @@ const scrollTrack = (page, p) => page.evaluate((p) => {
 }, p);
 const videoTime = (page) => page.evaluate(() => document.querySelector('.ps-video').currentTime);
 const activeItem = (page) => page.locator('.ps-step.is-on .ps-body b');
-const phone = (page) => page.locator('.pb-phone');
 /** El video se acerca al scroll con suavidad: espera a que se quede quieto y devuelve su segundo. */
 async function settledTime(page) {
   let prev = -1;
@@ -24,52 +23,38 @@ async function settledTime(page) {
   return prev;
 }
 
-test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scroll', async ({ browser }) => {
+test('escritorio: la receta guiada sigue al scroll en cinco pasos, sin login ni tiendas', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } } });
   await page.goto('/', { waitUntil: 'load' });
   await page.locator('#prensado').scrollIntoViewIfNeeded();
-  await expect(page.locator('#ps-title')).toContainText('Entra a Micra');
-  await expect(page.locator('#ps-title .essp-script')).toHaveText('tu AeroPress');
+  await expect(page.locator('#ps-title')).toContainText('Tu primera taza');
+  await expect(page.locator('#ps-title .essp-script')).toHaveText('con AeroPress');
   // La hoja de la portada: marco con zonas y panel oscuro con el odómetro
   await expect(page.locator('#prensado .essp-sheet')).toHaveCount(1);
-  await expect(page.locator('#prensado .pb-panel .essp-badge')).toHaveText(/0[1-8] \/ 08/);
-  await expect(page.locator('.pb-side .ps-step')).toHaveCount(8);
-  await expect(page.locator('#prensado .essp-stores')).toHaveCount(1);
-  // Al llegar, antes de bajar, la pantalla invita a deslizar
-  await scrollTrack(page, 0);
-  await expect(page.locator('.pb-hint')).toHaveAttribute('data-on', 'true');
-  await expect(page.locator('.pb-hint')).toContainText('Desliza para ver la app');
-
-  // Inicio de sesión: entrada → toque → cuenta → bienvenida → receta
-  const beats = [];
-  for (const p of [0.01, 0.07, 0.12, 0.17, 0.2, 0.26]) {
-    await scrollTrack(page, p);
-    await page.waitForTimeout(150);
-    beats.push(await phone(page).getAttribute('data-beat'));
-  }
-  expect(beats).toEqual(['screen', 'tap', 'chooser', 'pick', 'welcome', 'open']);
-  await scrollTrack(page, 0.12);
-  await expect(page.locator('.pb-chooser')).toContainText('Elige una cuenta');
-  await expect(activeItem(page)).toHaveText('Elige tu cuenta');
-  expect(await settledTime(page)).toBeLessThan(0.05);
+  await expect(page.locator('#prensado .pb-panel .essp-badge')).toHaveText(/0[1-5] \/ 05/);
+  await expect(page.locator('.pb-side .ps-step')).toHaveCount(5);
+  await expect(page.locator('#prensado')).not.toContainText('Google');
+  await expect(page.locator('#prensado .essp-stores, #prensado .pb-login')).toHaveCount(0);
+  await expect(page.locator('.pb-phone')).toHaveAttribute('data-scene', 'brew');
 
   // Lo que Safari de iOS necesita para cargar y buscar sin un toque: preload auto,
   // atributo muted (no solo la propiedad) y el video quieto tras el arranque
+  await scrollTrack(page, 0);
   await page.waitForFunction(() => document.querySelector('.ps-video')?.readyState >= 2);
   await expect.poll(() => page.evaluate(() => {
     const v = document.querySelector('.ps-video');
     return [v.preload, v.hasAttribute('muted'), v.hasAttribute('playsinline'), v.paused];
   })).toEqual(['auto', true, true, true]);
+  expect(await settledTime(page)).toBeLessThan(0.05);
 
-  // La receta: el video avanza con el scroll y los pasos van en orden
+  // El video avanza con el scroll y los pasos van en orden
   const seen = [];
   let last = -1;
-  for (const p of [0.4, 0.55, 0.7, 0.85, 1]) {
+  for (const p of [0.2, 0.4, 0.6, 0.8, 1]) {
     await scrollTrack(page, p);
     const t = await settledTime(page);
     expect(t).toBeGreaterThan(last + 0.5);
     last = t;
-    await expect(phone(page)).toHaveAttribute('data-scene', 'brew');
     seen.push(await activeItem(page).textContent());
   }
   expect(last).toBeGreaterThan(16);
@@ -79,9 +64,7 @@ test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scrol
   expect(idx).toEqual([...idx].sort((a, b) => a - b));
   await expect(page.locator('.pb-card')).toContainText('PASO 05 / 05');
 
-  // Tocar un ítem lleva a él: al inicio de sesión y a un paso de la receta
-  await page.click('.pb-side .ps-step:has-text("Elige tu cuenta") button');
-  await expect(phone(page)).toHaveAttribute('data-beat', /chooser|pick/, { timeout: 6000 });
+  // Tocar un paso de la lista lleva a él
   await page.click('.pb-side .ps-step:has-text("Presiona") button');
   await expect(activeItem(page)).toHaveText('Presiona', { timeout: 6000 });
   await expect(page.locator('.pb-card b')).toHaveText('Presiona');
@@ -89,7 +72,7 @@ test('escritorio: entra con Google, abre la receta y el AeroPress sigue al scrol
   await page.context().close();
 });
 
-test('celular: el celular llena la pantalla, sin la lista, con las tiendas debajo y el aviso de deslizar', async ({ browser }) => {
+test('celular: el celular llena la pantalla, sin la lista, y la sección mide menos de cuatro pantallas', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true } });
   await page.goto('/', { waitUntil: 'load' });
   await page.locator('#prensado').scrollIntoViewIfNeeded();
@@ -98,29 +81,25 @@ test('celular: el celular llena la pantalla, sin la lista, con las tiendas debaj
   await expect.poll(() => videoTime(page)).toBeGreaterThan(5);
   const r = await page.evaluate(() => {
     const b = document.querySelector('.pb-phone').getBoundingClientRect();
-    const st = document.querySelector('#prensado .essp-stores').getBoundingClientRect();
-    return { sw: document.documentElement.scrollWidth, side: getComputedStyle(document.querySelector('.pb-side')).display, left: b.left, right: b.right, bottom: b.bottom, w: b.width, storesTop: st.top, storesBottom: st.bottom, h: innerHeight };
+    return { sw: document.documentElement.scrollWidth, side: getComputedStyle(document.querySelector('.pb-side')).display, left: b.left, right: b.right, bottom: b.bottom, w: b.width, h: innerHeight, track: document.querySelector('.ps-track').offsetHeight };
   });
   expect(r.sw).toBe(390);
   expect(r.side).toBe('none');
   expect(r.left).toBeGreaterThanOrEqual(0);
   expect(r.right).toBeLessThanOrEqual(390);
-  // Grande, sin tapar los íconos de las tiendas, y estos dentro del marco de la hoja
   expect(r.w).toBeGreaterThanOrEqual(300);
-  expect(r.bottom).toBeLessThanOrEqual(r.storesTop + 8);
-  expect(r.storesBottom).toBeLessThanOrEqual(r.h - 18);
-  // Ya empezó el recorrido: el aviso de deslizar se fue
-  await expect(page.locator('.pb-hint')).toHaveAttribute('data-on', 'false');
+  expect(r.bottom).toBeLessThanOrEqual(r.h);
+  // Antes eran seis pantallas de scroll (la mitad de la portada)
+  expect(r.track).toBeLessThan(r.h * 4);
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('con movimiento reducido: los ocho pasos como tarjetas, sin celular animado ni pista larga', async ({ browser }) => {
+test('con movimiento reducido: los cinco pasos como tarjetas, sin celular animado ni pista larga', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' } });
   await page.goto('/', { waitUntil: 'load' });
   await page.locator('#prensado').scrollIntoViewIfNeeded();
-  await expect(page.locator('.ps-card')).toHaveCount(8);
-  await expect(page.locator('.ps-card.is-login').first()).toContainText('Continuar con Google');
+  await expect(page.locator('.ps-card')).toHaveCount(5);
   await expect(page.locator('.ps-track, .ps-video, .pb-phone')).toHaveCount(0);
   await expect(page.locator('.ps-card img').first()).toHaveAttribute('src', '/image/metodo/paso-1.webp');
   expect(errors).toEqual([]);

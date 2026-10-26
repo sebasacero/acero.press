@@ -5,7 +5,7 @@ import { openPage } from '../micra/fixtures.js';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
-const LINKS_ES = ['Inicio', 'Café', 'Campeones', 'Aprende', 'Contacto', 'Micra'];
+const LINKS_ES = ['Inicio', 'Café', 'Campeones', 'Aprende', 'Contacto', 'Tinteros'];
 
 /** La sección del ancla existe y quedó a la vista cuando el scroll (suave) ya se detuvo. */
 async function inView(page, id) {
@@ -37,12 +37,16 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await expect(menu(page).getByRole('link')).toHaveText(LINKS_ES);
 
   // En la portada son saltos dentro de la página
-  for (const [name, id] of [['Café', 'beans'], ['Campeones', 'metodo'], ['Micra', 'prensado'], ['Contacto', 'contact'], ['Inicio', 'home']]) {
+  for (const [name, id] of [['Café', 'beans'], ['Campeones', 'metodo'], ['Tinteros', 'tinteros'], ['Contacto', 'contact'], ['Inicio', 'home']]) {
     await toTop(page);
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/#${id}$`));
     await inView(page, id);
   }
+
+  // Tinteros abre la pestaña «Para tinteros» del banner
+  await menu(page).getByRole('link', { name: 'Tinteros', exact: true }).click();
+  await expect(page.locator('.essp-slide:not([aria-hidden="true"]) .essp-tabs [aria-selected="true"]').first()).toHaveText(/tinteros/i);
 
   // Aprende abre la Escuela, y ahí queda marcado como la página en la que estás
   await toTop(page);
@@ -55,7 +59,7 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await menu(page).getByRole('link', { name: 'Contacto', exact: true }).click();
   await expect(page).toHaveURL(/\/escuela#contact$/);
   await inView(page, 'contact');
-  for (const [name, id] of [['Campeones', 'metodo'], ['Café', 'beans'], ['Micra', 'prensado']]) {
+  for (const [name, id] of [['Campeones', 'metodo'], ['Café', 'beans'], ['Tinteros', 'tinteros']]) {
     await page.goto('/escuela', { waitUntil: 'load' });
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`^[^#]*/#${id}$`));
@@ -74,7 +78,7 @@ test('escritorio: idioma, cuenta y carrito desde el menú', async ({ browser }) 
   await page.goto('/', { waitUntil: 'load' });
   const lang = page.locator('.navbar .lang-btn');
   await lang.click(); // ES → EN
-  await expect(menu(page).getByRole('link')).toHaveText(['Home', 'Beans', 'Champions', 'Learn', 'Contact', 'Micra']);
+  await expect(menu(page).getByRole('link')).toHaveText(['Home', 'Beans', 'Champions', 'Learn', 'Contact', 'Vendors']);
   await lang.click(); // EN → JA
   await expect(menu(page).getByRole('link').nth(3)).toHaveText('学ぶ');
   await lang.click(); // JA → ES

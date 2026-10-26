@@ -84,7 +84,7 @@ function addLayers(map, sales, routes) {
     minzoom: 15.5,
     paint: {
       'circle-radius': ['interpolate', ['linear'], ['get', 'weight'], 0, 4, 1, 9],
-      'circle-color': '#E8201C',
+      'circle-color': '#DE1B1B',
       'circle-opacity': 0.85,
       'circle-stroke-color': '#fff',
       'circle-stroke-width': 2,
