@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { heatFromSales, pinsFromTinteros, summarize, mapLayers } from './streetMap.js';
+import { heatFromSales, pinsFromTinteros, summarize, mapLayers, tinteroBlock } from './streetMap.js';
 
 const sales = [
   { carrera: 13, calle: 85, cups: 40, zone: 'Zona T' },
@@ -42,4 +42,16 @@ test('las capas dicen si hay datos reales; vacío deja el ejemplo', () => {
   assert.equal(mapLayers({ sales: [], tinteros: [] }).real, false);
   assert.equal(mapLayers({ sales, tinteros: [] }).real, true);
   assert.equal(mapLayers({ sales: [], tinteros: [{ carrera: 13, calle: 72, stage: 'piloto' }] }).real, true);
+});
+
+test('un tintero con solo GPS (la ficha de la calle) también va al mapa, en su cuadra; en el sur no tiene pin', async () => {
+  const { toLngLat } = await import('./bogotaGeo.js');
+  const [lng, lat] = toLngLat(13, 72);
+  const pins = pinsFromTinteros([
+    { lat: lat + 0.00005, lng: lng - 0.00005, stage: 'prospecto' },
+    { lat: 4.6, lng: -74.17, stage: 'prospecto' }, // Kennedy: fuera de la cuadrícula
+    { carrera: 7, calle: 45, lat, lng, stage: 'activo' }, // la cuadra escrita manda
+  ]);
+  assert.deepEqual(pins, [[13, 72, 'T', false], [7, 45, 'A', true]]);
+  assert.equal(tinteroBlock({ lat: null, lng: null }), null);
 });

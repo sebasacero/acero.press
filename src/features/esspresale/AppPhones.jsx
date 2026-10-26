@@ -2,7 +2,7 @@ import MapCanvas from './MapCanvas.jsx';
 import { Segs, useClock } from './parts.jsx';
 
 // Pantallas de Micra dentro de un celular, para el banner: el mapa con las
-// ventas reales de la calle y la pantalla del barista. En el
+// ventas reales de la calle y Mi ruta, la app del tintero (un día de ejemplo). En el
 // celular el banner muestra la pantalla a sangre, como si fuera la app (ver
 // esspresale.css). Los textos de la app van en español: abre primero en Bogotá.
 
@@ -45,13 +45,13 @@ export function StreetPhone({ className = '', street = null, layers = null }) {
         <StatusBar />
         <AppBar zone={zone.toUpperCase()} />
         <div className="essp-phone-pill">
-          <div><span>HOY VENDEMOS EN</span>{zone} ▾</div>
+          <div><span>EL ESTUDIO EN</span>{zone} ▾</div>
           <span className="essp-phone-chip">AP</span>
         </div>
         <div className="essp-phone-sheet">
           <span className="essp-phone-handle" />
           <div className="essp-phone-card">
-            <div className="essp-phone-cota"><span>FIG. 01 — EL ESTUDIO</span><span className="essp-phone-badge">EN LA CALLE</span></div>
+            <div className="essp-phone-cota"><span>FIG. 01 — EL ESTUDIO</span><span className="essp-phone-badge">{layers ? 'DATOS REALES' : 'MAPA DE EJEMPLO'}</span></div>
             <Segs filled={Math.min(20, street?.blocks ?? 0)} />
             <div className="essp-phone-who">
               <span className="essp-phone-av">AP</span>
@@ -67,23 +67,23 @@ export function StreetPhone({ className = '', street = null, layers = null }) {
 
 export function BaristaPhone({ className = '' }) {
   return (
-    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra para baristas: mapa de calor de la demanda y avance del registro">
+    <div className={`essp-phone ${className}`} role="img" aria-label="Mi ruta, la app del tintero: su recorrido del día con paradas y tazas (ejemplo)">
       <MapCanvas view={baristaView} />
       <div className="essp-phone-screen" aria-hidden="true">
         <StatusBar />
-        <AppBar zone="BARISTA" />
+        <AppBar zone="MI RUTA" />
         <div className="essp-phone-pill">
-          <div><span>DEMANDA DE CAFÉ</span>Ahora en tu zona</div>
-          <span className="essp-phone-chip is-red">BARISTA</span>
+          <div><span>TU RECORRIDO</span>Hoy 6:40–9:15</div>
+          <span className="essp-phone-chip is-red">EJEMPLO</span>
         </div>
         <div className="essp-phone-sheet">
           <span className="essp-phone-handle" />
           <div className="essp-phone-card">
-            <div className="essp-phone-cota"><span>FIG. 04.1 — PASO 3 DE 4</span><span className="essp-phone-badge">2 / 4</span></div>
-            <Segs filled={10} />
-            <b>Certifica la receta WAC</b>
+            <div className="essp-phone-cota"><span>FIG. 02.1 — TU DÍA</span><span className="essp-phone-badge">14 PARADAS</span></div>
+            <Segs filled={14} />
+            <b>3,2 km · 38 tazas</b>
             <div className="essp-phone-toggle">
-              <span><b>Recibir pedidos</b><small>Al terminar los 4 pasos</small></span>
+              <span><b>Compartir ubicación</b><small>Solo mientras vendes</small></span>
               <span className="essp-phone-switch" />
             </div>
           </div>

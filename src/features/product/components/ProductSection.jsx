@@ -172,9 +172,6 @@ export default function ProductSection() {
   return (
     <section className="product-section shop" id="beans">
       <SectionEditButton section="Catálogo de café" toolId="catalog" />
-      <div className="product-banner">
-        <div className="banner-text">{t('banners.beans')}</div>
-      </div>
 
       <div className="shop-inner">
         <div className="shop-rule" aria-hidden="true"><span /></div>

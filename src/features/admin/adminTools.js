@@ -10,7 +10,6 @@ import InstagramPage from './pages/InstagramPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import TablesPage from './pages/TablesPage.jsx';
 import RecipesPage from './pages/RecipesPage.jsx';
-import AppWaitlistPage from './pages/AppWaitlistPage.jsx';
 import PilotoPage from './pages/PilotoPage.jsx';
 
 // Grupos por flujo de trabajo: primero lo que se usa en el día a día.
@@ -28,7 +27,7 @@ export const ADMIN_TOOLS = [
   { id: 'espresale', label: 'Micra', group: 'ops', desc: 'Cámara de venta y tarjetas para redes', bleed: true, Component: EspresalePage },
   { id: 'orders', label: 'Pedidos', group: 'ops', desc: 'Confirmar y completar pedidos', signal: 'pending', Component: OrdersPage },
   { id: 'tables', label: 'Mesas / POS', group: 'ops', desc: 'Cuentas abiertas por mesa', signal: 'occupied', Component: TablesPage },
-  { id: 'waitlist', label: 'Lista de espera', group: 'ops', desc: 'Quienes se apuntaron a la app Micra', Component: AppWaitlistPage },
+  // (La «Lista de espera» de la app salió del panel: contaba quién quería pedir café a domicilio)
   { id: 'dashboard', label: 'Agente', group: 'biz', desc: 'Dashboard e índice de crecimiento', Component: DashboardPage },
   { id: 'algorithm', label: 'Algoritmo', group: 'biz', desc: 'Plan Micra: qué hacer hoy y red de tinteros', Component: AlgorithmPage },
   { id: 'piloto', label: 'Estudio', group: 'biz', desc: 'Estudio de calle (MVP): tinteros con ficha, encuesta y GPS en el mapa', Component: PilotoPage },

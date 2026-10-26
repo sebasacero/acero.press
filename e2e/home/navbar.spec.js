@@ -5,7 +5,7 @@ import { openPage } from '../micra/fixtures.js';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
-const LINKS_ES = ['Home', 'Beans', 'Champions', 'Aprende', 'Contact', 'App'];
+const LINKS_ES = ['Inicio', 'Café', 'Campeones', 'Aprende', 'Contacto', 'Tinteros'];
 
 /** La sección del ancla existe y quedó a la vista cuando el scroll (suave) ya se detuvo. */
 async function inView(page, id) {
@@ -37,12 +37,16 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await expect(menu(page).getByRole('link')).toHaveText(LINKS_ES);
 
   // En la portada son saltos dentro de la página
-  for (const [name, id] of [['Beans', 'beans'], ['Champions', 'metodo'], ['App', 'prensado'], ['Contact', 'contact'], ['Home', 'home']]) {
+  for (const [name, id] of [['Café', 'beans'], ['Campeones', 'metodo'], ['Tinteros', 'tinteros'], ['Contacto', 'contact'], ['Inicio', 'home']]) {
     await toTop(page);
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/#${id}$`));
     await inView(page, id);
   }
+
+  // Tinteros abre la pestaña «Para tinteros» del banner
+  await menu(page).getByRole('link', { name: 'Tinteros', exact: true }).click();
+  await expect(page.locator('.essp-slide:not([aria-hidden="true"]) .essp-tabs [aria-selected="true"]').first()).toHaveText(/tinteros/i);
 
   // Aprende abre la Escuela, y ahí queda marcado como la página en la que estás
   await toTop(page);
@@ -51,11 +55,11 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Aprende a');
   await expect(menu(page).getByRole('link', { name: 'Aprende' })).toHaveAttribute('aria-current', 'page');
 
-  // Desde la Escuela: Contact se queda (el pie está en todas las páginas); los demás vuelven a la portada
-  await menu(page).getByRole('link', { name: 'Contact', exact: true }).click();
+  // Desde la Escuela: Contacto se queda (el pie está en todas las páginas); los demás vuelven a la portada
+  await menu(page).getByRole('link', { name: 'Contacto', exact: true }).click();
   await expect(page).toHaveURL(/\/escuela#contact$/);
   await inView(page, 'contact');
-  for (const [name, id] of [['Champions', 'metodo'], ['Beans', 'beans'], ['App', 'prensado']]) {
+  for (const [name, id] of [['Campeones', 'metodo'], ['Café', 'beans'], ['Tinteros', 'tinteros']]) {
     await page.goto('/escuela', { waitUntil: 'load' });
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`^[^#]*/#${id}$`));
@@ -74,7 +78,7 @@ test('escritorio: idioma, cuenta y carrito desde el menú', async ({ browser }) 
   await page.goto('/', { waitUntil: 'load' });
   const lang = page.locator('.navbar .lang-btn');
   await lang.click(); // ES → EN
-  await expect(menu(page).getByRole('link')).toHaveText(['Home', 'Beans', 'Champions', 'Learn', 'Contact', 'App']);
+  await expect(menu(page).getByRole('link')).toHaveText(['Home', 'Beans', 'Champions', 'Learn', 'Contact', 'Vendors']);
   await lang.click(); // EN → JA
   await expect(menu(page).getByRole('link').nth(3)).toHaveText('学ぶ');
   await lang.click(); // JA → ES
@@ -109,7 +113,7 @@ test('celular: el menú de tres rayas tiene los mismos enlaces, funcionan y se m
   await expect(burger).toBeFocused();
 
   await burger.click();
-  await links.filter({ hasText: 'Champions' }).click();
+  await links.filter({ hasText: 'Campeones' }).click();
   await expect(drawer).not.toHaveClass(/\bopen\b/);
   await expect(page).toHaveURL(/#metodo$/);
   await inView(page, 'metodo');
@@ -120,7 +124,7 @@ test('celular: el menú de tres rayas tiene los mismos enlaces, funcionan y se m
   await expect(page).toHaveURL(/\/escuela$/);
   await burger.click();
   await expect(links.filter({ hasText: 'Aprende' })).toHaveAttribute('aria-current', 'page');
-  await links.filter({ hasText: 'Beans' }).click();
+  await links.filter({ hasText: 'Café' }).click();
   await expect(page).toHaveURL(/\/#beans$/);
   await inView(page, 'beans');
   expect(errors).toEqual([]);

@@ -9,7 +9,7 @@ import AppIcon from './micraIcons.jsx';
 
 const FOLDER = { folder: 'site-folder', label: 'Sitio', apps: ['sections', 'recipes', 'settings'] };
 // Piloto va en la primera fila: es lo que se abre en la calle (encuestas) y en la reunión
-const GRID = ['dashboard', 'piloto', 'algorithm', 'inventory', 'catalog', FOLDER, 'instagram', 'publications', 'waitlist'];
+const GRID = ['dashboard', 'piloto', 'algorithm', 'inventory', 'catalog', FOLDER, 'instagram', 'publications'];
 const DOCK = ['espresale', 'orders', 'site', 'tables'];
 const WX = { clear: 'Despejado', partly: 'Parcialmente nublado', cloudy: 'Nublado', fog: 'Neblina', drizzle: 'Llovizna', rain: 'Lluvia', showers: 'Chubascos', storm: 'Tormenta' };
 

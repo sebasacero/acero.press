@@ -2,7 +2,7 @@
 
 Café de especialidad en Bogotá, hecho alrededor de la AeroPress. Una sola base de código con tres cosas:
 
-1. **El sitio público** (`/`): tienda de café y equipo AeroPress, carrusel de bebidas de la barra, archivo de recetas campeonas del World AeroPress Championship con barista IA, y la presentación de la app Micra.
+1. **El sitio público** (`/`): tienda de café y equipo AeroPress, carrusel de bebidas de la barra, archivo de recetas campeonas del World AeroPress Championship con barista IA, y la receta guiada del AeroPress (`PressStory`, cinco pasos que siguen al scroll). El banner de arriba tiene «El mapa» y «Para tinteros» (`/#tinteros` lo abre; es el enlace «Tinteros» del menú).
 2. **El panel de admin** (`/admin`, y flotando sobre el sitio para el owner): pedidos, mesas, inventario, catálogo, secciones del sitio, Instagram, publicaciones, agente de crecimiento, algoritmo/BI y tinteros.
 3. **Micra**: la herramienta de barra dentro del panel. Cámara y editor táctil que convierte una preparación en una tarjeta para redes, registra la venta y la publica. También es el nombre de la app futura que anuncia el sitio (lista de espera).
 
@@ -29,8 +29,8 @@ Datos reales hoy (oct. 2026): 13 productos, 31 presentaciones, 8 pedidos, 4 clie
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm run api` (FastAPI en :8000; necesita `uvicorn`, no está en `requirements.txt`).
-- `npm test`: unitarias (`node --test`) de los módulos puros. El glob es fijo (`admin/micra` y `home/sections`): si agregas un `*.test.js` en otra carpeta, amplía el script.
-- `npm run e2e`: navegador con Supabase simulado; nunca toca la base real. Chromium viene con `@playwright/test`; `PW_CHROMIUM` apunta a uno propio.
+- `npm test`: unitarias (`node --test`) de los módulos puros: todo `src/**/*.test.js`.
+- `npm run e2e`: navegador con Supabase simulado; nunca toca la base real. Chromium viene con `@playwright/test`; `PW_CHROMIUM` apunta a uno propio (en la nube: `PW_CHROMIUM=/opt/pw-browsers/chromium`). No edites archivos mientras corre: Vite recarga la página y las pruebas fallan por eso.
 - `npm run shot -- <ruta> <salida.png> [--desk] [--session] [--street=e2e/data/street.json] [--piloto=e2e/data/informe.json] [--click=sel] [--full]`: captura con el mismo simulador, para mirar un cambio visual antes de probarlo entero. Mira la captura con el lector de imágenes; no la subas a git.
 - `npm run test:sql`: funciones SQL de venta contra un Postgres local desechable (variables `PG*`; se niega a correr contra Supabase).
 - No hay CI, lint ni formateador: lo que no corras tú no lo corre nadie.
@@ -45,6 +45,7 @@ Antes de dar algo por terminado: `npm test`, `npm run build` (sin avisos nuevos 
 - Precios y totales se calculan en la base o en el servidor a partir de `product_variants`; lo que manda el navegador es `variant_id` y `qty`.
 - e2e: espera con `expect.poll`/locators, no con `waitForTimeout`; los selectores por rol o `data-testid` cuando los toques.
 - Una variable de entorno nueva se documenta en `SETUP.md` en el mismo cambio.
+- Diseño (auditoría del 26 oct 2026): un solo rojo, `var(--red)` (#DE1B1B, 4,9:1 con blanco; `--magenta` y `--yt` son alias); nada de rojos, morados o dorados sueltos. Letra: Archivo (títulos y lectura), JetBrains Mono (etiquetas y cifras), Permanent Marker (el subrayado a mano). Todo lo que se toca mide 44 × 44 px o más (bloque al final de `index.css`). Un solo `h1` por página. La meta de ventas flotante es solo del owner.
 - Medios en `public/image/`; nada por encima de ~1 MB sin comprimir y sin una razón escrita en el commit. La carpeta `image/` de la raíz es legado (solo se usa su favicon).
 
 ## Reglas
@@ -74,4 +75,4 @@ Para no redescubrirla. Ordenada por riesgo:
 5. **Todo el admin viaja al público** (`main.jsx` importa `AdminApp` sin `lazy`; `SectionEditButton` arrastra `admin.css`): bundle de ~830 kB.
 6. `instagram.js` conserva el camino no atómico (`atomicMissing`) aunque la migración ya está aplicada; `useCardOutput` sube dos veces si se guarda y luego se publica.
 7. Cualquier rol de `admin_users` ve todo el panel (Configuración, token de Instagram); `ADMIN_TOOLS` no tiene roles.
-8. Legado sin uso: `CSS/`, `JS/`, `image/` (11 MB duplicados), `README.md` describe el sitio HTML anterior, `og:image` apunta a un archivo que no existe.
+8. Legado sin uso: `CSS/`, `JS/`, `image/` (11 MB duplicados), `README.md` describe el sitio HTML anterior. (`og:image` sí existe: `public/image/local.jpg`.)

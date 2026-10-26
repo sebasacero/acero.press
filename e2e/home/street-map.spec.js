@@ -21,7 +21,11 @@ test('con ventas y tinteros reales, el calor sigue a las cuadras del estudio y l
   api.opts.streetMap = {
     days: 90,
     sales: [{ carrera: 7, calle: 60, cups: 40, zone: 'Chapinero' }],
-    tinteros: [{ carrera: 7, calle: 63, stage: 'activo', cups_per_hour: 30, zone: 'Chapinero' }],
+    tinteros: [
+      { carrera: 7, calle: 63, stage: 'activo', cups_per_hour: 30, zone: 'Chapinero' },
+      // La ficha de la calle guarda el GPS y no la cuadra: también cuenta y también tiene pin
+      { carrera: null, calle: null, lat: 4.668, lng: -74.054, stage: 'prospecto', zone: 'Chapinero' },
+    ],
   };
   await page.goto('/', { waitUntil: 'load' });
   await page.waitForTimeout(1200);
@@ -34,8 +38,10 @@ test('con ventas y tinteros reales, el calor sigue a las cuadras del estudio y l
   await expect(slide.locator('.essp-panel')).toContainText('1 cuadra');
   await expect(slide.locator('.essp-odo')).toHaveText('40');
   await expect(slide.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
-  await expect(slide.locator('.essp-phone-who')).toContainText('1 cuadras · 1 tinteros');
-  await expect(slide.locator('.essp-title')).toContainText('Pide caféen AeroPressa domicilio');
+  await expect(slide.locator('.essp-phone-who')).toContainText('1 cuadras · 2 tinteros');
+  await expect(slide.locator('.essp-panel .essp-badge')).toHaveText('DATOS REALES');
+  await expect(slide.locator('.essp-title')).toContainText('El tintotiene ruta.');
+  await expect(page.locator('.essp-hero')).not.toContainText(/domicilio|Recibir pedidos/i);
   await expect(page.locator('.essp-hero')).not.toContainText(/Laura|en camino/i);
   await expect(slide.locator('.essp-ctas a').first()).toHaveAttribute('href', '#beans');
   // Orden del inicio: tienda, barra, archivo WAC y recetas antes de Micra (#prensado) y el pie
@@ -55,6 +61,26 @@ test('sin estudio, el mapa dibuja su demanda de ejemplo (la Zona T sigue calient
   expect(sampleHot).toBeGreaterThan(cold + 20);
   // Sin estudio aún, el panel dice 0 de verdad, no un ejemplo
   await expect(page.locator('.essp-slide').first().locator('.essp-panel')).toContainText('0 cuadras');
+  // …y como el calor es de ejemplo, el panel no dice «datos reales»
+  await expect(page.locator('.essp-slide').first().locator('.essp-panel .essp-badge')).toHaveText('MAPA DE EJEMPLO');
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('el banner no avanza solo; «Soy tintero» lleva a la pestaña del tintero con WhatsApp listo', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } } });
+  await page.clock.install();
+  await page.goto('/', { waitUntil: 'load' });
+  const tabs = page.locator('.essp-tabs').first().getByRole('tab');
+  await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
+  // Un carrusel que avanza solo se ignora (NN/g): pasado el tiempo de antes (8 s) sigue en el mapa
+  await page.clock.runFor(20000);
+  await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
+  await page.locator('.essp-slide').first().getByRole('button', { name: 'Soy tintero' }).click();
+  // La diapositiva que se va queda inerte: las pestañas que se leen son las de la que llega
+  await expect(page.locator('.essp-slide').nth(1).getByRole('tab', { name: 'Para tinteros' })).toHaveAttribute('aria-selected', 'true');
+  const wa = page.locator('.essp-slide').nth(1).getByRole('link', { name: 'Quiero participar' });
+  await expect(wa).toHaveAttribute('href', /wa\.me\/\d+\?text=.*ruta/);
   expect(errors).toEqual([]);
   await page.context().close();
 });

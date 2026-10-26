@@ -84,13 +84,13 @@ function ColdBrewSlide({ t, lang, videoRef, slide, whatsapp }) {
         <div className="bar-actions">
           <LocationBadge />
         </div>
-        <h1>
+        <h2 className="hero-h">
           {slide.title1[lang]}<br />
           <div className="logo-unit">
             <img src="/image/logo.png" alt="ACERO.press" className="logo-acero1" />
             <span className="logo-press">.press</span>
           </div>
-        </h1>
+        </h2>
       </div>
 
       <div className="bar-panel-col">
@@ -176,7 +176,7 @@ export default function ColdBrewHero() {
   };
 
   return (
-    <section className="coldbrew-carousel" id="inicio">
+    <section className="coldbrew-carousel" id="barra">
       <ColdBrewCarouselEditor slides={slides} activeIndex={index} onSaved={load} />
 
       <div className="coldbrew-carousel-track" style={{ transform: `translateX(-${index * 100}%)` }}>

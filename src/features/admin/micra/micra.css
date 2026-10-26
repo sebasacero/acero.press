@@ -5,12 +5,12 @@
    cámara o el video (lo que gasta batería): solo fondos translúcidos.
    ===================================================================== */
 .mstudio{
-  --mst-red:#fa2525; --mst-ink:#2A3550; --mst-paper:#EDE6D3; --mst-cream:#F7F3E8;
+  --mst-red:var(--red); --mst-ink:#2A3550; --mst-paper:#EDE6D3; --mst-cream:#F7F3E8;
   --mst-glass:rgba(20,20,24,.55); --mst-glass-strong:rgba(20,20,24,.94);
   --mst-line:rgba(255,255,255,.14);
   --mst-sheen:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 40%);
   --mst-mono:'JetBrains Mono', ui-monospace, monospace;
-  --mst-grotesk:'Space Grotesk', 'Archivo', sans-serif;
+  --mst-grotesk:'Archivo', 'Archivo', sans-serif;
   position:fixed; inset:0; z-index:6000; overflow:hidden;
   background:#050506; color:#F4F2EC; font-family:'Archivo', -apple-system, sans-serif;
   -webkit-tap-highlight-color:transparent;
@@ -109,10 +109,11 @@
 
 .mc-modes-row{ width:100%; display:grid; grid-template-columns:auto minmax(0, 1fr) auto; align-items:center; gap:8px; padding:0 14px; }
 .mc-gallery{ border-radius:12px; }
-.mc-kinds{ display:flex; justify-content:center; gap:12px; min-width:0; }
+.mc-kinds{ display:flex; justify-content:safe center; gap:10px; min-width:0; overflow-x:auto; scrollbar-width:none; }
+.mc-kinds::-webkit-scrollbar{ display:none; }
 .mc-kinds button{
   position:relative; min-height:40px; border:0; background:none; cursor:pointer; padding:6px 1px 9px; white-space:nowrap;
-  color:rgba(255,255,255,.6); font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:rgba(255,255,255,.6); font-size:12px; font-weight:800; letter-spacing:.03em; text-transform:uppercase;
 }
 .mc-kinds button.on{ color:#fff; }
 .mc-kinds button.on::after{ content:''; position:absolute; left:50%; bottom:2px; width:5px; height:5px; margin-left:-2.5px; border-radius:50%; background:var(--mst-red); }
@@ -220,6 +221,8 @@
 .mst-rail-label{
   position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%); white-space:nowrap; pointer-events:none;
   font-size:12px; font-weight:700; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.85); opacity:0; transition:opacity .25s ease;
+  /* Encima de la tarjeta de papel el texto blanco se mezclaba con sus cifras: va en su píldora */
+  padding:4px 9px; border-radius:999px; background:rgba(20,20,20,.78);
 }
 .mst-rail.show-labels .mst-rail-label{ opacity:1; }
 
@@ -304,7 +307,7 @@
 .msheet-grab i{ width:40px; height:5px; border-radius:3px; background:rgba(255,255,255,.3); }
 .msheet-head{ display:flex; align-items:center; gap:10px; padding:6px 18px 10px; }
 .msheet-title{ flex:1; margin:0; font-size:18px; font-weight:800; letter-spacing:-.01em; }
-.msheet-total{ font:700 18px var(--mst-mono); color:#ff6464; }
+.msheet-total{ font:700 18px var(--mst-mono); color:rgba(247,243,232,.85); } /* avance, no error: sin rojo */
 .msheet-x{ width:40px; height:40px; border-radius:50%; border:0; background:rgba(255,255,255,.1); color:#fff; font-size:20px; cursor:pointer; }
 .msheet-body{ flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; display:flex; flex-direction:column; gap:14px; padding:0 18px 16px; }
 .msheet-foot{ display:flex; flex-direction:column; gap:8px; padding:12px 18px max(12px, env(safe-area-inset-bottom)); border-top:1px solid var(--mst-line); }
@@ -359,7 +362,7 @@
   width:100%; min-height:44px; padding:10px 12px; border-radius:12px; border:1px solid var(--mst-line);
   background:rgba(255,255,255,.06); color:#fff; font:15px var(--mst-mono);
 }
-.msheet-input::placeholder{ color:rgba(255,255,255,.35); }
+.msheet-input::placeholder{ color:rgba(255,255,255,.3); font-style:italic; } /* el ejemplo no se confunde con un valor ya anotado */
 .msheet-input.is-caption{ resize:vertical; font:14px/1.45 -apple-system, 'Archivo', sans-serif; }
 .msheet-fine{ margin:0; font-size:12px; line-height:1.45; color:rgba(255,255,255,.6); }
 .msheet-notice{ margin:0; padding:10px 12px; border-radius:12px; font-size:13px; line-height:1.4; }
@@ -529,7 +532,7 @@
 .mtin-photo img{ width:100%; aspect-ratio:4 / 3; object-fit:cover; border-radius:10px; border:1px solid var(--mst-line); background:#000; }
 .mst-tintero{
   display:inline-flex; align-items:center; justify-content:center; height:44px; padding:0 14px; border-radius:999px; cursor:pointer;
-  border:1px solid var(--mst-line); background:var(--mst-glass); color:#fff; font-size:13px; font-weight:700; white-space:nowrap;
+  border:0; background:#F7F3E8; color:#1E1E1E; font-size:13px; font-weight:800; white-space:nowrap;
 }
 .mst-tintero:disabled{ opacity:.5; cursor:default; }
 @media (max-width:360px){ .mst-tintero{ padding:0 10px; font-size:12px; } }

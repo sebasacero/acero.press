@@ -15,8 +15,8 @@ import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
 import Marquee from './features/home/sections/Marquee.jsx';
 import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
+import { useIsOwner } from './features/admin/useAdminAuth.js';
 import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
-import WacBanner from './features/home/sections/WacBanner.jsx';
 import PressStory from './features/home/sections/PressStory.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
@@ -26,6 +26,11 @@ import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // alrededor. En la portada queda una franja que lleva a ella. Las dos van en archivos aparte.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
 const SchoolTeaser = lazy(() => import('./features/school/SchoolTeaser.jsx'));
+// La meta de ventas es del equipo: en público era un «0 %» flotando sobre la tienda
+function OwnerOnly({ children }) {
+  return useIsOwner() ? children : null;
+}
+
 const isSchoolRoute = () => /^\/escuela\/?$/.test(window.location.pathname);
 
 export default function App() {
@@ -59,10 +64,6 @@ export default function App() {
 
                 <ColdBrewHero />
 
-                <Marquee channel="city" />
-
-                <WacBanner />
-
                 <RecipeArchive />
 
                 <PressStory />
@@ -70,8 +71,6 @@ export default function App() {
                 <Suspense fallback={null}>
                   <SchoolTeaser />
                 </Suspense>
-
-                <Marquee />
               </>
             )}
 
@@ -82,7 +81,7 @@ export default function App() {
             <CartDrawer />
             <CheckoutModal />
             <AccountDrawer />
-            <SalesFloatButton />
+            <OwnerOnly><SalesFloatButton /></OwnerOnly>
             <ActiveFloatWidget />
 
             <AdminDock />

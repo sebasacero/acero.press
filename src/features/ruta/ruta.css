@@ -6,7 +6,7 @@
   --r-ink: #2A3550;
   --r-ink-soft: #6B7290;
   --r-black: #1E1E1E;
-  --r-red: #de1b1b;
+  --r-red: var(--red);
   --r-green: #2E8B57;
   --r-line: #D6CEB6;
   min-height: 100vh;
@@ -30,7 +30,7 @@
   font-size: .72rem;
   letter-spacing: .08em;
 }
-.ruta-brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: .12em; }
+.ruta-brand { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: .12em; }
 .ruta-brand::after { content: ' ●'; color: var(--r-red); }
 .ruta-body {
   flex: 1;
@@ -42,7 +42,7 @@
   flex-direction: column;
   gap: 16px;
 }
-.ruta-title { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; line-height: 1.05; margin: 8px 0 0; color: var(--r-ink); }
+.ruta-title { font-family: 'Archivo', sans-serif; font-size: 2.2rem; line-height: 1.05; margin: 8px 0 0; color: var(--r-ink); }
 .ruta-lede { font-size: 1.08rem; line-height: 1.45; margin: 0; }
 .ruta-muted { color: var(--r-ink-soft); font-size: .95rem; margin: 0; }
 .ruta-h2 { font-family: 'JetBrains Mono', monospace; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--r-ink-soft); margin: 8px 0; }
@@ -85,7 +85,7 @@
 .ruta-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
 .ruta-stats div { background: #fff; border: 1.5px solid var(--r-line); border-radius: 12px; padding: 10px; text-align: center; }
 .ruta-stats dt { font-family: 'JetBrains Mono', monospace; font-size: .68rem; text-transform: uppercase; color: var(--r-ink-soft); }
-.ruta-stats dd { margin: 4px 0 0; font: 700 1.35rem 'Space Grotesk', sans-serif; }
+.ruta-stats dd { margin: 4px 0 0; font: 700 1.35rem 'Archivo', sans-serif; }
 .ruta-gps { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1.5px solid var(--r-line); font-weight: 600; }
 .ruta-gps.is-ok { border-color: var(--r-green); color: var(--r-green); }
 .ruta-gps.is-silent, .ruta-gps.is-denied, .ruta-gps.is-unavailable, .ruta-gps.is-unsupported { border-color: var(--r-red); color: var(--r-red); }

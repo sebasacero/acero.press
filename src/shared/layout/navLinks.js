@@ -14,6 +14,6 @@ export function navItems() {
     { key: 'championship', href: homeLink('#metodo') }, // las recetas campeonas del WAC
     { key: 'school', href: '/escuela', current: onSchool },
     { key: 'contact', href: '#contact' }, // el pie de página, con las redes, está en todas las páginas
-    { key: 'app', href: homeLink('#prensado'), className: 'nav-app-link' },
+    { key: 'app', href: homeLink('#tinteros'), className: 'nav-app-link' }, // abre «Para tinteros» en la portada
   ];
 }

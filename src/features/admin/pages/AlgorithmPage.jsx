@@ -9,7 +9,6 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 const PRIORITY = { 1: 'Hoy', 2: 'Esta semana', 3: 'Cuando se pueda' };
 const AREA = { operacion: 'Operación', red: 'Red', negocio: 'Negocio', redes: 'Redes', mercado: 'Mercado' };
 const STATUS = { ok: ['●', 'En rango'], warn: ['▲', 'Atención'], alert: ['■', 'Alerta'], nodata: ['○', 'Sin datos'] };
-const STAGES = ['prospecto', 'piloto', 'activo', 'pausa', 'salio'];
 const STAGE_LABEL = { prospecto: 'Prospecto', piloto: 'Piloto', activo: 'Activo', pausa: 'En pausa', salio: 'Salió' };
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
 const money = (n) => `$${Math.round(n).toLocaleString('es-CO')}`;
@@ -73,7 +72,6 @@ function Tinteros({ onChange }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [person, setPerson] = useState({ name: '', phone: '', zone: '', stage: 'prospecto', baseline_income: '', baseline_cups: '' });
   const [dayForm, setDayForm] = useState({ tintero: '', day: today(), cups_specialty: '', cups_tinto: '', price_specialty: '', net_income: '', hours: '' });
 
   const load = useCallback(() => {
@@ -106,7 +104,7 @@ function Tinteros({ onChange }) {
   return (
     <div className="algo-net">
       {list.length === 0 ? (
-        <p className="esp-muted">Aún no hay tinteros. Empieza por la etapa 0: registra a quienes conoces con su línea base (lo que ganan y venden hoy).</p>
+        <p className="esp-muted">Aún no hay tinteros. Se registran en la calle con la ficha de Micra (botón «Tintero»).</p>
       ) : (
         <div className="dash-table-wrap">
           <table className="dash-table">
@@ -134,26 +132,9 @@ function Tinteros({ onChange }) {
         </div>
       )}
 
+      {/* Una sola ficha del tintero: la de Micra (GPS, encuesta, permiso). Aquí solo se anota su día */}
+      <p className="esp-muted">Para sumar un tintero a la red, usa la ficha de Micra (botón «Tintero»).</p>
       <div className="algo-forms">
-        <form className="algo-form" onSubmit={(e) => submit(e, () => api('/tinteros', { method: 'POST', body: clean(person, ['baseline_income', 'baseline_cups']) }), `${person.name} quedó en la red.`)}>
-          <p className="algo-form-title">Nuevo tintero</p>
-          <Field label="Nombre"><input className="esp-input" required minLength={2} maxLength={80} value={person.name} onChange={(e) => setPerson({ ...person, name: e.target.value })} /></Field>
-          <div className="algo-form-row">
-            <Field label="WhatsApp"><input className="esp-input" inputMode="numeric" pattern="[0-9]{7,15}" value={person.phone} onChange={(e) => setPerson({ ...person, phone: e.target.value.replace(/\D/g, '') })} /></Field>
-            <Field label="Zona"><input className="esp-input" maxLength={80} placeholder="Calle 72 con 11" value={person.zone} onChange={(e) => setPerson({ ...person, zone: e.target.value })} /></Field>
-          </div>
-          <div className="algo-form-row">
-            <Field label="Etapa">
-              <select className="esp-input" value={person.stage} onChange={(e) => setPerson({ ...person, stage: e.target.value })}>
-                {STAGES.map((s) => <option key={s} value={s}>{STAGE_LABEL[s]}</option>)}
-              </select>
-            </Field>
-            <Field label="Ingreso neto / día hoy"><input className="esp-input" type="number" min="0" step="500" value={person.baseline_income} onChange={(e) => setPerson({ ...person, baseline_income: e.target.value })} /></Field>
-            <Field label="Tintos / día hoy"><input className="esp-input" type="number" min="0" value={person.baseline_cups} onChange={(e) => setPerson({ ...person, baseline_cups: e.target.value })} /></Field>
-          </div>
-          <button type="submit" className="esp-btn esp-btn-primary" disabled={busy}>Registrar tintero</button>
-        </form>
-
         <form
           className="algo-form"
           onSubmit={(e) => submit(

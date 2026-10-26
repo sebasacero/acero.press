@@ -2,7 +2,10 @@
 // se detuvo y el resumen que se manda al terminar. Solo datos, sin React ni
 // Supabase: corre en node --test. Los límites son los mismos de la base
 // (supabase/migrations/20261023120000_tintero_routes.sql).
-import { meters, toLngLat } from '../../shared/lib/bogotaGeo.js';
+import { meters, toCuadra } from '../../shared/lib/bogotaGeo.js';
+
+// toCuadra vive con toLngLat (el mapa público también la usa); se re-exporta para quien la buscaba aquí
+export { toCuadra };
 
 /** Bogotá con margen, igual que el check de tintero_route_points. */
 export const BOGOTA_BOX = { lat: [4.3, 5.0], lng: [-74.4, -73.8] };
@@ -100,39 +103,6 @@ export function detectStops(points, tune = TUNING) {
 }
 
 const round6 = (n) => Math.round(n * 1e6) / 1e6;
-
-/**
- * De GPS a la cuadra más cercana (carrera, calle): el inverso de toLngLat
- * por Newton. null fuera de la cuadrícula (el sur, las diagonales) o si no
- * converge a menos de 40 m.
- */
-export function toCuadra(lng, lat) {
-  let c = 12;
-  let k = 70;
-  const h = 0.05;
-  for (let it = 0; it < 30; it += 1) {
-    const p = toLngLat(c, k);
-    const pc = toLngLat(Math.min(c + h, 120), k);
-    const pk = toLngLat(c, Math.min(k + h, 200));
-    if (!p || !pc || !pk) return null;
-    const fx = p[0] - lng;
-    const fy = p[1] - lat;
-    const a = (pc[0] - p[0]) / h;
-    const b = (pk[0] - p[0]) / h;
-    const cc = (pc[1] - p[1]) / h;
-    const d = (pk[1] - p[1]) / h;
-    const det = a * d - b * cc;
-    if (Math.abs(det) < 1e-12) return null;
-    const dc = (d * fx - b * fy) / det;
-    const dk = (a * fy - cc * fx) / det;
-    c = Math.min(119.9, Math.max(1, c - dc));
-    k = Math.min(199.9, Math.max(1, k - dk));
-    if (Math.abs(dc) < 1e-4 && Math.abs(dk) < 1e-4) break;
-  }
-  const back = toLngLat(c, k);
-  if (!back || meters(back, [lng, lat]) > 40) return null;
-  return { carrera: Math.round(c), calle: Math.round(k) };
-}
 
 /** Distancia de un punto al segmento a–b, en metros (para simplificar el trazo). */
 function segDist(p, a, b) {

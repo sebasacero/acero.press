@@ -9,12 +9,12 @@ const C = {
   paper: '#EDE6D3',
   ink: '#2A3550',
   inkSoft: '#6B7290',
-  red: '#fa2525',
+  red: '#DE1B1B',
   cream: '#F7F3E8',
   panel: '#15171C',
 };
 const MONO = '"JetBrains Mono", ui-monospace, monospace';
-const GROTESK = '"Space Grotesk", Archivo, sans-serif';
+const GROTESK = '"Archivo", Archivo, sans-serif';
 const MARKER = '"Permanent Marker", cursive';
 
 // Formatos del sistema de publicaciones (lienzo "Formato de redes"):
@@ -568,7 +568,7 @@ function drawPanel(ctx, x, y, w, r, textLines, tone = 'paper') {
   const segW = (inner - gap * (segs - 1)) / segs;
   const filled = r.ratio ? Math.max(2, Math.min(segs, Math.round(((20 - r.ratio) / 10) * segs))) : 10;
   for (let i = 0; i < segs; i++) {
-    ctx.fillStyle = i < filled ? '#f91f1f' : 'rgba(255,255,255,0.2)';
+    ctx.fillStyle = i < filled ? '#DE1B1B' : 'rgba(255,255,255,0.2)';
     roundPath(ctx, x + pad + i * (segW + gap), cy, segW, 12, 6);
     ctx.fill();
   }
