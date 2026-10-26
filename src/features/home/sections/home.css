@@ -99,7 +99,6 @@
   transform: translateX(-50%); filter: drop-shadow(0 14px 14px rgba(42, 53, 80, .28));
   transition: transform .3s ease;
 }
-.visit-press { width: clamp(92px, 10.5cqi, 140px); }
 .visit-logo:hover .visit-pin { transform: translate(-50%, -10px); }
 .visit-word { position: relative; display: grid; justify-items: center; margin: 6px 0 10px; text-align: center; }
 .visit-title {

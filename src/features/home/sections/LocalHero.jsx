@@ -197,25 +197,24 @@ export default function LocalHero() {
                 <MapCanvas className="visit-floor-map" view={(w) => ({ style: 'blanco', c: 13, k: 85, ax: 0.5, ay: 0.5, s: w < 360 ? 13 : 17, heat: 0 })} />
               </span>
               <span className="visit-shadow" />
-              {/* El pin es una AeroPress: émbolo, cámara con sus números, la tapa del filtro y una gota de
-                  café que cae justo en la 85 */}
-              <svg className="visit-pin visit-press" viewBox="0 0 80 136">
-                <g stroke="#fff" strokeWidth="3" strokeLinejoin="round">
-                  <path d="M14 4h52l-6 9H20z" fill="var(--ink)" />
-                  <rect x="22" y="12" width="36" height="26" fill="var(--ink)" />
-                  <path d="M12 36h56v6H12z" fill="var(--red)" />
-                  <rect x="15" y="41" width="50" height="58" rx="3" fill="var(--red)" />
-                  <path d="M10 98h60v6l-4 8H14l-4-8z" fill="var(--ink)" />
-                  <path d="M40 116c-5 7-7 10-7 13a7 7 0 0 0 14 0c0-3-2-6-7-13z" fill="var(--red)" />
-                </g>
-                <path d="M21 50v40" stroke="rgba(255,255,255,.45)" strokeWidth="4" strokeLinecap="round" />
-                <g stroke="rgba(255,255,255,.5)" strokeWidth="1.5">{[17, 25, 33, 41, 49, 57, 63].map((x) => <path key={x} d={`M${x} 105v4`} />)}</g>
-                <g fill="none" stroke="#fff" strokeWidth="1.8">
-                  {[52, 63, 74, 85].map((y) => <g key={y}><circle cx="52" cy={y} r="4.2" /><path d={`M33 ${y}h11`} strokeLinecap="round" /></g>)}
-                </g>
-                <g fill="#fff" fontFamily="JetBrains Mono, monospace" fontSize="5.6" fontWeight="700" textAnchor="middle">
-                  {['4', '3', '2', '1'].map((n, i) => <text key={n} x="52" y={54 + i * 11}>{n}</text>)}
-                </g>
+              {/* El pin de Google Maps con su gradiente de colores (pedido del usuario: aquí sí se sale
+                  del rojo único, porque el pin dice «esto es Google Maps») */}
+              <svg className="visit-pin" viewBox="0 0 64 88">
+                <defs>
+                  <linearGradient id="visit-gmaps" x1="0.85" y1="0.05" x2="0.25" y2="0.95">
+                    <stop offset="0" stopColor="#EA4335" />
+                    <stop offset="0.42" stopColor="#FBBC04" />
+                    <stop offset="0.78" stopColor="#34A853" />
+                  </linearGradient>
+                  <linearGradient id="visit-gmaps-blue" x1="0" y1="0.2" x2="0.55" y2="0.45">
+                    <stop offset="0" stopColor="#4285F4" />
+                    <stop offset="1" stopColor="#4285F4" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M32 2C15.4 2 2 15.2 2 31.6 2 53.8 32 84 32 84s30-30.2 30-52.4C62 15.2 48.6 2 32 2Z" fill="url(#visit-gmaps)" stroke="#fff" strokeWidth="3" />
+                <path d="M32 3.5C16.2 3.5 3.5 16 3.5 31.6c0 9 5 19.6 11 29.2" fill="url(#visit-gmaps-blue)" />
+                <path d="M14 22c3-8 10-13 18-13" fill="none" stroke="rgba(255,255,255,.45)" strokeWidth="4" strokeLinecap="round" />
+                <circle cx="32" cy="31" r="11" fill="#fff" />
               </svg>
             </span>
             <span className="visit-word">
