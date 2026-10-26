@@ -4,12 +4,12 @@ import Navbar from '../../../shared/layout/Navbar.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
 import { fetchSection } from '../../../shared/lib/pageSections.js';
-import { storyFor, doseText, wrapIndex } from '../lib/houseRecipes.js';
+import { storyFor, wrapIndex } from '../lib/houseRecipes.js';
 import '../../esspresale/esspresale.css';
 import './home.css';
 
 // Primera sección: la marca y la foto de la barra que tuvimos en Chapinero. Las recetas de la casa
-// van pegadas como carteles en la vitrina del local. Se cambian con las pestañas o deslizando, nunca
+// se ven como el banner de la barra (video y cuadro de la receta) dentro del vidrio de la vitrina. Se cambian con las pestañas o deslizando, nunca
 // solas (un carrusel que avanza solo se ignora). El contenido lo edita el owner con el lápiz
 // (page_sections 'cold_brew', el mismo de la vieja barra); esto es solo el respaldo.
 
@@ -58,24 +58,53 @@ const FALLBACK_SLIDES = [
   },
 ];
 
-function Poster({ slide, index, total, lang, t }) {
+const SEGMENTS = 20;
+const PRICE_LABEL = { es: 'PRECIO', en: 'PRICE', ja: '価格' };
+
+/**
+ * El banner de la barra (video de fondo y el cuadro de la receta con su odómetro), proyectado
+ * dentro del vidrio de la vitrina, como una pantalla detrás del cristal. Solo el visible carga video.
+ */
+function WindowBanner({ slide, index, total, lang, t }) {
+  const ref = useRef(null);
   const name = slide.title1?.[lang] ?? slide.title1?.es ?? '';
   const story = storyFor(slide, lang, t('brand.stories'));
-  const p = t('brand.poster');
+  const filled = Math.round(((Number(slide.ratioPercent) || 0) / 100) * SEGMENTS);
   const price = Number(slide.price) > 0 ? money(slide.price) : null;
+  useEffect(() => { ref.current?.play?.().catch(() => {}); }, [slide.video]);
   return (
-    <article className="lh-poster" key={`${index}-${lang}`} aria-roledescription="slide" aria-label={`${index + 1} / ${total} · ${name}`}>
-      <div className="lh-poster-band"><span>{p.kicker}</span><span>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span></div>
-      <h3 className="lh-poster-name">{name}</h3>
-      {story && <p className="lh-poster-story">{story}</p>}
-      <dl className="lh-poster-specs">
-        <div><dt>{p.dose}</dt><dd>{doseText(slide.dose)}</dd></div>
-        <div><dt>{p.liquid}</dt><dd>{slide.target?.[lang] ?? slide.target?.es}</dd></div>
-        <div><dt>{p.ratio}</dt><dd>{String(slide.ratio?.[lang] ?? slide.ratio?.es ?? '').replace(/^[^\d]*/, '')}</dd></div>
-      </dl>
-      <div className="lh-poster-foot">
-        {price && <span className="lh-poster-price"><small>{p.price}</small>{price}</span>}
-        <a className="lh-poster-cta" href="#beans">{p.cta} <span aria-hidden="true">→</span></a>
+    <article className="lh-banner" aria-roledescription="slide" aria-label={`${index + 1} / ${total} · ${name}`}>
+      <video ref={ref} key={slide.video} className="lh-banner-video" src={slide.video || '/image/cans.mp4'} muted loop playsInline autoPlay preload="metadata" aria-hidden="true" />
+      <div className="lh-banner-shade" aria-hidden="true" />
+      <div className="lh-banner-in">
+        <div className="lh-banner-count">{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</div>
+        <h3 className="lh-banner-name">{name}</h3>
+        {story && <p className="lh-banner-story">{story}</p>}
+        <div className="odometer-panel lh-banner-panel">
+          <div className="cota cota-top">
+            <span className="annot">{slide.figLabel?.[lang] ?? slide.figLabel?.es}</span>
+            <span className="cota-badge">{slide.ratio?.[lang] ?? slide.ratio?.es}</span>
+          </div>
+          <div className="fig-label">{slide.doseLabel?.[lang] ?? slide.doseLabel?.es}</div>
+          <div className="odometer-row">
+            <div className="odometer">
+              {(slide.dose ?? []).map((d, i) => <span className="digit" key={i}>{d}</span>)}
+            </div>
+            <span className="odometer-sep">/</span>
+            <span className="odometer-target">{slide.target?.[lang] ?? slide.target?.es}</span>
+          </div>
+          <div className="seg-bar" aria-hidden="true">
+            {Array.from({ length: SEGMENTS }, (_, i) => <div key={i} className={`seg ${i < filled ? 'filled' : ''}`} />)}
+          </div>
+          <div className="progress-caption">{slide.caption?.[lang] ?? slide.caption?.es}</div>
+          {price && (
+            <div className="cota cota-price">
+              <span className="annot">{PRICE_LABEL[lang] || PRICE_LABEL.es}</span>
+              <span className="price-value">{price} <small>COP</small></span>
+            </div>
+          )}
+        </div>
+        <a className="bar-order-btn lh-banner-cta" href="#beans">{t('brand.poster.cta')} <span aria-hidden="true">→</span></a>
       </div>
     </article>
   );
@@ -133,9 +162,9 @@ export default function LocalHero({ navOpen, onOpenNavDrawer }) {
           >
             <div className="lh-photo">
               <img src="/image/local.webp" alt={t('brand.photoAlt')} width="907" height="893" fetchpriority="high" />
-              {/* El cartel va sobre el vidrio de la vitrina grande (coordenadas de la foto) */}
+              {/* El banner va en el vidrio de la vitrina grande (coordenadas de la foto) */}
               <div className="lh-window" aria-live="polite">
-                {slide && <Poster slide={slide} index={wrapIndex(index, slides.length)} total={slides.length} lang={lang} t={t} />}
+                {slide && <WindowBanner key={wrapIndex(index, slides.length)} slide={slide} index={wrapIndex(index, slides.length)} total={slides.length} lang={lang} t={t} />}
               </div>
             </div>
           </div>
