@@ -70,7 +70,7 @@
 .navbar--sheet .nav-logo { grid-column: 1; grid-row: 1; justify-self: start; }
 .navbar--sheet .nav-links.left {
   grid-column: 2; grid-row: 1; justify-self: end; align-items: center; gap: 20px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', monospace; flex-wrap: nowrap; white-space: nowrap;
 }
 .navbar--sheet .nav-links.left a {
   color: currentColor; font-size: .76rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
@@ -219,8 +219,10 @@
   .essp-main { grid-template-columns: minmax(0, 1fr) auto; }
   .essp-panel { grid-column: 1 / -1; justify-self: stretch; max-width: none; }
 }
-/* Con seis enlaces, el idioma y los íconos el menú no cabe por debajo de ~860 px: tres rayas */
-@container (max-width: 860px) {
+/* Con seis enlaces, el idioma y los íconos el menú cabe justo hacia 940 px, y con otra letra
+   (Safari, la letra de reserva mientras carga JetBrains Mono, texto agrandado) se partía en dos
+   renglones bajo el logo. Por debajo de 1100 px van las tres rayas, con margen. */
+@container (max-width: 1100px) {
   .navbar--sheet .nav-links.left { display: none; }
   .navbar--sheet .hamburger-btn { display: flex; align-items: center; grid-column: 2; grid-row: 1; justify-self: end; justify-content: flex-end; }
 }
@@ -230,6 +232,9 @@
   .navbar.navbar--sheet { top: 18px; left: 22px; right: 22px; padding: 8px 4px 0; }
   .navbar-sheet-logo img { height: 32px; }
   .navbar-sheet-logo .logo-press { font-size: 1.1rem; }
+  /* En 360 px el carrito se salía por la derecha */
+  .navbar--sheet .navbar-content { gap: 8px; }
+  .navbar--sheet .nav-icons.right { gap: 2px; }
   .essp-in { padding: 78px 24px 28px; gap: 14px; }
   .essp-main { grid-template-columns: 1fr; gap: 22px; }
   .essp-hero-phone { width: 230px; justify-self: center; }

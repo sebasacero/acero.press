@@ -3,6 +3,7 @@
 //
 //   npm run shot -- / portada.png                 celular (390×844), como un visitante
 //   npm run shot -- / portada.png --desk          computador (1440×900)
+//   npm run shot -- / portada.png --width=1024    cualquier ancho (alto 900)
 //   npm run shot -- /admin piloto.png --session   con sesión de owner
 //   npm run shot -- / portada.png --street=e2e/data/street.json   datos del mapa
 //   npm run shot -- / portada.png --click=".essp-tabs button >> nth=1" --wait=900
@@ -20,7 +21,8 @@ const flags = Object.fromEntries(args.filter((a) => a.startsWith('--')).map((a) 
 const [path = '/', out = 'shot.png'] = args.filter((a) => !a.startsWith('--'));
 
 const DESK = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 };
-const context = { ...(flags.desk ? DESK : PHONE), locale: flags.locale || 'es-CO' };
+const base = flags.width ? { viewport: { width: Number(flags.width), height: 900 }, deviceScaleFactor: 1 } : flags.desk ? DESK : PHONE;
+const context = { ...base, locale: flags.locale || 'es-CO' };
 
 async function serverUp() {
   try { await fetch(BASE_URL); return true; } catch { return false; }

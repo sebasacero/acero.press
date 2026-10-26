@@ -126,7 +126,7 @@ test('celular: el menú de tres rayas tiene los mismos enlaces, funcionan y se m
 });
 
 test('tableta chica: el menú pasa a tres rayas antes de dejar de caber', async ({ browser }) => {
-  for (const [w, burger] of [[780, true], [820, true], [860, true], [900, false]]) {
+  for (const [w, burger] of [[780, true], [900, true], [1024, true], [1100, true], [1180, false]]) {
     const { page } = await openPage(browser, { context: { viewport: { width: w, height: 800 } } });
     await page.goto('/', { waitUntil: 'load' });
     if (burger) {

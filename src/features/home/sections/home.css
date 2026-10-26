@@ -121,7 +121,7 @@
 }
 .micra .essp-sheet { z-index: 1; }
 .micra-anchor { position: absolute; top: 0; }
-.micra-in { position: relative; z-index: 2; padding: 76px 58px 64px; display: grid; gap: 44px; }
+.micra-in { position: relative; z-index: 2; padding: 128px 58px 64px; display: grid; gap: 44px; }
 .micra-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: center; }
 .micra-copy { display: grid; gap: 18px; min-width: 0; }
 .micra-title { font-size: clamp(3rem, 8cqi, 7.5rem); }
@@ -130,7 +130,7 @@
 .micra-phone { transform: rotate(2.5deg); margin-right: 20px; }
 
 @container (max-width: 760px) {
-  .micra-in { padding: 54px 24px 44px; gap: 30px; }
+  .micra-in { padding: 92px 24px 44px; gap: 30px; }
   .micra-head { grid-template-columns: minmax(0, 1fr); gap: 30px; }
   .micra-phone { justify-self: center; width: 230px; margin: 0; }
   .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
