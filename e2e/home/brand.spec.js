@@ -106,7 +106,7 @@ test('Visítanos va junto a la foto de las recetas, con el pin que abre Google M
   await expect(visit.getByRole('heading', { level: 2 })).toHaveText('Visítanos.');
   await expect(page.locator('section.lh #visitanos, section.lh #recetas')).toHaveCount(2);
   await expect(visit.locator('.visit-pin')).toBeVisible();
-  await expect(visit.locator('.visit-map')).toHaveAttribute('href', /google\.com\/maps.*Cra\.%2013%20%2385-32/);
+  await expect(visit.locator('.visit-logo')).toHaveAttribute('href', /google\.com\/maps.*Cra\.%2013%20%2385-32/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect(errors).toEqual([]);
   await page.context().close();

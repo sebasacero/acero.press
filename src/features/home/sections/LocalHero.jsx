@@ -189,27 +189,27 @@ export default function LocalHero() {
       <div className="lh-in">
         <div className="visit-copy" id="visitanos">
           <div className="essp-tag">{t('brand.visitTag')}</div>
-          <h2 className="essp-title visit-title" id="lh-title">{t('brand.title')}</h2>
-          <div className="essp-loc">{t('brand.loc')}</div>
-          <p className="visit-address">{address}</p>
-          <a className="visit-map" href={maps} target="_blank" rel="noopener noreferrer" aria-label={`${address} · ${t('brand.mapsCta')}`}>
-            <MapCanvas
-              className="visit-map-canvas"
-              label={t('brand.mapLabel')}
-              view={(w) => ({ style: 'blanco', c: 13, k: 85, ax: 0.5, ay: 0.58, s: w < 420 ? 15 : 20, heat: 0 })}
-            />
-            {/* El pin, gigante, en el centro del plano */}
-            <svg className="visit-pin" viewBox="0 0 64 88" aria-hidden="true">
-              <ellipse cx="32" cy="84" rx="13" ry="3.5" fill="rgba(42,53,80,.25)" />
-              <path d="M32 2C15.4 2 2 15.2 2 31.6 2 53.8 32 84 32 84s30-30.2 30-52.4C62 15.2 48.6 2 32 2Z" fill="var(--red)" stroke="#fff" strokeWidth="3" />
-              <circle cx="32" cy="31" r="11" fill="#fff" />
-            </svg>
-            <span className="visit-card">
-              <b>ACERO.press</b>
-              <span>{address}</span>
-              <em>{t('brand.mapsCta')} →</em>
+          {/* El logo de Visítanos: el plano de Bogotá acostado como piso, el pin parado encima y el
+              nombre con nuestras dos letras (Archivo y Permanent Marker). Todo abre Google Maps. */}
+          <a className="visit-logo" href={maps} target="_blank" rel="noopener noreferrer" aria-label={`${address} · ${t('brand.mapsCta')}`}>
+            <span className="visit-stage" aria-hidden="true">
+              <span className="visit-floor">
+                <MapCanvas className="visit-floor-map" view={(w) => ({ style: 'blanco', c: 13, k: 85, ax: 0.5, ay: 0.5, s: w < 360 ? 13 : 17, heat: 0 })} />
+              </span>
+              <span className="visit-shadow" />
+              <svg className="visit-pin" viewBox="0 0 64 88">
+                <path d="M32 2C15.4 2 2 15.2 2 31.6 2 53.8 32 84 32 84s30-30.2 30-52.4C62 15.2 48.6 2 32 2Z" fill="var(--red)" stroke="#fff" strokeWidth="3" />
+                <path d="M14 22c3-8 10-13 18-13" fill="none" stroke="rgba(255,255,255,.45)" strokeWidth="4" strokeLinecap="round" />
+                <circle cx="32" cy="31" r="11" fill="#fff" />
+              </svg>
+            </span>
+            <span className="visit-word">
+              <h2 className="visit-title" id="lh-title">{t('brand.title')}</h2>
+              <span className="visit-script">{t('brand.visitScript')}</span>
             </span>
           </a>
+          <div className="essp-loc">{t('brand.loc')}</div>
+          <p className="visit-address">{address}</p>
           <div className="essp-ctas">
             <a className="essp-btn" href={maps} target="_blank" rel="noopener noreferrer">{t('brand.mapsCta')}</a>
             <a className="essp-btn is-ghost" href="#beans">{t('brand.cta')}</a>

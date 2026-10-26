@@ -8,6 +8,7 @@ const translations = {
     brand: {
       visitTag: 'FIG. 07 — UBICACIÓN',
       title: 'Visítanos.',
+      visitScript: 'te esperamos con un café',
       loc: 'BOGOTÁ, 2.600 MSNM',
       address: 'Cra. 13 #85-32, Chapinero, Bogotá',
       mapsCta: 'Cómo llegar',
@@ -331,6 +332,7 @@ const translations = {
     brand: {
       visitTag: 'FIG. 07 — LOCATION',
       title: 'Visit us.',
+      visitScript: 'come have a coffee',
       loc: 'BOGOTÁ, 2,600 M',
       address: 'Cra. 13 #85-32, Chapinero, Bogotá',
       mapsCta: 'Get directions',
@@ -653,6 +655,7 @@ const translations = {
     brand: {
       visitTag: '図07 — 場所',
       title: 'お越しください。',
+      visitScript: 'コーヒーを飲みに来て',
       loc: 'ボゴタ 標高2,600 m',
       address: 'カラ13番 #85-32, チャピネロ, ボゴタ',
       mapsCta: '道順',
