@@ -1,0 +1,16 @@
+{
+  "baristas": [
+    { "id": "60000000-0000-0000-0000-000000000001", "name": "Marlene", "full": "Marlene Rojas", "mine": true, "stage": "piloto", "localidad": "Chapinero", "referencia": "Cl. 57 con Cra. 7", "lat": 4.643, "lng": -74.064, "hora_inicio": 6, "hora_fin": 11, "products": ["tinto", "perico", "aromatica", "ponque"], "prices": { "tinto": 1500, "perico": 2000, "aromatica": 1500 }, "payments": ["efectivo", "nequi"], "takes_holds": true, "live_until": "2099-01-01T00:00:00Z" },
+    { "id": "60000000-0000-0000-0000-000000000002", "name": "Jairo", "stage": "piloto", "localidad": "Chapinero", "referencia": "Cl. 59 con Cra. 12", "lat": 4.646, "lng": -74.066, "hora_inicio": 6, "hora_fin": 20, "products": ["tinto", "perico"], "prices": { "tinto": 1300, "perico": 1800 }, "payments": ["efectivo", "nequi", "daviplata"], "takes_holds": true },
+    { "id": "60000000-0000-0000-0000-000000000003", "name": "Wilson", "stage": "prospecto", "localidad": "Chapinero", "referencia": "Cl. 54 con Cra. 9", "lat": 4.640, "lng": -74.062, "hora_inicio": 14, "hora_fin": 18, "products": ["tinto", "aromatica", "galletas"], "prices": { "tinto": 1200, "aromatica": 1200 }, "payments": ["efectivo"], "takes_holds": false }
+  ],
+  "holds": [
+    { "id": "apartado-a", "tintero_id": "60000000-0000-0000-0000-000000000001", "client_ref": "otro-cel-1", "name": "Portería Ed. Alcalá", "items": [{ "product": "tinto", "qty": 3, "unit_price": 1500 }], "cups": 3, "total": 4500, "status": "waiting" },
+    { "id": "apartado-b", "tintero_id": "60000000-0000-0000-0000-000000000001", "client_ref": "otro-cel-2", "name": "Sebas · oficina 302", "items": [{ "product": "perico", "qty": 1, "unit_price": 2000 }, { "product": "tinto", "qty": 1, "unit_price": 1500 }], "cups": 2, "total": 3500, "status": "waiting" }
+  ],
+  "sales": [
+    { "id": "venta-a", "ref": "r-a", "tintero_id": "60000000-0000-0000-0000-000000000001", "product": "tinto", "qty": 1, "total": 1500, "at": "2026-10-26T11:40:00Z" },
+    { "id": "venta-b", "ref": "r-b", "tintero_id": "60000000-0000-0000-0000-000000000001", "product": "tinto", "qty": 1, "total": 1500, "at": "2026-10-26T11:45:00Z" },
+    { "id": "venta-c", "ref": "r-c", "tintero_id": "60000000-0000-0000-0000-000000000001", "product": "perico", "qty": 2, "total": 4000, "fiado_name": "Señora papelería", "at": "2026-10-26T11:50:00Z" }
+  ]
+}

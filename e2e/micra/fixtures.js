@@ -52,6 +52,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   const ruta = { code: 'ABC234', me: null, routes: [], points: [], summary: null, down: false };
   const byRef = new Map();
   let orderN = 0;
+  // App Micra (supabase/migrations/20261026210000_micra_app.sql): baristas públicos, apartados y la libreta
+  const micra = { baristas: [], holds: [], sales: [], admin: true, missing: false };
 
   // Como micra_record_sale / micra_void_sale (supabase/migrations/20261021120000_micra_atomic_sale.sql)
   const summary = (o, replay) => ({ order_id: o.id, total: o.total, status: o.status, replay, place: o.place ?? null, stock: [...o.net].map(([variant_id, applied]) => ({ variant_id, applied })) });
@@ -178,6 +180,75 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     try { data = req.postDataJSON(); } catch { data = req.postData(); }
     if (m !== 'GET') calls.push({ m, p, q: u.search, data });
 
+    // App Micra, en memoria (como las funciones de 20261026210000_micra_app.sql)
+    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day))$/)?.[1];
+    if (mfn) {
+      const M = micra;
+      const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
+      if (M.missing) return fail(404, 'PGRST202', `Could not find the function public.${mfn} in the schema cache`);
+      const today = new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+      const card = (b) => ({ ...b, waiting: M.holds.filter((h) => h.tintero_id === b.id && h.status === 'waiting').length });
+      const actor = () => (data?.p_tintero_id ? M.baristas.find((b) => b.id === data.p_tintero_id) : M.baristas.find((b) => b.mine));
+      const price = (b, prod) => b.prices?.[prod] ?? null;
+      if (mfn === 'micra_baristas') return json(200, M.baristas.filter((b) => b.public !== false).map(card));
+      if (mfn === 'micra_my_holds') return json(200, M.holds.filter((h) => h.client_ref === data.p_client_ref));
+      if (mfn === 'micra_hold') {
+        const b = M.baristas.find((x) => x.id === data.p_tintero_id);
+        if (!b?.takes_holds) return fail(404, 'P0002', 'Este barista todavía no recibe apartados en Micra.');
+        const items = data.p_items.map((i) => ({ ...i, unit_price: price(b, i.product) }));
+        const cups = items.reduce((a, i) => a + i.qty, 0);
+        if (cups < 1 || cups > 6) return fail(400, '22023', 'Se apartan de 1 a 6 tazas.');
+        let h = M.holds.find((x) => x.tintero_id === b.id && x.client_ref === data.p_client_ref);
+        const vals = { name: data.p_name, items, cups, total: items.reduce((a, i) => a + i.qty * i.unit_price, 0), status: 'waiting' };
+        if (h) Object.assign(h, vals); else { h = { id: `apartado-${M.holds.length + 1}`, tintero_id: b.id, client_ref: data.p_client_ref, for_day: today, ...vals }; M.holds.push(h); }
+        return json(200, h);
+      }
+      if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) h.status = 'cancelled'; return json(200, !!h); }
+      const b = actor();
+      if (mfn === 'micra_owner_day') {
+        if (!M.admin) return fail(403, '42501', 'Solo el equipo ve el resumen.');
+        const of = (x) => M.sales.filter((s) => s.tintero_id === x.id && !s.voided);
+        return json(200, {
+          day: today,
+          baristas: M.baristas.map((x) => ({ id: x.id, name: x.full ?? x.name, stage: x.stage ?? 'piloto', localidad: x.localidad, referencia: x.referencia, public: x.public !== false, linked: !!x.takes_holds, invite_code: null, live_until: x.live_until ?? null, has_prices: x.prices?.tinto != null, cups: of(x).reduce((a, s) => a + s.qty, 0), total: of(x).reduce((a, s) => a + s.total, 0), fiado: 0, waiting: M.holds.filter((h) => h.tintero_id === x.id && h.status === 'waiting').length, served: M.holds.filter((h) => h.tintero_id === x.id && h.status === 'served').length })),
+          week: Array.from({ length: 7 }, (_, i) => ({ day: new Date(Date.now() - (6 - i) * 864e5).toISOString().slice(0, 10), cups: i === 6 ? M.sales.filter((s) => !s.voided).reduce((a, s) => a + s.qty, 0) : [12, 18, 9, 22, 15, 0][i], total: 0, holds: 0 })),
+        });
+      }
+      if (!b) return fail(403, '42501', 'Enlaza tu cuenta de barista primero.');
+      const mine = () => M.sales.filter((s) => s.tintero_id === b.id && !s.voided);
+      if (mfn === 'micra_barista_day') {
+        const fiados = Object.values(mine().filter((s) => s.fiado_name && !s.paid).reduce((acc, s) => { const f = acc[s.fiado_name] ??= { name: s.fiado_name, total: 0, cups: 0, since: s.at }; f.total += s.total; f.cups += s.qty; return acc; }, {}));
+        return json(200, {
+          id: b.id, name: b.full ?? b.name, zone: b.referencia, localidad: b.localidad, public: b.public !== false, linked: true,
+          products: Object.keys(b.prices ?? {}), prices: { tinto: null, perico: null, aromatica: null, ...b.prices }, live_until: b.live_until ?? null,
+          holds: M.holds.filter((h) => h.tintero_id === b.id && h.status !== 'cancelled').map((h) => ({ ...h, at: new Date().toISOString() })),
+          sales: [...mine()].reverse().map((s) => ({ id: s.id, product: s.product, qty: s.qty, total: s.total, fiado_name: s.fiado_name ?? null, at: s.at })),
+          fiados,
+          week: Array.from({ length: 7 }, (_, i) => ({ day: new Date(Date.now() - (6 - i) * 864e5).toISOString().slice(0, 10), cups: i === 6 ? mine().reduce((a, s) => a + s.qty, 0) : [14, 22, 0, 19, 25, 17][i], total: 0 })),
+        });
+      }
+      if (mfn === 'micra_barista_out') { b.live_until = data.p_minutes > 0 ? new Date(Date.now() + data.p_minutes * 60000).toISOString() : null; return json(200, { live_until: b.live_until }); }
+      if (mfn === 'micra_barista_prices') { b.prices = Object.fromEntries([['tinto', data.p_tinto], ['perico', data.p_perico], ['aromatica', data.p_aromatica]].filter(([, v]) => v != null)); return json(200, b.prices); }
+      if (mfn === 'micra_barista_sale') {
+        const old = M.sales.find((s) => s.ref === data.p_client_ref);
+        if (old) return json(200, { ...old, replay: true });
+        const up = price(b, data.p_product);
+        if (up == null) return fail(400, '22023', `Pon el precio de «${data.p_product}» antes de contarlo.`);
+        const s = { id: `venta-${M.sales.length + 1}`, ref: data.p_client_ref, tintero_id: b.id, product: data.p_product, qty: data.p_qty, total: up * data.p_qty, fiado_name: data.p_fiado_name, at: new Date().toISOString() };
+        M.sales.push(s);
+        return json(200, { ...s, replay: false });
+      }
+      if (mfn === 'micra_barista_undo') { const s = M.sales.find((x) => x.id === data.p_sale_id && !x.voided); if (s) s.voided = true; return json(200, !!s); }
+      if (mfn === 'micra_hold_close') {
+        const h = M.holds.find((x) => x.id === data.p_hold_id);
+        if (h.status !== 'waiting') return json(200, { id: h.id, status: h.status, replay: true });
+        h.status = data.p_served ? 'served' : 'missed';
+        if (data.p_served) h.items.forEach((i) => M.sales.push({ id: `venta-${M.sales.length + 1}`, ref: `hold-${h.id}-${i.product}`, tintero_id: b.id, product: i.product, qty: i.qty, total: i.qty * i.unit_price, at: new Date().toISOString() }));
+        return json(200, { id: h.id, status: h.status, replay: false });
+      }
+      if (mfn === 'micra_fiado_paid') { let t = 0; mine().filter((s) => s.fiado_name === data.p_name && !s.paid).forEach((s) => { s.paid = true; t += s.total; }); return json(200, t); }
+    }
+
     // Mi ruta (supabase/migrations/20261023120000_tintero_routes.sql), en memoria
     const rpc = p.match(/\/rpc\/(tintero_\w+)$/)?.[1];
     if (rpc) {
@@ -235,7 +306,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     let body = [];
-    if (p.includes('/admin_users')) body = [{ id: 1, role: 'owner' }];
+    if (p.includes('/admin_users')) body = micra.admin ? [{ id: 1, role: 'owner' }] : [];
     else if (p.endsWith('/products')) body = ['eq.coffee_bag', null].includes(u.searchParams.get('category')) ? coffee : [];
     else if (p.endsWith('/inventory') && m === 'GET') {
       const eq = u.searchParams.get('variant_id');
@@ -266,6 +337,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     tinteros,
     surveys,
     ruta,
+    micra,
     clear: () => { calls.length = 0; },
     find: (path, method) => calls.find((c) => c.p.endsWith(path) && (!method || c.m === method)),
     all: (path, method) => calls.filter((c) => c.p.endsWith(path) && (!method || c.m === method)),

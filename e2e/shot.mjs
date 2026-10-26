@@ -5,6 +5,7 @@
 //   npm run shot -- / portada.png --desk          computador (1440×900)
 //   npm run shot -- /admin piloto.png --session   con sesión de owner
 //   npm run shot -- / portada.png --street=e2e/data/street.json   datos del mapa
+//   npm run shot -- /micra micra.png --micra=e2e/data/micra.json [--barista | --session]   app Micra
 //   npm run shot -- / portada.png --click=".essp-tabs button >> nth=1" --wait=900
 //
 // Levanta Vite en el puerto de las pruebas si no está corriendo. Las capturas
@@ -46,6 +47,9 @@ try {
   if (flags.session) await signIn(page, { coach: true });
   if (flags.street) api.opts.streetMap = JSON.parse(readFileSync(flags.street, 'utf8'));
   if (flags.piloto) api.opts.piloto = JSON.parse(readFileSync(flags.piloto, 'utf8'));
+  if (flags.micra) Object.assign(api.micra, JSON.parse(readFileSync(flags.micra, 'utf8')));
+  // --barista: sesión de un barista enlazado (sin equipo); con --session además es del equipo
+  if (flags.barista) { api.micra.admin = false; api.ruta.me = { id: 'tintero-1', name: 'Marlene Rojas', zone: 'Chapinero', consent_at: null }; await signIn(page, { coach: true }); }
   await page.goto(`${BASE_URL}${path}`, { waitUntil: 'load' });
   if (flags.click) await page.click(flags.click);
   await page.waitForTimeout(Number(flags.wait || 1200));
