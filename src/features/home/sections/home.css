@@ -1,0 +1,275 @@
+/* === Portada de la marca: LocalHero, Micra, Publicaciones y la receta oficial ===
+   Mismo lenguaje que la hoja de plano de siempre (esspresale.css): marco con zonas,
+   cotas en JetBrains Mono, un solo rojo y el subrayado a mano. */
+
+/* --- 1. La barra de Chapinero con las recetas en la vitrina --- */
+.lh {
+  position: relative; overflow: hidden; background: var(--paper); color: var(--ink);
+  container-type: inline-size;
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+}
+.lh .essp-sheet { z-index: 1; }
+.lh-in {
+  position: relative; z-index: 2;
+  padding: 118px 58px 46px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 48px; align-items: center;
+  min-height: min(100svh, 1000px);
+}
+.lh-copy { display: grid; gap: 18px; align-content: center; min-width: 0; }
+.lh-title { font-size: clamp(2.4rem, 5cqi, 5rem); }
+.lh-lede { max-width: 46ch; }
+
+.lh-store { position: relative; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: center; min-width: 0; }
+/* La foto conserva su proporción: las coordenadas de la vitrina son de la foto */
+.lh-stage {
+  position: relative; overflow: hidden; touch-action: pan-y;
+  width: min(100%, calc((100svh - 330px) * 907 / 893)); min-width: min(100%, 420px);
+  aspect-ratio: 907 / 893;
+  border: 3px solid var(--ink); background: #3b3b3a;
+  box-shadow: 8px 8px 0 var(--ink);
+}
+.lh-photo { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 907 / 893; container-type: inline-size; }
+.lh-photo img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+/* El vidrio de la vitrina grande va de x 17 % a 60 % y de y 4 % a 98 % de la foto */
+.lh-window {
+  position: absolute; left: 20.5%; top: 8.5%; width: 37%;
+  display: flex; justify-content: center;
+}
+
+/* El cartel: una hoja impresa pegada al vidrio con cinta */
+.lh-poster {
+  position: relative; width: 100%;
+  background: rgba(247, 243, 232, .95); color: var(--ink);
+  border: 2px solid var(--ink);
+  padding: 0 3.4cqi 3cqi;
+  display: grid; gap: 1.6cqi;
+  box-shadow: 0 1.6cqi 4cqi rgba(0, 0, 0, .35);
+  transform: rotate(-1.2deg);
+  animation: lh-in .45s cubic-bezier(.2, .7, .2, 1);
+}
+.lh-poster::before, .lh-poster::after {
+  content: ''; position: absolute; top: -1.8cqi; width: 9cqi; height: 3.4cqi;
+  background: rgba(235, 228, 205, .78); border: 1px solid rgba(42, 53, 80, .18);
+}
+.lh-poster::before { left: -2.4cqi; transform: rotate(-32deg); }
+.lh-poster::after { right: -2.4cqi; transform: rotate(32deg); }
+@keyframes lh-in { from { opacity: 0; transform: rotate(-1.2deg) translateY(2cqi); } }
+.lh-poster-band {
+  margin: 0 -3.4cqi; padding: 1.1cqi 3.4cqi;
+  background: var(--red); color: #fff;
+  display: flex; justify-content: space-between; gap: 2cqi;
+  font: 700 max(9px, 1.45cqi)/1.2 'JetBrains Mono', monospace; letter-spacing: .08em;
+}
+.lh-poster-name {
+  margin: .6cqi 0 0; font: 800 max(20px, 4.6cqi)/.95 'Archivo', sans-serif;
+  text-transform: uppercase; letter-spacing: -.01em; overflow-wrap: anywhere;
+}
+.lh-poster-story { margin: 0; font: 500 max(11.5px, 1.9cqi)/1.4 'Archivo', sans-serif; text-wrap: pretty; }
+.lh-poster-specs {
+  margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1.5px dashed var(--ink); border-bottom: 1.5px dashed var(--ink);
+}
+.lh-poster-specs div { padding: 1.2cqi .8cqi; min-width: 0; }
+.lh-poster-specs div + div { border-left: 1.5px dashed var(--ink); }
+.lh-poster-specs dt { font: 700 max(8px, 1.2cqi)/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--ink-soft); }
+.lh-poster-specs dd { margin: .4cqi 0 0; font: 700 max(10.5px, 1.7cqi)/1.2 'JetBrains Mono', monospace; overflow-wrap: anywhere; }
+.lh-poster-foot { display: flex; align-items: center; justify-content: space-between; gap: 2cqi; flex-wrap: wrap; }
+.lh-poster-price { display: grid; font: 800 max(13px, 2.2cqi)/1.1 'JetBrains Mono', monospace; }
+.lh-poster-price small { font-size: max(8px, 1.1cqi); color: var(--ink-soft); letter-spacing: .08em; }
+.lh-poster-cta {
+  flex: 1; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 2cqi; background: var(--ink); color: var(--cream);
+  font: 800 max(10.5px, 1.5cqi)/1.1 'Archivo', sans-serif; letter-spacing: .1em; text-transform: uppercase;
+}
+.lh-poster-cta:hover { background: var(--red); }
+.lh-poster-cta:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+
+.lh-tabs { display: flex; align-items: center; gap: 8px; width: min(100%, 640px); }
+.lh-tablist { flex: 1; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.lh-tablist::-webkit-scrollbar { display: none; }
+.lh-tablist button, .lh-arrow {
+  min-height: 44px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer;
+  font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
+}
+.lh-tablist button { flex: 1 0 auto; padding: 0 12px; white-space: nowrap; }
+.lh-tablist button[aria-selected='true'] { background: var(--red); border-color: var(--red); color: #fff; }
+.lh-arrow { width: 44px; flex: none; font-size: 20px; }
+.lh-tablist button:focus-visible, .lh-arrow:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.lh-caption { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); text-align: center; }
+
+@container (max-width: 980px) {
+  .lh-in { grid-template-columns: minmax(0, 1fr); gap: 30px; min-height: 0; }
+  .lh-stage { width: min(100%, 640px); }
+}
+/* Celular: la foto se agranda y se corre hasta que la vitrina llena el cuadro */
+@container (max-width: 640px) {
+  .lh-in { padding: 82px 24px 30px; gap: 22px; }
+  .lh .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .lh .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  .lh-stage { aspect-ratio: 4 / 5; min-width: 0; box-shadow: 5px 5px 0 var(--ink); }
+  .lh-photo { width: 165%; left: -14%; top: -4%; }
+}
+
+/* --- 2. Micra --- */
+.micra {
+  position: relative; overflow: hidden; background: #141518; color: var(--cream);
+  container-type: inline-size;
+  --essp-fg: var(--cream); --essp-soft: rgba(247, 243, 232, .7); --essp-line: rgba(247, 243, 232, .7);
+}
+.micra .essp-sheet { z-index: 1; }
+.micra-anchor { position: absolute; top: 0; }
+.micra-in { position: relative; z-index: 2; padding: 76px 58px 64px; display: grid; gap: 44px; }
+.micra-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: center; }
+.micra-copy { display: grid; gap: 18px; min-width: 0; }
+.micra-title { font-size: clamp(3rem, 8cqi, 7.5rem); }
+.micra-title .essp-script { font-size: .3em; }
+.micra-lede { max-width: 48ch; }
+.micra .essp-btn { box-shadow: 4px 4px 0 var(--cream); }
+.micra-phone { transform: rotate(2.5deg); margin-right: 20px; }
+
+.micra-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.micra-steps li {
+  border: 1.5px solid rgba(247, 243, 232, .35); padding: 18px 18px 20px;
+  display: grid; gap: 10px; align-content: start; min-width: 0;
+}
+.micra-steps li.is-now { border-color: var(--red); border-width: 2px; background: rgba(222, 27, 27, .08); }
+.micra-step-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.micra-step-num { font: 700 28px/1 'JetBrains Mono', monospace; color: rgba(247, 243, 232, .45); }
+.micra-step-badge {
+  font: 700 10px/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 3px 7px;
+  border: 1.5px solid currentColor; text-align: right;
+}
+.micra-step-badge.is-red { background: var(--red); border-color: var(--red); color: #fff; }
+.micra-steps h3 { margin: 0; font: 800 clamp(18px, 1.7cqi, 22px)/1.1 'Archivo', sans-serif; text-transform: uppercase; }
+.micra-steps p { margin: 0; font: 500 15px/1.5 'Archivo', sans-serif; color: rgba(247, 243, 232, .85); }
+.micra-step-link {
+  min-height: 44px; display: inline-flex; align-items: center; margin-top: 4px;
+  font: 700 12px/1.2 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--cream); text-decoration: underline; text-underline-offset: 5px;
+}
+.micra-step-link:hover { color: #fff; text-decoration-color: var(--red); }
+.micra-stats { display: grid; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1.5px dashed rgba(247, 243, 232, .35); }
+.micra-stats-cota { display: flex; justify-content: space-between; align-items: center; gap: 8px; font: 700 10px/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; color: rgba(247, 243, 232, .7); }
+.micra-stats-cota .essp-badge { font-size: 9.5px; }
+.micra-stats dl { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.micra-stats dd { margin: 0; font: 700 26px/1 'JetBrains Mono', monospace; }
+.micra-stats dt { font: 700 9.5px/1.3 'JetBrains Mono', monospace; letter-spacing: .08em; color: rgba(247, 243, 232, .65); }
+.micra-stats .essp-segs { display: grid; grid-template-columns: repeat(20, 1fr); gap: 2px; height: 8px; }
+.micra-stats .essp-segs i { background: rgba(247, 243, 232, .14); }
+.micra-stats .essp-segs i.on { background: var(--red); }
+.micra-stats small { font: 500 11px/1.4 'JetBrains Mono', monospace; color: rgba(247, 243, 232, .6); }
+
+@container (max-width: 1100px) {
+  .micra-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 760px) {
+  .micra-in { padding: 54px 24px 44px; gap: 30px; }
+  .micra-head { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .micra-phone { justify-self: center; width: 230px; margin: 0; }
+  .micra-steps { grid-template-columns: 1fr; gap: 12px; }
+  .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .micra .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+}
+
+/* --- 3. Publicaciones --- */
+.posts { background: var(--cream); color: var(--ink); container-type: inline-size; --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink); }
+.posts-in { max-width: 1240px; margin: 0 auto; padding: 72px 40px; display: grid; gap: 28px; }
+.posts-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.posts-head > div { display: grid; gap: 12px; }
+.posts-title { font-size: clamp(2.2rem, 5cqi, 4rem); }
+.posts-lede { margin: 0; font: 500 16px/1.5 'Archivo', sans-serif; max-width: 44ch; }
+.posts-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.posts-grid a {
+  position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: var(--paper-deep);
+  border: 2px solid var(--ink);
+}
+.posts-grid img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.posts-grid a:hover img { transform: scale(1.04); }
+.posts-grid a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.posts-video {
+  position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff;
+  font: 700 10px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 4px 7px;
+}
+.posts-caption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 12px 12px;
+  background: linear-gradient(transparent, rgba(14, 15, 19, .85)); color: #fff;
+  font: 600 13px/1.35 'Archivo', sans-serif;
+}
+.posts-fallback { margin: 0 0 12px; font: 500 14px/1.5 'Archivo', sans-serif; color: var(--ink-soft); }
+.posts-channels ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.posts-channels a {
+  min-height: 140px; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 14px; align-content: center;
+  padding: 20px; border: 2px solid var(--ink); background: var(--paper);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.posts-channels a:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
+.posts-channels a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.posts-channels svg { grid-row: 1 / 3; align-self: center; color: var(--red); }
+.posts-channels b { font: 800 18px/1.2 'Archivo', sans-serif; overflow-wrap: anywhere; }
+.posts-channels small { font: 500 12px/1.3 'JetBrains Mono', monospace; color: var(--ink-soft); }
+.posts-channels a > span { grid-row: 1 / 3; grid-column: 3; align-self: center; font-size: 20px; }
+.posts-channels.is-loading ul { opacity: .55; }
+
+@container (max-width: 760px) {
+  .posts-in { padding: 54px 20px; gap: 22px; }
+  .posts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .posts-caption { font-size: 12px; padding: 24px 8px 8px; }
+  .posts-channels ul { grid-template-columns: 1fr; gap: 10px; }
+  .posts-channels a { min-height: 76px; padding: 14px 16px; }
+  .posts-head .essp-btn { width: 100%; justify-content: center; }
+}
+
+/* --- 4. La receta oficial en cinco pasos --- */
+.brew {
+  position: relative; overflow: hidden; background: var(--paper); color: var(--ink);
+  container-type: inline-size;
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+}
+.brew .essp-sheet { z-index: 1; }
+.brew-in { position: relative; z-index: 2; padding: 70px 58px 56px; display: grid; gap: 32px; }
+.brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 40px; align-items: end; }
+.brew-head .essp-tag { grid-column: 1 / -1; }
+.brew-title { font-size: clamp(2.2rem, 4.6cqi, 4.2rem); }
+.brew-recipe { margin: 0; display: grid; grid-template-columns: repeat(5, auto); border: 2px solid var(--ink); background: var(--cream); }
+.brew-recipe div { padding: 10px 14px; }
+.brew-recipe div + div { border-left: 1.5px dashed var(--ink); }
+.brew-recipe dt { font: 700 10px/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--ink-soft); }
+.brew-recipe dd { margin: 4px 0 0; font: 700 16px/1.2 'JetBrains Mono', monospace; white-space: nowrap; }
+.brew-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.brew-steps li { position: relative; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.brew-steps img { width: 100%; height: auto; aspect-ratio: 868 / 656; object-fit: cover; background: #fff; border: 2px solid var(--ink); display: block; }
+.brew-num {
+  position: absolute; top: 8px; left: 8px; background: var(--red); color: #fff;
+  font: 700 12px/1 'JetBrains Mono', monospace; padding: 4px 7px;
+}
+.brew-steps h3 { margin: 0; font: 800 17px/1.15 'Archivo', sans-serif; text-transform: uppercase; }
+.brew-steps p { margin: 0; font: 500 14.5px/1.45 'Archivo', sans-serif; }
+.brew-foot { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; }
+.brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); }
+
+@container (max-width: 1100px) {
+  .brew-head { grid-template-columns: 1fr; }
+  .brew-recipe { justify-self: start; }
+  .brew-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Celular: los pasos se deslizan de lado y la receta va en dos filas */
+@container (max-width: 700px) {
+  .brew-in { padding: 54px 24px 40px; gap: 24px; }
+  .brew-recipe { grid-template-columns: repeat(3, 1fr); justify-self: stretch; }
+  .brew-recipe div { padding: 8px 10px; }
+  .brew-recipe div:nth-child(4) { border-left: none; }
+  .brew-recipe div:nth-child(n + 4) { border-top: 1.5px dashed var(--ink); }
+  .brew-recipe dd { font-size: 14px; white-space: normal; }
+  .brew-steps {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px;
+    margin: 0 -24px; padding: 0 24px 6px; scrollbar-width: thin;
+  }
+  .brew-steps li { flex: 0 0 74%; scroll-snap-align: start; }
+  .brew .essp-ctas { width: 100%; flex-wrap: nowrap; gap: 10px; }
+  .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-poster { animation: none; }
+  .posts-grid img, .posts-channels a { transition: none; }
+}

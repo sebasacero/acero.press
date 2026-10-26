@@ -44,7 +44,7 @@ const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-header
 
 export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomic = true } = {}) {
   const calls = [];
-  const opts = { slowPublish: false, dropNextSaleResponse: false, streetMap: null, piloto: null };
+  const opts = { slowPublish: false, dropNextSaleResponse: false, streetMap: null, piloto: null, igPosts: null };
   const stock = new Map((inventory ?? DEFAULT_STOCK(coffee)).map((r) => [r.variant_id, { ...r }]));
   const priceOf = new Map(coffee.flatMap((c) => c.product_variants.map((v) => [v.id, v.price])));
   const orders = new Map();
@@ -100,6 +100,11 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   await page.route('https://tiles.openfreemap.org/**', (route) => (opts.styleDown
     ? route.fulfill({ status: 503, headers: CORS, body: 'caído' })
     : route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify(TEST_STYLE) })));
+  // Imágenes de las publicaciones simuladas: https://ig-cdn.test/<archivo> sirve public/image/<archivo>
+  await page.route('https://ig-cdn.test/**', (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop();
+    return route.fulfill({ status: 200, path: `public/image/${name}` });
+  });
   await page.route('https://tile.openstreetmap.org/**', (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'image/png', body: PIXEL }));
   // API de BI: el piloto (lo que la prueba ponga en opts.piloto; vacío por defecto)
   await page.route('**/api/v1/bi/piloto**', (route) => {
@@ -229,6 +234,10 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     if (p.includes('/storage/v1/object/estudio/')) return json(200, { Key: p.split('/object/')[1] });
     // URL firmada del bucket privado (la pide la página del piloto con la sesión)
     if (p.includes('/storage/v1/object/sign/estudio/')) return json(200, { signedURL: `/object/sign/${p.split('/object/sign/')[1]}?token=firmado` });
+    // Feed de Instagram de la portada: por defecto caído (como con el token vencido); opts.igPosts lo llena
+    if (p.includes('/functions/v1/instagram-proxy')) {
+      return opts.igPosts ? json(200, { success: true, data: opts.igPosts }) : json(500, { success: false, error: 'Error validating access token' });
+    }
     if (p.includes('/functions/v1/publish-content')) {
       if (opts.slowPublish) await new Promise((r) => setTimeout(r, 2500));
       return json(200, { ok: true, results: { instagram: { success: true, post_id: '1' } } });

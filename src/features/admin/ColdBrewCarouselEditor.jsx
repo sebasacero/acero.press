@@ -5,6 +5,7 @@ import { useAdminUI } from './AdminUIContext.jsx';
 import EditDrawer, { LangTabs, LANGS } from './EditDrawer.jsx';
 import './admin.css';
 
+// Las recetas de la casa: hoy son los carteles de la vitrina del local (LocalHero)
 const TEXT_FIELDS = [
   { key: 'title1', label: 'Título grande' },
   { key: 'figLabel', label: 'Etiqueta superior (FIG. — RECETA)' },
@@ -12,6 +13,8 @@ const TEXT_FIELDS = [
   { key: 'doseLabel', label: 'Etiqueta de dosis' },
   { key: 'target', label: 'Líquido objetivo (después del /)' },
   { key: 'caption', label: 'Leyenda bajo la barra', multiline: true },
+  // Vacía = la frase de la casa para esa bebida (translations brand.stories)
+  { key: 'story', label: 'Lo que transmite (frase del cartel)', multiline: true, optional: true },
 ];
 
 /**
@@ -114,7 +117,7 @@ function CarouselDrawer({ currentSlides, initialIndex, onClose, onSaved }) {
 
   const slide = slides?.[active];
   const filled = slide
-    ? Object.fromEntries(LANGS.map((l) => [l.code, TEXT_FIELDS.every((f) => (slide[f.key]?.[l.code] ?? '').trim() !== '')]))
+    ? Object.fromEntries(LANGS.map((l) => [l.code, TEXT_FIELDS.every((f) => f.optional || (slide[f.key]?.[l.code] ?? '').trim() !== '')]))
     : {};
 
   return (
