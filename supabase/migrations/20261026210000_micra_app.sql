@@ -20,12 +20,13 @@ set lock_timeout = '5s';
 -- ── «Salí»: el barista avisa que está en la calle ───────────────────────
 -- El punto es el del celular al tocar «Salí», redondeado a ~110 m (una
 -- cuadra): nunca su posición exacta ni en vivo.
+-- En un solo ALTER (el «drop» suelto se cuelga al aplicarlo desde el conector de Supabase)
 alter table public.tinteros
   add column if not exists out_until timestamptz,
   add column if not exists out_lat numeric(6,3),
-  add column if not exists out_lng numeric(7,3);
-alter table public.tinteros drop constraint if exists tinteros_out_check;
-alter table public.tinteros add constraint tinteros_out_check check (
+  add column if not exists out_lng numeric(7,3),
+  drop constraint if exists tinteros_out_check,
+  add constraint tinteros_out_check check (
   num_nonnulls(out_lat, out_lng) in (0, 2)
   and (out_lat is null or (out_lat between 3.7 and 4.85 and out_lng between -74.5 and -73.95))
 );
@@ -76,10 +77,14 @@ revoke all on public.micra_holds from anon, authenticated;
 revoke all on public.tintero_sales from anon, authenticated;
 -- El equipo los lee directo (panel, BI); el resto solo por funciones
 grant select on public.micra_holds, public.tintero_sales to authenticated;
-drop policy if exists "solo el equipo lee apartados" on public.micra_holds;
-create policy "solo el equipo lee apartados" on public.micra_holds for select using (public.is_admin());
-drop policy if exists "solo el equipo lee ventas de baristas" on public.tintero_sales;
-create policy "solo el equipo lee ventas de baristas" on public.tintero_sales for select using (public.is_admin());
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'micra_holds' and policyname = 'solo el equipo lee apartados') then
+    create policy "solo el equipo lee apartados" on public.micra_holds for select using (public.is_admin());
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'tintero_sales' and policyname = 'solo el equipo lee ventas de baristas') then
+    create policy "solo el equipo lee ventas de baristas" on public.tintero_sales for select using (public.is_admin());
+  end if;
+end $$;
 
 -- ── Ayudas ──────────────────────────────────────────────────────────────
 create or replace function public.micra_today()
