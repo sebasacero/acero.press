@@ -296,7 +296,7 @@ export default function RecipeSheet({ recipe }) {
           <ul className="rs-links">
             <li><a href={WAC_RECIPES_URL} target="_blank" rel="noopener noreferrer">{t('champ.source')} ↗</a></li>
             {champ?.final && <li><a href={champ.final} target="_blank" rel="noopener noreferrer">{t('champ.final').replace('{year}', recipe.year)} ↗</a></li>}
-            {champ?.video && <li><a href={champ.video} target="_blank" rel="noopener noreferrer">{t('champ.video')} ↗</a></li>}
+            {champ?.video && <li><a href={champ.video} target="_blank" rel="noopener noreferrer">{t(`champ.videoKind.${champ.videoKind}`)} ↗</a></li>}
           </ul>
           <p>
             <b>{t('modal.dose')}:</b> {recipe.dose} · <b>{t('modal.temp')}:</b> <span className="rs-hot">{recipe.temp}</span> · <b>{t('modal.water')}:</b> {recipe.water}

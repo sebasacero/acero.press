@@ -239,7 +239,7 @@ const translations = {
       cardCta: 'Prepárala con el barista',
       askPrompt: '¿Con qué café de la tienda preparo la receta campeona {year} de {name}? Si me falta algo para hacerla en casa, dímelo.',
     },
-    champ: { photo: 'Foto', alt: '{name}, World AeroPress Championship {year}', source: 'Receta oficial (WAC)', final: 'La final de {year}', video: 'Video de la final' },
+    champ: { photo: 'Foto', alt: '{name}, World AeroPress Championship {year}', source: 'Receta oficial (WAC)', final: 'La final de {year}', video: 'Video de la final', videoBy: 'Video', videoKind: { final: 'Ver la final', champion: 'Verlo preparar su receta', recipe: 'La receta en video' } },
     recipeCard: {
       dose: 'dosis', temp: 'temp', position: 'posición', viewFull: 'Ver receta completa',
     },
@@ -563,7 +563,7 @@ const translations = {
       cardCta: 'Brew it with the barista',
       askPrompt: "Which coffee from the shop should I use for {name}'s {year} champion recipe? Tell me if I'm missing anything to brew it at home.",
     },
-    champ: { photo: 'Photo', alt: '{name}, World AeroPress Championship {year}', source: 'Official recipe (WAC)', final: 'The {year} final', video: 'Watch the final' },
+    champ: { photo: 'Photo', alt: '{name}, World AeroPress Championship {year}', source: 'Official recipe (WAC)', final: 'The {year} final', video: 'Watch the final', videoBy: 'Video', videoKind: { final: 'Watch the final', champion: 'Watch the champion brew', recipe: 'The recipe on video' } },
     recipeCard: {
       dose: 'dose', temp: 'temp', position: 'position', viewFull: 'View full recipe',
     },
@@ -887,7 +887,7 @@ const translations = {
       cardCta: 'バリスタと淹れる',
       askPrompt: '{name}の{year}年チャンピオンレシピには、ショップのどのコーヒーが合いますか？家で淹れるのに足りないものがあれば教えてください。',
     },
-    champ: { photo: '写真', alt: '{name}、ワールド・エアロプレス・チャンピオンシップ{year}', source: '公式レシピ（WAC）', final: '{year}年の決勝', video: '決勝の動画' },
+    champ: { photo: '写真', alt: '{name}、ワールド・エアロプレス・チャンピオンシップ{year}', source: '公式レシピ（WAC）', final: '{year}年の決勝', video: '決勝の動画', videoBy: '動画', videoKind: { final: '決勝を見る', champion: 'チャンピオンの抽出を見る', recipe: 'レシピ動画' } },
     recipeCard: {
       dose: '粉量', temp: '温度', position: 'ポジション', viewFull: 'レシピ全文を見る',
     },
