@@ -7,18 +7,20 @@ import { openPage } from '../micra/fixtures.js';
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
 
-test('portada: la receta oficial en cinco pasos, corta, lleva al cronómetro de la Escuela', async ({ browser }) => {
+test('portada: la hoja de instrucciones de AeroPress Go en diez pasos lleva al cronómetro de la Escuela', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
   const brew = page.locator('#escuela');
   await brew.scrollIntoViewIfNeeded();
-  await expect(brew.getByRole('heading', { level: 2 })).toContainText('Tu primera taza');
-  // Los números de la receta oficial de AeroPress (aeropress.com)
-  await expect(brew.locator('.brew-recipe dd')).toHaveText(['16–18 g', 'Media', '85 °C', 'Hasta el n.º 4', '1 min']);
-  await expect(brew.locator('.brew-steps > li h3')).toHaveText(['Filtro y tapa', 'Café', 'Agua y remover', 'Espera y presiona', 'Disco fuera']);
+  await expect(brew.getByRole('heading', { level: 2 })).toContainText('AeroPress Go');
+  // Diez pasos, cada uno con su dibujo; caliente y cold brew como en la hoja oficial
+  const steps = brew.locator('.brew-sheet > li');
+  await expect(steps).toHaveCount(10);
+  await expect(steps.locator('svg.brew-draw')).toHaveCount(10);
+  await expect(steps.nth(5)).toContainText('80 °C');
+  await expect(steps.nth(6).locator('.is-hot')).toHaveText('Caliente: 10 segundos.');
+  await expect(steps.nth(6).locator('b.is-cold')).toHaveText('Cold brew: 1 minuto.');
   await expect(brew).toContainText('aeropress.com');
-  // Corta: cabe en poco más de una pantalla (antes, la receta seguía al scroll por varias)
-  expect((await brew.boundingBox()).height).toBeLessThan(900 * 1.1);
   // La receta que seguía al scroll y la franja del temario ya no están en la portada
   await expect(page.locator('#prensado, .school-teaser')).toHaveCount(0);
   await expect(page.locator('.navbar a[href="/escuela"]').first()).toHaveText('Aprende');

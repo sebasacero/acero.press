@@ -7,7 +7,7 @@ import { wrapIndex } from '../lib/houseRecipes.js';
 import '../../esspresale/esspresale.css';
 import './home.css';
 
-// Después de la tienda: la marca y la foto de la barra que tuvimos en Chapinero. Las recetas de la casa
+// Después de la tienda: la foto de la barra, centrada y grande. Las recetas de la casa
 // se ven como el banner de la barra (video y cuadro de la receta) dentro del vidrio de la vitrina. Se cambian con las pestañas o deslizando, nunca
 // solas (un carrusel que avanza solo se ignora). El contenido lo edita el owner con el lápiz
 // (page_sections 'cold_brew', el mismo de la vieja barra); esto es solo el respaldo.
@@ -120,7 +120,6 @@ export default function LocalHero() {
   const [slides, setSlides] = useState(FALLBACK_SLIDES);
   const [index, setIndex] = useState(0);
   const touchX = useRef(null);
-  const title = t('brand.title');
   const p = t('brand.poster');
 
   const load = useCallback(() => {
@@ -138,18 +137,9 @@ export default function LocalHero() {
     <section className="lh" aria-labelledby="lh-title">
       <SheetFrame />
       <div className="lh-in">
-        <div className="lh-copy">
+        <div className="lh-head">
           <div className="essp-tag">{t('brand.tag')} <span className="essp-new">{t('brand.badge')}</span></div>
-          <h2 className="essp-title lh-title" id="lh-title">
-            {title[0]}<br />{title[1]}
-            <span className="essp-script">{t('brand.script')}</span>
-          </h2>
-          <div className="essp-loc">{t('brand.loc')}</div>
-          <p className="essp-lede lh-lede">{t('brand.lede')}</p>
-          <div className="essp-ctas">
-            <a className="essp-btn" href="#beans">{t('brand.cta')}</a>
-            <a className="essp-btn is-ghost" href="/escuela">{t('brew.cta2')}</a>
-          </div>
+          <h2 className="essp-title lh-title" id="lh-title">{t('brand.recipes')}</h2>
         </div>
 
         <figure className="lh-store" id="recetas" aria-roledescription="carousel" aria-label={t('brand.recipes')}>

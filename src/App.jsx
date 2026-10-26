@@ -17,6 +17,7 @@ import LocalHero from './features/home/sections/LocalHero.jsx';
 import MicraSection from './features/home/sections/MicraSection.jsx';
 import PostsSection from './features/home/sections/PostsSection.jsx';
 import BrewGuide from './features/home/sections/BrewGuide.jsx';
+import VisitSection from './features/home/sections/VisitSection.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
 import ConsentBanner from './shared/layout/ConsentBanner.jsx';
 import { trackWhatsAppClicks } from './shared/lib/analytics.js';
@@ -50,7 +51,7 @@ export default function App() {
             ) : (
               <>
                 {/* Primero la app (con el menú), luego la tienda y la barra de Chapinero con las
-                    recetas en la vitrina; al final la Escuela, los campeones y las redes */}
+                    recetas en la vitrina; al final la Escuela, los campeones, las redes y la ubicación */}
                 <MicraSection navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
 
                 <ProductSection />
@@ -62,6 +63,8 @@ export default function App() {
                 <RecipeArchive />
 
                 <PostsSection />
+
+                <VisitSection />
               </>
             )}
 

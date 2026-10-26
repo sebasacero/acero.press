@@ -1,5 +1,5 @@
 // La portada como marca: después de Micra y la tienda, la barra de Chapinero con el banner de las recetas (video y cuadro) en la vitrina,
-// la tienda que pregunta qué quieres llevar y las publicaciones (o, sin Instagram, las redes).
+// la tienda con sus botones de siempre y las publicaciones (o, sin Instagram, las redes).
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 import { readFileSync } from 'node:fs';
@@ -15,8 +15,10 @@ test('escritorio: la foto del local con el banner original de las recetas en la 
   // Un solo h1, el de Micra arriba; la marca y la barra vienen después de la tienda
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Micra.');
-  const order = await page.locator('#micra, #beans, #recetas, #escuela, #metodo, #publicaciones').evaluateAll((els) => els.map((e) => e.id));
-  expect(order).toEqual(['micra', 'beans', 'recetas', 'escuela', 'metodo', 'publicaciones']);
+  const order = await page.locator('#micra, #beans, #recetas, #escuela, #metodo, #publicaciones, #visitanos').evaluateAll((els) => els.map((e) => e.id));
+  expect(order).toEqual(['micra', 'beans', 'recetas', 'escuela', 'metodo', 'publicaciones', 'visitanos']);
+  // «Café de especialidad para todos» ya no está
+  await expect(page.getByRole('heading', { name: /para todos/i })).toHaveCount(0);
   // Sin el botón flotante de la meta de ventas
   await expect(page.locator('.sales-float')).toHaveCount(0);
   const store = page.locator('#recetas');
@@ -79,23 +81,18 @@ test('celular: la vitrina entera a la vista, el banner se lee completo y nada se
   await page.context().close();
 });
 
-test('tienda: primero «¿qué quieres llevar?», con el precio desde de cada opción', async ({ browser }) => {
+test('tienda: los botones de siempre (Café, AeroPress, Kit) y sin enlaces muertos', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
   const shop = page.locator('#beans');
   await shop.scrollIntoViewIfNeeded();
-  await expect(shop.getByRole('heading', { level: 2 })).toHaveText('¿Qué quieres llevar?');
-  const choices = shop.getByRole('tab');
-  await expect(choices).toHaveCount(3);
-  await expect(choices.nth(0)).toHaveAttribute('aria-selected', 'true');
-  await expect(choices.nth(0)).toContainText('desde $32.000'); // la bolsa de 250 g más barata
-  await expect(choices.nth(1)).toContainText('Muy pronto'); // sin equipo en el catálogo de prueba
-  await expect(choices.nth(2)).toContainText('RECOMENDADO');
-  // Sin enlaces muertos
+  const tabs = shop.locator('.shop-tabs').getByRole('tab');
+  await expect(tabs).toHaveCount(3);
+  await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
   await expect(shop.locator('a[href="#"]')).toHaveCount(0);
-  await choices.nth(2).click();
+  await tabs.nth(2).click();
   await expect(shop.getByRole('button', { name: 'Añadir kit al carrito' })).toBeVisible();
-  await choices.nth(0).click();
+  await tabs.nth(0).click();
   await shop.getByRole('button', { name: 'Añadir al carrito' }).first().click();
   await expect(page.locator('.navbar .cart-count-badge').first()).toHaveText('1');
   expect(errors).toEqual([]);
@@ -120,17 +117,26 @@ test('publicaciones: lo último de Instagram, cada una enlazada a su post', asyn
   await page.context().close();
 });
 
-test('publicaciones: con Instagram caído, la sección lleva a cada red en vez de quedar vacía', async ({ browser }) => {
+test('redes: un banner con video por red y el botón de la app encima; después, Visítanos con el pin', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: PHONE });
   await page.goto('/', { waitUntil: 'load' });
   const posts = page.locator('#publicaciones');
-  await expect(posts.locator('.posts-fallback')).toBeVisible();
-  const links = posts.locator('.posts-channels a');
-  await expect(links).toHaveCount(3);
+  const banners = posts.locator('.posts-banner');
+  await expect(banners).toHaveCount(3);
+  await expect(banners.locator('video')).toHaveCount(3);
+  const links = banners.getByRole('link');
   await expect(links.nth(0)).toHaveAttribute('href', /instagram\.com\/aceropress/);
+  await expect(links.nth(0)).toContainText('Instagram');
   await expect(links.nth(0)).toContainText('@aceropress');
   await expect(links.nth(1)).toContainText('@acero.press');
   await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
+  // La ubicación: el plano con el pin, el toque abre Google Maps con la dirección
+  const visit = page.locator('#visitanos');
+  await visit.scrollIntoViewIfNeeded();
+  await expect(visit.getByRole('heading', { level: 2 })).toHaveText('Visítanos.');
+  await expect(visit.locator('.visit-pin')).toBeVisible();
+  await expect(visit.locator('.visit-map')).toHaveAttribute('href', /google\.com\/maps.*Cra\.%2013%20%2385-32/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect(errors).toEqual([]);
   await page.context().close();
 });

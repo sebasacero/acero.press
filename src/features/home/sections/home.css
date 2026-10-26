@@ -11,22 +11,25 @@
 .lh .essp-sheet { z-index: 1; }
 .lh-in {
   position: relative; z-index: 2;
-  padding: 118px 58px 46px;
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 48px; align-items: center;
-  min-height: min(100svh, 1000px);
+  padding: 70px 58px 60px;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; justify-items: center;
 }
-.lh-copy { display: grid; gap: 18px; align-content: center; min-width: 0; }
-.lh-title { font-size: clamp(2.4rem, 5cqi, 5rem); }
-.lh-lede { max-width: 46ch; }
+.lh-head { display: grid; gap: 14px; justify-items: center; text-align: center; }
+.lh-title { font-size: clamp(2.6rem, 6cqi, 5.5rem); }
 
-.lh-store { position: relative; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: center; min-width: 0; }
+/* La foto sobre un paspartú gris claro, como una foto enmarcada */
+.lh-store {
+  position: relative; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; justify-items: center;
+  width: min(100%, 900px); min-width: 0; box-sizing: border-box; padding: 34px 34px 22px;
+  background: #F3F4F7; border-radius: 30px;
+}
 /* La foto conserva su proporción: las coordenadas de la vitrina son de la foto */
 .lh-stage {
   position: relative; overflow: hidden; touch-action: pan-y;
-  width: min(100%, calc((100svh - 330px) * 907 / 893)); min-width: min(100%, 420px);
+  width: min(100%, 720px, calc((100svh - 200px) * 907 / 893)); min-width: min(100%, 420px);
   aspect-ratio: 907 / 893;
-  border: 3px solid var(--ink); background: #3b3b3a;
-  box-shadow: 8px 8px 0 var(--ink);
+  border-radius: 22px; background: #3b3b3a;
+  box-shadow: 0 0 0 1px rgba(42, 53, 80, .12), 0 40px 70px -30px rgba(42, 53, 80, .6), 0 12px 24px -12px rgba(42, 53, 80, .35);
 }
 .lh-photo { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 907 / 893; container-type: inline-size; }
 .lh-photo > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
@@ -90,24 +93,61 @@
   min-height: 44px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer;
   font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
 }
-.lh-tablist button { flex: 1 0 auto; padding: 0 12px; white-space: nowrap; }
+.lh-tablist button { flex: 1 0 auto; padding: 0 14px; white-space: nowrap; border-radius: 999px; }
+.lh-arrow { border-radius: 50%; }
 .lh-tablist button[aria-selected='true'] { background: var(--red); border-color: var(--red); color: #fff; }
 .lh-arrow { width: 44px; flex: none; font-size: 20px; }
 .lh-tablist button:focus-visible, .lh-arrow:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 .lh-caption { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); text-align: center; }
 
-@container (max-width: 980px) {
-  .lh-in { grid-template-columns: minmax(0, 1fr); gap: 30px; min-height: 0; }
-  .lh-stage { width: min(100%, 640px); }
-}
 /* Celular: la foto se agranda y se corre hasta que la vitrina llena el cuadro */
 @container (max-width: 640px) {
-  .lh-in { padding: 82px 24px 30px; gap: 22px; }
-  .lh .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .lh .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  .lh-in { padding: 54px 24px 36px; gap: 22px; }
+  .lh-store { padding: 14px 12px 14px; border-radius: 22px; }
   /* La vitrina entera a la vista: el vidrio mide 1,47 veces el ancho del cuadro */
-  .lh-stage { aspect-ratio: 2 / 3; min-width: 0; box-shadow: 5px 5px 0 var(--ink); }
+  .lh-stage { aspect-ratio: 2 / 3; min-width: 0; border-radius: 18px; }
   .lh-photo { width: 160%; left: -12%; top: -4%; }
+}
+
+/* --- Visítanos: el plano con un pin gigante; todo el cuadro abre Google Maps --- */
+.visit {
+  position: relative; overflow: hidden; background: #fff; color: var(--ink);
+  container-type: inline-size;
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+}
+.visit .essp-sheet { z-index: 1; }
+.visit-in {
+  position: relative; z-index: 2; padding: 70px 58px 64px;
+  display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 44px; align-items: center;
+}
+.visit-copy { display: grid; gap: 16px; min-width: 0; }
+.visit-title { font-size: clamp(3rem, 7cqi, 6.5rem); }
+.visit-address { margin: 0; font: 600 clamp(18px, 2cqi, 24px)/1.35 'Archivo', sans-serif; }
+.visit-map {
+  position: relative; display: block; height: clamp(300px, 36cqi, 460px); overflow: hidden;
+  border: 2px solid var(--ink); border-radius: 22px; background: #fff; color: var(--ink); text-decoration: none;
+  box-shadow: 0 30px 60px -30px rgba(42, 53, 80, .55);
+}
+.visit-map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.visit-pin {
+  position: absolute; left: 50%; top: 58%; width: clamp(84px, 11cqi, 140px); height: auto;
+  transform: translate(-50%, -96%); filter: drop-shadow(0 12px 16px rgba(42, 53, 80, .3));
+  transition: transform .25s ease;
+}
+.visit-map:hover .visit-pin { transform: translate(-50%, -103%); }
+.visit-map:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.visit-card {
+  position: absolute; left: 16px; bottom: 16px; display: grid; gap: 2px; padding: 10px 14px;
+  background: #fff; border: 1.5px solid var(--ink); border-radius: 12px; box-shadow: 0 6px 18px rgba(42, 53, 80, .14);
+  font: 500 13px/1.35 'Archivo', sans-serif; max-width: calc(100% - 32px);
+}
+.visit-card b { font: 800 15px/1.2 'Archivo', sans-serif; }
+.visit-card em { font: 700 11px/1.4 'JetBrains Mono', monospace; font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--red); }
+@container (max-width: 860px) {
+  .visit-in { grid-template-columns: minmax(0, 1fr); gap: 26px; padding: 54px 24px 44px; }
+  .visit-map { height: 300px; }
+  .visit .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .visit .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
 /* --- 2. Micra --- */
@@ -194,31 +234,36 @@
   background: linear-gradient(transparent, rgba(14, 15, 19, .85)); color: #fff;
   font: 600 13px/1.35 'Archivo', sans-serif;
 }
-.posts-fallback { margin: 0 0 12px; font: 500 14px/1.5 'Archivo', sans-serif; color: var(--ink-soft); }
-.posts-channels ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.posts-channels a {
-  min-height: 140px; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 14px; align-content: center;
-  padding: 20px; border: 2px solid var(--ink); background: #fff;
-  transition: transform .15s ease, box-shadow .15s ease;
+/* Un banner pequeño por red: su video de fondo y el botón de la app encima */
+.posts-banners { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.posts-banner { position: relative; overflow: hidden; border-radius: 18px; background: #1b1d24; aspect-ratio: 4 / 3; }
+.posts-banner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.posts-banner::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(14, 15, 19, .15) 0%, rgba(14, 15, 19, .7) 100%); }
+.posts-banner a {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  color: #fff; text-decoration: none; text-align: center; padding: 16px;
 }
-.posts-channels a:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
-.posts-channels a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
-.posts-channels svg { grid-row: 1 / 3; align-self: center; color: var(--red); }
-.posts-channels b { font: 800 18px/1.2 'Archivo', sans-serif; overflow-wrap: anywhere; }
-.posts-channels small { font: 500 12px/1.3 'JetBrains Mono', monospace; color: var(--ink-soft); }
-.posts-channels a > span { grid-row: 1 / 3; grid-column: 3; align-self: center; font-size: 20px; }
-.posts-channels.is-loading ul { opacity: .55; }
+.posts-app {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 22px; margin-bottom: 6px;
+  background: #fff; color: var(--ink); border-radius: 999px; font: 800 15px/1 'Archivo', sans-serif;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .3); transition: transform .2s ease;
+}
+.posts-banner--instagram .posts-app svg, .posts-banner--youtube .posts-app svg { color: var(--red); }
+.posts-banner a:hover .posts-app { transform: translateY(-2px) scale(1.04); }
+.posts-banner a:focus-visible { outline: 3px solid var(--red); outline-offset: -6px; border-radius: 18px; }
+.posts-banner b { font: 800 18px/1.2 'Archivo', sans-serif; text-shadow: 0 2px 10px rgba(0, 0, 0, .5); overflow-wrap: anywhere; }
+.posts-banner small { font: 600 11px/1.3 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
 
 @container (max-width: 760px) {
   .posts-in { padding: 54px 20px; gap: 22px; }
   .posts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .posts-caption { font-size: 12px; padding: 24px 8px 8px; }
-  .posts-channels ul { grid-template-columns: 1fr; gap: 10px; }
-  .posts-channels a { min-height: 76px; padding: 14px 16px; }
+  .posts-banners { grid-template-columns: 1fr; gap: 10px; }
+  .posts-banner { aspect-ratio: 16 / 7; }
   .posts-head .essp-btn { width: 100%; justify-content: center; }
 }
 
-/* --- 4. La receta oficial en cinco pasos --- */
+/* --- 4. Aprende: la hoja de instrucciones de AeroPress Go --- */
 .brew {
   position: relative; overflow: hidden; background: #fff; color: var(--ink);
   container-type: inline-size;
@@ -229,46 +274,67 @@
 .brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 40px; align-items: end; }
 .brew-head .essp-tag { grid-column: 1 / -1; }
 .brew-title { font-size: clamp(2.2rem, 4.6cqi, 4.2rem); }
-.brew-recipe { margin: 0; display: grid; grid-template-columns: repeat(5, auto); border: 2px solid var(--ink); background: #fff; }
-.brew-recipe div { padding: 10px 14px; }
-.brew-recipe div + div { border-left: 1.5px dashed var(--ink); }
-.brew-recipe dt { font: 700 10px/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--ink-soft); }
-.brew-recipe dd { margin: 4px 0 0; font: 700 16px/1.2 'JetBrains Mono', monospace; white-space: nowrap; }
-.brew-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
-.brew-steps li { position: relative; display: grid; gap: 8px; align-content: start; min-width: 0; }
-.brew-steps img { width: 100%; height: auto; aspect-ratio: 868 / 656; object-fit: cover; background: #fff; border: 2px solid var(--ink); display: block; }
-.brew-num {
-  position: absolute; top: 8px; left: 8px; background: var(--red); color: #fff;
-  font: 700 12px/1 'JetBrains Mono', monospace; padding: 4px 7px;
+.brew-legend { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; }
+.brew-legend li { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 7px 10px; border: 1.5px solid currentColor; }
+.brew-legend .is-hot { color: var(--red); }
+.brew-legend .is-cold { color: var(--ink); }
+.brew .is-hot { color: var(--red); }
+.brew b.is-cold, .brew .brew-serve .is-cold { color: var(--ink); }
+
+/* La hoja: papel cuadriculado de 12 px, cuatro columnas, cada paso con su dibujo a trazo */
+.brew-sheet {
+  list-style: none; margin: 0; padding: 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 22px;
+  border: 2px solid var(--ink);
+  background-color: #fff;
+  background-image: linear-gradient(rgba(42, 53, 80, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 53, 80, .09) 1px, transparent 1px);
+  background-size: 12px 12px;
 }
-.brew-steps h3 { margin: 0; font: 800 17px/1.15 'Archivo', sans-serif; text-transform: uppercase; }
-.brew-steps p { margin: 0; font: 500 14.5px/1.45 'Archivo', sans-serif; }
+.brew-sheet li { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-content: start; min-width: 0; }
+.brew-draw { grid-column: 1 / -1; width: 100%; max-width: 220px; height: auto; justify-self: center; color: var(--ink); overflow: visible; }
+.brew-notes {
+  position: absolute; top: 0; right: 0; display: grid; gap: 1px; max-width: 46%; text-align: right;
+  font: 600 9.5px/1.25 'JetBrains Mono', monospace; color: var(--ink-soft);
+}
+.is-notes-left .brew-notes { right: auto; left: 0; text-align: left; }
+.brew-notes span:nth-child(even) { color: var(--ink); font-weight: 700; margin-bottom: 4px; }
+.brew-num { font: 800 30px/1 'Archivo', sans-serif; color: var(--ink); }
+.brew-sheet p { margin: 0; font: 600 14px/1.45 'Archivo', sans-serif; align-self: center; }
+.brew-sheet b { font-weight: 800; }
+.brew-sheet li.is-serve { grid-column: span 2; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.4fr); }
+.brew-sheet li.is-serve .brew-draw { grid-column: 1; grid-row: 1 / 4; }
+.brew-sheet li.is-serve .brew-num { grid-column: 2; }
+.brew-sheet li.is-serve p { grid-column: 3; grid-row: 1; }
+.brew-serve { grid-column: 2 / 4; margin: 4px 0 0; display: grid; gap: 4px; font: 500 13.5px/1.4 'Archivo', sans-serif; }
+.brew-serve dt { display: inline; font-weight: 800; color: var(--red); }
+.brew-serve .is-cold dt { color: var(--ink); }
+.brew-serve dd { display: inline; margin: 0; }
 .brew-foot { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; }
 .brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); }
 
 @container (max-width: 1100px) {
   .brew-head { grid-template-columns: 1fr; }
-  .brew-recipe { justify-self: start; }
-  .brew-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .brew-sheet { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .brew-sheet li.is-serve { grid-column: span 3; }
 }
-/* Celular: los pasos se deslizan de lado y la receta va en dos filas */
+@container (max-width: 760px) {
+  .brew-sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 16px 14px; }
+  .brew-sheet li.is-serve { grid-column: span 2; grid-template-columns: auto minmax(0, 1fr); }
+  .brew-sheet li.is-serve .brew-draw { grid-column: 1 / -1; grid-row: auto; max-width: 200px; }
+  .brew-sheet li.is-serve .brew-num, .brew-sheet li.is-serve p { grid-column: auto; grid-row: auto; }
+  .brew-serve { grid-column: 1 / -1; }
+  .brew-num { font-size: 24px; }
+  .brew-sheet p { font-size: 13px; }
+  .brew-notes { display: none; } /* las cotas no caben junto al dibujo en dos columnas */
+}
 @container (max-width: 700px) {
   .brew-in { padding: 54px 24px 40px; gap: 24px; }
-  .brew-recipe { grid-template-columns: repeat(3, 1fr); justify-self: stretch; }
-  .brew-recipe div { padding: 8px 10px; }
-  .brew-recipe div:nth-child(4) { border-left: none; }
-  .brew-recipe div:nth-child(n + 4) { border-top: 1.5px dashed var(--ink); }
-  .brew-recipe dd { font-size: 14px; white-space: normal; }
-  .brew-steps {
-    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px;
-    margin: 0 -24px; padding: 0 24px 6px; scrollbar-width: thin;
-  }
-  .brew-steps li { flex: 0 0 74%; scroll-snap-align: start; }
+  .brew-sheet { margin: 0 -8px; }
   .brew .essp-ctas { width: 100%; flex-wrap: nowrap; gap: 10px; }
   .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lh-banner { animation: none; }
-  .posts-grid img, .posts-channels a { transition: none; }
+  .visit-pin { transition: none; }
+  .posts-grid img, .posts-app { transition: none; }
 }

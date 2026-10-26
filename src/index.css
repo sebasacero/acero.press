@@ -507,36 +507,6 @@ a{ color:inherit; text-decoration:none; }
 
 /* Pestañas Café / AeroPress */
 /* «¿Qué quieres llevar?»: tres respuestas grandes con su precio desde */
-.shop-sub--lead{ margin:-26px auto 26px; }
-.shop-choices{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; max-width:880px; margin:0 auto 30px; }
-.shop-choice{
-  position:relative; display:grid; justify-items:start; gap:4px; text-align:left; cursor:pointer;
-  padding:18px 18px 16px; min-height:44px; background:#fff; color:var(--near-black);
-  border:2px solid var(--near-black); font-family:'Archivo', sans-serif;
-  transition:transform .15s ease, box-shadow .15s ease;
-}
-.shop-choice:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--near-black); }
-.shop-choice.is-on{ background:var(--near-black); color:var(--cream); box-shadow:5px 5px 0 var(--red); }
-.shop-choice:focus-visible{ outline:3px solid var(--red); outline-offset:3px; }
-.shop-choice-icon svg{ width:40px; height:40px; display:block; }
-.shop-choice.is-on .shop-choice-icon{ color:var(--red); }
-.shop-choice b{ font-size:1.25rem; font-weight:800; text-transform:uppercase; margin-top:6px; }
-.shop-choice small{ font-size:.86rem; opacity:.8; line-height:1.35; }
-.shop-choice em{ font-style:normal; font-family:'JetBrains Mono', monospace; font-weight:700; font-size:.86rem; margin-top:6px; }
-.shop-choice-badge{
-  position:absolute; top:-11px; right:12px; background:var(--red); color:#fff;
-  font-family:'JetBrains Mono', monospace; font-weight:700; font-size:.62rem; letter-spacing:.08em; padding:4px 7px;
-}
-@media (max-width:640px){
-  .shop-choices{ grid-template-columns:1fr; gap:10px; margin-bottom:22px; }
-  .shop-choice{ grid-template-columns:auto 1fr auto; grid-template-rows:auto auto; column-gap:12px; align-items:center; padding:12px 14px; }
-  .shop-choice-icon{ grid-row:1 / 3; }
-  .shop-choice-icon svg{ width:34px; height:34px; }
-  .shop-choice b{ margin-top:0; font-size:1.05rem; }
-  .shop-choice small{ grid-column:2; }
-  .shop-choice em{ grid-row:1 / 3; grid-column:3; margin-top:0; text-align:right; font-size:.8rem; }
-}
-@media (prefers-reduced-motion: reduce){ .shop-choice{ transition:none; } }
 .shop-tabs{ display:flex; justify-content:center; gap:8px; margin:-14px 0 22px; }
 .shop-tabs button{
   display:inline-flex; align-items:center; gap:8px; min-width:132px; justify-content:center;

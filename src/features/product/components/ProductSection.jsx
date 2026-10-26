@@ -4,29 +4,16 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchCoffeeVarieties, fetchAeropressProducts } from '../../../shared/lib/catalog.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
 import KitBuilder from './KitBuilder.jsx';
-import { isDevice } from '../../../shared/lib/pairing.js';
 
 const FALLBACK_IMG = '/image/bagsbeans.png';
 const sizeName = (s, t) => (s === '18G' ? t('shop.sachet') : s);
 const money = (n) => (n != null ? `$${Number(n).toLocaleString('es-CO')}` : null);
 
-// Dibujos de las tres opciones (trazo, sin fotos que dependan del catálogo)
-const CHOICE_ICONS = {
-  coffee: <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M13 10h22l3 6v24a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V16z" /><path d="M10 16h28" /><ellipse cx="24" cy="29" rx="4.5" ry="6.5" transform="rotate(25 24 29)" /><path d="M21.5 24.5c2 2.5 3 6 2.5 9.5" /></svg>,
-  gear: <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><rect x="16" y="4" width="16" height="6" rx="1.5" /><path d="M18 10h12v22H18z" /><path d="M12 32h24l-3 5H15z" /><path d="M14 44h20" /><path d="M21 16h6M21 21h6M21 26h6" /></svg>,
-  kit: <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M6 18h36v22a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" /><path d="M4 12h40v6H4z" /><path d="M24 12v30" /><path d="M24 12c-3-6-10-7-10-3s7 3 10 3c3 0 10 1 10-3s-7-3-10 3" /></svg>,
-};
-
-const minPrice = (list) => {
-  const all = list.flatMap((p) => Object.values(p.prices).filter((v) => v != null));
-  return all.length ? Math.min(...all) : null;
-};
-
 /**
- * Tienda: primero la pregunta, «¿qué quieres llevar?», con tres respuestas grandes (Café,
- * AeroPress, Kit) y su precio desde; después las tarjetas de esa opción. En Café, con muchas
- * bolsas, se filtra por variedad y región. Cada tarjeta añade al carrito; la barra de compra
- * trabaja sobre el producto seleccionado con cantidad, "Comprar" y "Comprar con tarjeta".
+ * Tienda: carrusel de tarjetas con pestañas Café / AeroPress. En Café, el
+ * cliente filtra por variedad y región. Cada tarjeta añade al carrito; la barra
+ * de compra trabaja sobre el producto seleccionado con cantidad, "Comprar" y
+ * "Comprar con tarjeta".
  */
 export default function ProductSection() {
   const { addItem, buyNow, buyNowCard } = useCart();
@@ -107,18 +94,6 @@ export default function ProductSection() {
       variantId: p.variantIds[size],
     };
   };
-
-  // «Desde»: el café en su bolsa de 250 g (el sachet no es la compra de la tienda); el kit, como lo
-  // arma KitBuilder por defecto: la prensa más barata, la bolsa más barata y los filtros de papel
-  const bagFrom = minPrice(coffee.map((p) => ({ prices: { bag: p.prices['250G'] ?? minPrice([p]) } })));
-  const devices = gear.filter(isDevice);
-  const paper = gear.filter((p) => !isDevice(p) && /papel|paper/i.test(p.name));
-  const kitFrom = bagFrom != null ? bagFrom + (minPrice(devices) ?? 0) + (minPrice(paper) ?? 0) : null;
-  const choices = [
-    { id: 'coffee', from: bagFrom },
-    { id: 'gear', from: minPrice(gear) },
-    { id: 'kit', from: kitFrom, badge: t('shopx.kit.badge') },
-  ];
 
   const selected = all.find((p) => p.id === selectedId) ?? null;
   const selectedItem = selected ? itemFor(selected, qty) : null;
@@ -202,24 +177,18 @@ export default function ProductSection() {
         <div className="shop-rule" aria-hidden="true"><span /></div>
         <p className="shop-kicker">{t('shop.kicker')}</p>
 
-        <h2 className="shop-title">{t('shopx.title')}</h2>
-        <p className="shop-sub shop-sub--lead">{t('shopx.sub')}</p>
+        <h2 className="shop-title">{tab === 'gear' ? t('shop.gearTitle') : tab === 'kit' ? t('shop.kitTitle') : t('shop.coffeeTitle')}</h2>
 
-        <div className="shop-choices" role="tablist" aria-label={t('shopx.title')}>
-          {choices.map(({ id, from, badge }) => (
-            <button key={id} type="button" role="tab" aria-selected={tab === id} aria-controls="shop-panel"
-              className={`shop-choice shop-choice--${id}${tab === id ? ' is-on' : ''}`} onClick={() => setTab(id)}>
-              {badge && <span className="shop-choice-badge">{badge}</span>}
-              <span className="shop-choice-icon" aria-hidden="true">{CHOICE_ICONS[id]}</span>
-              <b>{t(`shopx.${id}.title`)}</b>
-              <small>{t(`shopx.${id}.text`)}</small>
-              <em>{loading ? '…' : from != null ? `${t('shopx.from')} ${money(from)}` : t('shopx.soon')}</em>
+        <div className="shop-tabs" role="tablist" aria-label={t('shop.coffeeTitle')}>
+          {[['coffee', t('shop.tabCoffee'), coffee.length], ['gear', t('shop.tabGear'), gear.length], ['kit', t('shop.tabKit'), null]].map(([id, label, n]) => (
+            <button key={id} type="button" role="tab" aria-selected={tab === id} aria-controls="shop-track"
+              className={tab === id ? 'is-on' : ''} onClick={() => setTab(id)}>
+              {label}{!loading && n != null && <span>{n}</span>}
             </button>
           ))}
         </div>
 
-        <div id="shop-panel" role="tabpanel" className="shop-panel">
-        {tab === 'coffee' && coffee.length > 4 && (varietyOptions.length > 0 || regionOptions.length > 0) && (
+        {tab === 'coffee' && (varietyOptions.length > 0 || regionOptions.length > 0) && (
           <div className="shop-filters">
             {varietyOptions.length > 0 && (
               <label className="shop-filter">
@@ -246,6 +215,8 @@ export default function ProductSection() {
             )}
           </div>
         )}
+        {tab === 'gear' && <p className="shop-sub">{t('shop.gearSub')}</p>}
+        {tab === 'kit' && <p className="shop-sub">{t('shop.kitSub')}</p>}
 
         {loading ? (
           <p className="shop-empty">{t('shop.loading')}</p>
@@ -274,7 +245,7 @@ export default function ProductSection() {
             <button type="button" className="shop-arrow prev" aria-label={t('shop.prev')} disabled={edges.start} onClick={() => slide(-1)}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
-            <div className="shop-track" ref={trackRef} onScroll={updateEdges}>
+            <div className="shop-track" id="shop-track" ref={trackRef} onScroll={updateEdges}>
               {shown.map(card)}
             </div>
             <button type="button" className="shop-arrow next" aria-label={t('shop.next')} disabled={edges.end} onClick={() => slide(1)}>
@@ -321,8 +292,6 @@ export default function ProductSection() {
             </div>
           </div>
         )}
-
-        </div>
 
         <p className="payment-worldwide-note">{t('payment.subtitle')}</p>
       </div>

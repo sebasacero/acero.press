@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { useSocialLinks } from '../../../shared/lib/useSocialLinks.js';
 import { shapePosts } from '../lib/posts.js';
 import './home.css';
 
-// Mis publicaciones: lo último de Instagram, por la función pública instagram-proxy (la misma
-// conexión que el panel; la cuenta se renueva sola). Si la conexión está caída o la red falla,
-// la sección no queda vacía: lleva a cada red, con los enlaces de Configuración.
+// Mis redes: un banner pequeño por red, con un video nuestro de fondo y el botón de la app encima
+// (enlaces de Configuración). Si Instagram responde (función pública instagram-proxy), arriba
+// van también las últimas publicaciones. Los videos solo corren mientras se ven.
 const FEED_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/instagram-proxy?limit=9`;
 
 function usePosts() {
@@ -34,6 +34,42 @@ const ICONS = {
   tiktok: <path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3c.5 2.6 2.4 4.4 5 4.6" />,
   youtube: <><rect x="2.5" y="5.5" width="19" height="13" rx="3.5" /><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" /></>,
 };
+
+// El video de fondo de cada red (propios, de public/image): cambiarlos aquí
+const CHANNEL_VIDEO = {
+  instagram: '/image/cans.mp4',
+  tiktok: '/image/metodo/aeropress-metodo.mp4',
+  youtube: '/image/hero_main1.mp4',
+};
+const CHANNEL_NAME = { instagram: 'Instagram', tiktok: 'TikTok', youtube: 'YouTube' };
+
+function ChannelBanner({ id, href, handle, note }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || typeof IntersectionObserver === 'undefined') return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play?.().catch(() => {});
+      else v.pause?.();
+    }, { threshold: 0.25 });
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <li className={`posts-banner posts-banner--${id}`}>
+      <video ref={ref} src={`${CHANNEL_VIDEO[id]}#t=0.5`} muted loop playsInline preload="metadata" aria-hidden="true" />
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        <span className="posts-app">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICONS[id]}</svg>
+          {CHANNEL_NAME[id]}
+        </span>
+        <b>{handle}</b>
+        <small>{note}</small>
+      </a>
+    </li>
+  );
+}
 
 export default function PostsSection() {
   const { t } = useLanguage();
@@ -72,23 +108,13 @@ export default function PostsSection() {
               </li>
             ))}
           </ul>
-        ) : (
-          <div className={`posts-channels${status === 'loading' ? ' is-loading' : ''}`} aria-busy={status === 'loading'}>
-            {status === 'down' && <p className="posts-fallback">{t('posts.fallback')}</p>}
-            <ul>
-              {['instagram', 'tiktok', 'youtube'].map((k) => (
-                <li key={k}>
-                  <a href={links[k]} target="_blank" rel="noopener noreferrer">
-                    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICONS[k]}</svg>
-                    <b>{handle(links[k])}</b>
-                    <small>{channels[k]}</small>
-                    <span aria-hidden="true">→</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        ) : null}
+
+        <ul className="posts-banners" aria-busy={status === 'loading'}>
+          {['instagram', 'tiktok', 'youtube'].map((k) => (
+            <ChannelBanner key={k} id={k} href={links[k]} handle={handle(links[k])} note={channels[k]} />
+          ))}
+        </ul>
       </div>
     </section>
   );

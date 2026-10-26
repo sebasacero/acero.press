@@ -1,12 +1,11 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
+import BrewDrawing from './brewDrawings.jsx';
 import './home.css';
 
-// Aprende, en corto: la receta oficial de AeroPress (aeropress.com) en cinco pasos con su foto, y
-// la puerta a la Escuela (/escuela), donde está el cronómetro y lo demás. Reemplaza a la receta que
-// seguía al scroll y a la franja del temario: dos pantallas largas para lo que cabe en una.
-const STEP_IMG = (i) => `/image/metodo/paso-${i + 1}.webp`;
-
+// Aprende: la hoja de instrucciones de AeroPress Go tal cual, en diez pasos con su dibujo, sobre
+// papel cuadriculado. Caliente en rojo y cold brew en tinta, como en la hoja. La Escuela (/escuela)
+// tiene el cronómetro y lo demás.
 export default function BrewGuide() {
   const { t } = useLanguage();
   const title = t('brew.title');
@@ -22,19 +21,33 @@ export default function BrewGuide() {
             {title[0]}{' '}<br />{title[1]}
             <span className="essp-script">{t('brew.script')}</span>
           </h2>
-          <dl className="brew-recipe">
-            {t('brew.recipe').map(([k, v]) => (
-              <div key={k}><dt>{k}</dt><dd>{v}</dd></div>
-            ))}
-          </dl>
+          <ul className="brew-legend">
+            <li className="is-hot">{t('brew.hot')}</li>
+            <li className="is-cold">{t('brew.cold')}</li>
+          </ul>
         </div>
-        <ol className="brew-steps">
+        <ol className="brew-sheet">
           {steps.map((s, i) => (
-            <li key={i}>
-              <img src={STEP_IMG(i)} alt="" width="868" height="656" loading="lazy" />
-              <span className="brew-num">{String(i + 1).padStart(2, '0')}</span>
-              <h3>{s.title}</h3>
-              <p>{s.text}</p>
+            <li key={i} className={i === steps.length - 1 ? 'is-serve' : s.notesLeft ? 'is-notes-left' : undefined}>
+              <BrewDrawing index={i} />
+              {s.notes && (
+                <span className="brew-notes" aria-hidden="true">
+                  {s.notes.map((n, k) => <span key={k}>{n}</span>)}
+                </span>
+              )}
+              <span className="brew-num">{i + 1}</span>
+              <p>
+                {s.text}
+                {s.hot && <><br /><b className="is-hot">{s.hot}</b></>}
+                {s.cold && <><br /><b className="is-cold">{s.cold}</b></>}
+              </p>
+              {s.serve && (
+                <dl className="brew-serve">
+                  {s.serve.map(([k, v], j) => (
+                    <div key={k} className={j === s.serve.length - 1 ? 'is-cold' : undefined}><dt>{k}:</dt> <dd>{v}</dd></div>
+                  ))}
+                </dl>
+              )}
             </li>
           ))}
         </ol>
