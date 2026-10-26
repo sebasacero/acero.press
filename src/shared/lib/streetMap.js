@@ -2,6 +2,7 @@
 // tazas vendidas y tinteros, sin datos de nadie) convertido en lo que
 // drawBogotaMap dibuja. Solo matemáticas, sin Supabase: así corre en
 // node --test (la llamada a la base vive en useStreetMap.js).
+import { toCuadra } from './bogotaGeo.js';
 
 // Una coordenada ausente (null, '') no es la cuadra 0: `+null` daría 0 y pasaría por número
 const coord = (v) => (v === null || v === undefined || v === '' ? NaN : +v);
@@ -24,17 +25,29 @@ export function heatFromSales(sales) {
 const STAGE_TAG = { prospecto: 'T', piloto: 'P', activo: 'A', pausa: 'T' };
 
 /**
+ * La cuadra de un tintero: la que se escribió en la ficha o, si solo tiene el
+ * punto del GPS (la ficha en la calle ya no pide cuadra), la más cercana a
+ * ese punto. null en el sur y donde la cuadrícula no llega.
+ */
+export function tinteroBlock(t) {
+  if (placed(t)) return { carrera: +t.carrera, calle: +t.calle };
+  const lat = coord(t.lat);
+  const lng = coord(t.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? toCuadra(lng, lat) : null;
+}
+
+/**
  * Pines [carrera, calle, etiqueta, destacado] de los tinteros: la etiqueta es
  * corta («T · 25/h») y nunca lleva nombre. Los activos van destacados en rojo.
  */
 export function pinsFromTinteros(tinteros) {
-  return (tinteros ?? [])
-    .filter(placed)
-    .map((t) => {
-      const tag = STAGE_TAG[t.stage] ?? 'T';
-      const rate = t.cups_per_hour != null && Number.isFinite(+t.cups_per_hour) ? ` · ${Math.round(+t.cups_per_hour)}/h` : '';
-      return [+t.carrera, +t.calle, `${tag}${rate}`, t.stage === 'activo'];
-    });
+  return (tinteros ?? []).flatMap((t) => {
+    const at = tinteroBlock(t);
+    if (!at) return [];
+    const tag = STAGE_TAG[t.stage] ?? 'T';
+    const rate = t.cups_per_hour != null && Number.isFinite(+t.cups_per_hour) ? ` · ${Math.round(+t.cups_per_hour)}/h` : '';
+    return [[at.carrera, at.calle, `${tag}${rate}`, t.stage === 'activo']];
+  });
 }
 
 /** Resumen para contar en pantalla: cuadras con ventas, tazas, tinteros. */

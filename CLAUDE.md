@@ -29,8 +29,8 @@ Datos reales hoy (oct. 2026): 13 productos, 31 presentaciones, 8 pedidos, 4 clie
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm run api` (FastAPI en :8000; necesita `uvicorn`, no está en `requirements.txt`).
-- `npm test`: unitarias (`node --test`) de los módulos puros. El glob es fijo (`admin/micra` y `home/sections`): si agregas un `*.test.js` en otra carpeta, amplía el script.
-- `npm run e2e`: navegador con Supabase simulado; nunca toca la base real. Chromium viene con `@playwright/test`; `PW_CHROMIUM` apunta a uno propio.
+- `npm test`: unitarias (`node --test`) de los módulos puros: todo `src/**/*.test.js`.
+- `npm run e2e`: navegador con Supabase simulado; nunca toca la base real. Chromium viene con `@playwright/test`; `PW_CHROMIUM` apunta a uno propio (en la nube: `PW_CHROMIUM=/opt/pw-browsers/chromium`). No edites archivos mientras corre: Vite recarga la página y las pruebas fallan por eso.
 - `npm run shot -- <ruta> <salida.png> [--desk] [--session] [--street=e2e/data/street.json] [--piloto=e2e/data/informe.json] [--click=sel] [--full]`: captura con el mismo simulador, para mirar un cambio visual antes de probarlo entero. Mira la captura con el lector de imágenes; no la subas a git.
 - `npm run test:sql`: funciones SQL de venta contra un Postgres local desechable (variables `PG*`; se niega a correr contra Supabase).
 - No hay CI, lint ni formateador: lo que no corras tú no lo corre nadie.
@@ -74,4 +74,4 @@ Para no redescubrirla. Ordenada por riesgo:
 5. **Todo el admin viaja al público** (`main.jsx` importa `AdminApp` sin `lazy`; `SectionEditButton` arrastra `admin.css`): bundle de ~830 kB.
 6. `instagram.js` conserva el camino no atómico (`atomicMissing`) aunque la migración ya está aplicada; `useCardOutput` sube dos veces si se guarda y luego se publica.
 7. Cualquier rol de `admin_users` ve todo el panel (Configuración, token de Instagram); `ADMIN_TOOLS` no tiene roles.
-8. Legado sin uso: `CSS/`, `JS/`, `image/` (11 MB duplicados), `README.md` describe el sitio HTML anterior, `og:image` apunta a un archivo que no existe.
+8. Legado sin uso: `CSS/`, `JS/`, `image/` (11 MB duplicados), `README.md` describe el sitio HTML anterior. (`og:image` sí existe: `public/image/local.jpg`.)

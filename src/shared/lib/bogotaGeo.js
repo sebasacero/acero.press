@@ -76,3 +76,36 @@ export function meters([lng1, lat1], [lng2, lat2]) {
   const kx = 111320 * Math.cos(((lat1 + lat2) / 2) * (Math.PI / 180));
   return Math.hypot((lng2 - lng1) * kx, (lat2 - lat1) * 110574);
 }
+
+/**
+ * De GPS a la cuadra más cercana (carrera, calle): el inverso de toLngLat
+ * por Newton. null fuera de la cuadrícula (el sur, las diagonales) o si no
+ * converge a menos de 40 m.
+ */
+export function toCuadra(lng, lat) {
+  let c = 12;
+  let k = 70;
+  const h = 0.05;
+  for (let it = 0; it < 30; it += 1) {
+    const p = toLngLat(c, k);
+    const pc = toLngLat(Math.min(c + h, 120), k);
+    const pk = toLngLat(c, Math.min(k + h, 200));
+    if (!p || !pc || !pk) return null;
+    const fx = p[0] - lng;
+    const fy = p[1] - lat;
+    const a = (pc[0] - p[0]) / h;
+    const b = (pk[0] - p[0]) / h;
+    const cc = (pc[1] - p[1]) / h;
+    const d = (pk[1] - p[1]) / h;
+    const det = a * d - b * cc;
+    if (Math.abs(det) < 1e-12) return null;
+    const dc = (d * fx - b * fy) / det;
+    const dk = (a * fy - cc * fx) / det;
+    c = Math.min(119.9, Math.max(1, c - dc));
+    k = Math.min(199.9, Math.max(1, k - dk));
+    if (Math.abs(dc) < 1e-4 && Math.abs(dk) < 1e-4) break;
+  }
+  const back = toLngLat(c, k);
+  if (!back || meters(back, [lng, lat]) > 40) return null;
+  return { carrera: Math.round(c), calle: Math.round(k) };
+}

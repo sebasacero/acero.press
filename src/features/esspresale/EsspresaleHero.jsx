@@ -12,10 +12,13 @@ import { useEditableTexts } from '../../shared/lib/editableTexts.js';
 import './esspresale.css';
 
 // Primera sección del sitio: dos banners dibujados como las tarjetas de redes.
-// «Dónde estamos»: el mapa y los números reales del estudio de calle (ventas
-// con cuadra y tinteros). «Ser barista»: la convocatoria del piloto. Rotan
-// solos cada 8 s y se detienen mientras el cursor o el foco están encima.
-const AUTO_MS = 8000;
+// «El mapa»: el estudio de calle con sus números reales (ventas con cuadra y
+// tinteros). «Para tinteros»: qué le damos al tintero que nos deja ver su ruta
+// (Mi ruta). No rotan solos: un carrusel que avanza solo se ignora y se lee a
+// medias (NN/g); se cambia con las pestañas o con «Soy tintero».
+
+// Cifras del celular y del panel de «Para tinteros»: un día de ejemplo, marcado como tal
+const EXAMPLE_DAY = { stops: ['1', '4'], specs: ['3,2 km', '14', '38'] };
 
 // Textos de cada banner que se cambian con su lápiz (app_config essp_<banner>_<campo>_<idioma>).
 const TEXT_KEYS = ['title1', 'title2', 'script', 'loc', 'lede', 'panelText'];
@@ -133,7 +136,7 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
               {isOrder ? (
                 <>
                   <a className="essp-btn" href="#beans">{base('cta')}</a>
-                  <a className="essp-btn is-ghost" href="#prensado">{base('cta2')}</a>
+                  <button type="button" className="essp-btn is-ghost" onClick={() => onSelect(1)}>{base('cta2')}</button>
                 </>
               ) : (
                 <>
@@ -147,16 +150,17 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
           {isOrder ? <StreetPhone className="essp-hero-phone" street={street} layers={streetLayers} /> : <BaristaPhone className="essp-hero-phone" />}
 
           <aside className="essp-panel" aria-label={k('panelFig')}>
-            <div className="essp-panel-cota"><span>{k('panelFig')}</span><span className="essp-badge">{k('panelBadge')}</span></div>
+            {/* Sin puntos reales el mapa dibuja una demanda de ejemplo: el panel no dice «datos reales» encima */}
+            <div className="essp-panel-cota"><span>{k('panelFig')}</span><span className="essp-badge">{isOrder && !streetLayers ? base('panelBadgeDemo') : k('panelBadge')}</span></div>
             <div className="essp-panel-label">{k('panelLabel')}</div>
             <div className="essp-odo-row">
-              <Odometer digits={isOrder ? digitsOf(cups) : ['0', '2', '5']} />
+              <Odometer digits={isOrder ? digitsOf(cups) : EXAMPLE_DAY.stops} />
               <span className="essp-odo-sep">/</span>
               <span className="essp-odo-target">{isOrder ? `${show(blocks)} ${blocks === 1 ? base('target1') : base('target')}` : k('days')}</span>
             </div>
             <Segs filled={isOrder ? Math.min(20, blocks ?? 0) : 10} className="essp-bar" />
             <div className="essp-specs">
-              {(isOrder ? [show(cups), show(blocks), show(tinteros)] : ['1', '350', '1 kg']).map((v, i) => (
+              {(isOrder ? [show(cups), show(blocks), show(tinteros)] : EXAMPLE_DAY.specs).map((v, i) => (
                 <div key={i}><b>{v}</b><span>{specs[i]}</span></div>
               ))}
             </div>
@@ -170,38 +174,22 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
 }
 
 export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
+  const { t } = useLanguage();
   const { layers: streetLayers, summary: street } = useStreetMap();
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [tick, setTick] = useState(0);
+  const select = useCallback((i) => setIndex(i), []);
 
-  const select = useCallback((i) => {
-    setIndex(i);
-    setTick((n) => n + 1); // reinicia el temporizador al elegir a mano
-  }, []);
-
+  // «Para tinteros» escribe al WhatsApp del negocio (el mismo del botón flotante), con el mensaje listo
+  const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
   useEffect(() => {
-    if (paused || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
-    const id = setInterval(() => setIndex((i) => (i + 1) % 2), AUTO_MS);
-    return () => clearInterval(id);
-  }, [paused, tick]);
-
-  // «Ser barista» escribe al WhatsApp del negocio (el mismo del botón flotante)
-  const [whatsapp, setWhatsapp] = useState(`https://wa.me/${FALLBACK_WHATSAPP_NUMBER}`);
-  useEffect(() => {
-    fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setWhatsapp(`https://wa.me/${n}`));
+    fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then(setNumber);
   }, []);
+  const whatsapp = `https://wa.me/${number}?text=${encodeURIComponent(t('essp.barista.waMsg'))}`;
 
   const tone = index === 0 ? 'paper' : 'photo';
 
   return (
-    <header
-      className={`essp-hero essp-hero--${tone}`}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}
-    >
+    <header className={`essp-hero essp-hero--${tone}`}>
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} />
