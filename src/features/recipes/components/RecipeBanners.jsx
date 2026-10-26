@@ -4,6 +4,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
 import { money, firstSize } from './RecipeKit.jsx';
 import { isDevice } from '../../../shared/lib/pairing.js';
+import ChampionPhoto from './ChampionPhoto.jsx';
 import '../../esspresale/esspresale.css';
 
 // Cada receta campeona es un banner como los de la barra (cold brew, latte…):
@@ -86,6 +87,7 @@ function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onO
 
       <div className="rb-in">
         <div className="rb-copy">
+          <ChampionPhoto key={recipe.year} recipe={recipe} className="rb-champ" load={active} />
           <div className="rb-tag"><span className="rb-dot" />{t('recipesBanner.fig').replace('{year}', recipe.year)} <span className="rb-flag">{recipe.flag}</span></div>
           <h3 className="rb-name">{recipe.name}</h3>
           <div className="rb-place">{recipe.place[lang]}</div>

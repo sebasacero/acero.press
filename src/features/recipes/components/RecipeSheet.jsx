@@ -1,5 +1,7 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import translations from '../../i18n/translations.js';
+import ChampionPhoto from './ChampionPhoto.jsx';
+import { championOf, WAC_RECIPES_URL } from '../data/champions.js';
 
 // Hoja de instrucciones con la estructura del folleto impreso de AeroPress y
 // el estilo de la página — "plano técnico térmico": línea fina sobre papel
@@ -248,6 +250,7 @@ export default function RecipeSheet({ recipe }) {
   const pos = t(`position.${recipe.position}`);
   const others = ['es', 'en', 'ja'].filter((l) => l !== lang);
   const heat = heatColor(recipe.temp);
+  const champ = championOf(recipe.year);
 
   return (
     <section className="rs" lang={lang} aria-labelledby={`rs-${recipe.year}`} style={{ '--rs-heat': heat }}>
@@ -289,6 +292,12 @@ export default function RecipeSheet({ recipe }) {
         <aside className="rs-side" aria-label={t('sheet.data')}>
           <h4>{t('sheet.data')}</h4>
           <p className="rs-lead">{t('sheet.lead').replace('{name}', recipe.name).replace('{year}', recipe.year)}</p>
+          <ChampionPhoto key={recipe.year} recipe={recipe} className="rs-champ" />
+          <ul className="rs-links">
+            <li><a href={WAC_RECIPES_URL} target="_blank" rel="noopener noreferrer">{t('champ.source')} ↗</a></li>
+            {champ?.final && <li><a href={champ.final} target="_blank" rel="noopener noreferrer">{t('champ.final').replace('{year}', recipe.year)} ↗</a></li>}
+            {champ?.video && <li><a href={champ.video} target="_blank" rel="noopener noreferrer">{t('champ.video')} ↗</a></li>}
+          </ul>
           <p>
             <b>{t('modal.dose')}:</b> {recipe.dose} · <b>{t('modal.temp')}:</b> <span className="rs-hot">{recipe.temp}</span> · <b>{t('modal.water')}:</b> {recipe.water}
           </p>

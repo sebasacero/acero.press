@@ -1495,6 +1495,15 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 .rb-name{ font-family:'Archivo', sans-serif; font-weight:700; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:1.02; text-transform:uppercase; color:var(--cream); margin:0; text-wrap:balance; }
 .rb-place{ margin-top:.9rem; font-family:'JetBrains Mono', monospace; font-size:.8rem; letter-spacing:.04em; color:rgba(255,255,255,.82); }
 .rb-jp{ margin-top:.3rem; font-size:.82rem; color:#c9a0a0; }
+/* Foto del campeón (sitio oficial del WAC) con su crédito; el enlace mide 44 px de alto. */
+.champ{ margin:0; }
+.champ-img{ overflow:hidden; background:rgba(255,255,255,.12); }
+.champ-img img{ display:block; width:100%; height:100%; object-fit:cover; object-position:center 30%; }
+.champ figcaption a{ display:inline-flex; align-items:center; min-height:44px; font-family:'JetBrains Mono', monospace; font-size:.66rem; letter-spacing:.04em; color:inherit; text-decoration:underline; text-underline-offset:3px; }
+.rb-champ{ display:flex; align-items:center; gap:12px; margin-bottom:.4rem; color:rgba(255,255,255,.8); }
+.rb-champ .champ-img{ width:88px; height:88px; flex:none; border-radius:50%; border:2px solid var(--glass-line); box-shadow:0 10px 30px rgba(0,0,0,.25); }
+.rb-champ figcaption a:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+@media (max-width:900px){ .rb-champ .champ-img{ width:68px; height:68px; } }
 .rb-col{ position:relative; justify-self:end; width:100%; max-width:420px; display:grid; gap:12px; }
 .rb-panel{ justify-self:stretch; max-width:none; }
 .rb-panel .progress-caption{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
@@ -1600,6 +1609,12 @@ dialog.sales-modal-banner.sales-wa{ width:min(560px, 94vw); max-height:88vh; pad
 .rs-sensor-bar i{ position:absolute; top:50%; width:14px; height:14px; border-radius:50%; transform:translate(-50%,-50%); background:linear-gradient(135deg,#fff,#aeb3b9 55%,#fff); border:1.5px solid #0f1114; box-shadow:0 0 0 2px rgba(255,255,255,.6); }
 .rs-sensor-scale{ display:flex; justify-content:space-between; align-items:baseline; margin-top:.4rem; font-family:'JetBrains Mono',monospace; font-size:.58rem; color:rgba(255,255,255,.55); }
 .rs-sensor-scale b{ font-size:.95rem; }
+.rs-champ{ display:grid; justify-items:start; }
+.rs-champ .champ-img{ width:120px; aspect-ratio:1; border:1.5px solid var(--rs-ink); border-radius:2px; background:#e4e1da; }
+.rs-champ figcaption a{ color:#3a3d42; }
+.rs-links{ list-style:none; margin:0; padding:0; display:grid; }
+.rs-links a{ display:flex; align-items:center; min-height:44px; font-family:'JetBrains Mono',monospace; font-size:.7rem; font-weight:700; color:var(--rs-ink); text-decoration:underline; text-underline-offset:3px; border-top:1px dashed var(--rs-line); }
+.rs-links a:focus-visible, .rs-champ figcaption a:focus-visible{ outline:2px solid var(--rs-red); outline-offset:2px; }
 .rs-site{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.8rem; color:var(--rs-ink) !important; text-align:center; padding:.2rem 0; }
 .rs-legal{ font-size:.64rem; text-align:right; color:#555a61 !important; }
 .rs-copy{ font-family:'JetBrains Mono',monospace; font-size:.62rem; font-weight:700; text-align:right; color:var(--rs-ink) !important; }
