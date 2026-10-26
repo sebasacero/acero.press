@@ -39,7 +39,7 @@ export function StreetPhone({ className = '', street = null, layers = null }) {
   const n = (v) => (street ? String(v) : '—');
   const zone = street?.zones?.[0] ?? 'Chapinero';
   return (
-    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra: el mapa de las ventas en la calle y los tinteros de Chapinero">
+    <div className={`essp-phone ${className}`} role="img" aria-label="App Micra: el mapa de las ventas en la calle y los baristas de Chapinero">
       <MapCanvas view={streetView(layers)} redrawKey={layers} />
       <div className="essp-phone-screen" aria-hidden="true">
         <StatusBar />
@@ -55,7 +55,7 @@ export function StreetPhone({ className = '', street = null, layers = null }) {
             <Segs filled={Math.min(20, street?.blocks ?? 0)} />
             <div className="essp-phone-who">
               <span className="essp-phone-av">AP</span>
-              <div><b>{n(street?.cups)} tazas en la calle</b><small>{n(street?.blocks)} cuadras · {n(street?.tinteros)} tinteros</small></div>
+              <div><b>{n(street?.cups)} tazas en la calle</b><small>{n(street?.blocks)} cuadras · {n(street?.tinteros)} baristas</small></div>
               <em>{street ? `${street.days} d` : '—'}</em>
             </div>
           </div>
@@ -67,7 +67,7 @@ export function StreetPhone({ className = '', street = null, layers = null }) {
 
 export function BaristaPhone({ className = '' }) {
   return (
-    <div className={`essp-phone ${className}`} role="img" aria-label="Mi ruta, la app del tintero: su recorrido del día con paradas y tazas (ejemplo)">
+    <div className={`essp-phone ${className}`} role="img" aria-label="Mi ruta, la app del barista: su recorrido del día con paradas y tazas (ejemplo)">
       <MapCanvas view={baristaView} />
       <div className="essp-phone-screen" aria-hidden="true">
         <StatusBar />

@@ -38,7 +38,7 @@ test('con ventas y tinteros reales, el calor sigue a las cuadras del estudio y l
   await expect(slide.locator('.essp-panel')).toContainText('1 cuadra');
   await expect(slide.locator('.essp-odo')).toHaveText('40');
   await expect(slide.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
-  await expect(slide.locator('.essp-phone-who')).toContainText('1 cuadras · 2 tinteros');
+  await expect(slide.locator('.essp-phone-who')).toContainText('1 cuadras · 2 baristas');
   await expect(slide.locator('.essp-panel .essp-badge')).toHaveText('DATOS REALES');
   await expect(slide.locator('.essp-title')).toContainText('El tintotiene ruta.');
   await expect(page.locator('.essp-hero')).not.toContainText(/domicilio|Recibir pedidos/i);
@@ -67,7 +67,7 @@ test('sin estudio, el mapa dibuja su demanda de ejemplo (la Zona T sigue calient
   await page.context().close();
 });
 
-test('el banner no avanza solo; «Soy tintero» lleva a la pestaña del tintero con WhatsApp listo', async ({ browser }) => {
+test('el banner no avanza solo; «Soy barista» lleva a la pestaña del barista con WhatsApp listo', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } } });
   await page.clock.install();
   await page.goto('/', { waitUntil: 'load' });
@@ -76,9 +76,9 @@ test('el banner no avanza solo; «Soy tintero» lleva a la pestaña del tintero 
   // Un carrusel que avanza solo se ignora (NN/g): pasado el tiempo de antes (8 s) sigue en el mapa
   await page.clock.runFor(20000);
   await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
-  await page.locator('.essp-slide').first().getByRole('button', { name: 'Soy tintero' }).click();
+  await page.locator('.essp-slide').first().getByRole('button', { name: 'Soy barista' }).click();
   // La diapositiva que se va queda inerte: las pestañas que se leen son las de la que llega
-  await expect(page.locator('.essp-slide').nth(1).getByRole('tab', { name: 'Para tinteros' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.essp-slide').nth(1).getByRole('tab', { name: 'Para baristas' })).toHaveAttribute('aria-selected', 'true');
   const wa = page.locator('.essp-slide').nth(1).getByRole('link', { name: 'Quiero participar' });
   await expect(wa).toHaveAttribute('href', /wa\.me\/\d+\?text=.*ruta/);
   expect(errors).toEqual([]);

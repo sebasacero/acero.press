@@ -175,19 +175,21 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
   );
 }
 
+const BARISTA_HASHES = ['#baristas', '#tinteros'];
+
 export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
   const { layers: streetLayers, summary: street } = useStreetMap();
-  // #tinteros (el menú, un enlace compartido) abre «Para tinteros»
-  const [index, setIndex] = useState(() => (window.location.hash === '#tinteros' ? 1 : 0));
+  // #baristas (el menú, un enlace compartido) abre «Para baristas»; #tinteros sigue sirviendo para enlaces viejos
+  const [index, setIndex] = useState(() => (BARISTA_HASHES.includes(window.location.hash) ? 1 : 0));
   const select = useCallback((i) => setIndex(i), []);
   useEffect(() => {
-    const onHash = () => { if (window.location.hash === '#tinteros') setIndex(1); };
+    const onHash = () => { if (BARISTA_HASHES.includes(window.location.hash)) setIndex(1); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // «Para tinteros» escribe al WhatsApp del negocio (el mismo del botón flotante), con el mensaje listo
+  // «Para baristas» escribe al WhatsApp del negocio (el mismo del botón flotante), con el mensaje listo
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
   useEffect(() => {
     fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then(setNumber);
@@ -197,7 +199,7 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const tone = index === 0 ? 'paper' : 'photo';
 
   return (
-    <header className={`essp-hero essp-hero--${tone}`} id="tinteros">
+    <header className={`essp-hero essp-hero--${tone}`} id="baristas">
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} />

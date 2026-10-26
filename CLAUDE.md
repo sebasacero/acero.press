@@ -2,7 +2,7 @@
 
 Café de especialidad en Bogotá, hecho alrededor de la AeroPress. Una sola base de código con tres cosas:
 
-1. **El sitio público** (`/`): tienda de café y equipo AeroPress, carrusel de bebidas de la barra, archivo de recetas campeonas del World AeroPress Championship con barista IA, y la receta guiada del AeroPress (`PressStory`, cinco pasos que siguen al scroll). El banner de arriba tiene «El mapa» y «Para tinteros» (`/#tinteros` lo abre; es el enlace «Tinteros» del menú).
+1. **El sitio público** (`/`): tienda de café y equipo AeroPress, carrusel de bebidas de la barra, archivo de recetas campeonas del World AeroPress Championship con barista IA, y la receta guiada del AeroPress (`PressStory`, cinco pasos que siguen al scroll). El banner de arriba tiene «El mapa» y «Para baristas» (`/#baristas` lo abre, y `/#tinteros` para enlaces viejos; es el enlace «Baristas» del menú). En lo público se dice «barista», nunca «tintero» (el código y las tablas siguen con `tintero`).
 2. **El panel de admin** (`/admin`, y flotando sobre el sitio para el owner): pedidos, mesas, inventario, catálogo, secciones del sitio, Instagram, publicaciones, agente de crecimiento, algoritmo/BI y tinteros.
 3. **Micra**: la herramienta de barra dentro del panel. Cámara y editor táctil que convierte una preparación en una tarjeta para redes, registra la venta y la publica. También es el nombre de la app futura que anuncia el sitio (lista de espera).
 
