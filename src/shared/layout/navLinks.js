@@ -11,10 +11,10 @@ export function navItems() {
   // En el orden de la portada. Sin «Inicio» (lo hace el logo) ni «Contacto» (el pie y el botón de WhatsApp están siempre)
   return [
     { key: 'app', href: homeLink('#micra'), className: 'nav-app-link' },
+    { key: 'posts', href: homeLink('#publicaciones') }, // las fichas de redes, dentro de Micra
     { key: 'beans', href: homeLink('#beans') },
     { key: 'recipes', href: homeLink('#recetas') }, // las recetas de la casa, en la vitrina del local
     { key: 'school', href: '/escuela', current: onSchool },
     { key: 'championship', href: homeLink('#metodo') }, // las recetas campeonas del WAC
-    { key: 'posts', href: homeLink('#publicaciones') },
   ];
 }

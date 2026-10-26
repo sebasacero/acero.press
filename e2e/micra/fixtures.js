@@ -44,7 +44,7 @@ const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-header
 
 export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomic = true } = {}) {
   const calls = [];
-  const opts = { slowPublish: false, dropNextSaleResponse: false, streetMap: null, piloto: null, igPosts: null };
+  const opts = { slowPublish: false, dropNextSaleResponse: false, streetMap: null, piloto: null };
   const stock = new Map((inventory ?? DEFAULT_STOCK(coffee)).map((r) => [r.variant_id, { ...r }]));
   const priceOf = new Map(coffee.flatMap((c) => c.product_variants.map((v) => [v.id, v.price])));
   const orders = new Map();

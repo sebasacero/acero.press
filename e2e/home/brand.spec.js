@@ -1,12 +1,10 @@
 // La portada como marca: después de Micra y la tienda, la barra de Chapinero con el banner de las recetas (video y cuadro) en la vitrina,
-// la tienda con sus botones de siempre y las publicaciones (o, sin Instagram, las redes).
+// la tienda con sus botones de siempre y Visítanos con el mapa.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
-import { readFileSync } from 'node:fs';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
-const POSTS = JSON.parse(readFileSync('e2e/data/posts.json', 'utf8'));
 
 test('escritorio: la foto del local con el banner original de las recetas en la vitrina, sin avanzar solas', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
@@ -15,8 +13,8 @@ test('escritorio: la foto del local con el banner original de las recetas en la 
   // Un solo h1, el de Micra arriba; la marca y la barra vienen después de la tienda
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Micra.');
-  const order = await page.locator('#micra, #beans, #recetas, #escuela, #metodo, #publicaciones, #visitanos').evaluateAll((els) => els.map((e) => e.id));
-  expect(order).toEqual(['micra', 'beans', 'recetas', 'escuela', 'metodo', 'publicaciones', 'visitanos']);
+  const order = await page.locator('#micra, #publicaciones, #beans, #visitanos, #recetas, #escuela, #metodo').evaluateAll((els) => els.map((e) => e.id));
+  expect(order).toEqual(['micra', 'publicaciones', 'beans', 'visitanos', 'recetas', 'escuela', 'metodo']);
   // «Café de especialidad para todos» ya no está
   await expect(page.getByRole('heading', { name: /para todos/i })).toHaveCount(0);
   // Sin el botón flotante de la meta de ventas
@@ -99,41 +97,14 @@ test('tienda: los botones de siempre (Café, AeroPress, Kit) y sin enlaces muert
   await page.context().close();
 });
 
-test('publicaciones: lo último de Instagram, cada una enlazada a su post', async ({ browser }) => {
-  const { page, api, errors } = await openPage(browser, { context: DESK });
-  api.opts.igPosts = POSTS;
-  await page.goto('/', { waitUntil: 'load' });
-  const posts = page.locator('#publicaciones');
-  await posts.scrollIntoViewIfNeeded();
-  const cards = posts.locator('.posts-grid a');
-  await expect(cards).toHaveCount(6);
-  await expect(cards.first()).toHaveAttribute('href', 'https://www.instagram.com/p/p1/');
-  await expect(cards.first()).toHaveAttribute('target', '_blank');
-  await expect(cards.first()).toContainText('La barra de Chapinero, una mañana cualquiera');
-  await expect(cards.nth(1).locator('.posts-video')).toHaveText('VIDEO');
-  await expect.poll(() => cards.first().locator('img').evaluate((img) => img.naturalWidth)).toBeGreaterThan(0);
-  await expect(posts.getByRole('link', { name: 'Seguir en Instagram' })).toHaveAttribute('href', /instagram\.com\/aceropress/);
-  expect(errors).toEqual([]);
-  await page.context().close();
-});
-
-test('redes: un banner con video por red y el botón de la app encima; después, Visítanos con el pin', async ({ browser }) => {
+test('Visítanos va junto a la foto de las recetas, con el pin que abre Google Maps', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: PHONE });
   await page.goto('/', { waitUntil: 'load' });
-  const posts = page.locator('#publicaciones');
-  const banners = posts.locator('.posts-banner');
-  await expect(banners).toHaveCount(3);
-  await expect(banners.locator('video')).toHaveCount(3);
-  const links = banners.getByRole('link');
-  await expect(links.nth(0)).toHaveAttribute('href', /instagram\.com\/aceropress/);
-  await expect(links.nth(0)).toContainText('Instagram');
-  await expect(links.nth(0)).toContainText('@aceropress');
-  await expect(links.nth(1)).toContainText('@acero.press');
-  await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
   // La ubicación: el plano con el pin, el toque abre Google Maps con la dirección
   const visit = page.locator('#visitanos');
   await visit.scrollIntoViewIfNeeded();
   await expect(visit.getByRole('heading', { level: 2 })).toHaveText('Visítanos.');
+  await expect(page.locator('section.lh #visitanos, section.lh #recetas')).toHaveCount(2);
   await expect(visit.locator('.visit-pin')).toBeVisible();
   await expect(visit.locator('.visit-map')).toHaveAttribute('href', /google\.com\/maps.*Cra\.%2013%20%2385-32/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);

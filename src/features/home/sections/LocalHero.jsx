@@ -4,10 +4,12 @@ import { SheetFrame } from '../../esspresale/parts.jsx';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
 import { fetchSection } from '../../../shared/lib/pageSections.js';
 import { wrapIndex } from '../lib/houseRecipes.js';
+import MapCanvas from '../../esspresale/MapCanvas.jsx';
 import '../../esspresale/esspresale.css';
 import './home.css';
 
-// Después de la tienda: la foto de la barra, centrada y grande. Las recetas de la casa
+// Después de la tienda: «Visítanos» (pin gigante sobre el plano de Bogotá, dibujado aquí sin servicio
+// de mapas ni cookies; el toque abre Google Maps) junto a la foto de la barra con las recetas. Las recetas de la casa
 // se ven como el banner de la barra (video y cuadro de la receta) dentro del vidrio de la vitrina. Se cambian con las pestañas o deslizando, nunca
 // solas (un carrusel que avanza solo se ignora). El contenido lo edita el owner con el lápiz
 // (page_sections 'cold_brew', el mismo de la vieja barra); esto es solo el respaldo.
@@ -130,6 +132,9 @@ export default function LocalHero() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  const address = t('brand.address');
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`ACERO.press, ${address}`)}`;
+
   const go = (i) => setIndex(wrapIndex(i, slides.length));
   const slide = slides[wrapIndex(index, slides.length)];
 
@@ -137,13 +142,38 @@ export default function LocalHero() {
     <section className="lh" aria-labelledby="lh-title">
       <SheetFrame />
       <div className="lh-in">
-        <div className="lh-head">
-          <div className="essp-tag">{t('brand.tag')} <span className="essp-new">{t('brand.badge')}</span></div>
-          <h2 className="essp-title lh-title" id="lh-title">{t('brand.recipes')}</h2>
+        <div className="visit-copy" id="visitanos">
+          <div className="essp-tag">{t('brand.visitTag')}</div>
+          <h2 className="essp-title visit-title" id="lh-title">{t('brand.title')}</h2>
+          <div className="essp-loc">{t('brand.loc')}</div>
+          <p className="visit-address">{address}</p>
+          <a className="visit-map" href={maps} target="_blank" rel="noopener noreferrer" aria-label={`${address} · ${t('brand.mapsCta')}`}>
+            <MapCanvas
+              className="visit-map-canvas"
+              label={t('brand.mapLabel')}
+              view={(w) => ({ style: 'blanco', c: 13, k: 85, ax: 0.5, ay: 0.58, s: w < 420 ? 15 : 20, heat: 0 })}
+            />
+            {/* El pin, gigante, en el centro del plano */}
+            <svg className="visit-pin" viewBox="0 0 64 88" aria-hidden="true">
+              <ellipse cx="32" cy="84" rx="13" ry="3.5" fill="rgba(42,53,80,.25)" />
+              <path d="M32 2C15.4 2 2 15.2 2 31.6 2 53.8 32 84 32 84s30-30.2 30-52.4C62 15.2 48.6 2 32 2Z" fill="var(--red)" stroke="#fff" strokeWidth="3" />
+              <circle cx="32" cy="31" r="11" fill="#fff" />
+            </svg>
+            <span className="visit-card">
+              <b>ACERO.press</b>
+              <span>{address}</span>
+              <em>{t('brand.mapsCta')} →</em>
+            </span>
+          </a>
+          <div className="essp-ctas">
+            <a className="essp-btn" href={maps} target="_blank" rel="noopener noreferrer">{t('brand.mapsCta')}</a>
+            <a className="essp-btn is-ghost" href="#beans">{t('brand.cta')}</a>
+          </div>
         </div>
 
         <figure className="lh-store" id="recetas" aria-roledescription="carousel" aria-label={t('brand.recipes')}>
           <ColdBrewCarouselEditor slides={slides} activeIndex={index} onSaved={load} />
+          <div className="lh-kicker">{t('brand.recipes')}</div>
           <div
             className="lh-stage"
             onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}

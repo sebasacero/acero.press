@@ -12,21 +12,20 @@
 .lh-in {
   position: relative; z-index: 2;
   padding: 70px 58px 60px;
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; justify-items: center;
+  display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 44px; align-items: center;
 }
-.lh-head { display: grid; gap: 14px; justify-items: center; text-align: center; }
-.lh-title { font-size: clamp(2.6rem, 6cqi, 5.5rem); }
+.lh-kicker { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
 
 /* La foto sobre un paspartú gris claro, como una foto enmarcada */
 .lh-store {
   position: relative; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; justify-items: center;
-  width: min(100%, 900px); min-width: 0; box-sizing: border-box; padding: 34px 34px 22px;
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 22px 26px 18px;
   background: #F3F4F7; border-radius: 30px;
 }
 /* La foto conserva su proporción: las coordenadas de la vitrina son de la foto */
 .lh-stage {
   position: relative; overflow: hidden; touch-action: pan-y;
-  width: min(100%, 720px, calc((100svh - 200px) * 907 / 893)); min-width: min(100%, 420px);
+  width: min(100%, calc((100svh - 240px) * 907 / 893)); min-width: min(100%, 380px);
   aspect-ratio: 907 / 893;
   border-radius: 22px; background: #3b3b3a;
   box-shadow: 0 0 0 1px rgba(42, 53, 80, .12), 0 40px 70px -30px rgba(42, 53, 80, .6), 0 12px 24px -12px rgba(42, 53, 80, .35);
@@ -104,27 +103,20 @@
 @container (max-width: 640px) {
   .lh-in { padding: 54px 24px 36px; gap: 22px; }
   .lh-store { padding: 14px 12px 14px; border-radius: 22px; }
+  .visit-map { height: 260px; }
+  .lh .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .lh .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
   /* La vitrina entera a la vista: el vidrio mide 1,47 veces el ancho del cuadro */
   .lh-stage { aspect-ratio: 2 / 3; min-width: 0; border-radius: 18px; }
   .lh-photo { width: 160%; left: -12%; top: -4%; }
 }
 
 /* --- Visítanos: el plano con un pin gigante; todo el cuadro abre Google Maps --- */
-.visit {
-  position: relative; overflow: hidden; background: #fff; color: var(--ink);
-  container-type: inline-size;
-  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
-}
-.visit .essp-sheet { z-index: 1; }
-.visit-in {
-  position: relative; z-index: 2; padding: 70px 58px 64px;
-  display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 44px; align-items: center;
-}
 .visit-copy { display: grid; gap: 16px; min-width: 0; }
-.visit-title { font-size: clamp(3rem, 5.6cqi, 5.4rem); }
+.visit-title { font-size: clamp(3rem, 5.6cqi, 5.6rem); }
 .visit-address { margin: 0; font: 600 clamp(18px, 2cqi, 24px)/1.35 'Archivo', sans-serif; }
 .visit-map {
-  position: relative; display: block; height: clamp(300px, 36cqi, 460px); overflow: hidden;
+  position: relative; display: block; height: clamp(240px, 24cqi, 330px); overflow: hidden;
   border: 2px solid var(--ink); border-radius: 22px; background: #fff; color: var(--ink); text-decoration: none;
   box-shadow: 0 30px 60px -30px rgba(42, 53, 80, .55);
 }
@@ -143,11 +135,9 @@
 }
 .visit-card b { font: 800 15px/1.2 'Archivo', sans-serif; }
 .visit-card em { font: 700 11px/1.4 'JetBrains Mono', monospace; font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--red); }
-@container (max-width: 860px) {
-  .visit-in { grid-template-columns: minmax(0, 1fr); gap: 26px; padding: 54px 24px 44px; }
-  .visit-map { height: 300px; }
-  .visit .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .visit .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+@container (max-width: 980px) {
+  .lh-in { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .lh-stage { width: min(100%, 640px); }
 }
 
 /* --- 2. Micra --- */
@@ -166,77 +156,18 @@
 .micra-lede { max-width: 48ch; }
 .micra-phone { transform: rotate(2.5deg); margin-right: 20px; }
 
-.micra-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-.micra-steps li {
-  border: 1.5px solid rgba(42, 53, 80, .35); padding: 18px 18px 20px;
-  display: grid; gap: 10px; align-content: start; min-width: 0;
-}
-.micra-steps li.is-now { border-color: var(--red); border-width: 2px; background: rgba(222, 27, 27, .08); }
-.micra-step-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.micra-step-num { font: 700 28px/1 'JetBrains Mono', monospace; color: rgba(42, 53, 80, .45); }
-.micra-step-badge {
-  font: 700 10px/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 3px 7px;
-  border: 1.5px solid currentColor; text-align: right;
-}
-.micra-step-badge.is-red { background: var(--red); border-color: var(--red); color: #fff; }
-.micra-steps h3 { margin: 0; font: 800 clamp(18px, 1.7cqi, 22px)/1.1 'Archivo', sans-serif; text-transform: uppercase; }
-.micra-steps p { margin: 0; font: 500 15px/1.5 'Archivo', sans-serif; color: rgba(42, 53, 80, .85); }
-.micra-step-link {
-  min-height: 44px; display: inline-flex; align-items: center; margin-top: 4px;
-  font: 700 12px/1.2 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--ink); text-decoration: underline; text-underline-offset: 5px;
-}
-.micra-step-link:hover { color: var(--red); text-decoration-color: var(--red); }
-.micra-stats { display: grid; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1.5px dashed rgba(42, 53, 80, .35); }
-.micra-stats-cota { display: flex; justify-content: space-between; align-items: center; gap: 8px; font: 700 10px/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; color: rgba(42, 53, 80, .7); }
-.micra-stats-cota .essp-badge { font-size: 9.5px; }
-.micra-stats dl { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.micra-stats dd { margin: 0; font: 700 26px/1 'JetBrains Mono', monospace; }
-.micra-stats dt { font: 700 9.5px/1.3 'JetBrains Mono', monospace; letter-spacing: .08em; color: rgba(42, 53, 80, .65); }
-.micra-stats .essp-segs { display: grid; grid-template-columns: repeat(20, 1fr); gap: 2px; height: 8px; }
-.micra-stats .essp-segs i { background: rgba(42, 53, 80, .1); }
-.micra-stats .essp-segs i.on { background: var(--red); }
-.micra-stats small { font: 500 11px/1.4 'JetBrains Mono', monospace; color: rgba(42, 53, 80, .6); }
-
-@container (max-width: 1100px) {
-  .micra-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @container (max-width: 760px) {
   .micra-in { padding: 54px 24px 44px; gap: 30px; }
   .micra-head { grid-template-columns: minmax(0, 1fr); gap: 30px; }
   .micra-phone { justify-self: center; width: 230px; margin: 0; }
-  .micra-steps { grid-template-columns: 1fr; gap: 12px; }
   .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
   .micra .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
-/* --- 3. Publicaciones --- */
-.posts { background: #fff; color: var(--ink); container-type: inline-size; --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink); }
-.posts-in { max-width: 1240px; margin: 0 auto; padding: 72px 40px; display: grid; gap: 28px; }
-.posts-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
-.posts-head > div { display: grid; gap: 12px; }
-.posts-title { font-size: clamp(2.2rem, 5cqi, 4rem); }
-.posts-lede { margin: 0; font: 500 16px/1.5 'Archivo', sans-serif; max-width: 44ch; }
-.posts-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.posts-grid a {
-  position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: var(--paper-deep);
-  border: 2px solid var(--ink);
-}
-.posts-grid img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
-.posts-grid a:hover img { transform: scale(1.04); }
-.posts-grid a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
-.posts-video {
-  position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff;
-  font: 700 10px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 4px 7px;
-}
-.posts-caption {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 12px 12px;
-  background: linear-gradient(transparent, rgba(14, 15, 19, .85)); color: #fff;
-  font: 600 13px/1.35 'Archivo', sans-serif;
-}
+/* --- Las fichas de redes (en Micra) --- */
 /* Un banner pequeño por red: su video de fondo y el botón de la app encima */
 .posts-banners { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.posts-banner { position: relative; overflow: hidden; border-radius: 18px; background: #1b1d24; aspect-ratio: 4 / 3; }
+.posts-banner { position: relative; overflow: hidden; border-radius: 18px; background: #1b1d24; aspect-ratio: 16 / 10; }
 .posts-banner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .posts-banner::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(14, 15, 19, .15) 0%, rgba(14, 15, 19, .7) 100%); }
 .posts-banner a {
@@ -255,12 +186,8 @@
 .posts-banner small { font: 600 11px/1.3 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
 
 @container (max-width: 760px) {
-  .posts-in { padding: 54px 20px; gap: 22px; }
-  .posts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .posts-caption { font-size: 12px; padding: 24px 8px 8px; }
   .posts-banners { grid-template-columns: 1fr; gap: 10px; }
   .posts-banner { aspect-ratio: 16 / 7; }
-  .posts-head .essp-btn { width: 100%; justify-content: center; }
 }
 
 /* --- 4. Aprende: la hoja de instrucciones de AeroPress Go --- */
@@ -336,5 +263,5 @@
 @media (prefers-reduced-motion: reduce) {
   .lh-banner { animation: none; }
   .visit-pin { transition: none; }
-  .posts-grid img, .posts-app { transition: none; }
+  .posts-app { transition: none; }
 }

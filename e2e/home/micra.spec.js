@@ -1,11 +1,11 @@
-// Micra en la portada: qué es, sus cuatro frentes y el estudio de calle con las cifras reales
-// (micra_street_map); vacío, dice que aún no hay datos y el mapa del celular es de ejemplo.
+// Micra en la portada: qué es, el celular con las cifras reales del estudio (micra_street_map) y las
+// fichas de redes con video; vacío, el mapa del celular dice que es de ejemplo.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 
-test('con ventas y baristas reales, las cifras salen en el frente de hoy y en el celular, sin nombres', async ({ browser }) => {
+test('con ventas y baristas reales, las cifras salen en el celular, sin nombres; abajo, las fichas de redes', async ({ browser }) => {
   const { page, api, errors } = await openPage(browser, { context: DESK });
   api.opts.streetMap = {
     days: 90,
@@ -21,14 +21,16 @@ test('con ventas y baristas reales, las cifras salen en el frente de hoy y en el
   await micra.scrollIntoViewIfNeeded();
   await expect(micra.getByRole('heading', { level: 1 })).toContainText('Micra.');
   await expect(micra.locator('.essp-script').first()).toHaveText('la app que fomenta el barismo');
-  // Los cuatro frentes, cada uno con lo que es hoy: nada se da por hecho
-  const steps = micra.locator('.micra-steps > li');
-  await expect(steps).toHaveCount(4);
-  await expect(steps.locator('.micra-step-badge')).toHaveText(['HOY', 'EN DISEÑO', 'PRÓXIMAMENTE', 'BUSCAMOS ALIADOS']);
-  await expect(steps.nth(2)).toContainText('Certificación');
-  const stats = micra.locator('.micra-stats');
-  await expect(stats.locator('dd')).toHaveText(['40', '1', '2']);
-  await expect(stats.locator('.essp-badge')).toHaveText('DATOS REALES');
+  // Sin los cuadros de los frentes: en su lugar, las fichas de redes con su video y el botón de la app
+  await expect(micra.locator('.micra-steps')).toHaveCount(0);
+  const banners = micra.locator('#publicaciones .posts-banner');
+  await expect(banners).toHaveCount(3);
+  await expect(banners.locator('video')).toHaveCount(3);
+  const links = banners.getByRole('link');
+  await expect(links.nth(0)).toHaveAttribute('href', /instagram\.com\/aceropress/);
+  await expect(links.nth(0)).toContainText('@aceropress');
+  await expect(links.nth(1)).toContainText('@acero.press');
+  await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
   await expect(micra.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
   await expect(micra.locator('.essp-phone-who')).toContainText('1 cuadras · 2 baristas');
   // En público se dice «baristas»; ni domicilios ni nombres
@@ -37,18 +39,15 @@ test('con ventas y baristas reales, las cifras salen en el frente de hoy y en el
   await expect(page.locator('body')).not.toContainText(/Amor Perfecto/i);
   // Los llamados: WhatsApp con el mensaje listo y la Escuela
   await expect(micra.getByRole('link', { name: 'Vendo café en la calle' })).toHaveAttribute('href', /wa\.me\/\d+\?text=.*Micra/);
-  await expect(micra.getByRole('link', { name: 'Soy tostador: hablemos →' })).toHaveAttribute('href', /wa\.me\/\d+\?text=.*tostadora/);
   await expect(micra.getByRole('link', { name: 'Empezar la Escuela', exact: true })).toHaveAttribute('href', '/escuela');
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('sin estudio aún, dice que no hay datos y el celular marca su mapa como de ejemplo', async ({ browser }) => {
+test('sin estudio aún, el celular marca su mapa como de ejemplo', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
   const micra = page.locator('#micra');
-  await expect(micra.locator('.micra-stats dd')).toHaveText(['0', '0', '0']);
-  await expect(micra.locator('.micra-stats .essp-badge')).toHaveText('SIN DATOS AÚN');
   await expect(micra.locator('.essp-phone-badge')).toHaveText('MAPA DE EJEMPLO');
   expect(errors).toEqual([]);
   await page.context().close();

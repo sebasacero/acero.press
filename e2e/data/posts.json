@@ -1,8 +1,0 @@
-[
-  { "id": "p1", "media_type": "IMAGE", "media_url": "https://ig-cdn.test/local.webp", "permalink": "https://www.instagram.com/p/p1/", "caption": "La barra de Chapinero, una mañana cualquiera\n#aeropress #bogota", "timestamp": "2026-10-20T13:00:00+0000" },
-  { "id": "p2", "media_type": "VIDEO", "media_url": "https://ig-cdn.test/v.mp4", "thumbnail_url": "https://ig-cdn.test/bagsbeans.png", "permalink": "https://www.instagram.com/reel/p2/", "caption": "Cold brew en lata, hecho en AeroPress invertida", "timestamp": "2026-10-18T13:00:00+0000" },
-  { "id": "p3", "media_type": "CAROUSEL_ALBUM", "media_url": "https://ig-cdn.test/castillo.png", "permalink": "https://www.instagram.com/p/p3/", "caption": "Castillo de Huila, nuevo en la tienda", "timestamp": "2026-10-15T13:00:00+0000" },
-  { "id": "p4", "media_type": "IMAGE", "media_url": "https://ig-cdn.test/geisha.png", "permalink": "https://www.instagram.com/p/p4/", "caption": "Geisha: la receta para una taza limpia", "timestamp": "2026-10-12T13:00:00+0000" },
-  { "id": "p5", "media_type": "IMAGE", "media_url": "https://ig-cdn.test/micra-wallpaper.jpg", "permalink": "https://www.instagram.com/p/p5/", "caption": "Micra: el estudio del café de la calle arrancó en Chapinero", "timestamp": "2026-10-10T13:00:00+0000" },
-  { "id": "p6", "media_type": "IMAGE", "media_url": "https://ig-cdn.test/rosado.png", "permalink": "https://www.instagram.com/p/p6/", "caption": "Bourbon rosado", "timestamp": "2026-10-08T13:00:00+0000" }
-]
