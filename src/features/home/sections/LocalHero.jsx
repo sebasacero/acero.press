@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
@@ -62,55 +62,100 @@ const FALLBACK_SLIDES = [
 const SEGMENTS = 20;
 const PRICE_LABEL = { es: 'PRECIO', en: 'PRICE', ja: '価格' };
 
-/**
- * El banner de la barra (video de fondo y el cuadro de la receta con su odómetro), proyectado
- * dentro del vidrio de la vitrina, como una pantalla detrás del cristal. Solo el visible carga video.
- */
+// El banner de la barra tal cual era en el celular (390 px de ancho, mismas clases y estilos de
+// index.css: .hero, .hero-h, .odometer-panel, .bar-order-btn, .loc-badge) y escalado entero al vidrio
+// de la vitrina, que tiene casi la misma proporción. Así no cambia ni un espacio ni una letra.
+const BAR_W = 390;
+
+function useFitScale(ref) {
+  const [box, setBox] = useState({ scale: 0, height: 0 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const fit = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width) setBox({ scale: width / BAR_W, height: height / (width / BAR_W) });
+    };
+    fit();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [ref]);
+  return box;
+}
+
+function BarBadge({ t }) {
+  const address = t('brand.address');
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`ACERO.press, ${address}`)}`;
+  return (
+    <span className="loc-badge-wrap">
+      <a className="loc-badge" href={maps} target="_blank" rel="noopener noreferrer" aria-label={`${address} · ${t('brand.mapsCta')}`}>
+        <span className="loc-badge-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </span>
+        <span className="loc-badge-text">
+          <span className="loc-badge-address">{address}</span>
+          <span className="loc-badge-cta">{t('location')} · {t('brand.mapsCta')} →</span>
+        </span>
+      </a>
+    </span>
+  );
+}
+
 function WindowBanner({ slide, index, total, lang, t }) {
-  const ref = useRef(null);
+  const box = useRef(null);
+  const video = useRef(null);
+  const { scale, height } = useFitScale(box);
   const name = slide.title1?.[lang] ?? slide.title1?.es ?? '';
   const filled = Math.round(((Number(slide.ratioPercent) || 0) / 100) * SEGMENTS);
   const price = Number(slide.price) > 0 ? money(slide.price) : null;
-  useEffect(() => { ref.current?.play?.().catch(() => {}); }, [slide.video]);
+  useEffect(() => { video.current?.play?.().catch(() => {}); }, [slide.video]);
   return (
-    <article className="lh-banner" aria-roledescription="slide" aria-label={`${index + 1} / ${total} · ${name}`}>
-      <video ref={ref} key={slide.video} className="lh-banner-video" src={slide.video || '/image/cans.mp4'} muted loop playsInline autoPlay preload="metadata" aria-hidden="true" />
-      <div className="lh-banner-shade" aria-hidden="true" />
-      <div className="lh-banner-in">
-        {/* El banner original de la barra: título con el logo, cuadro oscuro y botón crema */}
-        <h3 className="hero-h">
-          {name}<br />
-          <span className="logo-unit" aria-hidden="true">
-            <img src="/image/logo.png" alt="" className="logo-acero1" />
-            <span className="logo-press">.press</span>
-          </span>
-        </h3>
-        <div className="bar-panel-col">
-        <div className="odometer-panel">
-          <div className="cota cota-top">
-            <span className="annot">{slide.figLabel?.[lang] ?? slide.figLabel?.es}</span>
-            <span className="cota-badge">{slide.ratio?.[lang] ?? slide.ratio?.es}</span>
-          </div>
-          <div className="fig-label">{slide.doseLabel?.[lang] ?? slide.doseLabel?.es}</div>
-          <div className="odometer-row">
-            <div className="odometer">
-              {(slide.dose ?? []).map((d, i) => <span className="digit" key={i}>{d}</span>)}
-            </div>
-            <span className="odometer-sep">/</span>
-            <span className="odometer-target">{slide.target?.[lang] ?? slide.target?.es}</span>
-          </div>
-          <div className="seg-bar" aria-hidden="true">
-            {Array.from({ length: SEGMENTS }, (_, i) => <div key={i} className={`seg ${i < filled ? 'filled' : ''}`} />)}
-          </div>
-          <div className="progress-caption">{slide.caption?.[lang] ?? slide.caption?.es}</div>
-          {price && (
-            <div className="cota cota-price">
-              <span className="annot">{PRICE_LABEL[lang] || PRICE_LABEL.es}</span>
-              <span className="price-value">{price} <small>COP</small></span>
-            </div>
-          )}
+    <article ref={box} className="lh-banner" aria-roledescription="slide" aria-label={`${index + 1} / ${total} · ${name}`}>
+      <div className="hero lh-hero" style={{ width: BAR_W, height: height || undefined, transform: `scale(${scale})`, visibility: scale ? 'visible' : 'hidden' }}>
+        <div className="hero-bg">
+          <video ref={video} key={slide.video} className="hero-bg-video" src={slide.video || '/image/cans.mp4'} muted loop playsInline autoPlay preload="metadata" aria-hidden="true" />
+          <div className="hero-bg-overlay" />
         </div>
-        <a className="bar-order-btn" href="#beans">{t('brand.poster.cta')} <span aria-hidden="true">→</span></a>
+        <div className="hero-copy">
+          <div className="bar-actions"><BarBadge t={t} /></div>
+          <h3 className="hero-h">
+            {name}<br />
+            <span className="logo-unit" aria-hidden="true">
+              <img src="/image/logo.png" alt="" className="logo-acero1" />
+              <span className="logo-press">.press</span>
+            </span>
+          </h3>
+        </div>
+        <div className="bar-panel-col">
+          <div className="odometer-panel">
+            <div className="cota cota-top">
+              <span className="annot">{slide.figLabel?.[lang] ?? slide.figLabel?.es}</span>
+              <span className="cota-badge">{slide.ratio?.[lang] ?? slide.ratio?.es}</span>
+            </div>
+            <div className="fig-label">{slide.doseLabel?.[lang] ?? slide.doseLabel?.es}</div>
+            <div className="odometer-row">
+              <div className="odometer">
+                {(slide.dose ?? []).map((d, i) => <span className="digit" key={i}>{d}</span>)}
+              </div>
+              <span className="odometer-sep">/</span>
+              <span className="odometer-target">{slide.target?.[lang] ?? slide.target?.es}</span>
+            </div>
+            <div className="seg-bar" aria-hidden="true">
+              {Array.from({ length: SEGMENTS }, (_, i) => <div key={i} className={`seg ${i < filled ? 'filled' : ''}`} />)}
+            </div>
+            <div className="progress-caption">{slide.caption?.[lang] ?? slide.caption?.es}</div>
+            {price && (
+              <div className="cota cota-price">
+                <span className="annot">{PRICE_LABEL[lang] || PRICE_LABEL.es}</span>
+                <span className="price-value">{price} <small>COP</small></span>
+              </div>
+            )}
+          </div>
+          <a className="bar-order-btn" href="#beans">{t('brand.poster.cta')} <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </article>

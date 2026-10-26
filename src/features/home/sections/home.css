@@ -36,54 +36,18 @@
 .lh-window { position: absolute; left: 17.3%; top: 4.5%; width: 43.1%; height: 93.5%; overflow: hidden; container-type: inline-size; }
 
 /* El banner de la barra detrás del vidrio: video, sombra para leer y el cuadro de la receta */
-.lh-banner { position: absolute; inset: 0; color: #fff; animation: lh-in .5s ease; }
+.lh-banner { position: absolute; inset: 0; overflow: hidden; color: #fff; animation: lh-in .5s ease; }
 @keyframes lh-in { from { opacity: 0; } }
-.lh-banner-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #111; }
-/* La sombra de la barra original (hero-bg-overlay) y un reflejo del vidrio */
-.lh-banner-shade {
-  position: absolute; inset: 0;
-  background:
-    linear-gradient(115deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, 0) 26%),
-    linear-gradient(180deg, rgba(10, 10, 12, .6) 0%, rgba(10, 10, 12, .25) 45%, rgba(10, 10, 12, .7) 100%);
+/* El banner de la barra en su tamaño de celular (390 px), escalado entero al vidrio. Estas reglas son
+   las de index.css para pantallas de menos de 900 px, porque aquí la pantalla puede ser ancha. */
+.lh-hero.hero {
+  position: absolute; left: 0; top: 0; transform-origin: 0 0;
+  min-height: 0; grid-template-columns: 1fr; gap: 32px; padding: 96px 24px 24px; box-sizing: border-box;
 }
-/* El banner original tal cual (letra, logo, cuadro oscuro, botón crema), a escala del vidrio:
-   --u es un píxel del banner de la barra, pensado a 460 px de ancho */
-.lh-banner-in {
-  --u: calc(100cqi / 460);
-  position: relative; height: 100%; box-sizing: border-box;
-  display: flex; flex-direction: column; justify-content: space-between; gap: calc(16 * var(--u));
-  padding: calc(26 * var(--u)) calc(20 * var(--u)) calc(20 * var(--u));
-}
-.lh-banner .hero-h {
-  margin: 0; font-family: 'Archivo', sans-serif; font-weight: 700; text-transform: uppercase;
-  font-size: max(20px, calc(58 * var(--u))); line-height: 1.04; letter-spacing: -.01em; color: var(--cream);
-  overflow-wrap: anywhere;
-}
-.lh-banner .logo-unit { gap: calc(6 * var(--u)); margin-top: calc(6 * var(--u)); }
-.lh-banner .logo-acero1 { height: max(22px, calc(48 * var(--u))); border-radius: calc(8 * var(--u)); }
-.lh-banner .logo-press { font-size: max(12px, calc(21 * var(--u))); }
-.lh-banner .bar-panel-col { display: flex; flex-direction: column; gap: calc(12 * var(--u)); }
-.lh-banner .odometer-panel { max-width: none; justify-self: stretch; padding: calc(20 * var(--u)) calc(22 * var(--u)); }
-.lh-banner .cota-top, .lh-banner .cota-badge, .lh-banner .cota-price { font-size: max(8px, calc(11 * var(--u))); }
-.lh-banner .cota-top { gap: calc(8 * var(--u)); padding-bottom: calc(10 * var(--u)); margin-bottom: calc(14 * var(--u)); }
-.lh-banner .annot { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lh-banner .cota-badge { white-space: nowrap; }
-.lh-banner .fig-label { font-size: max(7.5px, calc(10 * var(--u))); margin-bottom: calc(10 * var(--u)); }
-.lh-banner .odometer-row { gap: calc(10 * var(--u)); margin-bottom: calc(12 * var(--u)); }
-.lh-banner .odometer { gap: calc(4 * var(--u)); }
-.lh-banner .digit { width: max(16px, calc(26 * var(--u))); height: max(24px, calc(38 * var(--u))); font-size: max(14px, calc(22 * var(--u))); }
-.lh-banner .odometer-sep { font-size: max(13px, calc(20 * var(--u))); }
-.lh-banner .odometer-target { font-size: max(11px, calc(16 * var(--u))); }
-.lh-banner .seg-bar, .lh-banner .seg-bar .seg { height: max(5px, calc(8 * var(--u))); }
-.lh-banner .seg-bar { gap: calc(4 * var(--u)); margin-bottom: calc(8 * var(--u)); }
-.lh-banner .progress-caption {
-  font-size: max(9px, calc(11 * var(--u)));
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.lh-banner .cota-price { margin-top: calc(14 * var(--u)); padding-top: calc(12 * var(--u)); }
-.lh-banner .price-value { font-size: max(14px, calc(22 * var(--u))); }
-/* El botón crema de la barra; 44 px como mínimo para el dedo */
-.lh-banner .bar-order-btn { justify-content: space-between; min-height: 44px; padding: 0 calc(20 * var(--u)); font-size: max(10px, calc(12 * var(--u))); }
+.lh-hero.hero .hero-h { font-size: 2.6rem; margin: 0; }
+.lh-hero.hero > .bar-panel-col { justify-self: stretch; max-width: 100%; }
+.lh-hero .bar-actions { margin-top: -12px; }
+.lh-hero .odometer-panel { justify-self: stretch; max-width: 100%; }
 
 .lh-tabs { display: flex; align-items: center; gap: 8px; width: min(100%, 640px); }
 .lh-tablist { flex: 1; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
