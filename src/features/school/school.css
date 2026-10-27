@@ -212,7 +212,10 @@
 }
 
 /* Cierre: el cajetín con la invitación al piloto */
-.school-cta { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+/* Cajetín de cierre (antes compartía estilos con la tabla del banner de la portada, que ya no existe) */
+.school-cta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border: 2.5px solid var(--essp-line); background: var(--essp-block); }
+.school-cta > div { min-width: 0; }
+.school-cta > div + div { border-left: 1.5px solid var(--essp-line); }
 .school-cta > div { padding: 14px 18px; }
 .school-cta > div:first-child { display: grid; gap: 4px; }
 .school-cta > div:first-child b { font-family: 'Archivo', sans-serif; font-size: 20px; text-transform: uppercase; white-space: normal; overflow: visible; text-overflow: clip; }

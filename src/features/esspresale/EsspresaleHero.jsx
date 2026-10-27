@@ -3,7 +3,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
 import MapCanvas from './MapCanvas.jsx';
 import { StreetPhone, BaristaPhone } from './AppPhones.jsx';
-import { SheetFrame, Segs, Odometer, useClock } from './parts.jsx';
+import { SheetFrame, Segs, Odometer } from './parts.jsx';
 import StoreButtons from './StoreButtons.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
 import { useStreetMap } from '../../shared/lib/useStreetMap.js';
@@ -12,11 +12,10 @@ import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx
 import { useEditableTexts } from '../../shared/lib/editableTexts.js';
 import './esspresale.css';
 
-// Primera sección del sitio: dos banners dibujados como las tarjetas de redes.
-// «El mapa»: el estudio de calle con sus números reales (ventas con cuadra y
-// tinteros). «Para tinteros»: qué le damos al tintero que nos deja ver su ruta
-// (Mi ruta). No rotan solos: un carrusel que avanza solo se ignora y se lee a
-// medias (NN/g); se cambia con las pestañas o con «Soy tintero».
+// Primera sección del sitio: dos banners dibujados como las tarjetas de redes,
+// en carrusel, uno después del otro: «Pide café en AeroPress a domicilio» y
+// «Vive del café con tu AeroPress». Pasan solos (pedido del usuario) hasta que
+// la persona elige uno con las flechas, las píldoras o el dedo.
 
 // Cifras del celular y del panel de «Para tinteros»: un día de ejemplo, marcado como tal
 const EXAMPLE_DAY = { stops: ['1', '4'], specs: ['3,2 km', '14', '38'] };
@@ -45,34 +44,33 @@ const BG_VIEW = (w) =>
 // y los tinteros registrados; sin datos, la demanda de ejemplo de siempre.
 const withLayers = (layers) => (w) => (layers ? { ...BG_VIEW(w), heatPoints: layers.heatPoints, pinPoints: layers.pinPoints, pins: layers.pinPoints.length > 0 } : BG_VIEW(w));
 
-function Tabs({ index, onSelect }) {
+// Cada banner dura su turno y pasa al siguiente; se detiene con el cursor o el
+// foco encima y deja de pasar solo en cuanto la persona elige uno.
+const TURN_MS = 8000;
+
+function CarouselControls({ index, onSelect, playing, paused }) {
   const { t } = useLanguage();
+  const kinds = ['order', 'barista'];
+  const step = (d) => onSelect((index + d + kinds.length) % kinds.length);
   return (
-    <div className="essp-tabs" role="tablist" aria-label={t('essp.tabsLabel')}>
-      {['order', 'barista'].map((key, i) => (
-        <button key={key} type="button" role="tab" aria-selected={index === i} onClick={() => onSelect(i)}>
-          {t(`essp.tabs.${key}`)}
-        </button>
-      ))}
+    <div
+      className={`essp-carousel${playing ? ' is-playing' : ''}${paused ? ' is-paused' : ''}`}
+      style={{ '--essp-turn': `${TURN_MS}ms` }}
+    >
+      <button type="button" className="essp-carousel-arrow" onClick={() => step(-1)} aria-label={t('essp.prev')}>‹</button>
+      <div className="essp-carousel-tabs" role="tablist" aria-label={t('essp.tabsLabel')}>
+        {kinds.map((key, i) => (
+          <button key={key} type="button" role="tab" aria-selected={index === i} onClick={() => onSelect(i)}>
+            <span>{t(`essp.tabs.${key}`)}</span>
+          </button>
+        ))}
+      </div>
+      <button type="button" className="essp-carousel-arrow" onClick={() => step(1)} aria-label={t('essp.next')}>›</button>
     </div>
   );
 }
 
-function TitleBlock({ maker, makerIsYou, index, onSelect }) {
-  const { t } = useLanguage();
-  const { time, date } = useClock();
-  return (
-    <div className="essp-block">
-      <div><span>{t('essp.block.zone')}</span><b>Chapinero</b></div>
-      <div><span>{t('essp.block.time')}</span><b>{time}</b></div>
-      <div><span>{t('essp.block.date')}</span><b>{date}</b></div>
-      <div><span>{t('essp.block.maker')}</span><b className="is-red">{makerIsYou ? t('essp.block.you') : maker}</b></div>
-      <Tabs index={index} onSelect={onSelect} />
-    </div>
-  );
-}
-
-function Slide({ kind, active, index, onSelect, street = null, streetLayers = null, whatsapp, stores }) {
+function Slide({ kind, active, index, onSelect, playing, paused, street = null, streetLayers = null, whatsapp, stores }) {
   const { t } = useLanguage();
   const ref = useRef(null);
   const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
@@ -174,7 +172,8 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
             <p className="essp-panel-text">{k('panelText')}</p>
           </aside>
         </div>
-        <TitleBlock maker="Acero" makerIsYou={!isOrder} index={index} onSelect={onSelect} />
+        {/* key: la píldora activa vuelve a llenarse desde cero en cada turno */}
+        <CarouselControls key={active ? index : 'idle'} index={index} onSelect={onSelect} playing={playing && active} paused={paused} />
       </div>
     </section>
   );
@@ -187,12 +186,41 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const { layers: streetLayers, summary: street } = useStreetMap();
   // #baristas (el menú, un enlace compartido) abre «Para baristas»; #tinteros sigue sirviendo para enlaces viejos
   const [index, setIndex] = useState(() => (BARISTA_HASHES.includes(window.location.hash) ? 1 : 0));
-  const select = useCallback((i) => setIndex(i), []);
+  // Pasa solo hasta que la persona elige (o llega con #baristas, o pidió menos movimiento)
+  const [auto, setAuto] = useState(() => !BARISTA_HASHES.includes(window.location.hash) && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const [hold, setHold] = useState(false);
+  const [onScreen, setOnScreen] = useState(true);
+  const root = useRef(null);
+  const select = useCallback((i) => { setAuto(false); setIndex(i); }, []);
   useEffect(() => {
-    const onHash = () => { if (BARISTA_HASHES.includes(window.location.hash)) setIndex(1); };
+    const onHash = () => { if (BARISTA_HASHES.includes(window.location.hash)) select(1); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, [select]);
+  // Fuera de pantalla o con la pestaña escondida no corre el turno
+  useEffect(() => {
+    const el = root.current;
+    if (!el || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { threshold: 0.35 });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
+  const paused = hold || !onScreen;
+  useEffect(() => {
+    if (!auto || paused) return undefined;
+    const id = setTimeout(() => { if (!document.hidden) setIndex((i) => (i + 1) % 2); }, TURN_MS);
+    return () => clearTimeout(id);
+  }, [auto, paused, index]);
+  // Deslizar con el dedo cambia de banner (como el carrusel de recetas)
+  const touch = useRef(null);
+  const onTouchStart = (e) => { touch.current = [e.touches[0].clientX, e.touches[0].clientY]; };
+  const onTouchEnd = (e) => {
+    if (!touch.current) return;
+    const dx = e.changedTouches[0].clientX - touch.current[0];
+    const dy = e.changedTouches[0].clientY - touch.current[1];
+    touch.current = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) select((index + (dx < 0 ? 1 : -1) + 2) % 2);
+  };
 
   // «Para baristas» escribe al WhatsApp del negocio (el mismo del botón flotante), con el mensaje listo
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
@@ -207,11 +235,22 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const tone = index === 0 ? 'paper' : 'photo';
 
   return (
-    <header className={`essp-hero essp-hero--${tone}`} id="baristas">
+    <header
+      ref={root}
+      className={`essp-hero essp-hero--${tone}`}
+      id="baristas"
+      aria-roledescription="carousel"
+      onMouseEnter={() => setHold(true)}
+      onMouseLeave={() => setHold(false)}
+      onFocus={() => setHold(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setHold(false); }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} stores={stores} />
-        <Slide kind="barista" active={index === 1} index={index} onSelect={select} whatsapp={whatsapp} stores={stores} />
+        <Slide kind="order" active={index === 0} index={index} onSelect={select} playing={auto} paused={paused} street={street} streetLayers={streetLayers} stores={stores} />
+        <Slide kind="barista" active={index === 1} index={index} onSelect={select} playing={auto} paused={paused} whatsapp={whatsapp} stores={stores} />
       </div>
     </header>
   );

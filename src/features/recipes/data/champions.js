@@ -44,4 +44,13 @@ export function embedOf(url) {
   return null;
 }
 
+/** El mismo video como fondo del banner: sin sonido, en bucle y sin controles (no se toca: debajo va el texto). */
+export function backdropOf(url) {
+  const yt = /^https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})$/.exec(url ?? '');
+  if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}?autoplay=1&mute=1&loop=1&playlist=${yt[1]}&controls=0&playsinline=1&rel=0&disablekb=1`;
+  const vm = /^https:\/\/vimeo\.com\/(\d+)$/.exec(url ?? '');
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}?background=1&dnt=1`;
+  return null;
+}
+
 export default champions;

@@ -5,14 +5,13 @@ import SectionEditButton from '../../admin/SectionEditButton.jsx';
 import { money, firstSize } from './RecipeKit.jsx';
 import { isDevice } from '../../../shared/lib/pairing.js';
 import ChampionVideo from './ChampionVideo.jsx';
-import ChampionPhoto from './ChampionPhoto.jsx';
+import { championOf, backdropOf } from '../data/champions.js';
 import '../../esspresale/esspresale.css';
 
 // Cada receta campeona es un banner como los de la barra (cold brew, latte…):
-// video de fondo, el cuadro de vidrio con la receta y el botón del kit recomendado.
-//
-// Video de fondo, en orden: URL guardada con el lápiz (app_config
-// recipe_video_<año>) → /image/video-<año>.mp4 → video de la casa.
+// de fondo el campeón (su foto y su video), el cuadro de vidrio con la receta y
+// el botón del kit recomendado. Fondo, en orden: URL guardada con el lápiz
+// (app_config recipe_video_<año>) → foto + video del WAC → video de la casa.
 const HOUSE_VIDEOS = ['/image/hero_main1.mp4', '/image/cans.mp4'];
 const SEGMENTS = 20;
 
@@ -34,19 +33,17 @@ function useRecipeVideos() {
   return [urls, load];
 }
 
-function RecipeVideo({ recipe, index, custom, active }) {
+// Video de la casa: el fondo cuando el campeón no tiene foto que cargue ni video.
+function HouseVideo({ sources, active }) {
   const ref = useRef(null);
-  const sources = [custom, `/image/video-${recipe.year}.mp4`, HOUSE_VIDEOS[index % HOUSE_VIDEOS.length]].filter(Boolean);
   const [i, setI] = useState(0);
-  useEffect(() => { setI(0); }, [custom]);
+  useEffect(() => { setI(0); }, [sources[0]]);
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     if (active) v.play().catch(() => {});
     else v.pause();
   }, [active, i]);
-  // Solo el banner visible carga su video.
-  if (!active) return <div className="rb-video rb-video--idle" aria-hidden="true" />;
   return (
     <video
       ref={ref}
@@ -65,9 +62,72 @@ function RecipeVideo({ recipe, index, custom, active }) {
   );
 }
 
-function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onOpen }) {
+// Sin video de fondo con «ahorro de datos» o si la persona pidió menos movimiento:
+// queda la foto quieta, que ya cuenta quién ganó.
+const prefersStill = () =>
+  Boolean(navigator.connection?.saveData) || Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+
+/**
+ * Fondo del banner, a pantalla completa: la foto del campeón (WAC) como fondo de
+ * pantalla y, encima, su video sonando sin sonido mientras el banner se ve. El
+ * video guardado con el lápiz manda; si la foto no carga y no hay video, el de la casa.
+ * Solo el banner visible, con la sección en pantalla, pide foto y video.
+ */
+function RecipeBackdrop({ recipe, index, custom, active, visible }) {
+  const { t } = useLanguage();
+  const champ = championOf(recipe.year);
+  const [failed, setFailed] = useState(false);
+  const [still] = useState(prefersStill);
+  const moving = champ && !custom && !still ? backdropOf(champ.video) : null;
+
+  if (!active) return <div className="rb-bg rb-bg--idle" aria-hidden="true" />;
+  if (custom) return <div className="rb-bg"><HouseVideo sources={[custom, `/image/video-${recipe.year}.mp4`]} active /></div>;
+  const photoOk = champ && !failed;
+  return (
+    <div className={`rb-bg${moving && visible ? ' is-moving' : ''}`}>
+      {photoOk && (
+        <img
+          className="rb-photo"
+          src={champ.photo}
+          alt={t('champ.alt').replace('{name}', recipe.name).replace('{year}', recipe.year)}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      )}
+      {!photoOk && !moving && <HouseVideo sources={[`/image/video-${recipe.year}.mp4`, HOUSE_VIDEOS[index % HOUSE_VIDEOS.length]]} active />}
+      {moving && visible && (
+        <iframe
+          className="rb-bgvideo"
+          src={moving}
+          title={`${t(`champ.videoKind.${champ.videoKind}`)} · ${recipe.name} ${recipe.year}`}
+          allow="autoplay; encrypted-media"
+          referrerPolicy="strict-origin-when-cross-origin"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      )}
+    </div>
+  );
+}
+
+/** ¿Está la sección en pantalla? Los videos de fondo solo corren mientras se ve. */
+function useOnScreen(ref) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setOn(true); return undefined; }
+    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting), { rootMargin: '120px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return on;
+}
+
+function RecipeBanner({ recipe, index, pairing, active, visible, video, onVideoSaved, onOpen }) {
   const { lang, t } = useLanguage();
   const ref = useRef(null);
+  const champ = championOf(recipe.year);
   useEffect(() => { if (ref.current) ref.current.inert = !active; }, [active]);
   // Total del kit como lo arma el modal: café + extras, sin la prensa (va desmarcada).
   const total = pairing
@@ -76,23 +136,27 @@ function RecipeBanner({ recipe, index, pairing, active, video, onVideoSaved, onO
 
   return (
     <section ref={ref} className="rb-slide" aria-roledescription="slide" aria-label={`${recipe.year} · ${recipe.name}`} aria-hidden={!active}>
-      <RecipeVideo recipe={recipe} index={index} custom={video} active={active} />
+      <RecipeBackdrop recipe={recipe} index={index} custom={video} active={active} visible={visible} />
       <div className="rb-overlay" aria-hidden="true" />
       <SectionEditButton
         section={`Video receta ${recipe.year}`}
         fig={`FIG. 03 — WAC ${recipe.year}`}
         placement="hero"
         onSaved={onVideoSaved}
-        fields={[{ key: `recipe_video_${recipe.year}`, label: 'Video de fondo (URL .mp4)', i18n: false, type: 'url', hint: `Vacío = /image/video-${recipe.year}.mp4 o el video de la casa.` }]}
+        fields={[{ key: `recipe_video_${recipe.year}`, label: 'Video de fondo (URL .mp4)', i18n: false, type: 'url', hint: 'Vacío = la foto del campeón con su video del WAC (o el video de la casa si no hay).' }]}
       />
 
       <div className="rb-in">
         <div className="rb-copy">
-          <ChampionPhoto key={recipe.year} recipe={recipe} className="rb-champ" load={active} />
           <div className="rb-tag"><span className="rb-dot" />{t('recipesBanner.fig').replace('{year}', recipe.year)} <span className="rb-flag">{recipe.flag}</span></div>
           <h3 className="rb-name">{recipe.name}</h3>
           <div className="rb-place">{recipe.place[lang]}</div>
-          <ChampionVideo recipe={recipe} className="rb-play" />
+          <div className="rb-media">
+            <ChampionVideo recipe={recipe} className="rb-play" />
+            {champ && (
+              <a className="rb-credit" href={champ.final} target="_blank" rel="noopener noreferrer">{t('champ.photo')}: {champ.credit} ↗</a>
+            )}
+          </div>
           {/* El subtítulo japonés solo en japonés: en español era un tercer idioma a la vista */}
           {lang === 'ja' && <div className="rb-jp">世界チャンピオン · {recipe.year}年</div>}
         </div>
@@ -145,9 +209,11 @@ export default function RecipeBanners({ recipes, pairings, onOpen }) {
   const [videos, reloadVideos] = useRecipeVideos();
   const go = (i) => setIndex(((i % recipes.length) + recipes.length) % recipes.length);
   const touchX = useRef(null);
+  const root = useRef(null);
+  const visible = useOnScreen(root);
 
   return (
-    <div className="rb" aria-roledescription="carousel" aria-label={t('section.title')}>
+    <div className="rb" ref={root} aria-roledescription="carousel" aria-label={t('section.title')}>
       <SectionEditButton section="Recetas · café y kit" toolId="recipes" />
       <div
         className="rb-viewport"
@@ -167,6 +233,7 @@ export default function RecipeBanners({ recipes, pairings, onOpen }) {
               index={i}
               pairing={pairings[r.year]}
               active={i === index}
+              visible={visible}
               video={videos[r.year]}
               onVideoSaved={reloadVideos}
               onOpen={onOpen}
