@@ -4,7 +4,7 @@
 // vías principales y una capa de calor (azul → rojo) con la demanda de ejemplo.
 //
 // Coordenadas: c = carrera, k = calle. `view` fija qué punto queda dónde:
-//   { style: 'plano' | 'oscuro', c, k, ax, ay, s, heat?, labels?, pins?, route? }
+//   { style: 'plano' | 'blanco' | 'oscuro', c, k, ax, ay, s, heat?, labels?, pins?, route? }
 //   ax/ay = posición (0–1) del punto (c, k) en el lienzo; s = píxeles por cuadra.
 
 // [carrera, calle, peso, radio en cuadras] — demanda de ejemplo mientras no
@@ -50,6 +50,12 @@ const STYLES = {
     bg: '#EDE6D3', minor: 'rgba(42,53,80,.12)', major: 'rgba(42,53,80,.6)', hw: '#2A3550',
     hillBg: '#E6DEC8', hill: 'rgba(42,53,80,.2)', park: 'rgba(46,139,87,.2)', label: 'rgba(42,53,80,.8)',
     heatA: 0.5, blend: 'multiply', pin: '#2A3550', pinFg: '#EDE6D3', route: '#2A3550',
+  },
+  // El de la portada de la marca: el mismo plano sobre blanco
+  blanco: {
+    bg: '#FFFFFF', minor: 'rgba(42,53,80,.1)', major: 'rgba(42,53,80,.45)', hw: '#2A3550',
+    hillBg: '#F3F4F7', hill: 'rgba(42,53,80,.14)', park: 'rgba(46,139,87,.16)', label: 'rgba(42,53,80,.7)',
+    heatA: 0.5, blend: 'multiply', pin: '#2A3550', pinFg: '#FFFFFF', route: '#2A3550',
   },
   oscuro: {
     bg: '#141518', minor: 'rgba(255,255,255,.06)', major: 'rgba(255,255,255,.2)', hw: 'rgba(255,255,255,.32)',

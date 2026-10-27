@@ -1,16 +1,20 @@
 // Escuela: lógica pura del cronómetro de la receta base y de la cuenta de la taza.
 // Sin React, para probarla con node --test.
 
-/** Receta base de la Escuela: 15 g de café, 230 g de agua a 90 °C, dos minutos. */
-export const BASE_RECIPE = { coffee: 15, water: 230, tempC: 90, total: 120 };
+/**
+ * Receta base de la Escuela = la oficial de AeroPress (aeropress.com): 16–18 g de café de molienda
+ * media, agua a 85 °C hasta el n.º 4, 3 s de remover, 1 min de espera y presionar hasta que sisee.
+ * `water` es lo que se pesa en la lección de medir (≈ 1:15).
+ */
+export const BASE_RECIPE = { coffee: 17, water: 250, tempC: 85, total: 105 };
 
 /** Momentos del cronómetro, en segundos desde que cae el agua. `key` va a los textos de cada idioma. */
 export const BREW_STEPS = [
   { key: 'pour', at: 0 },
   { key: 'stir', at: 10 },
-  { key: 'cap', at: 20 },
-  { key: 'press', at: 90 },
-  { key: 'done', at: 120 },
+  { key: 'cap', at: 15 },
+  { key: 'press', at: 75 },
+  { key: 'done', at: 105 },
 ];
 
 /** Índice del paso que toca en el segundo `sec` (el último queda fijo al terminar). */
