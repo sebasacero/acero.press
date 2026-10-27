@@ -79,6 +79,12 @@ const translations = {
       waMsg: '¡Hola! Vendo café en la calle y quiero conocer Micra.',
       cta2: 'Empezar la Escuela',
       store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
+      steps: [
+        { title: 'Aprende', text: 'Seis lecciones cortas con AeroPress en la Escuela.' },
+        { title: 'Vende', text: 'Café de especialidad a un precio parecido al del tinto.' },
+        { title: 'Certifícate', text: 'Un video de tu preparación para conseguir mejor trabajo.' },
+      ],
+      stats: { label: 'El estudio de calle hoy', cups: 'tazas en la calle', blocks: 'cuadras con venta', baristas: 'baristas' },
     },
     posts: {
       label: 'Nuestras redes',
@@ -446,6 +452,12 @@ const translations = {
       waMsg: 'Hi! I sell coffee on the street and want to know about Micra.',
       cta2: 'Start the School',
       store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
+      steps: [
+        { title: 'Learn', text: 'Six short AeroPress lessons in the School.' },
+        { title: 'Sell', text: 'Specialty coffee at a price close to a tinto.' },
+        { title: 'Get certified', text: 'A video of your brew to land a better job.' },
+      ],
+      stats: { label: 'The street study today', cups: 'cups on the street', blocks: 'blocks with sales', baristas: 'baristas' },
     },
     posts: {
       label: 'Our socials',
@@ -812,6 +824,12 @@ const translations = {
       waMsg: 'こんにちは！路上でコーヒーを売っていて、Micraについて知りたいです。',
       cta2: 'スクールを始める',
       store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },
+      steps: [
+        { title: '学ぶ', text: 'スクールでAeroPressの短いレッスンを6つ。' },
+        { title: '売る', text: 'ティントに近い値段でスペシャルティコーヒーを。' },
+        { title: '認定を受ける', text: '抽出の動画で、より良い仕事へ。' },
+      ],
+      stats: { label: '路上調査の現在', cups: '路上で売れた杯数', blocks: '売れたブロック', baristas: 'バリスタ' },
     },
     posts: {
       label: 'ソーシャル',

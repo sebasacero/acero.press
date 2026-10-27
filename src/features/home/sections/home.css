@@ -120,20 +120,69 @@
 }
 .micra .essp-sheet { z-index: 1; }
 .micra-anchor { position: absolute; top: 0; }
-.micra-in { position: relative; z-index: 2; padding: 76px 58px 64px; display: grid; gap: 44px; }
-.micra-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: center; }
-.micra-copy { display: grid; gap: 18px; min-width: 0; }
+.micra-in { position: relative; z-index: 2; padding: 76px 58px 64px; display: grid; gap: 52px; }
+/* Dos columnas que se reparten la hoja: el texto con sus pasos y el panel del celular */
+.micra-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: clamp(32px, 5cqi, 72px); align-items: stretch; }
+.micra-copy { display: grid; gap: 18px; min-width: 0; align-content: center; }
 .micra-title { font-size: clamp(3rem, 8cqi, 7.5rem); }
-.micra-title .essp-script { font-size: .3em; }
+.micra-title .essp-script { font-size: .3em; display: block; margin-top: .25em; }
 .micra-lede { max-width: 48ch; }
-.micra-phone { transform: rotate(2.5deg); margin-right: 20px; }
+.micra-steps { list-style: none; margin: 4px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1.5px solid var(--ink); }
+.micra-steps li { display: grid; align-content: start; gap: 6px; padding: 14px 16px 4px 0; }
+.micra-steps li + li { padding-left: 16px; border-left: 1.5px dashed rgba(20, 20, 26, .3); }
+.micra-step-n { font: 700 12px/1 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--red); }
+.micra-steps b { font: 800 1.15rem/1.1 'Archivo', sans-serif; text-transform: uppercase; }
+.micra-steps li > span:last-child { font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+/* Panel oscuro: el celular al centro, las cifras alrededor y las tiendas abajo */
+.micra-stage {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 22px;
+  padding: 44px 28px 30px; border-radius: 26px; color: #fff; overflow: hidden;
+  background: radial-gradient(120% 80% at 50% 0%, #2a2c36 0%, #14151b 60%), #14151b;
+}
+.micra-stage::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image: linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.micra-phone { position: relative; transform: rotate(2.5deg); width: 250px; }
+.micra-stats { list-style: none; margin: 0; padding: 0; }
+.micra-stats li {
+  position: absolute; display: grid; gap: 2px; padding: 10px 14px; border-radius: 14px; min-width: 112px;
+  background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 12px 30px rgba(0, 0, 0, .3);
+}
+.micra-stats li:nth-child(1) { top: 70px; left: 6%; transform: rotate(-3deg); }
+.micra-stats li:nth-child(2) { top: 44%; right: 5%; transform: rotate(2deg); }
+.micra-stats li:nth-child(3) { bottom: 130px; left: 8%; transform: rotate(-1deg); }
+.micra-stats b { font: 700 28px/1 'JetBrains Mono', monospace; color: #fff; }
+.micra-stats li:nth-child(1) b { color: var(--red); }
+.micra-stats span { font: 600 10px/1.3 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: rgba(255, 255, 255, .72); }
+.micra-stage .essp-stores { position: relative; }
+.micra-social { display: grid; gap: 14px; }
+.micra-social .posts-banner { aspect-ratio: 16 / 8; }
 
+@container (max-width: 980px) {
+  .micra-head { grid-template-columns: minmax(0, 1fr); }
+}
 @container (max-width: 760px) {
-  .micra-in { padding: 54px 24px 44px; gap: 30px; }
-  .micra-head { grid-template-columns: minmax(0, 1fr); gap: 30px; }
-  .micra-phone { justify-self: center; width: 230px; margin: 0; }
+  .micra-in { padding: 54px 20px 44px; gap: 34px; }
+  .micra-steps { grid-template-columns: minmax(0, 1fr); border-top: 0; }
+  .micra-steps li, .micra-steps li + li { grid-template-columns: 34px minmax(0, 1fr); column-gap: 8px; padding: 12px 0; border-left: 0; border-top: 1.5px dashed rgba(20, 20, 26, .3); }
+  .micra-steps li:first-child { border-top: 1.5px solid var(--ink); }
+  .micra-step-n { grid-row: span 2; padding-top: 3px; }
   .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
   .micra .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  /* En celular: las tiendas arriba, el celular asoma y las cifras en fila debajo */
+  .micra-stage { padding: 26px 16px 22px; gap: 18px; }
+  .micra-stage .essp-stores { order: -1; }
+  .micra-phone { width: 210px; }
+  .micra-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+  .micra-stats li, .micra-stats li:nth-child(n) { position: static; transform: none; min-width: 0; padding: 10px; }
+  .micra-stats b { font-size: 22px; }
+  .micra-stats span { font-size: 9px; }
+  /* Las redes en fila con deslizamiento: tres tarjetas altas no alargan la portada */
+  .micra-social .posts-banners { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin: 0 -20px; padding: 0 20px 4px; scrollbar-width: none; }
+  .micra-social .posts-banner { flex: 0 0 78%; scroll-snap-align: start; aspect-ratio: 4 / 3; }
 }
 
 

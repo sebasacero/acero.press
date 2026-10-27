@@ -21,8 +21,11 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await micra.scrollIntoViewIfNeeded();
   await expect(micra.getByRole('heading', { level: 2 }).first()).toContainText('Micra.');
   await expect(micra.locator('.essp-script').first()).toHaveText('la app que fomenta el barismo');
-  // Sin los cuadros de los frentes: en su lugar, las fichas de redes con su video y el botón de la app
-  await expect(micra.locator('.micra-steps')).toHaveCount(0);
+  // Tres pasos cortos junto al texto y, en el panel del celular, las cifras reales del estudio
+  await expect(micra.locator('.micra-steps li')).toHaveCount(3);
+  await expect(micra.getByRole('list', { name: 'El estudio de calle hoy' }).locator('b')).toHaveText(['40', '1', '2']);
+  await expect(micra.getByRole('group', { name: 'Descarga la app Micra' })).toBeVisible();
+  // Abajo, las fichas de redes con su video y el botón de la app
   const banners = micra.locator('#publicaciones .posts-banner');
   await expect(banners).toHaveCount(3);
   await expect(banners.locator('video')).toHaveCount(3);
