@@ -33,43 +33,56 @@
 .school-list-body small { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--school-soft); }
 .school-fig { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: .08em; color: var(--school-soft); text-transform: uppercase; }
 
-/* --- Cabeza de la página: el título y el avance --- */
-.sp-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 40px; align-items: end; }
-.sp-copy { display: grid; gap: 14px; justify-items: start; }
-.sp-progress {
-  display: grid; gap: 12px; padding: 18px 18px 16px; min-width: 0;
-  background: rgba(14, 15, 19, .94); color: #F2F2F0; border: 1.5px solid rgba(255, 255, 255, .18);
-  font-family: 'JetBrains Mono', monospace;
-}
-.sp-segs { display: flex; gap: 4px; }
-.sp-segs i { flex: 1; height: 10px; background: rgba(255, 255, 255, .14); }
-.sp-segs i.on { background: var(--red); }
-.sp-progress-text { margin: 0; font-family: 'Archivo', sans-serif; font-size: 14px; line-height: 1.5; color: rgba(255, 255, 255, .82); }
-.sp-progress .essp-btn { box-shadow: none; justify-content: center; }
+/* --- Cabeza de la página: qué es y dos caminos (preparar ya o ir a las lecciones) --- */
+.sp-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; align-items: end; }
+.sp-copy { display: grid; gap: 16px; justify-items: start; }
+.sp-head .essp-ctas { flex-wrap: wrap; }
+.sp-glance { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sp-glance li { display: grid; gap: 6px; padding: 16px 16px 14px; color: #fff; border-radius: 14px; background: linear-gradient(160deg, #34353d 0%, #1c1d23 100%); border: 1px solid rgba(255, 255, 255, .22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 12px 30px rgba(20, 20, 26, .18); }
+.sp-glance b { font: 800 clamp(26px, 3cqi, 38px)/1 'Archivo', sans-serif; letter-spacing: -.01em; }
+.sp-glance li:first-child b { color: var(--red); }
+.sp-glance span { font: 700 11px/1.2 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: rgba(255, 255, 255, .75); }
 
-/* --- Temario (computador): lista fija a la izquierda, lección a la derecha --- */
-.sc { scroll-margin-top: 16px; }
-.sc-grid { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 28px; align-items: start; }
-.sc-list { position: sticky; top: 16px; display: grid; gap: 4px; }
-.sc-list button {
-  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; width: 100%; padding: 10px 10px;
-  font: inherit; color: inherit; text-align: left; cursor: pointer; background: none;
-  border: 0; border-left: 3px solid transparent; border-radius: 2px 10px 10px 2px;
-  transition: background-color .2s ease;
+/* --- Las lecciones: tarjetas en rejilla; la abierta ocupa todo el ancho, en su lugar --- */
+.school-lessons .school-in { padding-top: 64px; }
+.sc { display: grid; gap: 22px; scroll-margin-top: 16px; }
+.sc-head { display: grid; gap: 10px; justify-items: start; }
+.sc-title { font-size: clamp(1.8rem, 3.4cqi, 3rem); }
+.sc-text { margin: 0; font-size: 16px; line-height: 1.55; max-width: 60ch; }
+.sp-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-family: 'JetBrains Mono', monospace; }
+.sp-segs { display: flex; gap: 4px; width: 132px; }
+.sp-segs i { flex: 1; height: 10px; background: rgba(42, 53, 80, .16); }
+.sp-segs i.on { background: var(--red); }
+.sp-progress-text { font-size: 13px; color: var(--ink); }
+.sp-progress .essp-btn { box-shadow: none; }
+
+.sa { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.sa-item { background: rgba(247, 243, 232, .95); border: 1.5px solid var(--ink); border-radius: 10px; scroll-margin-top: 16px; min-width: 0; }
+.sa-item.is-open { grid-column: 1 / -1; border-width: 2px; box-shadow: 4px 5px 0 0 rgba(42, 53, 80, .14); }
+.sa-item.is-seen .school-num { border-color: var(--red); }
+.sa-h { margin: 0; }
+.sa-h button {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; min-height: 58px; padding: 14px 16px;
+  font: inherit; color: inherit; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 9px;
 }
-.sc-list button:hover { background: rgba(247, 243, 232, .65); }
-.sc-list button[aria-selected='true'] { border-left-color: var(--magenta-bright); background: var(--cream); box-shadow: 2px 3px 0 0 rgba(42, 53, 80, .12); }
-.sc-list button[aria-selected='true'] .school-num { background: var(--ink); color: var(--cream); }
-.sc-list button.is-seen .school-num { border-color: var(--magenta-bright); }
-.sc-list button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 2px; }
+.sa-h button:hover { background: rgba(255, 255, 255, .5); }
+.sa-h button:focus-visible { outline: 2px solid var(--red); outline-offset: -3px; }
+.sa-item.is-open .school-num { background: var(--ink); color: var(--cream); }
+.sa-item.is-open .school-list-body b { font-size: clamp(17px, 2cqi, 22px); }
+.sa-lead {
+  font-size: 14px; line-height: 1.45; color: var(--school-soft); margin: 2px 0 4px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.sa-chev { font: 700 22px/1 'JetBrains Mono', monospace; color: var(--ink); }
+.sa-panel { display: grid; gap: 16px; padding: 14px 18px 18px; border-top: 1px dashed rgba(42, 53, 80, .4); }
+.sl-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; list-style: none; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.sl-more summary::-webkit-details-marker { display: none; }
+.sl-more summary::before { content: '+'; display: grid; place-items: center; width: 22px; height: 22px; border: 1.5px solid var(--ink); border-radius: 50%; font-size: 14px; }
+.sl-more[open] summary::before { content: '−'; }
+.sl-more summary:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
 /* --- La lección --- */
-.sl {
-  display: grid; gap: 16px; padding: 24px 26px 22px; min-width: 0; background: rgba(247, 243, 232, .97);
-  border: 2px solid var(--ink); border-radius: 8px 14px 8px 14px; box-shadow: 4px 5px 0 0 rgba(42, 53, 80, .14);
-}
-.sl-head { display: grid; gap: 6px; }
-.sl-head h2 { margin: 0; font-family: 'Archivo', sans-serif; font-size: clamp(1.5rem, 2.5cqi, 2.2rem); text-transform: uppercase; color: var(--ink); }
+.sl { min-width: 0; }
 .sl-lead { margin: 0; font-size: 17px; line-height: 1.6; font-weight: 500; max-width: 64ch; }
 /* Texto a la izquierda (líneas de 60 caracteres) y la figura a la derecha, quieta mientras se lee */
 .sl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); grid-template-areas: 'text fig'; gap: 28px; align-items: start; }
@@ -269,8 +282,8 @@
 @media (max-width: 1100px) {
   .sl-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'fig' 'text'; }
   .sl-grid > .sf { position: static; max-width: 520px; }
-  .sc-grid { grid-template-columns: 230px minmax(0, 1fr); }
-  .sp-head { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); }
+  .sa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sp-head { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 28px; }
   .st-in { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -282,24 +295,16 @@
   .school-page .school-in { padding-top: 78px; }
   .school-sheet .essp-dash { display: none; }
   .school-title { font-size: clamp(1.9rem, 9cqi, 2.4rem); }
-  .sp-head { grid-template-columns: minmax(0, 1fr); gap: 18px; }
-  .sp-progress { padding: 14px; gap: 10px; }
-  .sp-progress .essp-odo-row { display: none; } /* en el celular basta la barra y la frase */
-
-  /* Temario en acordeón: las seis lecciones a la vista, una abierta */
-  .sa { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  .sa-item { background: rgba(247, 243, 232, .95); border: 1.5px solid var(--ink); border-radius: 10px; scroll-margin-top: 10px; }
-  .sa-item.is-open { border-width: 2px; box-shadow: 3px 4px 0 0 rgba(42, 53, 80, .14); }
-  .sa-item.is-seen .school-num { border-color: var(--magenta-bright); }
-  .sa-h { margin: 0; }
-  .sa-h button {
-    display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: 100%; min-height: 58px; padding: 10px 14px;
-    font: inherit; color: inherit; text-align: left; cursor: pointer; background: none; border: 0;
-  }
-  .sa-h button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: -3px; border-radius: 9px; }
-  .sa-item.is-open .school-num { background: var(--ink); color: var(--cream); }
-  .sa-chev { font: 700 22px/1 'JetBrains Mono', monospace; color: var(--ink); }
-  .sa-panel { display: grid; gap: 14px; padding: 12px 14px 16px; border-top: 1px dashed rgba(42, 53, 80, .4); background: none; border-radius: 0; box-shadow: none; border-left: 0; border-right: 0; border-bottom: 0; }
+  .sp-head { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .sp-glance { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .sp-glance li { padding: 10px 8px; border-radius: 10px; gap: 4px; }
+  .sp-glance b { font-size: clamp(16px, 5.4cqi, 22px); }
+  .sp-glance span { font-size: 9.5px; letter-spacing: .04em; }
+  .school-lessons .school-in { padding-top: 40px; }
+  .sa { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .sa-h button { padding: 12px 14px; }
+  .sa-lead { display: none; } /* en el celular basta el título: la lista entera cabe en una pantalla */
+  .sa-panel { padding: 12px 14px 16px; }
   .sl-grid { gap: 16px; }
   .sl-grid > .sf { max-width: none; }
   .sl-lead { font-size: 16px; }
@@ -315,6 +320,4 @@
   .school-cta .essp-ctas .essp-btn { flex: 1 1 auto; justify-content: center; }
   .st-cta { justify-self: stretch; justify-content: center; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .sc-list button { transition: none; }
-}
+
