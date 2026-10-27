@@ -1,6 +1,5 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import StepScrolly from './StepScrolly.jsx';
-import Marquee from './Marquee.jsx';
 
 // Aprende: la hoja de instrucciones de AeroPress Go, en diez pasos con su dibujo, contada con el
 // scroll: la hoja queda fija en pantalla y cada tramo de scroll pasa al siguiente paso (dibujo
@@ -10,25 +9,22 @@ import Marquee from './Marquee.jsx';
 export default function BrewGuide() {
   const { t } = useLanguage();
   return (
-    <>
-      <Marquee items={t('brew.marquee')} />
-      <StepScrolly
-        id="escuela"
-        tag={t('brew.tag')}
-        badge={t('brew.badge')}
-        title={t('brew.title')}
-        script={t('brew.script')}
-        legend={{ hot: t('brew.hot'), cold: t('brew.cold') }}
-        steps={t('brew.steps')}
-        labels={{ dots: t('brew.dots'), goStep: t('brew.goStep'), swipe: t('brew.swipe') }}
-        source={t('brew.source')}
-        ctas={(
-          <>
-            <a className="essp-btn" href="/escuela#leccion-2">{t('brew.cta')} →</a>
-            <a className="essp-btn is-ghost" href="/escuela">{t('brew.cta2')}</a>
-          </>
-        )}
-      />
-    </>
+    <StepScrolly
+      id="escuela"
+      tag={t('brew.tag')}
+      badge={t('brew.badge')}
+      title={t('brew.title')}
+      script={t('brew.script')}
+      legend={{ hot: t('brew.hot'), cold: t('brew.cold') }}
+      steps={t('brew.steps')}
+      labels={{ dots: t('brew.dots'), goStep: t('brew.goStep'), swipe: t('brew.swipe') }}
+      source={t('brew.source')}
+      ctas={(
+        <>
+          <a className="essp-btn" href="/escuela#leccion-2">{t('brew.cta')} →</a>
+          <a className="essp-btn is-ghost" href="/escuela">{t('brew.cta2')}</a>
+        </>
+      )}
+    />
   );
 }

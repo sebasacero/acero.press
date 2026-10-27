@@ -362,13 +362,3 @@
   .visit-pin { transition: none; }
   .posts-app { transition: none; }
 }
-
-/* ── Franja en movimiento (separa Aprende y la receta de la Escuela) ───────────── */
-.marquee { position: relative; overflow: hidden; background: var(--red); color: #fff; border-block: 2px solid var(--ink); padding: 14px 0; }
-.marquee.is-ink { background: var(--ink); color: var(--paper, #f4efe6); }
-.marquee-track { display: flex; width: max-content; animation: marquee-run 38s linear infinite; }
-.marquee-row { display: flex; flex-shrink: 0; }
-.marquee-item { font: 800 clamp(15px, 2.2vw, 22px)/1 'Archivo', sans-serif; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; padding-inline: 22px; display: inline-flex; align-items: center; }
-.marquee-item::after { content: '✳'; font-size: .8em; opacity: .85; margin-left: 22px; }
-@keyframes marquee-run { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }

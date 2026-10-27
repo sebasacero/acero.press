@@ -3,13 +3,13 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
 import { SheetFrame } from '../esspresale/parts.jsx';
 import StepScrolly from '../home/sections/StepScrolly.jsx';
-import Marquee from '../home/sections/Marquee.jsx';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx';
 import { lessonsFor } from './lessons.js';
 import { resumeIndex, totalMinutes, lessonHash, lessonFromHash, clock, BASE_RECIPE } from './school.js';
 import { readSeen, writeSeen } from './progress.js';
 import LessonFigure from './LessonFigure.jsx';
+import SchoolVideo from './SchoolVideo.jsx';
 import CookMode, { useBrewTimer } from './CookMode.jsx';
 import { track } from '../../shared/lib/analytics.js';
 import './school.css';
@@ -17,6 +17,7 @@ import './school.css';
 // /escuela, en tres tramos y en el orden de la caja de la AeroPress:
 //   1. Arriba, qué es y dos botones: preparar ya (el cronómetro) o ir a las lecciones.
 //   2. La receta oficial de AeroPress Original paso a paso con el scroll (como Aprende en la portada).
+//   2b. El video de la AeroPress dentro de un celular, que avanza con el scroll (SchoolVideo).
 //   3. Las seis lecciones en tarjetas; se abre una a la vez, en su lugar, en computador y en celular.
 // /escuela#leccion-3 abre esa lección (para mandarla por WhatsApp).
 const num = (i) => String(i + 1).padStart(2, '0');
@@ -193,7 +194,6 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
         </div>
       </div>
 
-      <Marquee items={t('school.marquee')} />
       <StepScrolly
         id="receta"
         tag={recipe.tag}
@@ -204,6 +204,16 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
         labels={{ dots: recipe.dots, goStep: recipe.goStep, swipe: recipe.swipe }}
         source={recipe.source}
         ctas={<button type="button" className="essp-btn" onClick={openCook}>{timerLabel}</button>}
+      />
+
+      <SchoolVideo
+        t={t}
+        ctas={(
+          <>
+            <button type="button" className="essp-btn" onClick={openCook}>{timerLabel}</button>
+            <a className="essp-btn is-ghost" href="#lecciones">{t('school.lessonsCta')} ↓</a>
+          </>
+        )}
       />
 
       <div className="school-sheet school-lessons" id="lecciones">

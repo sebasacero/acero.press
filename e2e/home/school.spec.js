@@ -7,14 +7,12 @@ import { openPage } from '../micra/fixtures.js';
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
 
-test('portada: la franja separa Aprende y la hoja de AeroPress Go en diez pasos lleva a la Escuela', async ({ browser }) => {
+test('portada: la hoja de AeroPress Go en diez pasos lleva a la Escuela', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
   const brew = page.locator('#escuela');
-  // La franja en movimiento va justo antes de Aprende; la copia del texto es decorado
-  const marquee = page.locator('.marquee + #escuela');
-  await expect(marquee).toHaveCount(1);
-  await expect(page.locator('.marquee').first()).toHaveAttribute('aria-label', /APRENDE · CAFÉ CALIENTE/);
+  // Sin franja en movimiento (el usuario la quitó)
+  await expect(page.locator('.marquee')).toHaveCount(0);
   await brew.scrollIntoViewIfNeeded();
   await expect(brew.getByRole('heading', { level: 2 })).toContainText('AeroPress Go');
   // Diez pasos, cada uno con su dibujo; caliente y cold brew como en la hoja oficial
@@ -173,6 +171,41 @@ test('celular: el temario completo a la vista, una lección abierta a la vez y n
   expect(box.y + box.height).toBeLessThanOrEqual(844);
   expect(errors).toEqual([]);
   await page.context().close();
+});
+
+test('el video de la AeroPress en el celular avanza con el scroll; con menos movimiento queda la foto', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.goto('/escuela', { waitUntil: 'load' });
+  const banner = page.locator('#video');
+  await expect(banner.getByRole('heading', { level: 2 })).toContainText('en movimiento');
+  await expect(banner.getByRole('img', { name: /Celular con un video/ })).toBeVisible();
+  const video = banner.locator('video');
+  const steps = banner.locator('.sv-steps li');
+  await expect(steps).toHaveCount(5);
+  // El celular con el centro de la pantalla un poco abajo: primeros pasos; más arriba: los últimos
+  const scrollStageTo = (frac) => page.evaluate((f) => {
+    const el = document.querySelector('#video .sv-stage');
+    const r = el.getBoundingClientRect();
+    window.scrollTo({ top: window.scrollY + r.top + r.height / 2 - innerHeight * f, behavior: 'instant' });
+  }, frac);
+  await scrollStageTo(0.75);
+  await expect(video).toHaveAttribute('src', /aeropress-metodo\.(mp4|webm)$/);
+  await expect.poll(() => video.evaluate((v) => v.readyState)).toBeGreaterThanOrEqual(1);
+  await expect(steps.first()).toHaveAttribute('aria-current', 'step');
+  await scrollStageTo(0.2);
+  await expect(steps.nth(4)).toHaveAttribute('aria-current', 'step');
+  await expect.poll(() => video.evaluate((v) => v.currentTime)).toBeGreaterThan(14);
+  await scrollStageTo(0.5);
+  await expect(steps.nth(2)).toHaveAttribute('aria-current', 'step');
+  expect(errors).toEqual([]);
+  await page.context().close();
+
+  const still = await openPage(browser, { context: { ...DESK, reducedMotion: 'reduce' } });
+  await still.page.goto('/escuela', { waitUntil: 'load' });
+  await expect(still.page.locator('#video video')).toHaveCount(0);
+  await expect(still.page.locator('#video img.sv-video')).toHaveAttribute('src', /poster\.webp$/);
+  expect(still.errors).toEqual([]);
+  await still.page.context().close();
 });
 
 test('el carrito sigue al pasar de la portada a la Escuela y volver', async ({ browser }) => {
