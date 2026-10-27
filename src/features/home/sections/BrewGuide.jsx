@@ -93,6 +93,10 @@ export default function BrewGuide() {
             </li>
           ))}
         </ol>
+        {/* El aviso para que se entienda que se baja: en el primer paso; al bajar se va (ya se entendió) */}
+        <div className={`brew-swipe${active > 0 ? ' is-gone' : ''}`} aria-hidden="true">
+          <span className="brew-swipe-icon">↓</span> {t('brew.swipe')}
+        </div>
         <div className="brew-dots" role="group" aria-label={t('brew.dots')}>
           {steps.map((_, i) => (
             <button

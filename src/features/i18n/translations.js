@@ -97,7 +97,7 @@ const translations = {
       script: 'paso a paso, como lo indica AeroPress',
       hot: 'CALIENTE',
       cold: 'COLD BREW',
-      dots: 'Pasos de la receta', goStep: 'Ir al paso {n}',
+      dots: 'Pasos de la receta', swipe: 'Desliza para ver los 10 pasos', goStep: 'Ir al paso {n}',
       steps: [
         { text: 'Saca el émbolo de la cámara.', notes: ['Cilindro de precisión', 'Ø base = 9,5 cm'] },
         { text: 'Pon un filtro de papel en la tapa del filtro.' },
@@ -466,7 +466,7 @@ const translations = {
       script: 'step by step, the way AeroPress says',
       hot: 'HOT',
       cold: 'COLD BREW',
-      dots: 'Recipe steps', goStep: 'Go to step {n}',
+      dots: 'Recipe steps', swipe: 'Scroll to see all 10 steps', goStep: 'Go to step {n}',
       steps: [
         { text: 'Remove the plunger from the chamber.', notes: ['Precision cylinder', 'Base Ø = 9.5 cm'] },
         { text: 'Place a paper filter in the filter cap.' },
@@ -834,7 +834,7 @@ const translations = {
       script: 'エアロプレスの手順どおりに',
       hot: 'ホット',
       cold: '水出し',
-      dots: 'レシピの手順', goStep: '手順{n}へ',
+      dots: 'レシピの手順', swipe: 'スクロールして10の手順を見る', goStep: '手順{n}へ',
       steps: [
         { text: 'チャンバーからプランジャーを押し出します。', notes: ['精密シリンダー', '底面 Ø = 9.5 cm'] },
         { text: 'フィルターをフィルターキャップに入れます。' },

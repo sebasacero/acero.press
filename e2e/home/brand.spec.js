@@ -1,4 +1,4 @@
-// La portada como marca: después de Micra y la tienda, la barra de Chapinero con el banner de las recetas (video y cuadro) en la vitrina,
+// La portada como marca: después de los banners principales, Micra y la tienda, la barra de Chapinero con el banner de las recetas (video y cuadro) en la vitrina,
 // la tienda con sus botones de siempre y Visítanos con el mapa.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
@@ -10,11 +10,11 @@ test('escritorio: la foto del local con el banner original de las recetas en la 
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.clock.install();
   await page.goto('/', { waitUntil: 'load' });
-  // Un solo h1, el de Micra arriba; la marca y la barra vienen después de la tienda
+  // Un solo h1, el de los banners principales (los de la web en línea); luego Micra y la tienda
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Micra.');
-  const order = await page.locator('#micra, #publicaciones, #beans, #visitanos, #recetas, #escuela, #metodo').evaluateAll((els) => els.map((e) => e.id));
-  expect(order).toEqual(['micra', 'publicaciones', 'beans', 'visitanos', 'recetas', 'escuela', 'metodo']);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
+  const order = await page.locator('#baristas, #micra, #publicaciones, #beans, #visitanos, #recetas, #escuela, #metodo').evaluateAll((els) => els.map((e) => e.id));
+  expect(order).toEqual(['baristas', 'micra', 'publicaciones', 'beans', 'visitanos', 'recetas', 'escuela', 'metodo']);
   // «Café de especialidad para todos» ya no está
   await expect(page.getByRole('heading', { name: /para todos/i })).toHaveCount(0);
   // Sin el botón flotante de la meta de ventas

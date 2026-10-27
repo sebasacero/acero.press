@@ -56,13 +56,14 @@ test('banner y hoja: foto del campeón con crédito, receta oficial, final y vid
   await page.context().close();
 });
 
-test('si la foto oficial no carga, el banner sigue sin un hueco roto', async ({ browser }) => {
+test('si la foto oficial no carga, van las iniciales del campeón en su lugar', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.route(/cdn\.shopify\.com/, (route) => route.fulfill({ status: 404, body: '' }));
   await page.goto('/#metodo', { waitUntil: 'load' });
   const first = page.locator('.rb-slide').first();
   await expect(first.getByRole('heading', { level: 3 })).toHaveText('Némo Pop');
-  await expect(first.locator('.rb-champ')).toHaveCount(0);
+  await expect(first.locator('.rb-champ .champ-img.is-initials')).toHaveText('NP');
+  await expect(first.locator('.rb-champ img')).toHaveCount(0);
   expect(errors).toEqual([]);
   await page.context().close();
 });

@@ -66,12 +66,11 @@
 /* Celular: la foto se agranda y se corre hasta que la vitrina llena el cuadro */
 @container (max-width: 640px) {
   .lh-in { padding: 54px 24px 36px; gap: 22px; }
-  .lh-store { padding: 14px 12px 14px; border-radius: 22px; }
+  .lh-store { padding: 12px 8px 14px; border-radius: 22px; }
   .lh .essp-ctas { flex-wrap: nowrap; gap: 10px; }
   .lh .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
-  /* La vitrina entera a la vista: el vidrio mide 1,47 veces el ancho del cuadro */
-  .lh-stage { aspect-ratio: 2 / 3; min-width: 0; border-radius: 18px; }
-  .lh-photo { width: 160%; left: -12%; top: -4%; }
+  /* La foto del local completa, también en celular: el banner se ve en su ventana, no la tapa */
+  .lh-stage { width: 100%; min-width: 0; border-radius: 18px; }
 }
 
 /* --- Visítanos: el plano con un pin gigante; todo el cuadro abre Google Maps --- */
@@ -177,7 +176,7 @@
 .brew .essp-sheet { z-index: 1; }
 .brew-in {
   position: relative; z-index: 2; box-sizing: border-box; height: 100%;
-  padding: 56px 58px 32px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 16px;
+  padding: 56px 58px 32px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 16px;
 }
 .brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 40px; align-items: end; }
 .brew-head .essp-tag { grid-column: 1 / -1; }
@@ -219,6 +218,18 @@
 .brew-serve .is-cold dt { color: var(--ink); }
 .brew-serve dd { display: inline; margin: 0; }
 
+/* «Desliza»: pastilla sobre la hoja que rebota en el primer paso y se va al bajar */
+.brew-swipe {
+  justify-self: center; margin-top: -54px; z-index: 3; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px 8px 10px; border-radius: 999px; background: var(--ink); color: #fff;
+  font: 700 12px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
+  box-shadow: 0 10px 24px -8px rgba(42, 53, 80, .55); transition: opacity .3s ease; pointer-events: none;
+}
+.brew-swipe-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--red); font-size: 13px; }
+.brew-swipe .brew-swipe-icon { animation: brew-bob 1.2s ease-in-out infinite; }
+.brew-swipe.is-gone { opacity: 0; }
+@keyframes brew-bob { 50% { transform: translateY(4px); } }
+
 /* Puntos de avance: cada uno salta a su paso (área de 44 px, punto de 10) */
 .brew-dots { display: flex; justify-content: center; gap: 2px; }
 .brew-dots button { width: 34px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
@@ -230,7 +241,8 @@
 .brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); }
 
 @media (prefers-reduced-motion: reduce) {
-  .brew-sheet li, .brew-dots button::before { transition: none; }
+  .brew-sheet li, .brew-dots button::before, .brew-swipe { transition: none; }
+  .brew-swipe .brew-swipe-icon { animation: none; }
 }
 @container (max-width: 1100px) {
   .brew-head { grid-template-columns: 1fr; }

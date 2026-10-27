@@ -19,7 +19,7 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await page.goto('/', { waitUntil: 'load' });
   const micra = page.locator('#micra');
   await micra.scrollIntoViewIfNeeded();
-  await expect(micra.getByRole('heading', { level: 1 })).toContainText('Micra.');
+  await expect(micra.getByRole('heading', { level: 2 }).first()).toContainText('Micra.');
   await expect(micra.locator('.essp-script').first()).toHaveText('la app que fomenta el barismo');
   // Sin los cuadros de los frentes: en su lugar, las fichas de redes con su video y el botón de la app
   await expect(micra.locator('.micra-steps')).toHaveCount(0);
@@ -35,17 +35,15 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(micra.locator('.essp-phone-who')).toContainText('1 cuadras · 2 baristas');
   // En público se dice «baristas»; sin nombres
   await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
-  // Arriba, pequeños, los botones de las tiendas (sin enlace todavía: «Pronto»)
-  const stores = micra.getByRole('group', { name: 'Descarga la app Micra' });
+  // Los banners principales de la web en línea van arriba, con los botones de las tiendas bajo el iPhone
+  const hero = page.locator('#baristas');
+  await expect(hero.getByRole('heading', { level: 1 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
+  const stores = hero.getByRole('group', { name: 'Descarga la app Micra' }).first();
   await expect(stores.getByRole('img', { name: 'Muy pronto en App Store' })).toBeVisible();
   await expect(stores.getByRole('img', { name: 'Muy pronto en Google Play' })).toBeVisible();
-  // Los dos banners de siempre: pedir café a domicilio y vivir del café con la AeroPress
-  const promos = micra.locator('.micra-promo');
-  await expect(promos).toHaveCount(2);
-  await expect(promos.nth(0).getByRole('heading', { level: 2 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
-  await expect(promos.nth(0).getByRole('link', { name: 'Ver la tienda' })).toHaveAttribute('href', '#beans');
-  await expect(promos.nth(1).getByRole('heading', { level: 2 })).toContainText(/Vive\s*del café\.\s*con tu AeroPress/);
-  await expect(promos.nth(1).getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /wa\.me\/\d+\?text=/);
+  await hero.getByRole('tab', { name: 'Ser barista' }).click();
+  await expect(hero.getByRole('heading', { level: 2 }).filter({ hasText: 'Vive' })).toContainText(/Vive\s*del café\.\s*con tu AeroPress/);
+  await expect(hero.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /wa\.me\/\d+\?text=/);
   // Un aliado no se nombra antes de serlo
   await expect(page.locator('body')).not.toContainText(/Amor Perfecto/i);
   // Los llamados: WhatsApp con el mensaje listo y la Escuela
@@ -64,13 +62,10 @@ test('sin estudio aún, el celular marca su mapa como de ejemplo', async ({ brow
   await page.context().close();
 });
 
-test('los enlaces viejos a /#tinteros llegan a Micra', async ({ browser }) => {
+test('los enlaces viejos a /#tinteros y /#baristas abren el banner «Ser barista»', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/#tinteros', { waitUntil: 'load' });
-  await expect.poll(() => page.evaluate(() => {
-    const b = document.getElementById('micra').getBoundingClientRect();
-    return b.top < window.innerHeight && b.bottom > 0;
-  }), { timeout: 10000 }).toBe(true);
+  await expect(page.locator('#baristas').getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
   expect(errors).toEqual([]);
   await page.context().close();
 });
