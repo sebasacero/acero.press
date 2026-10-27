@@ -18,15 +18,18 @@ const MODE_KEY = 'micra_mode_v1';
 
 function useManifest() {
   useEffect(() => {
-    const link = document.createElement('link');
+    // El navegador usa el primer manifiesto: si el sitio ya trae uno, se le cambia el href y se devuelve al salir
+    const existing = document.querySelector('link[rel="manifest"]');
+    const link = existing ?? document.createElement('link');
+    const prevHref = existing?.getAttribute('href');
     link.rel = 'manifest';
     link.href = '/micra.webmanifest';
-    document.head.appendChild(link);
+    if (!existing) document.head.appendChild(link);
     const meta = document.querySelector('meta[name="theme-color"]');
     const prevColor = meta?.content;
     const prevTitle = document.title;
     document.title = 'Micra · café en la calle';
-    return () => { link.remove(); document.title = prevTitle; if (meta && prevColor) meta.content = prevColor; };
+    return () => { if (existing) link.setAttribute('href', prevHref); else link.remove(); document.title = prevTitle; if (meta && prevColor) meta.content = prevColor; };
   }, []);
 }
 
