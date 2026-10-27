@@ -1,37 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
-import { SheetFrame, Odometer } from '../esspresale/parts.jsx';
+import { SheetFrame } from '../esspresale/parts.jsx';
+import StepScrolly from '../home/sections/StepScrolly.jsx';
+import Marquee from '../home/sections/Marquee.jsx';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx';
 import { lessonsFor } from './lessons.js';
-import { resumeIndex, totalMinutes, lessonHash, lessonFromHash } from './school.js';
+import { resumeIndex, totalMinutes, lessonHash, lessonFromHash, clock, BASE_RECIPE } from './school.js';
 import { readSeen, writeSeen } from './progress.js';
 import LessonFigure from './LessonFigure.jsx';
 import CookMode, { useBrewTimer } from './CookMode.jsx';
 import { track } from '../../shared/lib/analytics.js';
 import './school.css';
 
-// /escuela: la Escuela en su propia página, en la hoja de plano de la portada.
-// En computador, el temario a la izquierda y la lección a la derecha (pestañas,
-// también con flechas del teclado). En celular, el temario completo a la vista y
-// cada lección se abre debajo de su título (acordeón): ninguna lección queda escondida.
+// /escuela, en tres tramos y en el orden de la caja de la AeroPress:
+//   1. Arriba, qué es y dos botones: preparar ya (el cronómetro) o ir a las lecciones.
+//   2. La receta oficial de AeroPress Original paso a paso con el scroll (como Aprende en la portada).
+//   3. Las seis lecciones en tarjetas; se abre una a la vez, en su lugar, en computador y en celular.
 // /escuela#leccion-3 abre esa lección (para mandarla por WhatsApp).
-const NARROW = '(max-width: 760px)';
 const num = (i) => String(i + 1).padStart(2, '0');
 const reducedMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-function useNarrow() {
-  const [narrow, setNarrow] = useState(() => !!window.matchMedia?.(NARROW).matches);
-  useEffect(() => {
-    const mq = window.matchMedia?.(NARROW);
-    if (!mq) return undefined;
-    const onChange = () => setNarrow(mq.matches);
-    mq.addEventListener?.('change', onChange);
-    return () => mq.removeEventListener?.('change', onChange);
-  }, []);
-  return narrow;
-}
 
 /** Lo que tiene cada lección: entrada, la figura, la lista, el consejo, la práctica y para dónde seguir. */
 function LessonBody({ lesson, index, count, isSeen, t, timer, onOpenTimer, onPrev, onNext, onFinish }) {
@@ -50,8 +39,10 @@ function LessonBody({ lesson, index, count, isSeen, t, timer, onOpenTimer, onPre
             <b>{t('school.tipLabel')}</b>
             <p>{lesson.tip}</p>
           </aside>
-          <h3 className="sl-label">{t('school.practiceLabel')}</h3>
-          <ol className="sl-practice">{lesson.practice.map((p) => <li key={p}>{p}</li>)}</ol>
+          <details className="sl-more">
+            <summary>{t('school.practiceLabel')}</summary>
+            <ol className="sl-practice">{lesson.practice.map((p) => <li key={p}>{p}</li>)}</ol>
+          </details>
         </div>
       </div>
       <div className="sl-nav">
@@ -74,14 +65,12 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   const lessons = lessonsFor(lang);
   const keysRef = useRef([]);
   keysRef.current = lessons.map((l) => l.key); // para medir sin rehacer open() en cada render
-  const narrow = useNarrow();
   const [seen, setSeen] = useState(() => readSeen());
-  // En celular puede no haber ninguna abierta (se ve el temario entero); en computador siempre hay una
-  const [active, setActive] = useState(() => lessonFromHash(window.location.hash, lessons.length) ?? (window.matchMedia?.(NARROW).matches ? null : 0));
+  // Ninguna abierta al llegar: se ve el temario entero; #leccion-3 abre esa
+  const [active, setActive] = useState(() => lessonFromHash(window.location.hash, lessons.length));
   const [whatsapp, setWhatsapp] = useState(`https://wa.me/${FALLBACK_WHATSAPP_NUMBER}`);
   const [cookOpen, setCookOpen] = useState(false);
   const timer = useBrewTimer();
-  const tabRefs = useRef([]);
   // A dónde llevar la vista (y el foco) después de pintar. Es estado y no ref: pedir la lección que
   // ya está abierta también tiene que mover la vista. Al llegar con #leccion-3, desde el primer cuadro.
   const [scrollReq, setScrollReq] = useState(() => {
@@ -89,7 +78,6 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
     return i === null ? null : { i, focus: false };
   });
   const touched = useRef(false);
-  const shown = active ?? (narrow ? null : 0);
   const brew = lessons.find((l) => l.figure.kind === 'brew');
 
   useEffect(() => {
@@ -105,22 +93,22 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   useEffect(() => {
     if (!touched.current) return;
     const { pathname, search } = window.location; // con ?utm=… de Instagram o WhatsApp intactos
-    window.history.replaceState(null, '', `${pathname}${search}${shown === null ? '' : lessonHash(shown)}`);
-  }, [shown]);
+    window.history.replaceState(null, '', `${pathname}${search}${active === null ? '' : lessonHash(active)}`);
+  }, [active]);
 
   // Llevar la vista a la lección pedida (al llegar con #leccion-3, con «Siguiente» o desde el avance)
   useEffect(() => {
     if (!scrollReq) return;
     const { i, focus } = scrollReq;
-    const el = document.getElementById(narrow ? `leccion-${i + 1}` : 'temario');
+    const el = document.getElementById(`leccion-${i + 1}`);
     if (el) {
       const top = el.getBoundingClientRect().top;
       // 'instant' y no 'auto': la página tiene scroll-behavior: smooth y 'auto' lo seguiría
       if (top < 0 || top > window.innerHeight * 0.6) el.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'instant' : 'smooth' });
     }
-    // En el celular el botón que tenía el foco se fue con la lección cerrada: el foco pasa al título de la nueva
-    if (focus && narrow) document.getElementById(`sa-btn-${lessons[i].key}`)?.focus({ preventScroll: true });
-  }, [scrollReq, narrow, lessons]);
+    // El botón que tenía el foco se fue con la lección cerrada: el foco pasa al título de la nueva
+    if (focus) document.getElementById(`sa-btn-${lessons[i].key}`)?.focus({ preventScroll: true });
+  }, [scrollReq, lessons]);
   const open = useCallback((i, { scroll = true, focus = false } = {}) => {
     touched.current = true;
     setActive(i);
@@ -145,30 +133,23 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   }), []);
   const goNext = (i) => { markSeen(lessons[i].key); open(i + 1, { focus: true }); };
   const goPrev = (i) => open(i - 1, { focus: true });
+  const openCook = () => { track('school_timer'); setCookOpen(true); };
   const closeCook = useCallback(() => setCookOpen(false), []);
-
-  // Pestañas del temario (computador): flechas, Inicio y Fin, como pide el patrón de pestañas
-  const onTabKey = (e) => {
-    const keys = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
-    let i = null;
-    if (keys[e.key]) i = (shown + keys[e.key] + lessons.length) % lessons.length;
-    else if (e.key === 'Home') i = 0;
-    else if (e.key === 'End') i = lessons.length - 1;
-    if (i === null) return;
-    e.preventDefault();
-    open(i, { scroll: false });
-    tabRefs.current[i]?.focus();
-  };
 
   const done = lessons.filter((l) => seen.includes(l.key)).length;
   const resume = resumeIndex(lessons, seen);
   const titleLines = t('school.titleLines');
   const minutes = totalMinutes(lessons);
+  const recipe = t('school.recipe');
   const progressCta = done === 0
     ? { label: t('school.start'), to: 0 }
     : resume === -1
       ? { label: t('school.review'), to: 0 }
       : { label: t('school.resume').replace('{n}', resume + 1), to: resume };
+  // El cronómetro sigue andando si se cierra: el botón lo dice y vuelve a él
+  const timerLabel = timer.elapsed > 0 && timer.elapsed < BASE_RECIPE.total
+    ? `${t('school.timer.back')} · ${clock(timer.elapsed)}`
+    : t('school.timer.open');
 
   const bodyProps = (i) => ({
     lesson: lessons[i],
@@ -177,12 +158,11 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
     isSeen: seen.includes(lessons[i].key),
     t,
     timer,
-    onOpenTimer: () => { track('school_timer'); setCookOpen(true); },
+    onOpenTimer: openCook,
     onPrev: () => goPrev(i),
     onNext: () => goNext(i),
     onFinish: () => markSeen(lessons[i].key),
   });
-  const meta = (l) => `${l.mins} ${t('school.min')}${seen.includes(l.key) ? ` · ✓ ${t('school.seen')}` : ''}`;
 
   return (
     <main className="school school-page">
@@ -198,87 +178,85 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
                 {titleLines[0]}{' '}<br />{titleLines[1]}
                 <span className="essp-script">{t('school.script')}</span>
               </h1>
-              <div className="essp-loc">{t('school.loc')}</div>
               <p className="essp-lede school-lede">{t('school.lede')}</p>
+              <div className="essp-ctas">
+                <button type="button" className="essp-btn" onClick={openCook}>{timerLabel}</button>
+                <a className="essp-btn is-ghost" href="#lecciones">{t('school.lessonsCta')} ↓</a>
+              </div>
+              <div className="essp-loc">{t('school.loc')} · {t('school.total').replace('{min}', minutes)}</div>
             </div>
-
-            {/* El avance, como el panel del odómetro de la portada: cuánto llevas y por dónde seguir */}
-            <aside className="sp-progress" aria-label={t('school.progressLabel')}>
-              <div className="essp-panel-cota"><span>{t('school.progressLabel')}</span><span className="essp-badge">{t('school.total').replace('{min}', minutes)}</span></div>
-              <div className="essp-odo-row">
-                <Odometer digits={[String(done)]} />
-                <span className="essp-odo-sep">/</span>
-                <span className="essp-odo-target">{lessons.length}</span>
-              </div>
-              <span className="sp-segs" aria-hidden="true">
-                {lessons.map((l) => <i key={l.key} className={seen.includes(l.key) ? 'on' : undefined} />)}
-              </span>
-              <p className="sp-progress-text">
-                {resume === -1 ? t('school.allDone') : t('school.progress').replace('{n}', done).replace('{total}', lessons.length)}
-              </p>
-              <button type="button" className="essp-btn" onClick={() => open(progressCta.to, { focus: true })}>{progressCta.label}</button>
-            </aside>
+            {/* La receta de un vistazo, como las cifras de Micra en la portada */}
+            <ul className="sp-glance" aria-label={t('school.glanceLabel')}>
+              {t('school.glance').map(([v, k]) => <li key={v}><b>{v}</b><span>{k}</span></li>)}
+            </ul>
           </header>
+        </div>
+      </div>
 
-          <section className="sc" id="temario" aria-label={t('school.outline')}>
-            {narrow ? (
-              <ol className="sa">
-                {lessons.map((l, i) => {
-                  const isOpen = shown === i;
-                  return (
-                    <li key={l.key} id={`leccion-${i + 1}`} className={`sa-item${isOpen ? ' is-open' : ''}${seen.includes(l.key) ? ' is-seen' : ''}`}>
-                      <h2 className="sa-h">
-                        <button
-                          type="button"
-                          id={`sa-btn-${l.key}`}
-                          aria-expanded={isOpen}
-                          aria-controls={`sa-panel-${l.key}`}
-                          onClick={() => open(isOpen ? null : i, { scroll: !isOpen })}
-                        >
-                          <span className="school-num">{num(i)}</span>
-                          <span className="school-list-body"><b>{l.title}</b><small>{meta(l)}</small></span>
-                          <span className="sa-chev" aria-hidden="true">{isOpen ? '−' : '+'}</span>
-                        </button>
-                      </h2>
-                      {isOpen && (
-                        <div className="sa-panel sl" id={`sa-panel-${l.key}`} role="region" aria-labelledby={`sa-btn-${l.key}`}>
-                          <LessonBody {...bodyProps(i)} />
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ol>
-            ) : (
-              <div className="sc-grid">
-                <div className="sc-list" role="tablist" aria-orientation="vertical" aria-label={t('school.outline')} onKeyDown={onTabKey}>
-                  {lessons.map((l, i) => (
-                    <button
-                      key={l.key}
-                      type="button"
-                      role="tab"
-                      id={`tab-${l.key}`}
-                      ref={(el) => { tabRefs.current[i] = el; }}
-                      aria-selected={i === shown}
-                      aria-controls="sl-panel"
-                      tabIndex={i === shown ? 0 : -1}
-                      className={seen.includes(l.key) ? 'is-seen' : undefined}
-                      onClick={() => open(i, { scroll: false })}
-                    >
-                      <span className="school-num">{num(i)}</span>
-                      <span className="school-list-body"><b>{l.title}</b><small>{meta(l)}</small></span>
-                    </button>
-                  ))}
-                </div>
-                <article className="sl" id="sl-panel" role="tabpanel" aria-labelledby={`tab-${lessons[shown].key}`}>
-                  <header className="sl-head">
-                    <span className="school-fig">{t('school.lessonOf').replace('{n}', shown + 1).replace('{total}', lessons.length)} · {lessons[shown].mins} {t('school.min')}</span>
-                    <h2>{lessons[shown].title}</h2>
-                  </header>
-                  <LessonBody {...bodyProps(shown)} />
-                </article>
+      <Marquee items={t('school.marquee')} />
+      <StepScrolly
+        id="receta"
+        tag={recipe.tag}
+        badge={recipe.badge}
+        title={recipe.title}
+        script={recipe.script}
+        steps={recipe.steps}
+        labels={{ dots: recipe.dots, goStep: recipe.goStep, swipe: recipe.swipe }}
+        source={recipe.source}
+        ctas={<button type="button" className="essp-btn" onClick={openCook}>{timerLabel}</button>}
+      />
+
+      <div className="school-sheet school-lessons" id="lecciones">
+        <SheetFrame />
+        <div className="school-in">
+          <section className="sc" aria-labelledby="lecciones-title">
+            <header className="sc-head">
+              <div className="essp-tag">{t('school.lessonsTag')}</div>
+              <h2 className="essp-title sc-title" id="lecciones-title">{t('school.lessonsTitle')}</h2>
+              <p className="sc-text">{t('school.lessonsText')}</p>
+              <div className="sp-progress" aria-label={t('school.progressLabel')}>
+                <span className="sp-segs" aria-hidden="true">
+                  {lessons.map((l) => <i key={l.key} className={seen.includes(l.key) ? 'on' : undefined} />)}
+                </span>
+                <span className="sp-progress-text">
+                  {resume === -1 ? t('school.allDone') : t('school.progress').replace('{n}', done).replace('{total}', lessons.length)}
+                </span>
+                <button type="button" className="essp-btn is-ghost" onClick={() => open(progressCta.to, { focus: true })}>{progressCta.label}</button>
               </div>
-            )}
+            </header>
+
+            <ol className="sa">
+              {lessons.map((l, i) => {
+                const isOpen = active === i;
+                const isSeen = seen.includes(l.key);
+                return (
+                  <li key={l.key} id={`leccion-${i + 1}`} className={`sa-item${isOpen ? ' is-open' : ''}${isSeen ? ' is-seen' : ''}`}>
+                    <h3 className="sa-h">
+                      <button
+                        type="button"
+                        id={`sa-btn-${l.key}`}
+                        aria-expanded={isOpen}
+                        aria-controls={`sa-panel-${l.key}`}
+                        onClick={() => open(isOpen ? null : i, { scroll: !isOpen })}
+                      >
+                        <span className="school-num">{num(i)}</span>
+                        <span className="school-list-body">
+                          <b>{l.title}</b>
+                          {!isOpen && <span className="sa-lead">{l.lead}</span>}
+                          <small>{l.mins} {t('school.min')}{isSeen ? ` · ✓ ${t('school.seen')}` : ''}</small>
+                        </span>
+                        <span className="sa-chev" aria-hidden="true">{isOpen ? '−' : '+'}</span>
+                      </button>
+                    </h3>
+                    {isOpen && (
+                      <div className="sa-panel sl" id={`sa-panel-${l.key}`} role="region" aria-labelledby={`sa-btn-${l.key}`}>
+                        <LessonBody {...bodyProps(i)} />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
           </section>
 
           <div className="school-cta">

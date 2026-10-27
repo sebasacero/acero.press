@@ -232,7 +232,7 @@
 .brew .essp-sheet { z-index: 1; }
 .brew-in {
   position: relative; z-index: 2; box-sizing: border-box; height: 100%;
-  padding: 56px 58px 32px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 16px;
+  padding: 56px 58px 32px; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 16px;
 }
 .brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 40px; align-items: end; }
 .brew-head .essp-tag { grid-column: 1 / -1; }
@@ -316,10 +316,45 @@
   .brew-sheet p { font-size: 16px; max-width: none; }
   .brew-serve { font-size: 14px; }
   .brew-notes { display: none; }
-  .brew-dots button { width: 28px; }
+  .brew-dots button { width: auto; flex: 0 1 28px; min-width: 20px; }
   .brew-foot { justify-content: center; }
   .brew .essp-ctas { width: 100%; flex-wrap: nowrap; gap: 10px; }
   .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+}
+
+/* Celular angosto y bajo (320 × 568): en «Sírvelo» el texto no cabe con el dibujo y se salía de la hoja */
+@media (max-width: 760px) and (max-height: 700px) {
+  .brew-sheet li.is-serve .brew-draw { display: none; }
+  .brew-sheet li.is-serve { grid-template-rows: auto auto auto; align-content: center; }
+  .brew-sheet li.is-serve { gap: 2px; }
+  .brew-sheet li.is-serve .brew-num { font-size: 28px; }
+  .brew-sheet li.is-serve p { font-size: 15px; }
+  .brew-sheet li.is-serve .brew-serve { font-size: 13px; line-height: 1.3; gap: 2px; margin-top: 2px; }
+}
+/* Pantallas bajas (celular acostado, ventanas pequeñas): no hay altura para fijar la hoja; los
+   pasos pasan a una fila que se desliza de lado, todos visibles, sin puntos ni aviso. */
+@media (max-height: 560px) {
+  .brew { height: auto; }
+  .brew-pin { position: relative; height: auto; }
+  .brew-in { height: auto; grid-template-rows: none; padding-top: 32px; padding-bottom: 24px; }
+  .brew-head .essp-script, .brew-legend { display: none; }
+  .brew-sheet {
+    display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+    padding: 14px; scrollbar-width: thin;
+  }
+  .brew-sheet li {
+    grid-area: auto; flex: 0 0 min(78%, 480px); scroll-snap-align: start;
+    opacity: 1; transform: none; pointer-events: auto;
+    grid-template-columns: minmax(0, 120px) minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: start; gap: 4px 14px;
+    padding: 10px; background: #fff; border: 1.5px solid rgba(42, 53, 80, .25);
+  }
+  .brew-sheet li.is-serve .brew-draw { display: block; }
+  .brew-draw { grid-column: 1; grid-row: 1 / 4; max-height: 150px; max-width: 120px; }
+  .brew-num, .brew-sheet p, .brew-serve { grid-column: 2; }
+  .brew-num { font-size: 30px; align-self: start; }
+  .brew-sheet p { font-size: 15px; max-width: none; }
+  .brew-serve { font-size: 13px; }
+  .brew-notes, .brew-dots, .brew-swipe { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -327,3 +362,13 @@
   .visit-pin { transition: none; }
   .posts-app { transition: none; }
 }
+
+/* ── Franja en movimiento (separa Aprende y la receta de la Escuela) ───────────── */
+.marquee { position: relative; overflow: hidden; background: var(--red); color: #fff; border-block: 2px solid var(--ink); padding: 14px 0; }
+.marquee.is-ink { background: var(--ink); color: var(--paper, #f4efe6); }
+.marquee-track { display: flex; width: max-content; animation: marquee-run 38s linear infinite; }
+.marquee-row { display: flex; flex-shrink: 0; }
+.marquee-item { font: 800 clamp(15px, 2.2vw, 22px)/1 'Archivo', sans-serif; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; padding-inline: 22px; display: inline-flex; align-items: center; }
+.marquee-item::after { content: '✳'; font-size: .8em; opacity: .85; margin-left: 22px; }
+@keyframes marquee-run { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
