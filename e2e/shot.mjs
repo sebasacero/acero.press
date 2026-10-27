@@ -6,7 +6,7 @@
 //   npm run shot -- / portada.png --width=1024    cualquier ancho (alto 900)
 //   npm run shot -- /admin piloto.png --session   con sesión de owner
 //   npm run shot -- / portada.png --street=e2e/data/street.json   datos del mapa
-//   npm run shot -- / portada.png --click=".essp-tabs button >> nth=1" --wait=900
+//   npm run shot -- / portada.png --click=".essp-carousel-tabs button >> nth=1" --wait=900
 //
 // Levanta Vite en el puerto de las pruebas si no está corriendo. Las capturas
 // van a la carpeta que se indique (por defecto, la actual); nada se sube a git.

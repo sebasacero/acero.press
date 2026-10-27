@@ -69,3 +69,27 @@ test('los enlaces viejos a /#tinteros y /#baristas abren el banner «Ser barista
   expect(errors).toEqual([]);
   await page.context().close();
 });
+
+test('los banners del principio van en carrusel, sin la tabla de zona y hora', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.clock.install();
+  await page.goto('/', { waitUntil: 'load' });
+  const hero = page.locator('#baristas');
+  await expect(hero).toHaveAttribute('aria-roledescription', 'carousel');
+  await expect(hero.getByText(/^(ZONA|HORA|FECHA|PREPARA)$/)).toHaveCount(0);
+  const order = hero.getByRole('tab', { name: 'Pide café' });
+  await expect(order).toHaveAttribute('aria-selected', 'true');
+  // Pasa solo al siguiente banner y vuelve al primero
+  await page.clock.runFor(8500);
+  await expect(hero.getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
+  await page.clock.runFor(8500);
+  await expect(order).toHaveAttribute('aria-selected', 'true');
+  // Con las flechas se elige, y desde ahí ya no pasa solo
+  await hero.getByRole('button', { name: /siguiente/i }).click();
+  await expect(hero.getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
+  await page.mouse.move(0, 890);
+  await page.clock.runFor(20000);
+  await expect(hero.getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
+  expect(errors).toEqual([]);
+  await page.context().close();
+});

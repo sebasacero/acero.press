@@ -1,7 +1,7 @@
 /* === Esspresale: banner de portada y sección App ===
    Mismo lenguaje que las tarjetas de redes (admin/espresaleCard.js): hoja de
    plano con marco y zonas, cotas en JetBrains Mono, panel oscuro del odómetro
-   y cajetín. Dos tonos: papel (tinta) y foto (crema). */
+   y los controles del carrusel. Dos tonos: papel (tinta) y foto (crema). */
 
 .essp-hero {
   position: relative;
@@ -92,6 +92,29 @@
   display: grid; gap: 18px;
 }
 .essp-dash { border: none; border-top: 1.5px dashed var(--essp-line); margin: 0; }
+
+/* Carrusel: los dos banners uno después del otro. Flechas, una píldora por banner
+   (la activa se llena mientras corre su turno) y deslizar con el dedo. */
+.essp-carousel { display: flex; align-items: center; gap: 10px; justify-self: start; }
+.essp-carousel-tabs { display: flex; gap: 8px; }
+.essp-carousel-tabs button, .essp-carousel-arrow {
+  position: relative; overflow: hidden; min-height: 44px; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--essp-fg); background: rgba(255, 255, 255, .55); border: 1.5px solid var(--essp-line); border-radius: 999px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.essp-slide--photo .essp-carousel-tabs button, .essp-slide--photo .essp-carousel-arrow { background: rgba(20, 20, 24, .45); }
+.essp-carousel-tabs button { padding: 0 18px; }
+.essp-carousel-tabs button span { position: relative; z-index: 1; }
+.essp-carousel-tabs button[aria-selected='true'] { color: #fff; border-color: var(--red); background: rgba(222, 27, 27, .55); }
+.essp-carousel-tabs button[aria-selected='true']::before {
+  content: ''; position: absolute; inset: 0; background: var(--red); transform-origin: left; transform: scaleX(1);
+}
+.essp-carousel.is-playing button[aria-selected='true']::before { animation: essp-turn var(--essp-turn, 8s) linear both; }
+.essp-carousel.is-paused button[aria-selected='true']::before { animation-play-state: paused; }
+@keyframes essp-turn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.essp-carousel-arrow { width: 44px; display: grid; place-items: center; font-size: 20px; line-height: 1; padding: 0 0 2px; }
+.essp-carousel button:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
 .essp-main { display: grid; grid-template-columns: minmax(0, 1.05fr) auto minmax(0, .8fr); gap: 34px; align-items: center; }
 .essp-copy { min-width: 0; display: grid; gap: 16px; align-content: center; }
 .essp-tag {
@@ -123,7 +146,7 @@
 }
 .essp-btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--essp-line, var(--ink)); }
 .essp-btn:disabled { opacity: .6; cursor: wait; }
-.essp-btn:focus-visible, .essp-tabs button:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
+.essp-btn:focus-visible { outline: 2px solid var(--magenta-bright); outline-offset: 3px; }
 
 /* Llamados del banner: uno lleno, otro solo con borde (hereda el color del banner) */
 .essp-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -159,21 +182,6 @@
 .essp-specs b { color: var(--magenta-bright); font-size: 22px; font-weight: 700; }
 .essp-specs span { font-size: 9.5px; color: rgba(255, 255, 255, .5); letter-spacing: .06em; }
 .essp-panel-text { font-size: 12px; line-height: 1.55; color: rgba(255, 255, 255, .7); margin: 0; }
-
-/* Cajetín */
-.essp-block { display: grid; grid-template-columns: 1.1fr 1fr 1.25fr 1.35fr auto; border: 2.5px solid var(--essp-line); background: var(--essp-block); }
-.essp-block > div { padding: 10px 16px 12px; display: grid; gap: 4px; min-width: 0; }
-.essp-block > div + div { border-left: 1.5px solid var(--essp-line); }
-.essp-block span { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .06em; color: var(--essp-soft); }
-.essp-block b { font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.essp-block b.is-red { color: var(--magenta-bright); }
-.essp-block > .essp-tabs { display: flex; flex-direction: column; justify-content: center; gap: 0; }
-.essp-tabs button {
-  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  background: none; border: 1.5px solid var(--essp-line); color: var(--essp-fg); padding: 7px 10px; cursor: pointer;
-}
-.essp-tabs button + button { border-top: none; }
-.essp-tabs button[aria-selected='true'] { background: var(--magenta-bright); border-color: var(--magenta-bright); color: #fff; }
 
 /* Celular con la app */
 .essp-phone {
@@ -258,13 +266,7 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
   .essp-main { grid-template-columns: 1fr; gap: 22px; }
   .essp-hero-phone { width: 230px; justify-self: center; }
   .essp-panel { display: none; }
-  .essp-block { grid-template-columns: 1fr 1fr; }
-  .essp-block > div:nth-child(3) { border-left: none; border-top: 1.5px solid var(--essp-line); }
-  .essp-block > div:nth-child(4) { border-top: 1.5px solid var(--essp-line); }
-  .essp-block > .essp-tabs { grid-column: 1 / -1; flex-direction: row; border-top: 1.5px solid var(--essp-line); padding: 10px 12px; }
-  .essp-block > .essp-tabs button { flex: 1; }
-  .essp-block > .essp-tabs button + button { border-top: 1.5px solid var(--essp-line); border-left: none; }
-  .essp-block b { font-size: 18px; }
+
   /* Los dos llamados en una fila, para que el celular siga asomando */
   .essp-ctas { flex-wrap: nowrap; gap: 10px; }
   .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
@@ -272,6 +274,7 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .essp-track { transition: none; }
+  .essp-carousel button::before { animation: none !important; }
   .essp-btn { transition: none; }
 }
 
@@ -303,29 +306,10 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
 .essp-slide--paper .essp-bar i.on { background: var(--red); }
 .essp-slide--paper .essp-specs { border-color: rgba(20, 20, 26, .2); }
 .essp-slide--paper .essp-panel-text { color: rgba(20, 20, 26, .78); }
-/* Tabla inferior (zona · hora · fecha · prepara) en el mismo vidrio. */
-.essp-slide .essp-block {
-  border: 1px solid rgba(255, 255, 255, .32); border-radius: 18px; overflow: hidden;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .2) 0%, rgba(255, 255, 255, .07) 100%);
-  backdrop-filter: blur(20px) saturate(170%); -webkit-backdrop-filter: blur(20px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 18px 50px rgba(0, 0, 0, .22);
-}
-.essp-slide .essp-block > div + div { border-left-color: rgba(255, 255, 255, .25); border-top-color: rgba(255, 255, 255, .25); }
-.essp-slide .essp-tabs button { border-radius: 10px; border-color: rgba(255, 255, 255, .45); }
-.essp-slide .essp-block > .essp-tabs { gap: 6px; }
-.essp-slide .essp-tabs button + button { border-top: 1.5px solid rgba(255, 255, 255, .45); }
-.essp-slide--paper .essp-block {
-  background: linear-gradient(135deg, rgba(255, 255, 255, .62) 0%, rgba(255, 255, 255, .34) 100%);
-  border-color: rgba(255, 255, 255, .8); box-shadow: inset 0 1px 0 #fff, 0 18px 50px rgba(20, 20, 30, .14);
-}
-.essp-slide--paper .essp-block > div + div { border-left-color: rgba(20, 20, 26, .18); border-top-color: rgba(20, 20, 26, .18); }
-.essp-slide--paper .essp-tabs button, .essp-slide--paper .essp-tabs button + button { border-color: rgba(20, 20, 26, .35); }
-.essp-slide .essp-tabs button[aria-selected='true'] { border-color: var(--magenta-bright); }
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .essp-slide--photo .essp-panel { background: rgba(20, 20, 24, .6); }
   .essp-slide--paper .essp-panel { background: rgba(255, 255, 255, .9); }
-  .essp-slide--photo .essp-block { background: rgba(20, 20, 24, .6); }
-  .essp-slide--paper .essp-block { background: rgba(255, 255, 255, .9); }
 }
 
 /* Barra de la app dentro del celular: marca Micra */
@@ -338,7 +322,7 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
 
 /* === Celular: formato de redes en una sola pantalla ===
    Misma hoja de plano (mapa de papel, marco, tinta) que en computador,
-   compactada a 100svh: texto y tiendas arriba, el cajetín en una fila y el
+   compactada a 100svh: texto y tiendas arriba, los controles del carrusel en una fila y el
    celular de la app asomando abajo (detrás de los botones flotantes). */
 @container (max-width: 760px) {
   .essp-slide .essp-in {
@@ -354,12 +338,7 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
   .essp-slide .essp-hero-device { order: 3; align-self: center; gap: 14px; padding-top: 0; }
   .essp-slide .essp-hero-device .essp-stores { order: -1; }
   .essp-slide .essp-hero-phone { flex: none; width: 210px; margin-top: 2px; }
-  /* Cajetín en una fila: hora, quién prepara y el cambio de banner */
-  .essp-slide .essp-block { flex: none; grid-template-columns: 1fr 1fr auto; order: 2; }
-  .essp-slide .essp-block > div:nth-child(1), .essp-slide .essp-block > div:nth-child(3) { display: none; }
-  .essp-slide .essp-block > div:nth-child(4) { border-top: 0; border-left: 1.5px solid var(--essp-line); }
-  .essp-slide .essp-block > div { padding: 8px 12px 9px; }
-  .essp-slide .essp-block b { font-size: 17px; }
-  .essp-slide .essp-block > .essp-tabs { grid-column: auto; flex-direction: column; border-top: 0; padding: 7px 8px; gap: 4px; }
-  .essp-slide .essp-block > .essp-tabs button, .essp-slide .essp-block > .essp-tabs button + button { border-top: 1.5px solid var(--essp-line); padding: 5px 9px; font-size: 9.5px; }
+  .essp-slide .essp-carousel { order: 2; flex: none; align-self: stretch; gap: 6px; }
+  .essp-carousel-tabs { flex: 1; gap: 6px; }
+  .essp-carousel-tabs button { flex: 1; padding: 0 8px; font-size: 10px; letter-spacing: .05em; }
 }

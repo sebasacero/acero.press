@@ -281,7 +281,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
             )}
           </section>
 
-          <div className="essp-block school-cta">
+          <div className="school-cta">
             <div>
               <b>{t('school.ctaTitle')}</b>
               <span>{t('school.ctaText')}</span>

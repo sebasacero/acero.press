@@ -92,6 +92,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
 
   await page.route(/supabase\.co/, (route) => route.abort());
   await page.route(/googletagmanager/, (route) => route.abort());
+  // Los videos de fondo de los campeones (YouTube sin cookies, Vimeo): una página vacía, sin red
+  await page.route(/youtube-nocookie\.com|player\.vimeo\.com/, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>video</title>' }));
   // Clima fijo: 14 °C y lluvia ligera
   await page.route(/open-meteo/, (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify({ current: { temperature_2m: 14, weather_code: 61 } }) }));
   await page.route('**/api/v1/pulse', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }));
