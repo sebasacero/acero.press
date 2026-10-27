@@ -54,7 +54,8 @@ export default function MicraSection() {
               ))}
             </ol>
             <div className="essp-ctas">
-              <a className="essp-btn" href={wa(t('micra.waMsg'))} target="_blank" rel="noopener noreferrer">{t('micra.cta')}</a>
+              <a className="essp-btn" href="/micra">{t('micra.open')}</a>
+              <a className="essp-btn is-ghost" href={wa(t('micra.waMsg'))} target="_blank" rel="noopener noreferrer">{t('micra.cta')}</a>
               <a className="essp-btn is-ghost" href="/escuela">{t('micra.cta2')}</a>
             </div>
           </div>

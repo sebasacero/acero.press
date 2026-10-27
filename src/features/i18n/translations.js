@@ -78,6 +78,7 @@ const translations = {
       cta: 'Vendo café',
       waMsg: '¡Hola! Vendo café en la calle y quiero conocer Micra.',
       cta2: 'Empezar la Escuela',
+      open: 'Abrir la app',
       store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
       steps: [
         { title: 'Aprende', text: 'Seis lecciones cortas con AeroPress en la Escuela.' },
@@ -495,6 +496,7 @@ const translations = {
       cta: 'I sell coffee',
       waMsg: 'Hi! I sell coffee on the street and want to know about Micra.',
       cta2: 'Start the School',
+      open: 'Open the app',
       store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
       steps: [
         { title: 'Learn', text: 'Six short AeroPress lessons in the School.' },
@@ -911,6 +913,7 @@ const translations = {
       cta: 'コーヒーを売っています',
       waMsg: 'こんにちは！路上でコーヒーを売っていて、Micraについて知りたいです。',
       cta2: 'スクールを始める',
+      open: 'アプリを開く',
       store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },
       steps: [
         { title: '学ぶ', text: 'スクールでAeroPressの短いレッスンを6つ。' },
