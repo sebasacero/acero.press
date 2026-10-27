@@ -6,15 +6,15 @@ test('el cronómetro avanza de paso en los segundos de la receta', () => {
   assert.equal(brewStepAt(0), 0);
   assert.equal(brewStepAt(9.9), 0);
   assert.equal(brewStepAt(10), 1);
-  assert.equal(brewStepAt(89), 2);
-  assert.equal(brewStepAt(90), 3);
+  assert.equal(brewStepAt(74), 2);
+  assert.equal(brewStepAt(75), 3);
   assert.equal(brewStepAt(500), BREW_STEPS.length - 1);
 });
 
 test('dice cuánto falta para el siguiente paso, y nada al terminar', () => {
   assert.equal(untilNext(0), 10);
-  assert.equal(untilNext(25), 65);
-  assert.equal(untilNext(120), null);
+  assert.equal(untilNext(25), 50);
+  assert.equal(untilNext(105), null);
 });
 
 test('formatea el reloj en minutos y segundos', () => {

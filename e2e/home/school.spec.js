@@ -1,4 +1,4 @@
-// Escuela: la franja de la portada lleva a /escuela; ahí el temario (pestañas en
+// Escuela: la receta oficial de la portada lleva a /escuela; ahí el temario (pestañas en
 // computador, acordeón en celular), la figura de cada lección, el modo preparar,
 // la cuenta de la taza y lo visto recordado en el navegador.
 import { test, expect } from '@playwright/test';
@@ -7,23 +7,28 @@ import { openPage } from '../micra/fixtures.js';
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
 
-test('portada: la franja muestra el temario y lleva a la lección en la página de la Escuela', async ({ browser }) => {
+test('portada: la hoja de instrucciones de AeroPress Go en diez pasos lleva al cronómetro de la Escuela', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
-  const teaser = page.locator('#escuela');
-  await teaser.scrollIntoViewIfNeeded();
-  await expect(teaser.getByRole('link', { name: /Empezar la lección 1/ })).toHaveAttribute('href', '/escuela#leccion-1');
-  const rows = teaser.getByRole('navigation', { name: 'Temario' }).getByRole('link');
-  await expect(rows).toHaveCount(6);
-  await expect(rows.nth(2)).toHaveAttribute('href', '/escuela#leccion-3');
-  // Se llega también desde el menú y desde el banner «Ser barista»; el curso no va en la portada
+  const brew = page.locator('#escuela');
+  await brew.scrollIntoViewIfNeeded();
+  await expect(brew.getByRole('heading', { level: 2 })).toContainText('AeroPress Go');
+  // Diez pasos, cada uno con su dibujo; caliente y cold brew como en la hoja oficial
+  const steps = brew.locator('.brew-sheet > li');
+  await expect(steps).toHaveCount(10);
+  await expect(steps.locator('svg.brew-draw')).toHaveCount(10);
+  await expect(steps.nth(5)).toContainText('80 °C');
+  await expect(steps.nth(6).locator('.is-hot')).toHaveText('Caliente: 10 segundos.');
+  await expect(steps.nth(6).locator('b.is-cold')).toHaveText('Cold brew: 1 minuto.');
+  await expect(brew).toContainText('aeropress.com');
+  // La receta que seguía al scroll y la franja del temario ya no están en la portada
+  await expect(page.locator('#prensado, .school-teaser')).toHaveCount(0);
   await expect(page.locator('.navbar a[href="/escuela"]').first()).toHaveText('Aprende');
-  await expect(page.locator('.essp-slide a[href="/escuela"]')).toHaveText('Aprende a preparar');
-  await expect(page.locator('.sl, .sa')).toHaveCount(0);
 
-  await rows.nth(2).click();
-  await expect(page).toHaveURL(/\/escuela#leccion-3$/);
-  await expect(page.getByRole('tab', { name: /Medir el café/ })).toHaveAttribute('aria-selected', 'true');
+  await brew.getByRole('link', { name: /Prepárala con cronómetro/ }).click();
+  await expect(page).toHaveURL(/\/escuela#leccion-2$/);
+  await expect(page.getByRole('tab', { name: /Tu primera taza/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tabpanel')).toContainText('85 °C');
   await expect(page).toHaveTitle(/Escuela Acero/);
   expect(errors).toEqual([]);
   await page.context().close();
@@ -66,7 +71,7 @@ test('escritorio: temario con teclado, figura por lección, modo preparar, enlac
   await expect(cook).toBeVisible();
   await cook.getByRole('button', { name: 'Empezar', exact: true }).click();
   await page.clock.runFor(12_000);
-  await expect(cook.locator('.cook-now b')).toHaveText('Remueve 10 veces');
+  await expect(cook.locator('.cook-now b')).toHaveText('Remueve 3 segundos');
   await expect(cook.locator('.cook-clock')).toHaveText('0:12');
   await expect(cook.locator('.cook-next')).toContainText('Pon el émbolo y espera');
   await cook.getByRole('button', { name: 'Pausar' }).click();
@@ -84,7 +89,7 @@ test('escritorio: temario con teclado, figura por lección, modo preparar, enlac
   await back.click();
   await cook.getByRole('button', { name: 'Seguir' }).click();
   await page.clock.runFor(120_000);
-  await expect(cook.locator('.cook-clock')).toHaveText('2:00');
+  await expect(cook.locator('.cook-clock')).toHaveText('1:45');
   await expect(cook.locator('.cook-now b')).toHaveText('Listo');
   await expect(cook.getByRole('button', { name: 'Otra taza' })).toBeVisible();
   await cook.getByRole('button', { name: 'Cerrar' }).click();
@@ -99,16 +104,14 @@ test('escritorio: temario con teclado, figura por lección, modo preparar, enlac
   await cost.getByLabel('Vaso, tapa y filtro por taza').fill('200');
   await cost.getByLabel('Precio de venta').fill('3.000');
   const results = cost.locator('.sf-results');
-  await expect(results).toContainText('$800');
-  await expect(results).toContainText('$2.200');
-  await expect(results).toContainText('73 %');
-  await expect(cost).toContainText('Tazas por libra: 33');
+  await expect(results).toContainText('$880');
+  await expect(results).toContainText('$2.120');
+  await expect(results).toContainText('71 %');
+  await expect(cost).toContainText('Tazas por libra: 29');
 
-  // Lo visto sigue al volver, y la portada ofrece seguir donde iba
+  // Lo visto sigue al volver
   await page.reload({ waitUntil: 'load' });
   await expect(page.locator('.sp-progress')).toContainText('1 de 6 vistas');
-  await page.goto('/', { waitUntil: 'load' });
-  await expect(page.locator('#escuela').getByRole('link', { name: /Seguir con la lección 2/ })).toHaveAttribute('href', '/escuela#leccion-2');
   expect(errors).toEqual([]);
   await page.context().close();
 });

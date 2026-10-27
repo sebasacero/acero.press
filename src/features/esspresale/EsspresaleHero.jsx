@@ -4,6 +4,7 @@ import Navbar from '../../shared/layout/Navbar.jsx';
 import MapCanvas from './MapCanvas.jsx';
 import { StreetPhone, BaristaPhone } from './AppPhones.jsx';
 import { SheetFrame, Segs, Odometer, useClock } from './parts.jsx';
+import StoreButtons from './StoreButtons.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
 import { useStreetMap } from '../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
@@ -71,7 +72,7 @@ function TitleBlock({ maker, makerIsYou, index, onSelect }) {
   );
 }
 
-function Slide({ kind, active, index, onSelect, street = null, streetLayers = null, whatsapp }) {
+function Slide({ kind, active, index, onSelect, street = null, streetLayers = null, whatsapp, stores }) {
   const { t } = useLanguage();
   const ref = useRef(null);
   const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
@@ -149,7 +150,11 @@ function Slide({ kind, active, index, onSelect, street = null, streetLayers = nu
             </div>
           </div>
 
-          {isOrder ? <StreetPhone className="essp-hero-phone" street={street} layers={streetLayers} /> : <BaristaPhone className="essp-hero-phone" />}
+          {/* Debajo del iPhone, pequeños, los botones de las tiendas (sin enlace dicen «Pronto») */}
+          <div className="essp-hero-device">
+            {isOrder ? <StreetPhone className="essp-hero-phone" street={street} layers={streetLayers} /> : <BaristaPhone className="essp-hero-phone" />}
+            <StoreButtons appStoreUrl={stores.apple} playStoreUrl={stores.google} />
+          </div>
 
           <aside className="essp-panel" aria-label={k('panelFig')}>
             {/* Sin puntos reales el mapa dibuja una demanda de ejemplo: el panel no dice «datos reales» encima */}
@@ -191,8 +196,11 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
 
   // «Para baristas» escribe al WhatsApp del negocio (el mismo del botón flotante), con el mensaje listo
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
+  const [stores, setStores] = useState({ apple: '', google: '' });
   useEffect(() => {
     fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then(setNumber);
+    Promise.all([fetchAppConfig('app_store_url', ''), fetchAppConfig('play_store_url', '')])
+      .then(([apple, google]) => setStores({ apple: apple || '', google: google || '' }));
   }, []);
   const whatsapp = `https://wa.me/${number}?text=${encodeURIComponent(t('essp.barista.waMsg'))}`;
 
@@ -202,8 +210,8 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     <header className={`essp-hero essp-hero--${tone}`} id="baristas">
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} />
-        <Slide kind="barista" active={index === 1} index={index} onSelect={select} whatsapp={whatsapp} />
+        <Slide kind="order" active={index === 0} index={index} onSelect={select} street={street} streetLayers={streetLayers} stores={stores} />
+        <Slide kind="barista" active={index === 1} index={index} onSelect={select} whatsapp={whatsapp} stores={stores} />
       </div>
     </header>
   );

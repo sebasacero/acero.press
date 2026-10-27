@@ -1,0 +1,273 @@
+/* === Portada de la marca: LocalHero, Micra, Publicaciones y la receta oficial ===
+   Mismo lenguaje de plano (esspresale.css) sobre blanco: la hoja crema quedó atrás: marco con zonas,
+   cotas en JetBrains Mono, un solo rojo y el subrayado a mano. */
+
+/* --- 1. La barra de Chapinero con las recetas en la vitrina --- */
+.lh {
+  position: relative; overflow: hidden; background: #fff; color: var(--ink);
+  container-type: inline-size;
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+}
+.lh .essp-sheet { z-index: 1; }
+.lh-in {
+  position: relative; z-index: 2;
+  padding: 70px 58px 60px;
+  display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 44px; align-items: center;
+}
+.lh-kicker { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* La foto sobre un paspartú gris claro, como una foto enmarcada */
+.lh-store {
+  position: relative; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; justify-items: center;
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 22px 26px 18px;
+  background: #F3F4F7; border-radius: 30px;
+}
+/* La foto conserva su proporción: las coordenadas de la vitrina son de la foto */
+.lh-stage {
+  position: relative; overflow: hidden; touch-action: pan-y;
+  width: min(100%, calc((100svh - 240px) * 907 / 893)); min-width: min(100%, 380px);
+  aspect-ratio: 907 / 893;
+  border-radius: 22px; background: #3b3b3a;
+  box-shadow: 0 0 0 1px rgba(42, 53, 80, .12), 0 40px 70px -30px rgba(42, 53, 80, .6), 0 12px 24px -12px rgba(42, 53, 80, .35);
+}
+.lh-photo { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 907 / 893; container-type: inline-size; }
+.lh-photo > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+/* El vidrio de la vitrina grande va de x 17,3 % a 60,4 % y de y 4,5 % a 98 % de la foto */
+.lh-window { position: absolute; left: 17.3%; top: 4.5%; width: 43.1%; height: 93.5%; overflow: hidden; container-type: inline-size; }
+
+/* El banner de la barra detrás del vidrio: video, sombra para leer y el cuadro de la receta */
+.lh-banner { position: absolute; inset: 0; overflow: hidden; color: #fff; animation: lh-in .5s ease; }
+@keyframes lh-in { from { opacity: 0; } }
+/* El banner de la barra en su tamaño de celular (390 px), escalado entero al vidrio. Estas reglas son
+   las de index.css para pantallas de menos de 900 px, porque aquí la pantalla puede ser ancha. */
+.lh-hero.hero {
+  position: absolute; left: 0; top: 0; transform-origin: 0 0;
+  min-height: 0; grid-template-columns: 1fr; gap: 32px; padding: 96px 24px 24px; box-sizing: border-box;
+}
+.lh-hero.hero .hero-h { font-size: 2.6rem; margin: 0; }
+.lh-hero.hero > .bar-panel-col { justify-self: stretch; max-width: 100%; }
+.lh-hero .bar-actions { margin-top: -12px; }
+.lh-hero .odometer-panel { justify-self: stretch; max-width: 100%; }
+
+.lh-tabs { display: flex; align-items: center; gap: 8px; width: min(100%, 640px); }
+.lh-tablist { flex: 1; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.lh-tablist::-webkit-scrollbar { display: none; }
+.lh-tablist button, .lh-arrow {
+  min-height: 44px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer;
+  font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
+}
+.lh-tablist button { flex: 1 0 auto; padding: 0 14px; white-space: nowrap; border-radius: 999px; }
+.lh-arrow { border-radius: 50%; }
+.lh-tablist button[aria-selected='true'] { background: var(--red); border-color: var(--red); color: #fff; }
+.lh-arrow { width: 44px; flex: none; font-size: 20px; }
+.lh-tablist button:focus-visible, .lh-arrow:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.lh-caption { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); text-align: center; }
+
+/* Celular: la foto se agranda y se corre hasta que la vitrina llena el cuadro */
+@container (max-width: 640px) {
+  .lh-in { padding: 54px 24px 36px; gap: 22px; }
+  .lh-store { padding: 12px 8px 14px; border-radius: 22px; }
+  .lh .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .lh .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  /* La foto del local completa, también en celular: el banner se ve en su ventana, no la tapa */
+  .lh-stage { width: 100%; min-width: 0; border-radius: 18px; }
+}
+
+/* --- Visítanos: el plano con un pin gigante; todo el cuadro abre Google Maps --- */
+.visit-copy { display: grid; gap: 16px; min-width: 0; }
+.visit-address { margin: 0; font: 600 clamp(18px, 2cqi, 24px)/1.35 'Archivo', sans-serif; }
+/* El logo: el plano acostado como piso (perspectiva), el pin parado encima con su sombra y el nombre */
+.visit-logo { position: relative; display: block; color: var(--ink); text-decoration: none; border-radius: 22px; }
+.visit-logo:focus-visible { outline: 3px solid var(--red); outline-offset: 4px; }
+.visit-stage { position: relative; display: block; height: clamp(230px, 24cqi, 320px); perspective: 900px; perspective-origin: 50% 0%; }
+.visit-floor {
+  position: absolute; left: 4%; right: 4%; bottom: 0; height: 100%; overflow: hidden;
+  transform: rotateX(60deg); transform-origin: 50% 100%;
+  border: 2px solid var(--ink); border-radius: 26px; background: #fff;
+  box-shadow: 0 40px 50px -20px rgba(42, 53, 80, .45);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%); mask-image: linear-gradient(180deg, transparent 0%, #000 30%);
+}
+.visit-floor-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* La sombra del pin en el piso y el pin saliendo del plano */
+.visit-shadow {
+  position: absolute; left: 50%; bottom: 25%; width: clamp(70px, 8cqi, 110px); height: clamp(16px, 1.8cqi, 24px);
+  transform: translate(-50%, 50%); border-radius: 50%; background: radial-gradient(rgba(42, 53, 80, .45), transparent 70%);
+}
+.visit-pin {
+  position: absolute; left: 50%; bottom: 25%; width: clamp(96px, 11cqi, 150px); height: auto;
+  transform: translateX(-50%); filter: drop-shadow(0 14px 14px rgba(42, 53, 80, .28));
+  transition: transform .3s ease;
+}
+.visit-logo:hover .visit-pin { transform: translate(-50%, -10px); }
+.visit-word { position: relative; display: grid; justify-items: center; margin: 6px 0 10px; text-align: center; }
+.visit-title {
+  margin: 0; font: 800 clamp(3rem, 6.4cqi, 6rem)/.92 'Archivo', sans-serif; text-transform: uppercase; letter-spacing: -.02em; color: var(--ink);
+}
+.visit-script {
+  font: 400 clamp(1.3rem, 2.4cqi, 2.2rem)/1 'Permanent Marker', cursive; color: var(--red);
+  transform: rotate(-4deg); margin-top: 4px;
+}
+@container (max-width: 980px) {
+  .lh-in { grid-template-columns: minmax(0, 1fr); gap: 34px; }
+  .lh-stage { width: min(100%, 640px); }
+}
+
+/* --- 2. Micra --- */
+.micra {
+  position: relative; overflow: hidden; background: #fff; color: var(--ink);
+  container-type: inline-size;
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+}
+.micra .essp-sheet { z-index: 1; }
+.micra-anchor { position: absolute; top: 0; }
+.micra-in { position: relative; z-index: 2; padding: 76px 58px 64px; display: grid; gap: 44px; }
+.micra-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: center; }
+.micra-copy { display: grid; gap: 18px; min-width: 0; }
+.micra-title { font-size: clamp(3rem, 8cqi, 7.5rem); }
+.micra-title .essp-script { font-size: .3em; }
+.micra-lede { max-width: 48ch; }
+.micra-phone { transform: rotate(2.5deg); margin-right: 20px; }
+
+@container (max-width: 760px) {
+  .micra-in { padding: 54px 24px 44px; gap: 30px; }
+  .micra-head { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .micra-phone { justify-self: center; width: 230px; margin: 0; }
+  .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
+  .micra .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+}
+
+
+
+/* --- Las fichas de redes (en Micra) --- */
+/* Un banner pequeño por red: su video de fondo y el botón de la app encima */
+.posts-banners { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.posts-banner { position: relative; overflow: hidden; border-radius: 18px; background: #1b1d24; aspect-ratio: 16 / 10; }
+.posts-banner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.posts-banner::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(14, 15, 19, .15) 0%, rgba(14, 15, 19, .7) 100%); }
+.posts-banner a {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  color: #fff; text-decoration: none; text-align: center; padding: 16px;
+}
+.posts-app {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 22px; margin-bottom: 6px;
+  background: #fff; color: var(--ink); border-radius: 999px; font: 800 15px/1 'Archivo', sans-serif;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .3); transition: transform .2s ease;
+}
+.posts-banner--instagram .posts-app svg, .posts-banner--youtube .posts-app svg { color: var(--red); }
+.posts-banner a:hover .posts-app { transform: translateY(-2px) scale(1.04); }
+.posts-banner a:focus-visible { outline: 3px solid var(--red); outline-offset: -6px; border-radius: 18px; }
+.posts-banner b { font: 800 18px/1.2 'Archivo', sans-serif; text-shadow: 0 2px 10px rgba(0, 0, 0, .5); overflow-wrap: anywhere; }
+.posts-banner small { font: 600 11px/1.3 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
+
+@container (max-width: 760px) {
+  .posts-banners { grid-template-columns: 1fr; gap: 10px; }
+  .posts-banner { aspect-ratio: 16 / 7; }
+}
+
+/* --- 4. Aprende: la hoja de AeroPress Go contada con el scroll --- */
+/* La sección mide una pantalla más un tramo por paso; adentro, el panel queda fijo (sticky) y el
+   avance elige el paso. overflow: clip (no hidden) para que sticky funcione. */
+.brew {
+  position: relative; overflow: clip; background: #fff; color: var(--ink);
+  container-type: inline-size; height: calc(100svh + var(--brew-steps, 10) * 26svh);
+  --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+}
+.brew-pin { position: sticky; top: 0; height: 100svh; }
+.brew .essp-sheet { z-index: 1; }
+.brew-in {
+  position: relative; z-index: 2; box-sizing: border-box; height: 100%;
+  padding: 56px 58px 32px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 16px;
+}
+.brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 40px; align-items: end; }
+.brew-head .essp-tag { grid-column: 1 / -1; }
+.brew-title { font-size: clamp(1.9rem, 3.6cqi, 3.4rem); }
+.brew-title .essp-script { margin-top: .5em; }
+.brew-legend { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; }
+.brew-legend li { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 7px 10px; border: 1.5px solid currentColor; }
+.brew-legend .is-hot { color: var(--red); }
+.brew-legend .is-cold { color: var(--ink); }
+.brew .is-hot { color: var(--red); }
+.brew b.is-cold, .brew .brew-serve .is-cold { color: var(--ink); }
+
+/* La hoja: papel cuadriculado de 12 px; los diez pasos apilados en la misma celda, solo uno visible */
+.brew-sheet {
+  list-style: none; margin: 0; padding: 22px 28px; display: grid; min-height: 0;
+  border: 2px solid var(--ink);
+  background-color: #fff;
+  background-image: linear-gradient(rgba(42, 53, 80, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 53, 80, .09) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+.brew-sheet li {
+  grid-area: 1 / 1; position: relative; min-width: 0; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: center; gap: 6px 36px;
+  opacity: 0; transform: translateY(14px); transition: opacity .35s ease, transform .35s ease; pointer-events: none;
+}
+.brew-sheet li.is-active { opacity: 1; transform: none; pointer-events: auto; }
+.brew-draw { grid-column: 1; grid-row: 1 / 4; width: 100%; max-width: 520px; max-height: 100%; height: auto; justify-self: center; align-self: center; color: var(--ink); overflow: visible; }
+.brew-notes {
+  position: absolute; top: 0; left: 0; display: grid; gap: 1px; max-width: 30%;
+  font: 600 11px/1.3 'JetBrains Mono', monospace; color: var(--ink-soft);
+}
+.brew-notes span:nth-child(even) { color: var(--ink); font-weight: 700; margin-bottom: 4px; }
+.brew-num { grid-column: 2; align-self: end; font: 800 clamp(48px, 6cqi, 88px)/1 'Archivo', sans-serif; color: var(--ink); }
+.brew-num small { font-size: .28em; font-weight: 600; color: var(--ink-soft); margin-left: 4px; font-family: 'JetBrains Mono', monospace; }
+.brew-sheet p { grid-column: 2; margin: 0; font: 600 clamp(17px, 1.8cqi, 23px)/1.4 'Archivo', sans-serif; max-width: 30ch; }
+.brew-sheet b { font-weight: 800; }
+.brew-serve { grid-column: 2; margin: 6px 0 0; display: grid; gap: 4px; font: 500 clamp(14px, 1.3cqi, 17px)/1.4 'Archivo', sans-serif; align-self: start; }
+.brew-serve dt { display: inline; font-weight: 800; color: var(--red); }
+.brew-serve .is-cold dt { color: var(--ink); }
+.brew-serve dd { display: inline; margin: 0; }
+
+/* «Desliza»: pastilla sobre la hoja que rebota en el primer paso y se va al bajar */
+.brew-swipe {
+  justify-self: center; margin-top: -54px; z-index: 3; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px 8px 10px; border-radius: 999px; background: var(--ink); color: #fff;
+  font: 700 12px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
+  box-shadow: 0 10px 24px -8px rgba(42, 53, 80, .55); transition: opacity .3s ease; pointer-events: none;
+}
+.brew-swipe-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--red); font-size: 13px; }
+.brew-swipe .brew-swipe-icon { animation: brew-bob 1.2s ease-in-out infinite; }
+.brew-swipe.is-gone { opacity: 0; }
+@keyframes brew-bob { 50% { transform: translateY(4px); } }
+
+/* Puntos de avance: cada uno salta a su paso (área de 44 px, punto de 10) */
+.brew-dots { display: flex; justify-content: center; gap: 2px; }
+.brew-dots button { width: 34px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.brew-dots button::before { content: ''; width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--ink); transition: width .25s ease, background .25s ease; }
+.brew-dots button.is-done::before { background: var(--ink); }
+.brew-dots button.is-on::before { width: 26px; background: var(--red); border-color: var(--red); }
+.brew-dots button:focus-visible { outline: 2px solid var(--red); outline-offset: -4px; }
+.brew-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px 18px; flex-wrap: wrap; }
+.brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .brew-sheet li, .brew-dots button::before, .brew-swipe { transition: none; }
+  .brew-swipe .brew-swipe-icon { animation: none; }
+}
+@container (max-width: 1100px) {
+  .brew-head { grid-template-columns: 1fr; }
+  .brew-legend { display: none; } /* cada paso ya dice «Caliente» y «Cold brew» en su color */
+}
+@container (max-width: 760px) {
+  .brew-in { padding: 40px 22px 18px; gap: 10px; }
+  .brew-head .essp-script { display: none; }
+  .brew-title { font-size: clamp(1.6rem, 7.4cqi, 2.2rem); }
+  .brew-sheet { padding: 14px; }
+  .brew-sheet li { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto auto; align-content: stretch; gap: 4px; }
+  .brew-draw { grid-column: 1; grid-row: 1; max-width: 300px; max-height: 100%; }
+  .brew-num, .brew-sheet p, .brew-serve { grid-column: 1; }
+  .brew-num { font-size: 40px; }
+  .brew-sheet p { font-size: 16px; max-width: none; }
+  .brew-serve { font-size: 14px; }
+  .brew-notes { display: none; }
+  .brew-dots button { width: 28px; }
+  .brew-foot { justify-content: center; }
+  .brew .essp-ctas { width: 100%; flex-wrap: nowrap; gap: 10px; }
+  .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-banner { animation: none; }
+  .visit-pin { transition: none; }
+  .posts-app { transition: none; }
+}

@@ -5,6 +5,7 @@ import { useAdminUI } from './AdminUIContext.jsx';
 import EditDrawer, { LangTabs, LANGS } from './EditDrawer.jsx';
 import './admin.css';
 
+// Las recetas de la casa: hoy son los carteles de la vitrina del local (LocalHero)
 const TEXT_FIELDS = [
   { key: 'title1', label: 'Título grande' },
   { key: 'figLabel', label: 'Etiqueta superior (FIG. — RECETA)' },

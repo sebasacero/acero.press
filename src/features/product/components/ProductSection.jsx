@@ -294,10 +294,6 @@ export default function ProductSection() {
         )}
 
         <p className="payment-worldwide-note">{t('payment.subtitle')}</p>
-        <div className="shop-links">
-          <a href="#">{t('product.morePayment')}</a>
-          <a href="#" className="store-info-link">{t('product.viewStore')}</a>
-        </div>
       </div>
     </section>
   );

@@ -13,23 +13,16 @@ import CheckoutModal from './features/payment/CheckoutModal.jsx';
 import AccountDrawer from './features/account/AccountDrawer.jsx';
 import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
-import Marquee from './features/home/sections/Marquee.jsx';
-import SalesFloatButton from './features/sales/SalesFloatButton.jsx';
-import { useIsOwner } from './features/admin/useAdminAuth.js';
-import ColdBrewHero from './features/home/sections/ColdBrewHero.jsx';
-import PressStory from './features/home/sections/PressStory.jsx';
+import LocalHero from './features/home/sections/LocalHero.jsx';
 import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
+import MicraSection from './features/home/sections/MicraSection.jsx';
+import BrewGuide from './features/home/sections/BrewGuide.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
 import ConsentBanner from './shared/layout/ConsentBanner.jsx';
 import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
-// alrededor. En la portada queda una franja que lleva a ella. Las dos van en archivos aparte.
+// alrededor. En la portada queda la receta oficial en cinco pasos (BrewGuide), que lleva a ella.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
-const SchoolTeaser = lazy(() => import('./features/school/SchoolTeaser.jsx'));
-// La meta de ventas es del equipo: en público era un «0 %» flotando sobre la tienda
-function OwnerOnly({ children }) {
-  return useIsOwner() ? children : null;
-}
 
 const isSchoolRoute = () => /^\/escuela\/?$/.test(window.location.pathname);
 
@@ -56,21 +49,19 @@ export default function App() {
               </Suspense>
             ) : (
               <>
+                {/* Primero la app (con el menú), luego la tienda y la barra de Chapinero con las
+                    recetas en la vitrina; al final la Escuela, los campeones; las redes van arriba, en Micra, y Visítanos junto a la foto */}
+                {/* Los dos banners principales de la web en línea (pedir café, ser barista); llevan el menú y el h1 */}
                 <EsspresaleHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
+                <MicraSection />
 
                 <ProductSection />
 
-                <Marquee channel="market" />
+                <LocalHero />
 
-                <ColdBrewHero />
+                <BrewGuide />
 
                 <RecipeArchive />
-
-                <PressStory />
-
-                <Suspense fallback={null}>
-                  <SchoolTeaser />
-                </Suspense>
               </>
             )}
 
@@ -81,7 +72,6 @@ export default function App() {
             <CartDrawer />
             <CheckoutModal />
             <AccountDrawer />
-            <OwnerOnly><SalesFloatButton /></OwnerOnly>
             <ActiveFloatWidget />
 
             <AdminDock />
