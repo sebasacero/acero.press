@@ -14,6 +14,7 @@ import AccountDrawer from './features/account/AccountDrawer.jsx';
 import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
 import LocalHero from './features/home/sections/LocalHero.jsx';
+import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
 import MicraSection from './features/home/sections/MicraSection.jsx';
 import BrewGuide from './features/home/sections/BrewGuide.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
@@ -50,7 +51,9 @@ export default function App() {
               <>
                 {/* Primero la app (con el menú), luego la tienda y la barra de Chapinero con las
                     recetas en la vitrina; al final la Escuela, los campeones; las redes van arriba, en Micra, y Visítanos junto a la foto */}
-                <MicraSection navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
+                {/* Los dos banners principales de la web en línea (pedir café, ser barista); llevan el menú y el h1 */}
+                <EsspresaleHero navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
+                <MicraSection />
 
                 <ProductSection />
 

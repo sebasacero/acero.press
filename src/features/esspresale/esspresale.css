@@ -182,6 +182,25 @@
   box-shadow: 0 28px 60px rgba(0, 0, 0, .4); color: #F4F2EC;
 }
 .essp-hero-phone { transform: rotate(2.5deg); }
+/* Debajo del iPhone (arriba en celular), los botones pequeños de las tiendas */
+.essp-hero-device { display: grid; justify-items: center; gap: 18px; flex: none; padding-top: 36px; }
+.essp-stores { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.essp-appicon {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 6px;
+  border: 1.5px solid currentColor; border-radius: 12px; color: var(--essp-fg, var(--ink)); text-decoration: none;
+  background: rgba(255, 255, 255, .72); backdrop-filter: blur(6px);
+}
+.essp-hero--photo .essp-appicon { background: rgba(10, 10, 12, .45); }
+.essp-appicon-tile { position: relative; width: 30px; height: 30px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); }
+.essp-appicon-tile svg { width: 100%; height: 100%; display: block; border-radius: inherit; }
+.essp-appicon-name { font: 700 12px/1 'Archivo', sans-serif; white-space: nowrap; }
+.essp-appicon-badge {
+  position: absolute; top: -8px; right: -12px; font-style: normal; white-space: nowrap; background: var(--red); color: #fff;
+  border: 2px solid #fff; border-radius: 999px; padding: 1px 5px; font: 800 9px/1.2 'Archivo', sans-serif;
+}
+a.essp-appicon:hover { background: var(--ink); color: #fff; }
+.essp-appicon:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+.essp-appicon.is-soon { cursor: default; }
 .essp-phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .essp-phone-screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .essp-phone-status {
@@ -332,7 +351,9 @@
   .essp-slide .essp-title { font-size: clamp(2rem, 10.5cqi, 2.7rem); }
   .essp-slide .essp-lede { font-size: 14px; line-height: 1.45; }
   /* El celular sobresale: pasa por encima del marco de la hoja y lo corta el borde de la pantalla */
-  .essp-slide .essp-hero-phone { flex: none; width: 210px; align-self: center; margin-top: 2px; order: 3; }
+  .essp-slide .essp-hero-device { order: 3; align-self: center; gap: 14px; padding-top: 0; }
+  .essp-slide .essp-hero-device .essp-stores { order: -1; }
+  .essp-slide .essp-hero-phone { flex: none; width: 210px; margin-top: 2px; }
   /* Cajetín en una fila: hora, quién prepara y el cambio de banner */
   .essp-slide .essp-block { flex: none; grid-template-columns: 1fr 1fr auto; order: 2; }
   .essp-slide .essp-block > div:nth-child(1), .essp-slide .essp-block > div:nth-child(3) { display: none; }

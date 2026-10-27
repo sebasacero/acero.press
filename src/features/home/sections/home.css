@@ -121,7 +121,7 @@
 }
 .micra .essp-sheet { z-index: 1; }
 .micra-anchor { position: absolute; top: 0; }
-.micra-in { position: relative; z-index: 2; padding: 128px 58px 64px; display: grid; gap: 44px; }
+.micra-in { position: relative; z-index: 2; padding: 76px 58px 64px; display: grid; gap: 44px; }
 .micra-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: center; }
 .micra-copy { display: grid; gap: 18px; min-width: 0; }
 .micra-title { font-size: clamp(3rem, 8cqi, 7.5rem); }
@@ -130,49 +130,14 @@
 .micra-phone { transform: rotate(2.5deg); margin-right: 20px; }
 
 @container (max-width: 760px) {
-  .micra-in { padding: 92px 24px 44px; gap: 30px; }
+  .micra-in { padding: 54px 24px 44px; gap: 30px; }
   .micra-head { grid-template-columns: minmax(0, 1fr); gap: 30px; }
   .micra-phone { justify-self: center; width: 230px; margin: 0; }
   .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
   .micra .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
-/* Botones de las tiendas, pequeños, encima del título: ícono de app y nombre al lado */
-.micra .essp-stores { display: flex; flex-wrap: wrap; gap: 10px; }
-.micra .essp-appicon {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 6px;
-  border: 1.5px solid var(--ink); border-radius: 12px; color: var(--ink); text-decoration: none;
-}
-.micra .essp-appicon-tile { position: relative; width: 30px; height: 30px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); }
-.micra .essp-appicon-tile svg { width: 100%; height: 100%; display: block; border-radius: inherit; }
-.micra .essp-appicon-name { font: 700 12px/1 'Archivo', sans-serif; white-space: nowrap; }
-.micra .essp-appicon-badge {
-  position: absolute; top: -8px; right: -12px; font-style: normal; white-space: nowrap; background: var(--red); color: #fff;
-  border: 2px solid #fff; border-radius: 999px; padding: 1px 5px; font: 800 9px/1.2 'Archivo', sans-serif;
-}
-.micra a.essp-appicon:hover { background: var(--ink); color: #fff; }
-.micra .essp-appicon:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
-.micra .essp-appicon.is-soon { cursor: default; }
 
-/* Los dos banners de siempre: plano claro y foto oscura, lado a lado */
-.micra-promos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.micra-promo { position: relative; overflow: hidden; min-height: 420px; border: 2px solid var(--ink); border-radius: 22px; container-type: inline-size; display: grid; align-items: end; }
-.micra-promo-bg { position: absolute; inset: 0; }
-.micra-promo-bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.micra-promo-in { position: relative; display: grid; gap: 12px; padding: 30px 28px 28px; }
-.micra-promo-title { font-size: clamp(2.2rem, 11cqi, 4.2rem); }
-.micra-promo-title .essp-script { font-size: .4em; }
-.micra-promo .essp-lede { max-width: 44ch; }
-.micra-promo--order .essp-btn.is-ghost { background: #fff; }
-.micra-promo--barista { color: var(--cream, #F7F3E8); --essp-fg: #fff; --essp-soft: rgba(255, 255, 255, .78); }
-.micra-promo--barista .essp-title, .micra-promo--barista .essp-lede, .micra-promo--barista .essp-tag { color: #fff; }
-.micra-promo--barista .essp-loc { color: rgba(255, 255, 255, .8); }
-.micra-promo--barista .essp-btn.is-ghost { color: #fff; border-color: #fff; }
-@container (max-width: 860px) {
-  .micra-promos { grid-template-columns: minmax(0, 1fr); }
-  .micra-promo { min-height: 360px; }
-  .micra-promo-in { padding: 22px 18px 20px; }
-}
 
 /* --- Las fichas de redes (en Micra) --- */
 /* Un banner pequeño por red: su video de fondo y el botón de la app encima */
