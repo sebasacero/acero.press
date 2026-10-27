@@ -29,9 +29,6 @@ const translations = {
       },
     },
     essp: {
-      tabsLabel: 'Banners de la portada',
-      prev: 'Banner anterior',
-      next: 'Banner siguiente',
       store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
       tabs: { order: 'Pide café', barista: 'Ser barista' },
       mapLabel: 'Mapa de Bogotá con las ventas en la calle y los baristas',
@@ -399,9 +396,6 @@ const translations = {
       },
     },
     essp: {
-      tabsLabel: 'Home banners',
-      prev: 'Previous banner',
-      next: 'Next banner',
       store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
       tabs: { order: 'Order coffee', barista: 'Be a barista' },
       mapLabel: 'Map of Bogotá with street sales and street baristas',
@@ -768,9 +762,6 @@ const translations = {
       },
     },
     essp: {
-      tabsLabel: 'トップのバナー',
-      prev: '前のバナー',
-      next: '次のバナー',
       store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },
       tabs: { order: 'コーヒーを頼む', barista: 'バリスタになる' },
       mapLabel: '路上販売とバリスタを示すボゴタの地図',
