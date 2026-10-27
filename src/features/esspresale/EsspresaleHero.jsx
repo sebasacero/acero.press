@@ -14,8 +14,7 @@ import './esspresale.css';
 
 // Primera sección del sitio: dos banners dibujados como las tarjetas de redes,
 // en carrusel, uno después del otro: «Pide café en AeroPress a domicilio» y
-// «Vive del café con tu AeroPress». Pasan solos (pedido del usuario) hasta que
-// la persona elige uno con las flechas, las píldoras o el dedo.
+// «Vive del café con tu AeroPress». Pasan solos y con el dedo (pedido del usuario).
 
 // Cifras del celular y del panel de «Para tinteros»: un día de ejemplo, marcado como tal
 const EXAMPLE_DAY = { stops: ['1', '4'], specs: ['3,2 km', '14', '38'] };
@@ -44,33 +43,12 @@ const BG_VIEW = (w) =>
 // y los tinteros registrados; sin datos, la demanda de ejemplo de siempre.
 const withLayers = (layers) => (w) => (layers ? { ...BG_VIEW(w), heatPoints: layers.heatPoints, pinPoints: layers.pinPoints, pins: layers.pinPoints.length > 0 } : BG_VIEW(w));
 
-// Cada banner dura su turno y pasa al siguiente; se detiene con el cursor o el
-// foco encima y deja de pasar solo en cuanto la persona elige uno.
+// Cada banner dura su turno y pasa al siguiente; se detiene mientras el cursor o
+// el foco están encima. Sin flechas ni píldoras (pedido del usuario): pasa solo,
+// con el dedo, o con «Soy barista»; por eso nunca deja de pasar del todo.
 const TURN_MS = 8000;
 
-function CarouselControls({ index, onSelect, playing, paused }) {
-  const { t } = useLanguage();
-  const kinds = ['order', 'barista'];
-  const step = (d) => onSelect((index + d + kinds.length) % kinds.length);
-  return (
-    <div
-      className={`essp-carousel${playing ? ' is-playing' : ''}${paused ? ' is-paused' : ''}`}
-      style={{ '--essp-turn': `${TURN_MS}ms` }}
-    >
-      <button type="button" className="essp-carousel-arrow" onClick={() => step(-1)} aria-label={t('essp.prev')}>‹</button>
-      <div className="essp-carousel-tabs" role="tablist" aria-label={t('essp.tabsLabel')}>
-        {kinds.map((key, i) => (
-          <button key={key} type="button" role="tab" aria-selected={index === i} onClick={() => onSelect(i)}>
-            <span>{t(`essp.tabs.${key}`)}</span>
-          </button>
-        ))}
-      </div>
-      <button type="button" className="essp-carousel-arrow" onClick={() => step(1)} aria-label={t('essp.next')}>›</button>
-    </div>
-  );
-}
-
-function Slide({ kind, active, index, onSelect, playing, paused, street = null, streetLayers = null, whatsapp, stores }) {
+function Slide({ kind, active, onSelect, street = null, streetLayers = null, whatsapp, stores }) {
   const { t } = useLanguage();
   const ref = useRef(null);
   const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
@@ -172,8 +150,6 @@ function Slide({ kind, active, index, onSelect, playing, paused, street = null, 
             <p className="essp-panel-text">{k('panelText')}</p>
           </aside>
         </div>
-        {/* key: la píldora activa vuelve a llenarse desde cero en cada turno */}
-        <CarouselControls key={active ? index : 'idle'} index={index} onSelect={onSelect} playing={playing && active} paused={paused} />
       </div>
     </section>
   );
@@ -186,12 +162,13 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const { layers: streetLayers, summary: street } = useStreetMap();
   // #baristas (el menú, un enlace compartido) abre «Para baristas»; #tinteros sigue sirviendo para enlaces viejos
   const [index, setIndex] = useState(() => (BARISTA_HASHES.includes(window.location.hash) ? 1 : 0));
-  // Pasa solo hasta que la persona elige (o llega con #baristas, o pidió menos movimiento)
-  const [auto, setAuto] = useState(() => !BARISTA_HASHES.includes(window.location.hash) && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  // Pasa solo, salvo si llega con #baristas (vino a ese banner) o pidió menos movimiento
+  const [auto] = useState(() => !BARISTA_HASHES.includes(window.location.hash) && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const [hold, setHold] = useState(false);
   const [onScreen, setOnScreen] = useState(true);
   const root = useRef(null);
-  const select = useCallback((i) => { setAuto(false); setIndex(i); }, []);
+  // Elegir (con el dedo o «Soy barista») reinicia el turno del banner elegido
+  const select = useCallback((i) => setIndex(i), []);
   useEffect(() => {
     const onHash = () => { if (BARISTA_HASHES.includes(window.location.hash)) select(1); };
     window.addEventListener('hashchange', onHash);
@@ -249,8 +226,8 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     >
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} index={index} onSelect={select} playing={auto} paused={paused} street={street} streetLayers={streetLayers} stores={stores} />
-        <Slide kind="barista" active={index === 1} index={index} onSelect={select} playing={auto} paused={paused} whatsapp={whatsapp} stores={stores} />
+        <Slide kind="order" active={index === 0} onSelect={select} street={street} streetLayers={streetLayers} stores={stores} />
+        <Slide kind="barista" active={index === 1} onSelect={select} whatsapp={whatsapp} stores={stores} />
       </div>
     </header>
   );

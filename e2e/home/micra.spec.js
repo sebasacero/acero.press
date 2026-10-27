@@ -21,8 +21,11 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await micra.scrollIntoViewIfNeeded();
   await expect(micra.getByRole('heading', { level: 2 }).first()).toContainText('Micra.');
   await expect(micra.locator('.essp-script').first()).toHaveText('la app que fomenta el barismo');
-  // Sin los cuadros de los frentes: en su lugar, las fichas de redes con su video y el botón de la app
-  await expect(micra.locator('.micra-steps')).toHaveCount(0);
+  // Tres pasos cortos junto al texto y, en el panel del celular, las cifras reales del estudio
+  await expect(micra.locator('.micra-steps li')).toHaveCount(3);
+  await expect(micra.getByRole('list', { name: 'El estudio de calle hoy' }).locator('b')).toHaveText(['40', '1', '2']);
+  await expect(micra.getByRole('group', { name: 'Descarga la app Micra' })).toBeVisible();
+  // Abajo, las fichas de redes con su video y el botón de la app
   const banners = micra.locator('#publicaciones .posts-banner');
   await expect(banners).toHaveCount(3);
   await expect(banners.locator('video')).toHaveCount(3);
@@ -41,7 +44,7 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   const stores = hero.getByRole('group', { name: 'Descarga la app Micra' }).first();
   await expect(stores.getByRole('img', { name: 'Muy pronto en App Store' })).toBeVisible();
   await expect(stores.getByRole('img', { name: 'Muy pronto en Google Play' })).toBeVisible();
-  await hero.getByRole('tab', { name: 'Ser barista' }).click();
+  await hero.getByRole('button', { name: 'Soy barista' }).click();
   await expect(hero.getByRole('heading', { level: 2 }).filter({ hasText: 'Vive' })).toContainText(/Vive\s*del café\.\s*con tu AeroPress/);
   await expect(hero.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /wa\.me\/\d+\?text=/);
   // Un aliado no se nombra antes de serlo
@@ -65,31 +68,45 @@ test('sin estudio aún, el celular marca su mapa como de ejemplo', async ({ brow
 test('los enlaces viejos a /#tinteros y /#baristas abren el banner «Ser barista»', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/#tinteros', { waitUntil: 'load' });
-  await expect(page.locator('#baristas').getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#baristas .essp-slide--photo')).toHaveAttribute('aria-hidden', 'false');
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('los banners del principio van en carrusel, sin la tabla de zona y hora', async ({ browser }) => {
+test('los banners del principio van en carrusel, sin tabla ni botones de control', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.clock.install();
   await page.goto('/', { waitUntil: 'load' });
   const hero = page.locator('#baristas');
   await expect(hero).toHaveAttribute('aria-roledescription', 'carousel');
   await expect(hero.getByText(/^(ZONA|HORA|FECHA|PREPARA)$/)).toHaveCount(0);
-  const order = hero.getByRole('tab', { name: 'Pide café' });
-  await expect(order).toHaveAttribute('aria-selected', 'true');
+  await expect(hero.getByRole('tab')).toHaveCount(0);
+  await expect(hero.getByRole('button', { name: /anterior|siguiente/i })).toHaveCount(0);
+  const order = hero.locator('.essp-slide--paper');
+  const barista = hero.locator('.essp-slide--photo');
+  await expect(order).toHaveAttribute('aria-hidden', 'false');
   // Pasa solo al siguiente banner y vuelve al primero
   await page.clock.runFor(8500);
-  await expect(hero.getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
+  await expect(barista).toHaveAttribute('aria-hidden', 'false');
   await page.clock.runFor(8500);
-  await expect(order).toHaveAttribute('aria-selected', 'true');
-  // Con las flechas se elige, y desde ahí ya no pasa solo
-  await hero.getByRole('button', { name: /siguiente/i }).click();
-  await expect(hero.getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
-  await page.mouse.move(0, 890);
+  await expect(order).toHaveAttribute('aria-hidden', 'false');
+  // Con el cursor encima se queda quieto
+  await page.mouse.move(700, 400);
   await page.clock.runFor(20000);
-  await expect(hero.getByRole('tab', { name: 'Ser barista' })).toHaveAttribute('aria-selected', 'true');
+  await expect(order).toHaveAttribute('aria-hidden', 'false');
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('la pestaña del navegador lleva el icono térmico', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.goto('/', { waitUntil: 'load' });
+  await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
+  for (const href of ['/image/icono-32.png', '/image/icono-64.png']) {
+    await expect(page.locator(`link[rel="icon"][href="${href}"]`)).toHaveCount(1);
+    expect((await page.request.get(href)).status(), href).toBe(200);
+  }
+  await expect(page.locator('link[rel="apple-touch-icon"], link[rel="manifest"]')).toHaveCount(0);
   expect(errors).toEqual([]);
   await page.context().close();
 });
