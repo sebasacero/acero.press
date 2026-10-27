@@ -28,18 +28,13 @@ const minutes = (a, b) => Math.max(0, Math.round((Date.parse(b) - Date.parse(a))
 
 function useManifest() {
   useEffect(() => {
-    // index.html ya trae el manifiesto del sitio y el navegador usa el primero: se cambia ese, no se agrega otro
-    const existing = document.querySelector('link[rel="manifest"]');
-    const link = existing ?? document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'manifest' }));
-    const prevHref = existing?.getAttribute('href');
+    const link = document.createElement('link');
+    link.rel = 'manifest';
     link.href = '/ruta.webmanifest';
+    document.head.appendChild(link);
     const prevTitle = document.title;
     document.title = 'Micra · Mi ruta';
-    return () => {
-      if (existing) existing.setAttribute('href', prevHref);
-      else link.remove();
-      document.title = prevTitle;
-    };
+    return () => { link.remove(); document.title = prevTitle; };
   }, []);
 }
 

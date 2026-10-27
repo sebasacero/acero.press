@@ -95,15 +95,15 @@ test('los banners del principio van en carrusel, sin tabla ni botones de control
   await page.context().close();
 });
 
-test('la web usa el icono térmico en la pestaña, el iPhone y el manifiesto', async ({ browser }) => {
+test('la pestaña del navegador lleva el icono térmico', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
-  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/image/icono-180.png');
-  for (const href of ['/image/icono-32.png', '/image/icono-180.png', '/image/icono-192.png', '/image/icono-512.png', '/site.webmanifest']) {
+  await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
+  for (const href of ['/image/icono-32.png', '/image/icono-64.png']) {
+    await expect(page.locator(`link[rel="icon"][href="${href}"]`)).toHaveCount(1);
     expect((await page.request.get(href)).status(), href).toBe(200);
   }
-  const manifest = await (await page.request.get('/site.webmanifest')).json();
-  expect(manifest.icons.map((i) => i.sizes)).toEqual(['192x192', '512x512']);
+  await expect(page.locator('link[rel="apple-touch-icon"], link[rel="manifest"]')).toHaveCount(0);
   expect(errors).toEqual([]);
   await page.context().close();
 });

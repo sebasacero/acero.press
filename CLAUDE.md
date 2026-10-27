@@ -46,7 +46,7 @@ Antes de dar algo por terminado: `npm test`, `npm run build` (sin avisos nuevos 
 - e2e: espera con `expect.poll`/locators, no con `waitForTimeout`; los selectores por rol o `data-testid` cuando los toques.
 - Una variable de entorno nueva se documenta en `SETUP.md` en el mismo cambio.
 - Diseño (auditoría del 26 oct 2026): un solo rojo, `var(--red)` (#DE1B1B, 4,9:1 con blanco; `--magenta` y `--yt` son alias); nada de rojos, morados o dorados sueltos. Letra: Archivo (títulos y lectura), JetBrains Mono (etiquetas y cifras), Permanent Marker (el subrayado a mano). Todo lo que se toca mide 44 × 44 px o más (bloque al final de `index.css`). Un solo `h1` por página.
-- Medios en `public/image/`; nada por encima de ~1 MB sin comprimir y sin una razón escrita en el commit. La carpeta `image/` de la raíz es legado, sin uso. Iconos de la web: `public/image/icono-{32,180,192,512}.png` (el icono térmico) y `public/site.webmanifest`; `/ruta` tiene los suyos.
+- Medios en `public/image/`; nada por encima de ~1 MB sin comprimir y sin una razón escrita en el commit. La carpeta `image/` de la raíz es legado, sin uso. Miniatura de la pestaña: `public/image/icono-{32,64}.png` (el icono térmico); sin icono de iPhone ni manifiesto en el sitio.
 
 ## Reglas
 - Nunca pedir ni pegar secretos en el chat (claves, tokens, `.env`).
