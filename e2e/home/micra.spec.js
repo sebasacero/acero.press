@@ -50,7 +50,7 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   // Un aliado no se nombra antes de serlo
   await expect(page.locator('body')).not.toContainText(/Amor Perfecto/i);
   // Los llamados: WhatsApp con el mensaje listo y la Escuela
-  await expect(micra.getByRole('link', { name: 'Vendo café en la calle' })).toHaveAttribute('href', /wa\.me\/\d+\?text=.*Micra/);
+  await expect(micra.getByRole('link', { name: 'Vendo café', exact: true })).toHaveAttribute('href', /wa\.me\/\d+\?text=.*Micra/);
   await expect(micra.getByRole('link', { name: 'Empezar la Escuela', exact: true })).toHaveAttribute('href', '/escuela');
   expect(errors).toEqual([]);
   await page.context().close();
