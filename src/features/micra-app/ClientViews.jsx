@@ -4,6 +4,7 @@ import {
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS,
 } from './micraApp.js';
 import * as api from './api.js';
+import platform from './platform.js';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
@@ -57,14 +58,13 @@ function StatusBadge({ s }) {
 }
 
 function shareBarista(b) {
-  const url = window.location.origin + baristaPath(b.id);
+  const url = platform.siteUrl(baristaPath(b.id));
   const text = `${b.name} vende café ${b.referencia ? `en ${b.referencia}` : 'en la calle'}. Apártale en Micra:`;
-  if (navigator.share) navigator.share({ title: `${b.name} en Micra`, text, url }).catch(() => {});
-  else window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener');
+  platform.share({ title: `${b.name} en Micra`, text, url });
 }
 
 function inviteText() {
-  const url = `${window.location.origin}/micra`;
+  const url = platform.siteUrl('/micra');
   return `¿Vendes café en la calle? Con Micra tus clientes te apartan los tintos antes de que llegues. Escríbele al equipo: ${url}`;
 }
 

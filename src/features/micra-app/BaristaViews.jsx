@@ -4,6 +4,7 @@ import {
   baristaPath, newRef, recentFiados,
 } from './micraApp.js';
 import * as api from './api.js';
+import platform from './platform.js';
 
 // Modo barista: salí, quién me espera, +1 por taza, fiados y el día. Pensado
 // para una mano, al sol y con mala señal: los +1 se guardan en el celular y
@@ -242,10 +243,9 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
     setBusy(null);
   };
   const shareLink = () => {
-    const url = window.location.origin + baristaPath(day.id);
+    const url = platform.siteUrl(baristaPath(day.id));
     const text = `Apártame tus tintos en Micra y te los tengo listos cuando pase:`;
-    if (navigator.share) navigator.share({ title: `${first} en Micra`, text, url }).catch(() => {});
-    else window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank', 'noopener');
+    platform.share({ title: `${first} en Micra`, text, url });
   };
   const waiting = day.holds.filter((h) => h.status === 'waiting');
   const bars = weekBars(day.week);
@@ -358,7 +358,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
           <section className="mapp-glass mapp-share">
             <p className="mapp-cota">Tu enlace</p>
             <p>Mándalo a tus clientes fijos o pégalo en tu termo: con él te apartan.</p>
-            <code>{window.location.host}{baristaPath(day.id)}</code>
+            <code>{platform.siteUrl(baristaPath(day.id)).replace(/^https?:\/\//, '')}</code>
             <span className="mapp-row-btns">
               <button type="button" className="mapp-btn is-small" onClick={shareLink}>Compartir</button>
               <button type="button" className="mapp-link" onClick={() => go(baristaPath(day.id))}>Ver como cliente</button>
@@ -368,7 +368,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
           {showPrices
             ? <Prices day={day} asId={asId} onSaved={() => { setShowPrices(false); load(); }} />
             : <button type="button" className="mapp-link" onClick={() => setShowPrices(true)}>Cambiar mis precios</button>}
-          {!asId && <a className="mapp-link" href="/ruta">Medir mi recorrido (Mi ruta)</a>}
+          {!asId && <a className="mapp-link" href={platform.siteUrl('/ruta')}>Medir mi recorrido (Mi ruta)</a>}
         </>
       )}
     </div>

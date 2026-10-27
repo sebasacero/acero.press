@@ -1,5 +1,6 @@
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { newRef } from './micraApp.js';
+import platform from './platform.js';
 
 // Llamadas de la app Micra a la base (supabase/migrations/20261026210000_micra_app.sql).
 // Todas por funciones: la base pone precios y decide quién puede qué. `as` es el
@@ -64,20 +65,9 @@ export async function isAdmin(userId) {
   return !error && !!data;
 }
 
-export const signIn = (next) => supabase.auth.signInWithOAuth({
-  provider: 'google',
-  options: { redirectTo: window.location.origin + (next || window.location.pathname) + window.location.search },
-});
+// En el celular instalado se entra por el navegador del sistema y se vuelve por enlace (native/)
+export const signIn = (next) => platform.signIn(next);
 export const signOut = () => supabase.auth.signOut();
 
 /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
-export function onePosition(timeout = 8000) {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) { resolve(null); return; }
-    navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => resolve(null),
-      { enableHighAccuracy: false, timeout, maximumAge: 120000 },
-    );
-  });
-}
+export const onePosition = (timeout) => platform.position(timeout);

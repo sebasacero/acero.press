@@ -1,0 +1,81 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { Geolocation } from '@capacitor/geolocation';
+import { Share } from '@capacitor/share';
+import { supabase } from '../../../shared/lib/supabaseClient.js';
+import { SITE, setPlatform } from '../platform.js';
+import { AUTH_REDIRECT, authFromUrl, micraPathFromUrl, startPath } from './deepLink.js';
+import MicraApp from '../MicraApp.jsx';
+import '../../../index.css';
+
+// Micra instalada en Android e iOS (Capacitor, micra.html → dist-micra/). Son las
+// mismas pantallas de /micra; aquí solo se cambia lo que en el celular se hace
+// distinto: GPS, compartir, salir a WhatsApp o al sitio y entrar con Google.
+
+const go = (path) => {
+  window.history.pushState(null, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+};
+
+setPlatform({
+  native: true,
+  siteUrl: (path = '/') => SITE + path,
+  // Capacitor abre fuera de la app (WhatsApp, Safari, Chrome) todo lo que no es localhost
+  openExternal: (url) => { window.location.href = url; },
+  share: ({ title, text, url }) => Share.share({ title, text, url, dialogTitle: title }).catch(() => {}),
+  position: async (timeout = 8000) => {
+    try {
+      const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout, maximumAge: 120000 });
+      return { lat: p.coords.latitude, lng: p.coords.longitude };
+    } catch { return null; }
+  },
+  // Google no deja entrar desde una vista web dentro de la app: se abre el navegador
+  // del sistema y Supabase vuelve a la app por el esquema propio (AUTH_REDIRECT)
+  signIn: async (next) => {
+    if (next) try { sessionStorage.setItem('micra_after_login', next); } catch { /* sin memoria */ }
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: AUTH_REDIRECT, skipBrowserRedirect: true },
+    });
+    if (error) throw error;
+    await Browser.open({ url: data.url, presentationStyle: 'popover' });
+  },
+  // Letras de la barra del sistema claras de noche y oscuras de día, como el fondo de Micra
+  setNight: (night) => { SystemBars.setStyle({ style: night ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {}); },
+});
+
+async function openUrl(url) {
+  const auth = authFromUrl(url);
+  if (auth) {
+    Browser.close().catch(() => { /* Android cierra la pestaña solo */ });
+    if (auth.code) await supabase.auth.exchangeCodeForSession(auth.code);
+    else if (auth.access_token) await supabase.auth.setSession(auth);
+    else window.alert(`No se pudo entrar: ${auth.error}`);
+    let next = null;
+    try { next = sessionStorage.getItem('micra_after_login'); sessionStorage.removeItem('micra_after_login'); } catch { /* sin memoria */ }
+    if (next && next !== window.location.pathname) go(next);
+    return;
+  }
+  const path = micraPathFromUrl(url);
+  if (path) go(path);
+}
+
+App.addListener('appUrlOpen', ({ url }) => { openUrl(url); });
+App.getLaunchUrl().then((r) => r?.url && openUrl(r.url)).catch(() => {});
+// Atrás en Android: primero dentro de Micra; en el inicio, la app se va al fondo
+App.addListener('backButton', ({ canGoBack }) => {
+  if (canGoBack && window.location.pathname !== '/micra') window.history.back();
+  else App.minimizeApp();
+});
+
+document.documentElement.classList.add(`is-${Capacitor.getPlatform()}`);
+window.history.replaceState(null, '', startPath(window.location.pathname) + window.location.search);
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <MicraApp />
+  </React.StrictMode>
+);

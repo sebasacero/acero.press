@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { money, cupsLabel, weekBars, weekdayLetter, baristaPath } from './micraApp.js';
 import * as api from './api.js';
+import platform from './platform.js';
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle), qué le falta a cada barista para vender por Micra y el código para
@@ -36,8 +37,8 @@ export default function OwnerView({ onActAs, go }) {
     } catch (e) { setError(e.message); }
   };
   const sendCode = (b, code) => {
-    const url = `${window.location.origin}/micra/barista?codigo=${code}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(`Hola, ${b.name.split(' ')[0]}. Este es tu enlace para entrar a Micra: ${url} (tu código es ${code}, vence en 7 días).`)}`, '_blank', 'noopener');
+    const url = platform.siteUrl(`/micra/barista?codigo=${code}`);
+    platform.openExternal(`https://wa.me/?text=${encodeURIComponent(`Hola, ${b.name.split(' ')[0]}. Este es tu enlace para entrar a Micra: ${url} (tu código es ${code}, vence en 7 días).`)}`);
   };
 
   if (error && !data) return <p className="mapp-error" role="alert">{error}</p>;
@@ -100,7 +101,7 @@ export default function OwnerView({ onActAs, go }) {
           })}
         </ul>
       </section>
-      <a className="mapp-link" href="/admin">Abrir el panel completo</a>
+      <a className="mapp-link" href={platform.siteUrl('/admin')}>Abrir el panel completo</a>
     </div>
   );
 }

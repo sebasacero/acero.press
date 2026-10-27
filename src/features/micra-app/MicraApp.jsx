@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { isNight, parseRoute } from './micraApp.js';
 import * as api from './api.js';
+import platform from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
@@ -18,6 +19,8 @@ const MODE_KEY = 'micra_mode_v1';
 
 function useManifest() {
   useEffect(() => {
+    // Instalada en el celular no hay nada que instalar ni pestaña que titular
+    if (platform.native) return undefined;
     // El navegador usa el primer manifiesto: si el sitio ya trae uno, se le cambia el href y se devuelve al salir
     const existing = document.querySelector('link[rel="manifest"]');
     const link = existing ?? document.createElement('link');
@@ -121,8 +124,7 @@ export default function MicraApp() {
   };
 
   useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = night ? '#0E0F12' : '#FFFFFF';
+    platform.setNight(night);
   }, [night]);
 
   let body;
@@ -162,7 +164,7 @@ export default function MicraApp() {
           <button type="button" className={route.view === 'holds' ? 'on' : ''} onClick={() => go('/micra/apartados')}>
             <span aria-hidden="true">☕</span>Mis apartados
           </button>
-          <a href="/"><span aria-hidden="true">↗</span>aceropress</a>
+          <a href={platform.siteUrl('/')}><span aria-hidden="true">↗</span>aceropress</a>
         </nav>
       )}
     </div>

@@ -47,7 +47,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+  padding: max(10px, var(--safe-area-inset-top, env(safe-area-inset-top))) 16px 10px;
   background: color-mix(in srgb, var(--m-bg) 82%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -103,9 +103,9 @@
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  padding: 18px 16px calc(96px + env(safe-area-inset-bottom));
+  padding: 18px 16px calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
 }
-.mapp.is-barista .mapp-main, .mapp.is-owner .mapp-main { padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+.mapp.is-barista .mapp-main, .mapp.is-owner .mapp-main { padding-bottom: max(32px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
 
 /* ── Texto ───────────────────────────────────────────────────────── */
 .mapp-kicker, .mapp-cota {
@@ -313,7 +313,7 @@
 .mapp-tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
   display: grid; grid-template-columns: repeat(3, 1fr);
-  padding: 6px 8px max(8px, env(safe-area-inset-bottom));
+  padding: 6px 8px max(8px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
   background: color-mix(in srgb, var(--m-bg) 86%, transparent);
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--m-line);
@@ -388,4 +388,4 @@
   .mapp-map { height: 300px; }
 }
 /* El botón de apartar sigue a la vista mientras se eligen las tazas */
-.mapp-order > .mapp-btn.is-cta { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 2; box-shadow: 0 8px 24px rgba(222, 27, 27, .25); }
+.mapp-order > .mapp-btn.is-cta { position: sticky; bottom: calc(76px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); z-index: 2; box-shadow: 0 8px 24px rgba(222, 27, 27, .25); }
