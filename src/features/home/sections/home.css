@@ -192,6 +192,30 @@
   .micra-social .posts-banner { flex: 0 0 78%; scroll-snap-align: start; aspect-ratio: 4 / 3; }
 }
 
+/* Las personas de la calle: los personajes parados sobre un andén a trazo, en la hoja crema */
+.people { position: relative; display: grid; gap: 22px; background: var(--cream, #F5EEE2); border-radius: 22px; padding: 34px 34px 22px; overflow: hidden; }
+.people-head { display: grid; gap: 8px; max-width: 62ch; }
+.people-title { margin: 0; font: 800 clamp(1.6rem, 3.4cqi, 2.6rem)/1.05 Archivo, sans-serif; letter-spacing: -.02em; text-transform: uppercase; color: var(--ink); }
+.people-text { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.people-row { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: stretch; position: relative; }
+/* El andén: la línea de la acera y su raya, como en el guion */
+.people-row::before { content: ''; position: absolute; left: -34px; right: -34px; bottom: calc(2.7em + 28px); font-size: 10px; height: 3px; background: var(--ink); }
+.people-row::after { content: ''; position: absolute; left: -34px; right: -34px; bottom: calc(2.7em + 10px); font-size: 10px; border-top: 2px dashed rgba(28, 37, 65, .45); }
+.people-item { position: relative; display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 30px; min-width: 0; }
+.people-item img { display: block; height: clamp(180px, 22cqi, 300px); width: auto; max-width: 100%; object-fit: contain; object-position: bottom; position: relative; z-index: 1; align-self: end; }
+.people-item--ruta img, .people-item--pareja img { height: clamp(170px, 21cqi, 285px); }
+.people-item span { font: 600 10px/1.35 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); text-align: center; height: 2.7em; max-width: 22ch; }
+.people-note { margin: 0; font: 500 10px/1.4 'JetBrains Mono', monospace; letter-spacing: .04em; color: var(--ink-soft); }
+@container (max-width: 760px) {
+  .people { padding: 26px 20px 18px; border-radius: 18px; }
+  .people-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 4px; margin: 0 -20px; padding: 0 20px; scrollbar-width: none; }
+  /* Al deslizar, cada persona lleva su tramo de andén */
+  .people-row::before, .people-row::after { display: none; }
+  .people-item { flex: 0 0 46%; scroll-snap-align: start; }
+  .people-item::before { content: ''; position: absolute; left: -2px; right: -2px; bottom: calc(2.7em + 28px); font-size: 10px; height: 3px; background: var(--ink); }
+  .people-item::after { content: ''; position: absolute; left: -2px; right: -2px; bottom: calc(2.7em + 10px); font-size: 10px; border-top: 2px dashed rgba(28, 37, 65, .45); }
+  .people-item img, .people-item--ruta img, .people-item--pareja img { height: 230px; }
+}
 
 
 /* --- Las fichas de redes (en Micra) --- */
@@ -244,6 +268,12 @@
 .brew-legend .is-cold { color: var(--ink); }
 .brew .is-hot { color: var(--red); }
 .brew b.is-cold, .brew .brew-serve .is-cold { color: var(--ink); }
+
+/* La hoja y, al pie a la derecha, una persona de la calle (decorativa: se va donde no cabe) */
+.brew-stage { position: relative; display: grid; min-height: 0; }
+.brew-persona { position: absolute; right: 18px; bottom: 2px; height: min(58%, 420px); width: auto; pointer-events: none; z-index: 1; }
+@container (max-width: 980px) { .brew-persona { display: none; } }
+@media (max-height: 560px) { .brew-persona { display: none; } }
 
 /* La hoja: papel cuadriculado de 12 px; los diez pasos apilados en la misma celda, solo uno visible */
 .brew-sheet {

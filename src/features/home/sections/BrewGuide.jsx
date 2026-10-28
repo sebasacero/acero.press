@@ -1,5 +1,6 @@
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import StepScrolly from './StepScrolly.jsx';
+import { personaSrc } from './StreetPeople.jsx';
 
 // Aprende: la hoja de instrucciones de AeroPress Go, en diez pasos con su dibujo, contada con el
 // scroll: la hoja queda fija en pantalla y cada tramo de scroll pasa al siguiente paso (dibujo
@@ -19,6 +20,7 @@ export default function BrewGuide() {
       steps={t('brew.steps')}
       labels={{ dots: t('brew.dots'), goStep: t('brew.goStep'), swipe: t('brew.swipe') }}
       source={t('brew.source')}
+      persona={personaSrc('ruana')}
       ctas={(
         <>
           <a className="essp-btn" href="/escuela#leccion-2">{t('brew.cta')} →</a>
