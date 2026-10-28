@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import BrewDrawing from './brewDrawings.jsx';
+import StreetScene from './StreetScene.jsx';
 import { scrollProgress, stepAt, progressFor } from '../lib/scrolly.js';
 import './home.css';
 
@@ -9,7 +10,10 @@ import './home.css';
 // Todos los pasos siguen en la lista (los no activos, transparentes) para lectores de pantalla.
 // En pantallas bajas (celular acostado) no hay altura para fijar la hoja: los pasos pasan a una
 // fila que se desliza con el dedo (CSS). Cada paso puede elegir su dibujo con `draw`.
-export default function StepScrolly({ id, tag, badge, title, script, legend, steps, labels, source, ctas, persona, headingLevel = 2 }) {
+// Se cuenta en la calle del guion de Micra: la calle a trazo al pie (StreetScene), la hoja
+// como tarjeta blanca encima y, si se pasa `persona`, una persona de la calle parada en el
+// andén junto a la hoja (`streetSeed` cambia las fachadas de una sección a otra).
+export default function StepScrolly({ id, tag, badge, title, script, legend, steps, labels, source, ctas, persona, streetSeed = 7, headingLevel = 2 }) {
   const n = steps.length;
   const ref = useRef(null);
   const [active, setActive] = useState(0);
@@ -49,6 +53,9 @@ export default function StepScrolly({ id, tag, badge, title, script, legend, ste
     <section ref={ref} className="brew" id={id} aria-labelledby={`${id}-title`} style={{ '--brew-steps': n }}>
       <div className="brew-pin">
         <SheetFrame />
+        <StreetScene className="brew-street" seed={streetSeed} />
+        {/* Una persona de la calle parada en el andén, junto a la hoja (decorativa: se va donde no cabe) */}
+        {persona && <img className="brew-persona" src={persona} alt="" decoding="async" loading="lazy" aria-hidden="true" />}
         <div className="brew-in">
           <div className="brew-head">
             <div className="essp-tag">{tag} {badge && <span className="essp-new">{badge}</span>}</div>
@@ -93,8 +100,6 @@ export default function StepScrolly({ id, tag, badge, title, script, legend, ste
                 </li>
               ))}
             </ol>
-            {/* Una persona de la calle al pie de la hoja, como quien la sigue con su AeroPress */}
-            {persona && <img className="brew-persona" src={persona} alt="" decoding="async" loading="lazy" aria-hidden="true" />}
           </div>
           {/* El aviso para que se entienda que se baja: en el primer paso; al bajar se va (ya se entendió) */}
           <div className={`brew-swipe${active > 0 ? ' is-gone' : ''}`} aria-hidden="true">
