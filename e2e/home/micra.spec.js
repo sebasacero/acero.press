@@ -98,11 +98,11 @@ test('los banners del principio van en carrusel, sin tabla ni botones de control
   await page.context().close();
 });
 
-test('la pestaña del navegador lleva el icono térmico', async ({ browser }) => {
+test('la pestaña del navegador lleva la miniatura de Micra', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
   await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
-  for (const href of ['/image/icono-32.png', '/image/icono-64.png']) {
+  for (const href of ['/image/favicon-micra-32.png', '/image/favicon-micra-64.png']) {
     await expect(page.locator(`link[rel="icon"][href="${href}"]`)).toHaveCount(1);
     expect((await page.request.get(href)).status(), href).toBe(200);
   }
