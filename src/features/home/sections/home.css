@@ -244,44 +244,50 @@
   .posts-banner { aspect-ratio: 16 / 7; }
 }
 
-/* --- 4. Aprende: la hoja de AeroPress Go contada con el scroll --- */
+/* --- 4. Aprende: la hoja de AeroPress Go contada con el scroll, en la calle del guion --- */
 /* La sección mide una pantalla más un tramo por paso; adentro, el panel queda fijo (sticky) y el
    avance elige el paso. overflow: clip (no hidden) para que sticky funcione. */
 .brew {
-  position: relative; overflow: clip; background: #fff; color: var(--ink);
+  position: relative; overflow: clip; background: var(--st-cream); color: var(--ink);
   container-type: inline-size; height: calc(100svh + var(--brew-steps, 10) * 26svh);
   --essp-fg: var(--ink); --essp-soft: var(--ink-soft); --essp-line: var(--ink);
+  --st-cream: #F5EEE2; --st-paper: #FBF7EF; --st-sand: #E3D3B8;
+  /* La calle al pie: alto del dibujo y, desde abajo, la línea del andén (80/420 del dibujo,
+     escalado por el ancho o por el alto, lo que mande) */
+  --street-h: clamp(220px, 34svh, 400px);
+  --street-ground: max(5.7cqi, calc(var(--street-h) * .19));
 }
 .brew-pin { position: sticky; top: 0; height: 100svh; }
 .brew .essp-sheet { z-index: 1; }
+.brew-street { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: var(--street-h); z-index: 0; }
+.brew-persona { position: absolute; right: 5%; bottom: var(--street-ground); height: min(46svh, 420px); width: auto; pointer-events: none; z-index: 2; }
 .brew-in {
   position: relative; z-index: 2; box-sizing: border-box; height: 100%;
   padding: 56px 58px 32px; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto; gap: 16px;
 }
+/* Con la persona a la derecha, la hoja y los botones le dejan su sitio */
+.brew:has(.brew-persona) .brew-stage, .brew:has(.brew-persona) .brew-foot, .brew:has(.brew-persona) .brew-dots { margin-right: clamp(200px, 20cqi, 300px); }
 .brew-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 40px; align-items: end; }
 .brew-head .essp-tag { grid-column: 1 / -1; }
 .brew-title { font-size: clamp(1.9rem, 3.6cqi, 3.4rem); }
 .brew-title .essp-script { margin-top: .5em; }
+/* La leyenda como las fichas del guion: pastillas blancas con sombra */
 .brew-legend { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; }
-.brew-legend li { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 7px 10px; border: 1.5px solid currentColor; }
+.brew-legend li { font: 700 11px/1 'JetBrains Mono', monospace; letter-spacing: .08em; padding: 10px 14px; border-radius: 999px; background: #fff; box-shadow: 0 10px 28px rgba(28, 37, 65, .12); display: flex; align-items: center; gap: 8px; }
+.brew-legend li::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
 .brew-legend .is-hot { color: var(--red); }
 .brew-legend .is-cold { color: var(--ink); }
 .brew .is-hot { color: var(--red); }
 .brew b.is-cold, .brew .brew-serve .is-cold { color: var(--ink); }
 
-/* La hoja y, al pie a la derecha, una persona de la calle (decorativa: se va donde no cabe) */
-.brew-stage { position: relative; display: grid; min-height: 0; }
-.brew-persona { position: absolute; right: 18px; bottom: 2px; height: min(58%, 420px); width: auto; pointer-events: none; z-index: 1; }
-@container (max-width: 980px) { .brew-persona { display: none; } }
-@media (max-height: 560px) { .brew-persona { display: none; } }
+.brew-stage { position: relative; display: grid; min-height: 0; align-content: start; }
 
-/* La hoja: papel cuadriculado de 12 px; los diez pasos apilados en la misma celda, solo uno visible */
+/* La hoja: tarjeta blanca redondeada con sombra, como las tarjetas del guion; los diez pasos
+   apilados en la misma celda, solo uno visible */
 .brew-sheet {
-  list-style: none; margin: 0; padding: 22px 28px; display: grid; min-height: 0;
-  border: 2px solid var(--ink);
-  background-color: #fff;
-  background-image: linear-gradient(rgba(42, 53, 80, .09) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 53, 80, .09) 1px, transparent 1px);
-  background-size: 12px 12px;
+  list-style: none; margin: 0; padding: 24px 32px; display: grid; min-height: 0; max-height: min(100%, 60svh);
+  background: #fff; border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(28, 37, 65, .14), 0 4px 14px rgba(28, 37, 65, .06);
 }
 .brew-sheet li {
   grid-area: 1 / 1; position: relative; min-width: 0; min-height: 0;
@@ -295,14 +301,40 @@
   font: 600 11px/1.3 'JetBrains Mono', monospace; color: var(--ink-soft);
 }
 .brew-notes span:nth-child(even) { color: var(--ink); font-weight: 700; margin-bottom: 4px; }
-.brew-num { grid-column: 2; align-self: end; font: 800 clamp(48px, 6cqi, 88px)/1 'Archivo', sans-serif; color: var(--ink); }
-.brew-num small { font-size: .28em; font-weight: 600; color: var(--ink-soft); margin-left: 4px; font-family: 'JetBrains Mono', monospace; }
+/* El número del paso, como la tarjeta oscura «Entregado» del guion */
+.brew-num {
+  grid-column: 2; align-self: end; justify-self: start; display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 10px 18px; border-radius: 18px; background: var(--ink); color: #fff;
+  font: 800 clamp(26px, 3cqi, 40px)/1 'Archivo', sans-serif;
+  box-shadow: 0 16px 40px rgba(28, 37, 65, .2);
+}
+.brew-num small { font-size: .42em; font-weight: 700; color: rgba(255, 255, 255, .6); font-family: 'JetBrains Mono', monospace; }
 .brew-sheet p { grid-column: 2; margin: 0; font: 600 clamp(17px, 1.8cqi, 23px)/1.4 'Archivo', sans-serif; max-width: 30ch; }
 .brew-sheet b { font-weight: 800; }
 .brew-serve { grid-column: 2; margin: 6px 0 0; display: grid; gap: 4px; font: 500 clamp(14px, 1.3cqi, 17px)/1.4 'Archivo', sans-serif; align-self: start; }
 .brew-serve dt { display: inline; font-weight: 800; color: var(--red); }
 .brew-serve .is-cold dt { color: var(--ink); }
 .brew-serve dd { display: inline; margin: 0; }
+
+/* La calle a trazo (StreetScene): tinta, arena y papel del guion */
+.street { display: block; }
+.street-sun { fill: none; stroke: var(--ink); stroke-width: 2.5; opacity: .5; }
+.street-hills { fill: var(--st-sand, #E3D3B8); opacity: .4; }
+.street-facade { opacity: .65; }
+.street-facade > rect:first-child { fill: var(--st-paper, #FBF7EF); stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.street-facade.is-sand > rect:first-child { fill: var(--st-sand, #E3D3B8); }
+.street-win { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.street-win.is-lit { fill: var(--st-sand, #E3D3B8); }
+.street-roof { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.street-door { fill: var(--st-paper, #FBF7EF); stroke: var(--ink); stroke-width: 2; }
+.street-lamp { stroke: var(--ink); stroke-width: 5; stroke-linecap: round; }
+.street-lamp-head { fill: var(--st-paper, #FBF7EF); stroke: var(--ink); stroke-width: 3; }
+.street-trunk { stroke: var(--ink); stroke-width: 7; stroke-linecap: round; }
+.street-crown { fill: var(--st-sand, #E3D3B8); stroke: var(--ink); stroke-width: 3; }
+.street-walk { fill: var(--st-paper, #FBF7EF); }
+.street-curb { stroke: var(--ink); stroke-width: 3; }
+.street-tile { stroke: var(--ink); stroke-width: 1; opacity: .45; }
+.street-stripe { stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 30 20; }
 
 /* «Desliza»: pastilla sobre la hoja que rebota en el primer paso y se va al bajar */
 .brew-swipe {
@@ -317,14 +349,16 @@
 @keyframes brew-bob { 50% { transform: translateY(4px); } }
 
 /* Puntos de avance: cada uno salta a su paso (área de 44 px, punto de 10) */
-.brew-dots { display: flex; justify-content: center; gap: 2px; }
+.brew-dots { display: flex; justify-content: center; justify-self: center; gap: 2px; padding: 0 10px; border-radius: 999px; background: #fff; box-shadow: 0 10px 28px rgba(28, 37, 65, .12); }
 .brew-dots button { width: 34px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
-.brew-dots button::before { content: ''; width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--ink); transition: width .25s ease, background .25s ease; }
+.brew-dots button::before { content: ''; width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid var(--ink); background: #fff; transition: width .25s ease, background .25s ease; }
 .brew-dots button.is-done::before { background: var(--ink); }
 .brew-dots button.is-on::before { width: 26px; background: var(--red); border-color: var(--red); }
 .brew-dots button:focus-visible { outline: 2px solid var(--red); outline-offset: -4px; }
 .brew-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px 18px; flex-wrap: wrap; }
-.brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink-soft); }
+.brew-source { font: 500 11.5px/1.4 'JetBrains Mono', monospace; color: var(--ink); padding: 9px 14px; border-radius: 999px; background: #fff; box-shadow: 0 10px 28px rgba(28, 37, 65, .12); }
+/* En la calle el botón de borde va sobre blanco, como una ficha */
+.brew .essp-btn.is-ghost { background: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .brew-sheet li, .brew-dots button::before, .brew-swipe { transition: none; }
@@ -334,15 +368,28 @@
   .brew-head { grid-template-columns: 1fr; }
   .brew-legend { display: none; } /* cada paso ya dice «Caliente» y «Cold brew» en su color */
 }
+/* Sin ancho para la persona junto a la hoja: se va, y la hoja vuelve a todo el ancho */
+@container (max-width: 980px) {
+  .brew-persona { display: none; }
+  .brew:has(.brew-persona) .brew-stage, .brew:has(.brew-persona) .brew-foot, .brew:has(.brew-persona) .brew-dots { margin-right: 0; }
+}
 @container (max-width: 760px) {
+  .brew { --street-h: 170px; }
   .brew-in { padding: 40px 22px 18px; gap: 10px; }
+  .brew-sheet { border-radius: 20px; }
+  .brew-num { padding: 8px 14px; border-radius: 14px; }
   .brew-head .essp-script { display: none; }
   .brew-title { font-size: clamp(1.6rem, 7.4cqi, 2.2rem); }
   .brew-sheet { padding: 14px; }
-  .brew-sheet li { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto auto; align-content: stretch; gap: 4px; }
-  .brew-draw { grid-column: 1; grid-row: 1; max-width: 300px; max-height: 100%; }
+  /* Número y texto arriba, el dibujo llena lo que queda: así el aviso «desliza» cae sobre el dibujo */
+  .brew-sheet li { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; align-content: stretch; gap: 6px; }
+  .brew-draw { grid-column: 1; grid-row: 3; max-width: 300px; max-height: 100%; }
   .brew-num, .brew-sheet p, .brew-serve { grid-column: 1; }
-  .brew-num { font-size: 40px; }
+  .brew-num { grid-row: 1; }
+  .brew-sheet p { grid-row: 2; }
+  .brew-serve { grid-row: 4; }
+  .brew-dots { max-width: 100%; }
+  .brew-num { font-size: 24px; }
   .brew-sheet p { font-size: 16px; max-width: none; }
   .brew-serve { font-size: 14px; }
   .brew-notes { display: none; }
@@ -356,8 +403,9 @@
 @media (max-width: 760px) and (max-height: 700px) {
   .brew-sheet li.is-serve .brew-draw { display: none; }
   .brew-sheet li.is-serve { grid-template-rows: auto auto auto; align-content: center; }
+  .brew-sheet li.is-serve .brew-serve { grid-row: 3; }
   .brew-sheet li.is-serve { gap: 2px; }
-  .brew-sheet li.is-serve .brew-num { font-size: 28px; }
+  .brew-sheet li.is-serve .brew-num { font-size: 20px; padding: 6px 12px; }
   .brew-sheet li.is-serve p { font-size: 15px; }
   .brew-sheet li.is-serve .brew-serve { font-size: 13px; line-height: 1.3; gap: 2px; margin-top: 2px; }
 }
@@ -366,6 +414,8 @@
 @media (max-height: 560px) {
   .brew { height: auto; }
   .brew-pin { position: relative; height: auto; }
+  .brew-street, .brew-persona { display: none; }
+  .brew:has(.brew-persona) .brew-stage, .brew:has(.brew-persona) .brew-foot, .brew:has(.brew-persona) .brew-dots { margin-right: 0; }
   .brew-in { height: auto; grid-template-rows: none; padding-top: 32px; padding-bottom: 24px; }
   .brew-head .essp-script, .brew-legend { display: none; }
   .brew-sheet {
@@ -376,12 +426,12 @@
     grid-area: auto; flex: 0 0 min(78%, 480px); scroll-snap-align: start;
     opacity: 1; transform: none; pointer-events: auto;
     grid-template-columns: minmax(0, 120px) minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: start; gap: 4px 14px;
-    padding: 10px; background: #fff; border: 1.5px solid rgba(42, 53, 80, .25);
+    padding: 10px; background: #fff; border: 1.5px solid rgba(42, 53, 80, .25); border-radius: 14px;
   }
   .brew-sheet li.is-serve .brew-draw { display: block; }
   .brew-draw { grid-column: 1; grid-row: 1 / 4; max-height: 150px; max-width: 120px; }
   .brew-num, .brew-sheet p, .brew-serve { grid-column: 2; }
-  .brew-num { font-size: 30px; align-self: start; }
+  .brew-num { font-size: 20px; align-self: start; padding: 6px 12px; border-radius: 12px; box-shadow: none; }
   .brew-sheet p { font-size: 15px; max-width: none; }
   .brew-serve { font-size: 13px; }
   .brew-notes, .brew-dots, .brew-swipe { display: none; }
