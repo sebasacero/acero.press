@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Los personajes animados (animado/*.svg, SMIL en bucle, sin JS por cuadro):
-// acompañan las esperas. Llegan aparte y solo cuando se muestran; se tiñen con
-// las mismas variables de la app, así de noche la línea es blanca. Con «menos
-// movimiento» quedan quietos en una pose que se entiende.
+// Los personajes de la calle animados (animado/*.svg): las ilustraciones
+// originales recortadas por partes que se mueven en bucle con SMIL, sin JS por
+// cuadro (scripts/animar-personajes los genera). Acompañan las esperas, llegan
+// aparte y solo cuando se muestran. Son dibujos a color fijo: de noche van
+// sobre una tarjeta crema. Con «menos movimiento» quedan quietos.
 
 const FIGURAS = {
   carrito: () => import('./animado/carrito.svg?raw'),
   ruana: () => import('./animado/ruana.svg?raw'),
   caminando: () => import('./animado/caminando.svg?raw'),
   aeropress: () => import('./animado/aeropress.svg?raw'),
-  molino: () => import('./animado/molino.svg?raw'),
   servir: () => import('./animado/servir.svg?raw'),
 };
 
