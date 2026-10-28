@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
   meters, distanceLabel, sortBaristas, filterBaristas, daySummary, weekBars, weekdayLetter, fiadoMessage,
-  parseRoute, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS,
+  parseRoute, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
 // 26 oct 2026, 7:30 a. m. en Bogotá (UTC−5)
@@ -132,4 +132,26 @@ test('referencias e iniciales', () => {
   assert.ok(r.length >= 8 && r.length <= 64);
   assert.equal(initials('Marlene Rojas Díaz'), 'MR');
   assert.equal(initials(''), '?');
+});
+
+test('holdStage: apartado → salió → en tu cuadra → recibido, sin prometer de más', () => {
+  const now = new Date('2026-10-26T12:30:00Z'); // 7:30 a. m. en Bogotá
+  const b = { hora_inicio: 6, hora_fin: 11 };
+  const live = { ...b, live_until: '2026-10-26T15:00:00Z' };
+  assert.equal(holdStage({ status: 'waiting' }, b, now), 0);
+  assert.equal(holdStage({ status: 'waiting' }, live, now), 2);
+  assert.equal(holdStage({ status: 'waiting' }, { ...live, hora_inicio: 14, hora_fin: 18 }, now), 1);
+  assert.equal(holdStage({ status: 'served' }, b, now), 3);
+  assert.equal(holdStage({ status: 'cancelled' }, b, now), null);
+  assert.equal(holdStage(null, b, now), null);
+});
+
+test('outProgress: cuánto lleva la salida y cuánto le queda', () => {
+  const now = new Date('2026-10-26T12:30:00Z');
+  const p = outProgress('2026-10-26T14:16:00Z', now);
+  assert.equal(p.pct.toFixed(2), '0.56');
+  assert.equal(p.leftLabel, '1 h 46 min');
+  assert.equal(outProgress('2026-10-26T12:00:00Z', now), null);
+  assert.equal(outProgress(null, now), null);
+  assert.equal(outProgress('2026-10-26T12:40:00Z', now).leftLabel, '10 min');
 });

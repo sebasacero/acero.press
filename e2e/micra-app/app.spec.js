@@ -184,3 +184,40 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
   await expect(page.getByRole('heading', { name: '¿Como quién entras?' })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('cliente con apartado: arriba va «Tu apartado» con sus etapas; los pines llevan el número de la fila', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.holds.push({ id: 'apartado-mio', tintero_id: MARLENE, client_ref: 'MI-CEL', name: 'Sebas', items: [{ product: 'tinto', qty: 2, unit_price: 1500 }], cups: 2, total: 3000, status: 'waiting' });
+  const { page, errors } = await open(browser, { seed });
+  await page.addInitScript(() => { localStorage.setItem('micra_device_v1', JSON.stringify('MI-CEL')); localStorage.setItem('micra_name_v1', JSON.stringify('Sebas · oficina 302')); });
+  await page.goto('/micra', { waitUntil: 'load' });
+
+  const card = page.getByRole('region', { name: 'Tu apartado de hoy' });
+  await expect(card).toContainText('2 tintos con Marlene');
+  // Marlene avisó que salió: la etapa actual es «Salió» (o «En tu cuadra» si es su hora)
+  await expect(card.getByRole('list', { name: 'Etapas' }).locator('[aria-current="step"]')).toHaveText(/Salió|En tu cuadra/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('¿Quién pasa con café');
+  // El número de cada fila es el del pin
+  const rows = page.getByRole('list', { name: 'Baristas' }).getByRole('listitem');
+  await expect(rows.first().locator('.mapp-av')).toHaveText('1');
+  await expect(rows.nth(2).locator('.mapp-av')).toHaveText('3');
+  await card.getByRole('button', { name: 'Ver a Marlene' }).click();
+  await expect(page).toHaveURL(new RegExp(`/micra/b/${MARLENE}$`));
+  expect(errors).toEqual([]);
+});
+
+test('barista en la calle: la cabecera roja dice hasta cuándo, cuánto va y lo que lleva', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.baristas[0].live_until = new Date(Date.now() + 100 * 60000).toISOString();
+  const { page, errors } = await open(browser, { who: 'barista', seed });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  const out = page.getByRole('region', { name: 'Tu salida' });
+  await expect(out).toContainText('Hasta las');
+  await expect(out).toContainText('quedan 1 h 40 min');
+  await expect(out.getByRole('progressbar')).toHaveAttribute('aria-valuenow', /^5[789]$/);
+  await expect(out).toContainText('$7.000');
+  await expect(out).toContainText('$4.000');
+  await out.getByRole('button', { name: 'Ya volví' }).click();
+  await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
+  expect(errors).toEqual([]);
+});

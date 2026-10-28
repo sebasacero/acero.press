@@ -1,10 +1,12 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   sortBaristas, filterBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
-  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS,
+  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting,
 } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
+import Figure from './Elenco.jsx';
+import { IconThermo, IconCheck, IconOut } from './icons.jsx';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
@@ -50,7 +52,41 @@ function useMe() {
 function Avatar({ b, big = false }) {
   return b.photo_url
     ? <img className={`mapp-av ${big ? 'is-big' : ''}`} src={b.photo_url} alt="" />
-    : <span className={`mapp-av ${big ? 'is-big' : ''}`} aria-hidden="true">{initials(b.name)}</span>;
+    : <span className={`mapp-av ${big ? 'is-big' : ''} ${b.n && !big ? `is-${b.status}` : ''}`} aria-hidden="true">{b.n && !big ? b.n : initials(b.name)}</span>;
+}
+
+/** Lo que está pasando con el apartado de hoy: las cuatro etapas y el termito en la actual. */
+function HoldCard({ hold, barista, go }) {
+  const stage = holdStage(hold, barista);
+  if (stage == null || !barista) return null;
+  const win = windowLabel(barista.hora_inicio, barista.hora_fin);
+  return (
+    <section className="mapp-now" aria-label="Tu apartado de hoy">
+      <p className="mapp-now-kicker">Tu apartado{barista.status === 'live' && <span className="mapp-now-live">Salió</span>}</p>
+      <button type="button" className="mapp-now-go" onClick={() => go(baristaPath(barista.id))} aria-label={`Ver a ${barista.name}`}><IconOut /></button>
+      <h2 className="mapp-now-title">{itemsLabel(hold.items)} con {barista.name}</h2>
+      <p className="mapp-now-sub">{stage === 3 ? 'Ya te lo entregó. Mañana puedes volver a apartar.' : barista.referencia ? `Pasa por ${barista.referencia}${win ? ` ${win}` : ''}` : win ? `Pasa ${win}` : 'Te entrega cuando pase'}</p>
+      <ol className="mapp-stages" aria-label="Etapas">
+        {HOLD_STAGES.map((label, i) => (
+          <li key={label} className={i < stage ? 'is-done' : i === stage ? 'is-now' : ''} aria-current={i === stage ? 'step' : undefined}>
+            <i>{i < stage ? <IconCheck /> : i === stage ? <IconThermo /> : null}</i>
+            <span>{label}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/** Filas grises mientras llega la lista, para que la pantalla ya tenga forma. */
+function Skeleton({ rows = 3 }) {
+  return (
+    <ul className="mapp-list is-skeleton" aria-hidden="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <li key={i} style={{ '--i': i }}><span className="mapp-row"><span className="mapp-av mapp-skel" /><span className="mapp-row-main"><span className="mapp-skel" style={{ width: '55%' }} /><span className="mapp-skel" style={{ width: '80%' }} /></span><span className="mapp-skel" style={{ width: 56 }} /></span></li>
+      ))}
+    </ul>
+  );
 }
 
 function StatusBadge({ s }) {
@@ -68,10 +104,10 @@ function inviteText() {
   return `¿Vendes café en la calle? Con Micra tus clientes te apartan los tintos antes de que llegues. Escríbele al equipo: ${url}`;
 }
 
-function BaristaRow({ b, onOpen }) {
+function BaristaRow({ b, onOpen, i = 0 }) {
   const menu = menuOf(b);
   return (
-    <li>
+    <li style={{ '--i': i }}>
       <button type="button" className="mapp-row" onClick={() => onOpen(b.id)}>
         <Avatar b={b} />
         <span className="mapp-row-main">
@@ -96,18 +132,37 @@ export function ClientHome({ go, night }) {
   const { me, ask, asking } = useMe();
   const [filter, setFilter] = useState('all');
   const [favs] = useState(api.favorites);
-  const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }), [list, me, favs]);
+  // Cada barista lleva el número de su fila, el mismo que su pin en el mapa
+  const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }).map((b, i) => ({ ...b, n: i + 1 })), [list, me, favs]);
   const shown = filterBaristas(sorted, filter);
   const live = sorted.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
+  // Si ya apartó hoy, arriba va cómo va eso, no la bienvenida
+  const [hold, setHold] = useState(null);
+  useEffect(() => {
+    api.myHolds().then((h) => setHold((h ?? []).find((x) => x.status === 'waiting' || x.status === 'served') ?? null)).catch(() => {});
+  }, []);
+  const holdBarista = hold ? sorted.find((b) => b.id === hold.tintero_id) : null;
+  const name = api.savedName();
 
   return (
     <div className="mapp-client">
-      <section className="mapp-hero">
-        <p className="mapp-kicker">Café de la calle · Bogotá</p>
-        <h1 className="mapp-title is-home">¿Quién pasa con café <span className="mapp-script">cerca?</span></h1>
-        <p className="mapp-lede">Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.</p>
-      </section>
+      {hold && holdBarista ? (
+        <>
+          <p className="mapp-kicker is-hello">{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</p>
+          <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
+          <HoldCard hold={hold} barista={holdBarista} go={go} />
+        </>
+      ) : (
+        <section className="mapp-hero">
+          <div>
+            <p className="mapp-kicker">Café de la calle · Bogotá</p>
+            <h1 className="mapp-title is-home">¿Quién pasa con café <span className="mapp-script">cerca?</span></h1>
+            <p className="mapp-lede">Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.</p>
+          </div>
+          <Figure name="caminando" className="is-hero" />
+        </section>
+      )}
 
       {sorted.length > 0 && (
         <Suspense fallback={<div className="mapp-map is-loading" />}>
@@ -128,17 +183,18 @@ export function ClientHome({ go, night }) {
         </div>
       </div>
 
-      {list === null && <p className="mapp-muted">Buscando baristas…</p>}
+      {list === null && <Skeleton />}
       {error && (
         <p className="mapp-error" role="alert">No se pudo cargar la lista. <button type="button" className="mapp-link" onClick={reload}>Reintentar</button></p>
       )}
       {list && shown.length > 0 && (
         <ul className="mapp-list" aria-label="Baristas">
-          {shown.map((b) => <BaristaRow key={b.id} b={b} onOpen={open} />)}
+          {shown.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
         </ul>
       )}
       {list && !error && shown.length === 0 && (
         <div className="mapp-empty">
+          <Figure name="entrega" className="is-empty" />
           <b>{missing ? 'Micra abre muy pronto.' : sorted.length ? 'Nadie con ese filtro ahora.' : 'Todavía no hay baristas en Micra cerca de ti.'}</b>
           <p>Estamos sumando a quienes ya venden café en la calle en Chapinero, Kennedy y Bosa. Si tienes un barista de confianza, invítalo.</p>
           <a className="mapp-btn is-ghost" href={`https://wa.me/?text=${encodeURIComponent(inviteText())}`} target="_blank" rel="noopener noreferrer">Invitar a mi barista</a>
@@ -324,6 +380,7 @@ export function MyHolds({ go }) {
       {holds === null && <p className="mapp-muted">Cargando…</p>}
       {holds && live.length === 0 && (
         <div className="mapp-empty">
+          <Figure name="caminando" className="is-empty" />
           <b>Hoy no has apartado.</b>
           <p>Busca al barista de tu cuadra y apártale tus tintos.</p>
           <button type="button" className="mapp-btn is-cta" onClick={() => go('/micra')}>Ver baristas cerca</button>

@@ -22,7 +22,7 @@ function pin(b, onPick) {
   const el = document.createElement('button');
   el.type = 'button';
   el.className = `mapp-pin is-${b.status}`;
-  el.textContent = initials(b.name);
+  el.textContent = b.n ?? initials(b.name);
   el.setAttribute('aria-label', `Ver a ${b.name}`);
   el.addEventListener('click', (e) => { e.stopPropagation(); onPick(b.id); });
   return el;
