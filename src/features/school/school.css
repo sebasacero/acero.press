@@ -34,7 +34,8 @@
 .school-fig { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: .08em; color: var(--school-soft); text-transform: uppercase; }
 
 /* --- Cabeza de la página: qué es y dos caminos (preparar ya o ir a las lecciones) --- */
-.sp-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; align-items: end; }
+.sp-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 380px); gap: 40px; align-items: end; }
+.sp-persona { display: block; height: clamp(220px, 24cqi, 340px); width: auto; align-self: end; margin-bottom: -6px; }
 .sp-copy { display: grid; gap: 16px; justify-items: start; }
 .sp-head .essp-ctas { flex-wrap: wrap; }
 .sp-glance { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -321,7 +322,8 @@
   .sl-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'fig' 'text'; }
   .sl-grid > .sf { position: static; max-width: 520px; }
   .sa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sp-head { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 28px; }
+  .sp-head { grid-template-columns: minmax(0, 1fr) auto minmax(0, 300px); gap: 28px; }
+  .sp-persona { height: 220px; }
   .st-in { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -334,6 +336,7 @@
   .school-sheet .essp-dash { display: none; }
   .school-title { font-size: clamp(1.9rem, 9cqi, 2.4rem); }
   .sp-head { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .sp-persona { display: none; }
   .sp-glance { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .sp-glance li { padding: 10px 8px; border-radius: 10px; gap: 4px; }
   .sp-glance b { font-size: clamp(16px, 5.4cqi, 22px); }

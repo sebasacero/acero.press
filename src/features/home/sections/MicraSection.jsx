@@ -3,6 +3,7 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { StreetPhone } from '../../esspresale/AppPhones.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import SocialBanners from './SocialBanners.jsx';
+import StreetPeople from './StreetPeople.jsx';
 import StoreButtons from '../../esspresale/StoreButtons.jsx';
 import { useStreetMap } from '../../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
@@ -69,6 +70,8 @@ export default function MicraSection() {
             <StoreButtons appStoreUrl={stores.apple} playStoreUrl={stores.google} />
           </div>
         </div>
+
+        <StreetPeople />
 
         <div className="micra-social">
           <div className="essp-tag">{t('posts.label')}</div>

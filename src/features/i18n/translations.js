@@ -86,6 +86,20 @@ const translations = {
       ],
       stats: { label: 'El estudio de calle hoy', cups: 'tazas en la calle', blocks: 'cuadras con venta', baristas: 'baristas' },
     },
+    people: {
+      tag: 'FIG. 02B — EN LA CALLE',
+      title: 'Las personas detrás de cada taza',
+      text: 'Micra existe por quienes salen temprano con un termo, una AeroPress y su ruta de siempre.',
+      note: 'Ilustraciones. Las personas del estudio de calle no salen en la web.',
+      items: [
+        'Con carrito, en la esquina de siempre',
+        'Con termo y AeroPress, a pie',
+        'De ruana, desde las 5 a. m.',
+        'Empujando la ruta',
+        'En pareja, se reparten las cuadras',
+        'Con sombrilla, llueva o no',
+      ],
+    },
     posts: {
       label: 'Nuestras redes',
       channels: {
@@ -503,6 +517,20 @@ const translations = {
       ],
       stats: { label: 'The street study today', cups: 'cups on the street', blocks: 'blocks with sales', baristas: 'baristas' },
     },
+    people: {
+      tag: 'FIG. 02B — ON THE STREET',
+      title: 'The people behind every cup',
+      text: 'Micra exists for those who head out early with a thermos, an AeroPress and their usual route.',
+      note: 'Illustrations. The people in our street study are never shown on the site.',
+      items: [
+        'With a cart, on the usual corner',
+        'With a thermos and an AeroPress, on foot',
+        'In a ruana, from 5 a.m.',
+        'Pushing the route',
+        'As a pair, splitting the blocks',
+        'With an umbrella, rain or shine',
+      ],
+    },
     posts: {
       label: 'Our socials',
       channels: {
@@ -918,6 +946,20 @@ const translations = {
         { title: '認定を受ける', text: '抽出の動画で、より良い仕事へ。' },
       ],
       stats: { label: '路上調査の現在', cups: '路上で売れた杯数', blocks: '売れたブロック', baristas: 'バリスタ' },
+    },
+    people: {
+      tag: 'FIG. 02B — 街角で',
+      title: '一杯ごとの、その人たち',
+      text: 'Micraは、魔法瓶とAeroPressを持って、いつものルートへ朝早く出かける人のためにあります。',
+      note: 'イラストです。路上調査の参加者はサイトに掲載しません。',
+      items: [
+        'いつもの角で、カートと一緒に',
+        '魔法瓶とAeroPressを持って、歩いて',
+        'ルアナを着て、朝5時から',
+        'ルートを押して進む',
+        '二人で、通りを分け合う',
+        '傘を持って、雨でも晴れでも',
+      ],
     },
     posts: {
       label: 'ソーシャル',

@@ -3,6 +3,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
 import { SheetFrame } from '../esspresale/parts.jsx';
 import StepScrolly from '../home/sections/StepScrolly.jsx';
+import { personaSrc } from '../home/sections/StreetPeople.jsx';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx';
 import { lessonsFor } from './lessons.js';
@@ -186,6 +187,8 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
               </div>
               <div className="essp-loc">{t('school.loc')} · {t('school.total').replace('{min}', minutes)}</div>
             </div>
+            {/* Una persona de la calle con su carrito: la Escuela es para quien prepara en la calle */}
+            <img className="sp-persona" src={personaSrc('carrito')} alt="" decoding="async" aria-hidden="true" />
             {/* La receta de un vistazo, como las cifras de Micra en la portada */}
             <ul className="sp-glance" aria-label={t('school.glanceLabel')}>
               {t('school.glance').map(([v, k]) => <li key={v}><b>{v}</b><span>{k}</span></li>)}
@@ -203,6 +206,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
         steps={recipe.steps}
         labels={{ dots: recipe.dots, goStep: recipe.goStep, swipe: recipe.swipe }}
         source={recipe.source}
+        persona={personaSrc('aeropress')}
         ctas={<button type="button" className="essp-btn" onClick={openCook}>{timerLabel}</button>}
       />
 

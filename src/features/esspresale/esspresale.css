@@ -219,6 +219,12 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
 .essp-phone-switch { width: 36px; height: 20px; border-radius: 999px; background: rgba(255, 255, 255, .15); position: relative; flex: none; }
 .essp-phone-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
 
+/* La persona de la calle de cada banner, parada sobre el borde inferior de la hoja, a la derecha */
+.essp-persona { position: absolute; z-index: 1; right: 3.5%; bottom: 36px; height: min(80%, 680px); width: auto; pointer-events: none; }
+/* El panel baja y se corre a la izquierda, como la tarjeta del guion: la persona queda a la vista */
+.essp-slide .essp-panel { position: relative; z-index: 2; align-self: end; justify-self: start; max-width: 300px; margin-bottom: 8px; padding: 16px 16px 14px; gap: 9px; }
+.essp-slide .essp-panel-text { display: none; }
+
 /* Tamaños intermedios y celular */
 @container (max-width: 1180px) {
   .essp-main { grid-template-columns: minmax(0, 1fr) auto; }
@@ -244,6 +250,8 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
   .essp-main { grid-template-columns: 1fr; gap: 22px; }
   .essp-hero-phone { width: 230px; justify-self: center; }
   .essp-panel { display: none; }
+  /* En celular la persona se para delante, junto a la esquina del iPhone, sin tapar el texto */
+  .essp-persona { height: 270px; left: 14px; right: auto; bottom: 22px; z-index: 3; }
 
   /* Los dos llamados en una fila, para que el celular siga asomando */
   .essp-ctas { flex-wrap: nowrap; gap: 10px; }
