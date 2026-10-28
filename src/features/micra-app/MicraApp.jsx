@@ -9,6 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import { IconNear, IconCup, IconOut } from './icons.jsx';
 import './micra-app.css';
+import { Cargando } from './Animado.jsx';
 
 // Micra (/micra): la app que abre el botón «Micra» del sitio. Es la misma para
 // todos y cambia según quién entra:
@@ -133,12 +134,12 @@ export default function MicraApp() {
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'barista') {
-    if (who.loading) body = <p className="mapp-muted">Cargando…</p>;
+    if (who.loading) body = <Cargando />;
     else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} />;
     else if (who.barista) body = <BaristaHome go={go} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} />;
   } else if (route.view === 'owner') {
-    if (who.loading) body = <p className="mapp-muted">Cargando…</p>;
+    if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
   } else body = <ClientHome go={go} night={night} />;

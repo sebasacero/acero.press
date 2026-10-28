@@ -7,6 +7,7 @@ import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
 import { IconThermo, IconCheck, IconOut } from './icons.jsx';
+import { Cargando } from './Animado.jsx';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
@@ -256,7 +257,7 @@ export function BaristaPage({ id, go }) {
     }).catch(() => {});
   }, [id]);
 
-  if (list === null) return <p className="mapp-muted">Cargando…</p>;
+  if (list === null) return <Cargando fig="caminando" />;
   if (!b) {
     return (
       <div className="mapp-empty">
@@ -377,7 +378,7 @@ export function MyHolds({ go }) {
     <div className="mapp-client">
       <h1 className="mapp-title is-small">Mis apartados de hoy</h1>
       {error && <p className="mapp-error" role="alert">{error}</p>}
-      {holds === null && <p className="mapp-muted">Cargando…</p>}
+      {holds === null && <Cargando fig="servir" />}
       {holds && live.length === 0 && (
         <div className="mapp-empty">
           <Figure name="caminando" className="is-empty" />
