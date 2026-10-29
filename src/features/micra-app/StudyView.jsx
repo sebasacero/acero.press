@@ -14,6 +14,7 @@ import { Cargando } from './Animado.jsx';
 // encuesta, el punto de GPS o la foto del puesto. Mismas tablas y misma API.
 
 const SurveyDialog = lazy(() => import('../admin/survey/SurveyDialog.jsx'));
+const StudyHeatMap = lazy(() => import('./StudyHeatMap.jsx'));
 const BUCKET = 'estudio';
 const shortDate = (iso) => new Date(iso).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' });
 
@@ -158,6 +159,8 @@ export default function StudyView({ go }) {
         <div><dt>Con GPS</dt><dd>{n.gps}<small> de {n.total}</small></dd></div>
         <div><dt>Con foto</dt><dd>{n.foto}<small> de {n.total}</small></dd></div>
       </dl>
+
+      <Suspense fallback={null}><StudyHeatMap rows={rows} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Fichas · {n.total - n.done} con algo pendiente</p>

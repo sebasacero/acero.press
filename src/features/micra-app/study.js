@@ -55,3 +55,19 @@ export function gpsPatch(pos, now = new Date()) {
     located_at: now.toISOString(),
   };
 }
+
+/**
+ * Las fichas con punto de GPS como GeoJSON para el mapa de calor del estudio.
+ * El peso es lo que vende el puesto (tazas por hora vistas, hasta 40 = 1);
+ * sin ese dato, 0.5: cada vendedor mapeado ya suma calor.
+ */
+export function heatPoints(rows) {
+  const features = (rows ?? [])
+    .filter((r) => r.lat != null && r.lng != null && Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng)))
+    .map((r) => {
+      const cups = Number(r.cups_per_hour);
+      const weight = Number.isFinite(cups) && cups > 0 ? Math.min(1, Math.max(0.3, cups / 40)) : 0.5;
+      return { type: 'Feature', geometry: { type: 'Point', coordinates: [Number(r.lng), Number(r.lat)] }, properties: { id: r.id, weight } };
+    });
+  return { type: 'FeatureCollection', features };
+}
