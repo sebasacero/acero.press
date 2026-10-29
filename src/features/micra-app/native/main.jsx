@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle, registerPlugin } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Geolocation } from '@capacitor/geolocation';
@@ -19,6 +19,8 @@ import '../../../index.css';
 // Micra instalada en Android e iOS (Capacitor, micra.html → dist-micra/). Son las
 // mismas pantallas de /micra; aquí solo se cambia lo que en el celular se hace
 // distinto: GPS, compartir, salir a WhatsApp o al sitio y entrar con Google.
+
+const BackgroundGeolocation = registerPlugin('BackgroundGeolocation');
 
 const blobToBase64 = (blob) => new Promise((resolve, reject) => {
   const r = new FileReader();
@@ -66,6 +68,28 @@ setPlatform({
   // Capacitor abre fuera de la app (WhatsApp, Safari, Chrome) todo lo que no es localhost
   openExternal: (url) => { window.location.href = url; },
   share: ({ title, text, url }) => Share.share({ title, text, url, dialogTitle: title }).catch(() => {}),
+  // `background`: el recorrido de «Salí a vender» sigue con la pantalla apagada (plugin de
+  // segundo plano; Android muestra una notificación fija mientras graba)
+  watch: (onFix, onError = () => {}, { background = false } = {}) => {
+    if (background) {
+      let bgId = null;
+      let bgStopped = false;
+      BackgroundGeolocation.addWatcher(
+        { backgroundTitle: 'Micra · Salí a vender', backgroundMessage: 'Tus clientes te ven en el mapa mientras vendes.', requestPermissions: true, stale: false, distanceFilter: 10 },
+        (loc, err) => {
+          if (err) { onError(err); return; }
+          if (loc) onFix({ coords: { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy }, timestamp: loc.time ?? Date.now() });
+        },
+      ).then((w) => { bgId = w; if (bgStopped) BackgroundGeolocation.removeWatcher({ id: w }); }).catch(onError);
+      return () => { bgStopped = true; if (bgId) BackgroundGeolocation.removeWatcher({ id: bgId }); };
+    }
+    let id = null;
+    let stopped = false;
+    Geolocation.watchPosition({ enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }, (p, err) => {
+      if (err) onError(err); else if (p) onFix(p);
+    }).then((w) => { id = w; if (stopped) Geolocation.clearWatch({ id }); }).catch(onError);
+    return () => { stopped = true; if (id) Geolocation.clearWatch({ id }); };
+  },
   // El ticket como archivo: el menú del celular lo lleva a WhatsApp, a la app de Phomemo o a Imprimir
   shareImage: async ({ blob, fileName, title, text }) => {
     const { uri } = await Filesystem.writeFile({ path: fileName, data: await blobToBase64(blob), directory: Directory.Cache });

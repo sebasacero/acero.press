@@ -560,3 +560,18 @@
 .mapp-heat-legend { display: flex; align-items: center; gap: 8px; margin-top: 8px; font: 600 11px/1 "JetBrains Mono", monospace; color: var(--m-muted, rgba(255,255,255,.65)); }
 .mapp-heat-legend i { flex: 1; height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgb(43,43,209), rgb(0,179,230), rgb(38,208,124), rgb(245,225,0), rgb(255,140,0), rgb(255,31,31)); }
 .mapp-heat-legend b { margin-left: 6px; color: inherit; }
+
+/* Recorrido de un carrito (RouteCapture) y modos del mapa del estudio */
+.mrc-map { height: 46vh; min-height: 240px; background: #111318; }
+.mrc-off { margin: 8px 16px 0; }
+.mrc-body { flex: 0 1 auto; }
+.mapp-heat-modes { display: flex; gap: 8px; margin: 0 0 8px; }
+.mapp-heat-modes button { min-height: 44px; flex: 1; border-radius: 999px; border: 1px solid var(--m-line); background: none; color: inherit; font-weight: 600; }
+.mapp-heat-modes button[aria-pressed="true"] { background: var(--m-ink, #fff); color: var(--m-bg, #0E0F12); }
+.mapp-heat-top { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--m-muted, rgba(255,255,255,.7)); }
+
+/* Permiso de ubicación y recorrido de «Salí a vender» */
+.mapp-consent { margin: 12px 0 0; text-align: left; }
+.mapp-consent .mapp-check { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; }
+.mapp-consent .mapp-check input { width: 24px; height: 24px; flex: 0 0 auto; margin-top: 2px; }
+.mapp-trip { font-weight: 600; }

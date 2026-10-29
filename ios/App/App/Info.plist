@@ -39,8 +39,14 @@
 	<string>Micra usa la cámara para la foto del puesto en el estudio de calle y para las tarjetas con filtros.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Micra usa el micrófono solo cuando grabas un video para una tarjeta.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Micra usa tu ubicación mientras tienes activo «Salí a vender», también con la pantalla apagada, para que tus clientes te encuentren.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Micra usa tu ubicación para mostrarte los baristas que pasan cerca y, si eres barista, para marcar dónde saliste a vender.</string>
+	<string>Micra usa tu ubicación mientras vendes, para que tus clientes te encuentren, y para mostrarte los baristas cerca.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Micra usa el Bluetooth para imprimir el ticket en una impresora Phomemo.</string>
 	<key>LSRequiresIPhoneOS</key>

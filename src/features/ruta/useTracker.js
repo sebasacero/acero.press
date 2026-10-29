@@ -27,7 +27,9 @@ const save = (s) => {
 
 const GPS_ERROR = { 1: 'denied', 2: 'unavailable', 3: 'waiting' };
 
-export function useTracker(me) {
+// `watch` (opcional): otra fuente de GPS, la de la app instalada que sigue con la
+// pantalla apagada. Recibe (onFix, onError) y devuelve cómo pararla.
+export function useTracker(me, { watch = null } = {}) {
   const state = useRef(null); // { routeId, clientRef, startedAt, points, queue, ending }
   const watchId = useRef(null);
   const wake = useRef(null);
@@ -83,19 +85,19 @@ export function useTracker(me) {
   }, []);
 
   const stopWatch = useCallback(() => {
-    if (watchId.current !== null) navigator.geolocation?.clearWatch(watchId.current);
+    if (typeof watchId.current === 'function') watchId.current();
+    else if (watchId.current !== null) navigator.geolocation?.clearWatch(watchId.current);
     watchId.current = null;
     wake.current?.release?.().catch(() => {});
     wake.current = null;
   }, []);
 
   const startWatch = useCallback(() => {
-    if (!('geolocation' in navigator)) { setGps('unsupported'); return; }
+    if (!watch && !('geolocation' in navigator)) { setGps('unsupported'); return; }
     stopWatch();
     setGps('waiting');
     lastFixAt.current = Date.now();
-    watchId.current = navigator.geolocation.watchPosition(
-      (pos) => {
+    const onFix = (pos) => {
         lastFixAt.current = Date.now();
         setGps('ok');
         const s = state.current;
@@ -109,12 +111,12 @@ export function useTracker(me) {
           if (s.queue.length >= TUNING.batch) flush();
         }
         refresh(fix?.acc ?? null);
-      },
-      (err) => setGps(GPS_ERROR[err.code] ?? 'unavailable'),
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 },
-    );
+    };
+    const onError = (err) => setGps(GPS_ERROR[err?.code] ?? (err?.code === 'NOT_AUTHORIZED' ? 'denied' : 'unavailable'));
+    if (watch) { watchId.current = watch(onFix, onError); return; }
+    watchId.current = navigator.geolocation.watchPosition(onFix, onError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
     lockScreen();
-  }, [flush, lockScreen, refresh, stopWatch]);
+  }, [flush, lockScreen, refresh, stopWatch, watch]);
 
   // Retomar: lo guardado en el teléfono manda si es el recorrido abierto de la base
   useEffect(() => {

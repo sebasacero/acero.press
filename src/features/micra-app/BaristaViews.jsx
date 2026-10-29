@@ -8,6 +8,8 @@ import platform from './platform.js';
 import Figure from './Elenco.jsx';
 import { IconThermo } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
+import { useSaliTracking } from './useSaliTracking.js';
+import { km } from '../ruta/track.js';
 
 // Modo barista: salí, quién me espera, +1 por taza, fiados y el día. Pensado
 // para una mano, al sol y con mala señal: los +1 se guardan en el celular y
@@ -158,10 +160,32 @@ function Digits({ value, label }) {
   );
 }
 
+/** El permiso de ubicación de «Salí a vender», con lo que se informa (Ley 1581). */
+function LocationConsent({ onAccept, onSkip, busy }) {
+  return (
+    <section className="mapp-glass mapp-consent" role="dialog" aria-label="Permiso de ubicación" data-testid="location-consent">
+      <p className="mapp-cota">Tu ubicación</p>
+      <p>Mientras tengas activo <b>Salí a vender</b>, Micra usa tu ubicación para que tus clientes te encuentren en el mapa y para mejorar la app. Al tocar «Ya volví» deja de usarla.</p>
+      <label className="mapp-check">
+        <input type="checkbox" id="mapp-consent-box" />
+        <span>Permito que Micra use mi ubicación mientras estoy vendiendo, para que mis clientes me encuentren y para mejorar la app.</span>
+      </label>
+      <p className="mapp-fine">Puedes retirar este permiso cuando quieras. <a className="mapp-link" href={platform.siteUrl('/privacidad#ubicacion')} target="_blank" rel="noreferrer">Cómo usamos tu ubicación</a></p>
+      <span className="mapp-row-btns">
+        <button type="button" className="mapp-btn is-cta" disabled={busy} onClick={() => { if (document.getElementById('mapp-consent-box')?.checked) onAccept(); else document.getElementById('mapp-consent-box')?.focus(); }} data-testid="consent-accept">{busy ? 'Guardando…' : 'Aceptar y salir'}</button>
+        <button type="button" className="mapp-link" onClick={onSkip}>Salir sin compartir mi recorrido</button>
+      </span>
+    </section>
+  );
+}
+
 export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false }) {
   const [day, setDay] = useState(null);
   const [error, setError] = useState(null);
   const [missing, setMissing] = useState(false);
+  // El recorrido de «Salí a vender»: solo en su propia cuenta (el equipo «actuando como» no graba)
+  const trip = useSaliTracking({ enabled: !asId });
+  const [asking, setAsking] = useState(false);
   const [pending, setPending] = useState(() => readQueue().length);
   const [fiadoFor, setFiadoFor] = useState(null); // producto que espera el nombre del fiado
   const [fiadoName, setFiadoName] = useState('');
@@ -256,14 +280,26 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     } catch (e) { setError(e.message); }
     setBusy(null);
   };
-  const out = async (on) => {
+  const out = async (on, { share = true } = {}) => {
+    // La primera vez, el permiso de ubicación antes de salir
+    if (on && trip.ready && !trip.consented && !asking) { setAsking(true); return; }
+    setAsking(false);
     setBusy('out');
     try {
       const pos = on ? await api.onePosition() : null;
       await api.goOut(on ? OUT_MINUTES : 0, pos, asId);
+      if (on && share && trip.ready && !trip.recording) await trip.start();
+      if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();
     } catch (e) { setError(e.message); }
     setBusy(null);
+  };
+  const acceptLocation = async () => {
+    setBusy('out');
+    try { await trip.consent(true); } catch (e) { setError(e.message); setBusy(null); return; }
+    setBusy(null);
+    setAsking(false);
+    await out(true);
   };
   const closeHold = async (h, served) => {
     setBusy(h.id);
@@ -306,6 +342,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <div><dd>{money(sum.total)}</dd><dt>hoy llevas</dt></div>
             <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
           </dl>
+          {trip.recording && (
+            <p className="mapp-now-sub mapp-trip" role="status" data-testid="trip-recording">
+              📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
+            </p>
+          )}
           <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
         </section>
       ) : (
@@ -315,6 +356,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           <button type="button" className="mapp-btn is-cta is-big" onClick={() => out(true)} disabled={busy === 'out' || !day.public}>
             {busy === 'out' ? 'Avisando…' : 'Salí a vender'}
           </button>
+          {asking && <LocationConsent busy={busy === 'out'} onAccept={acceptLocation} onSkip={() => out(true, { share: false })} />}
+          {trip.pendingEnd && <p className="mapp-fine">Tu último recorrido no ha subido: se envía solo cuando haya señal.</p>}
           {!day.public && <p className="mapp-fine">Aún no apareces para los clientes: el equipo te activa cuando aceptes salir en Micra.</p>}
           {day.public && <p className="mapp-fine">Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.</p>}
         </section>

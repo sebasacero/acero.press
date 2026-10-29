@@ -45,6 +45,12 @@ const web = {
       { enableHighAccuracy: precise, timeout, maximumAge: precise ? 0 : 120000 },
     );
   }),
+  /** El GPS seguido (para acompañar un recorrido): `onFix(position)` en cada lectura. Devuelve cómo pararlo. */
+  watch: (onFix, onError = () => {}) => {
+    if (!navigator.geolocation) { onError(new Error('Este celular no tiene GPS en el navegador.')); return () => {}; }
+    const id = navigator.geolocation.watchPosition(onFix, onError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+    return () => navigator.geolocation.clearWatch(id);
+  },
   signIn: (next) => {
     markLogin();
     return supabase.auth.signInWithOAuth({
