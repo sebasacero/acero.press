@@ -7,6 +7,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { Share } from '@capacitor/share';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { BleClient } from '@capacitor-community/bluetooth-le';
+import { CapacitorUpdater } from '@capgo/capacitor-updater';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { setApiBase } from '../../../shared/lib/apiBase.js';
 import { SITE, markLogin, setPlatform } from '../platform.js';
@@ -21,6 +22,25 @@ import '../../../index.css';
 // distinto: GPS, compartir, salir a WhatsApp o al sitio y entrar con Google.
 
 const BackgroundGeolocation = registerPlugin('BackgroundGeolocation');
+
+// Actualizar sin reinstalar: al abrir, la app mira /micra-app/latest.json del sitio y, si hay
+// una web más nueva para esta misma app instalada (llave nativa igual), la baja y la aplica la
+// próxima vez que se abra o vuelva del fondo. Si una versión nueva falla, se vuelve sola a la anterior.
+const UPDATE_URL = `${SITE}/micra-app/latest.json`;
+async function checkUpdate() {
+  try {
+    await CapacitorUpdater.notifyAppReady();
+    const res = await fetch(UPDATE_URL, { cache: 'no-store' });
+    if (!res.ok) return;
+    const latest = await res.json();
+    if (!latest?.version || latest.native !== __MICRA_NATIVE__) return; // otra app instalada: hay que reinstalar
+    const { bundle } = await CapacitorUpdater.current();
+    if (bundle?.version === latest.version) return;
+    if (bundle?.id === 'builtin' && latest.at && latest.at <= __MICRA_BUILT_AT__) return;
+    const next = await CapacitorUpdater.download({ version: latest.version, url: latest.url });
+    await CapacitorUpdater.next({ id: next.id });
+  } catch { /* sin red o sin plugin: sigue la versión que hay */ }
+}
 
 const blobToBase64 = (blob) => new Promise((resolve, reject) => {
   const r = new FileReader();
@@ -136,6 +156,8 @@ async function openUrl(url) {
 }
 
 App.addListener('appUrlOpen', ({ url }) => { openUrl(url); });
+checkUpdate();
+App.addListener('appStateChange', ({ isActive }) => { if (isActive) checkUpdate(); });
 App.getLaunchUrl().then((r) => r?.url && openUrl(r.url)).catch(() => {});
 // Atrás en Android: primero dentro de Micra; en el inicio, la app se va al fondo
 App.addListener('backButton', ({ canGoBack }) => {

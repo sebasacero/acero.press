@@ -575,3 +575,23 @@
 .mapp-consent .mapp-check { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; }
 .mapp-consent .mapp-check input { width: 24px; height: 24px; flex: 0 0 auto; margin-top: 2px; }
 .mapp-trip { font-weight: 600; }
+
+/* Tablero del barista (Scoreboard): siempre arriba, se queda pegado al bajar */
+.mapp-board { position: sticky; top: 0; z-index: 5; margin: 0 -16px 12px; padding: 10px 16px 12px; background: var(--m-bg, #0E0F12); border-bottom: 1px solid var(--m-line); }
+.mapp-board dl { display: flex; gap: 8px; margin: 0; }
+.mapp-board dl div { flex: 1; min-width: 0; }
+.mapp-board dt { font: 600 10px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--m-muted, rgba(255,255,255,.6)); }
+.mapp-board dd { margin: 4px 0 0; font: 700 1.2rem/1.1 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mapp-board-goal { height: 8px; border-radius: 4px; background: var(--m-line, rgba(255,255,255,.12)); margin: 10px 0 6px; overflow: hidden; }
+.mapp-board-goal i { display: block; height: 100%; background: var(--red, #DE1B1B); border-radius: 4px; transition: width .4s; }
+.mapp-board-sub { display: flex; justify-content: space-between; gap: 8px; margin: 0; font-size: 12px; color: var(--m-muted, rgba(255,255,255,.7)); }
+.mapp-board-sub .is-up { color: #2E8B57; font-weight: 700; }
+.mapp-board-sub .is-down { color: #D98A00; font-weight: 700; }
+
+/* Sellos y pago directo (Loyalty.jsx) */
+.mapp-stamps-row { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; list-style: none; margin: 8px 0; padding: 0; }
+.mapp-stamps-row li { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; border: 1.5px dashed var(--m-line, rgba(255,255,255,.25)); font-size: 14px; filter: grayscale(1); opacity: .35; }
+.mapp-stamps-row li.on { border-style: solid; border-color: var(--red, #DE1B1B); filter: none; opacity: 1; }
+.mapp-stamps-free { margin: 4px 0 0; font-weight: 700; color: var(--red, #DE1B1B); }
+.mapp-pay-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 0; font-family: 'JetBrains Mono', monospace; }
+.mapp-reward { display: block; margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--red, #DE1B1B); }

@@ -4,6 +4,7 @@ import {
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting,
 } from './micraApp.js';
 import * as api from './api.js';
+import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
 import { IconThermo, IconCheck, IconOut } from './icons.jsx';
@@ -359,6 +360,9 @@ export function BaristaPage({ id, go }) {
         </form>
       )}
 
+      {mine?.status === 'waiting' && <PayBarista id={b.id} name={b.name} total={money(mine.total)} />}
+      <StampsCard />
+
       <button type="button" className="mapp-btn is-ghost" onClick={() => shareBarista(b)}>Compartir a {b.name}</button>
     </article>
   );
@@ -378,6 +382,7 @@ export function MyHolds({ go }) {
     <div className="mapp-client">
       <h1 className="mapp-title is-small">Mis apartados de hoy</h1>
       {error && <p className="mapp-error" role="alert">{error}</p>}
+      <StampsCard />
       {holds === null && <Cargando fig="servir" />}
       {holds && live.length === 0 && (
         <div className="mapp-empty">

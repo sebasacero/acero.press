@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   PRODUCTS, menuOf, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
-  baristaPath, newRef, recentFiados, outProgress,
+  baristaPath, newRef, recentFiados, outProgress, scoreboard,
 } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
@@ -9,6 +9,7 @@ import Figure from './Elenco.jsx';
 import { IconThermo } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
+import { PaySettings } from './Loyalty.jsx';
 import { km } from '../ruta/track.js';
 
 // Modo barista: salí, quién me espera, +1 por taza, fiados y el día. Pensado
@@ -179,6 +180,27 @@ function LocationConsent({ onAccept, onSkip, busy }) {
   );
 }
 
+/** El tablero de arriba: lo de hoy, la meta del día y cómo va contra ayer (como las apps de domicilios). */
+function Scoreboard({ board }) {
+  const trend = board.record ? '🔥 ¡Tu mejor día!' : board.vsYesterday == null ? null : board.vsYesterday >= 0 ? `▲ ${board.vsYesterday}% vs ayer` : `▼ ${Math.abs(board.vsYesterday)}% vs ayer`;
+  return (
+    <section className="mapp-board" aria-label="Tu día" data-testid="scoreboard">
+      <dl>
+        <div><dt>Hoy</dt><dd>{money(board.total)}</dd></div>
+        <div><dt>Tazas</dt><dd>{board.cups}</dd></div>
+        <div><dt>Semana</dt><dd>{money(board.weekMoney)}</dd></div>
+      </dl>
+      <div className="mapp-board-goal" role="progressbar" aria-valuemin={0} aria-valuemax={board.goal} aria-valuenow={board.cups} aria-label={`Meta del día: ${board.goal} tazas`}>
+        <i style={{ width: `${board.goalPct * 100}%` }} />
+      </div>
+      <p className="mapp-board-sub">
+        <span>{board.goalLeft > 0 ? `Te faltan ${board.goalLeft} para tu meta de ${board.goal}` : `Meta de ${board.goal} cumplida ✓`}</span>
+        {trend && <span className={board.vsYesterday < 0 && !board.record ? 'is-down' : 'is-up'}>{trend}</span>}
+      </p>
+    </section>
+  );
+}
+
 export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false }) {
   const [day, setDay] = useState(null);
   const [error, setError] = useState(null);
@@ -186,6 +208,13 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   // El recorrido de «Salí a vender»: solo en su propia cuenta (el equipo «actuando como» no graba)
   const trip = useSaliTracking({ enabled: !asId });
   const [asking, setAsking] = useState(false);
+  const [rewards, setRewards] = useState({}); // { holdId: tintos gratis por canjear }
+  const [showPay, setShowPay] = useState(false);
+  // Quién de los que esperan tiene un tinto gratis (arriba de los returns: los hooks van siempre en el mismo orden)
+  useEffect(() => {
+    if (!day) return;
+    api.holdRewards(asId).then((r) => setRewards(r ?? {})).catch(() => setRewards({}));
+  }, [day, asId]);
   const [pending, setPending] = useState(() => readQueue().length);
   const [fiadoFor, setFiadoFor] = useState(null); // producto que espera el nombre del fiado
   const [fiadoName, setFiadoName] = useState('');
@@ -301,6 +330,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     setAsking(false);
     await out(true);
   };
+  const redeem = async (h) => {
+    setBusy(`r-${h.id}`);
+    try { await api.redeemReward(h.id, asId); setRewards((r) => ({ ...r, [h.id]: 0, [`done-${h.id}`]: 1 })); } catch (e) { setError(e.message); }
+    setBusy(null);
+  };
   const closeHold = async (h, served) => {
     setBusy(h.id);
     try { await api.closeHold(h.id, served, asId); await load(); } catch (e) { setError(e.message); }
@@ -322,6 +356,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
 
   return (
     <div className="mapp-barista">
+      <Scoreboard board={scoreboard(day, queued, day.prices ?? {})} />
       {admin && (
         <p className="mapp-acting">
           Actuando como <b>{day.name}</b>
@@ -377,7 +412,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <ul className="mapp-holds">
               {waiting.map((h) => (
                 <li key={h.id}>
-                  <div><b>{h.name}</b><span>{itemsLabel(h.items)} · {money(h.total)}</span></div>
+                  <div>
+                    <b>{h.name}</b><span>{itemsLabel(h.items)} · {money(h.total)}</span>
+                    {rewards[h.id] > 0 && <span className="mapp-reward">🎁 Tiene un tinto gratis <button type="button" className="mapp-link" onClick={() => redeem(h)} disabled={busy === `r-${h.id}`}>Canjear</button></span>}
+                    {rewards[`done-${h.id}`] && <span className="mapp-reward">✓ Tinto gratis canjeado</span>}
+                  </div>
                   <span className="mapp-hold-act">
                     <button type="button" className="mapp-btn is-small" onClick={() => closeHold(h, true)} disabled={busy === h.id}>Entregado</button>
                     <button type="button" className="mapp-link" onClick={() => closeHold(h, false)} disabled={busy === h.id}>No vino</button>
@@ -460,6 +499,9 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           {showPrices
             ? <Prices day={day} asId={asId} onSaved={() => { setShowPrices(false); load(); }} />
             : <button type="button" className="mapp-link" onClick={() => setShowPrices(true)}>Cambiar mis precios</button>}
+          {showPay
+            ? <PaySettings day={day} asId={asId} onSaved={() => setShowPay(false)} />
+            : <button type="button" className="mapp-link" onClick={() => setShowPay(true)} data-testid="pay-open">Cómo te pagan (Nequi, Daviplata)</button>}
           <section className="mapp-glass">
             <p className="mapp-cota">Para tus redes</p>
             <p>Un video o una foto con los filtros de Micra: tu café, tu puesto, la app. Lo compartes donde quieras.</p>

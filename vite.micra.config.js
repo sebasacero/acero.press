@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { nativeKey } from './scripts/micra-native-key.mjs'
 
 // La app Micra para Android e iOS (Capacitor): solo micra.html y lo que importa,
 // en dist-micra/ con el nombre index.html que espera Capacitor. Sin public/: los
@@ -20,6 +21,8 @@ function asIndex() {
 export default defineConfig({
   plugins: [react(), asIndex()],
   publicDir: false,
+  // La app compara su llave nativa con la de la actualización (scripts/micra-bundle.mjs)
+  define: { __MICRA_NATIVE__: JSON.stringify(nativeKey()), __MICRA_BUILT_AT__: JSON.stringify(new Date().toISOString()) },
   worker: { format: 'es' },
   build: {
     outDir: 'dist-micra',

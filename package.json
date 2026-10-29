@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "api": "uvicorn --app-dir api v1:app --reload --port 8000",
-    "build": "vite build",
+    "build": "vite build && npm run micra:web",
     "preview": "vite preview",
     "test": "node --test \"src/**/*.test.js\"",
     "e2e": "playwright test",
@@ -16,7 +16,8 @@
     "micra:ios": "npm run micra:build && cap run ios",
     "micra:android": "npm run micra:build && cap run android",
     "micra:xcode": "npm run micra:build && cap open ios",
-    "micra:studio": "npm run micra:build && cap open android"
+    "micra:studio": "npm run micra:build && cap open android",
+    "micra:web": "vite build --config vite.micra.config.js && node scripts/micra-bundle.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.134.0",
@@ -31,6 +32,7 @@
     "@capacitor/ios": "8.5.3",
     "@capacitor/share": "8.0.3",
     "@capacitor/splash-screen": "8.0.2",
+    "@capgo/capacitor-updater": "^8.54.0",
     "@supabase/supabase-js": "^2.45.4",
     "maplibre-gl": "6.11.2",
     "react": "^18.3.1",
