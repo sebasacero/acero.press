@@ -251,3 +251,14 @@ export function outProgress(liveUntil, now = new Date(), minutes = 240) {
   const leftLabel = left >= 60 ? `${Math.floor(left / 60)} h ${left % 60 ? `${left % 60} min` : ''}`.trim() : `${left} min`;
   return { start: new Date(start), end: new Date(end), pct, leftLabel };
 }
+
+/**
+ * A dónde va quien acaba de entrar con Google: el equipo a su panel, el barista
+ * enlazado a su día y quien aún no tiene cuenta enlazada a poner su código.
+ * La sesión vuelve siempre a /micra/barista; aquí se decide con quién entró.
+ */
+export function landingAfterLogin({ admin, barista }) {
+  if (barista) return '/micra/barista';
+  if (admin) return '/micra/equipo';
+  return '/micra/barista';
+}

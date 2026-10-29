@@ -1,8 +1,8 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { isNight, parseRoute } from './micraApp.js';
+import { isNight, landingAfterLogin, parseRoute } from './micraApp.js';
 import * as api from './api.js';
-import platform from './platform.js';
+import platform, { takeLogin } from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
@@ -132,6 +132,15 @@ export default function MicraApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [who.loading]);
 
+  // Recién entrado con Google: cada quien a su panel (el equipo al suyo, no al del barista)
+  useEffect(() => {
+    if (who.loading || !who.session || !takeLogin()) return;
+    const to = landingAfterLogin(who);
+    try { localStorage.setItem(MODE_KEY, to === '/micra/equipo' ? 'owner' : 'barista'); } catch { /* sin memoria */ }
+    go(to);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [who.loading, who.session]);
+
   const switchMode = (m) => {
     try { localStorage.setItem(MODE_KEY, m); } catch { /* sin memoria */ }
     go(m === 'owner' ? '/micra/equipo' : m === 'barista' ? '/micra/barista' : '/micra');
@@ -146,13 +155,13 @@ export default function MicraApp() {
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
-    else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} />;
-    else if (who.barista) body = <BaristaHome go={go} />;
-    else body = <BaristaJoin session={who.session} onLinked={reloadWho} />;
+    else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} night={night} />;
+    else if (who.barista) body = <BaristaHome go={go} night={night} />;
+    else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (videoView) {
     if (who.loading) body = <Cargando />;
     else if (who.barista || who.admin) body = <Cargando fig="caminando">Abriendo la cámara…</Cargando>;
-    else body = <BaristaJoin session={who.session} onLinked={reloadWho} />;
+    else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (teamView) {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;

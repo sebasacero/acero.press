@@ -550,3 +550,6 @@
 .mvf-shutter:disabled{ opacity:.4; }
 .mvf-side{ width:48px; height:48px; border-radius:50%; border:0; background:rgba(255,255,255,.2); color:#fff; font-size:22px; }
 .mff-survey{ display:flex; flex-direction:column; flex:1; min-height:0; }
+
+/* Barista: el mapa de lo que hay cerca, arriba de las solicitudes */
+.mapp-nearby .mapp-map { margin: 8px 0 0; }
