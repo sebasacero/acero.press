@@ -151,9 +151,9 @@ export default function MicraApp() {
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
-    else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} />;
-    else if (who.barista) body = <BaristaHome go={go} />;
-    else body = <BaristaJoin session={who.session} onLinked={reloadWho} />;
+    else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} night={night} />;
+    else if (who.barista) body = <BaristaHome go={go} night={night} />;
+    else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (teamView) {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;

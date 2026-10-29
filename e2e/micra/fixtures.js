@@ -318,7 +318,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     let body = [];
-    if (p.includes('/admin_users')) body = micra.admin ? [{ id: 1, role: 'owner' }] : [];
+    if (p.includes('/admin_users')) body = micra.admin ? [{ id: 1, role: micra.adminRole ?? 'owner' }] : [];
     else if (p.endsWith('/products')) body = ['eq.coffee_bag', null].includes(u.searchParams.get('category')) ? coffee : [];
     else if (p.endsWith('/inventory') && m === 'GET') {
       const eq = u.searchParams.get('variant_id');

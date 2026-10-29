@@ -506,3 +506,6 @@
 .mapp-study-fix > div { display: grid; gap: 6px; justify-items: start; }
 .mapp-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
 .mapp-check input { width: 22px; height: 22px; accent-color: var(--m-cta); }
+
+/* Barista: el mapa de lo que hay cerca, arriba de las solicitudes */
+.mapp-nearby .mapp-map { margin: 8px 0 0; }

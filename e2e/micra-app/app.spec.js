@@ -236,5 +236,19 @@ test('al volver de Google, el equipo cae en su panel y el barista en su día', a
   await barista.page.goto('/micra/barista', { waitUntil: 'load' });
   await expect(barista.page.getByRole('tab', { name: 'Barista' })).toHaveAttribute('aria-selected', 'true');
   await expect(barista.page).toHaveURL(/\/micra\/barista$/);
+  // Su panel: el mapa de lo que hay cerca y, debajo, quién le apartó
+  await expect(barista.page.getByTestId('micra-map')).toBeVisible();
+  await expect(barista.page.getByText(/Solicitudes cerca · Te esperan/)).toBeVisible();
+  // Sin el panel del equipo (estudio, encuestas, filtros)
+  await expect(barista.page.getByRole('tab', { name: 'Equipo' })).toHaveCount(0);
   expect(barista.errors).toEqual([]);
+});
+
+test('el panel del equipo es solo del dueño: otro rol de admin entra como barista', async ({ browser }) => {
+  const { page, api, errors } = await open(browser, { who: 'team' });
+  api.micra.adminRole = 'editor';
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await expect(page.getByText('Esta parte es del equipo de Micra.')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Equipo' })).toHaveCount(0);
+  expect(errors).toEqual([]);
 });
