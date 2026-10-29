@@ -43,3 +43,22 @@ test('app instalada: el barista ve su enlace con la dirección del sitio', async
   expect(errors).toEqual([]);
   await ctx.close();
 });
+
+test('app instalada: el arranque se dibuja una vez por sesión y se puede saltar', async ({ browser }) => {
+  const ctx = await browser.newContext(PHONE);
+  const page = await ctx.newPage();
+  const errors = watchErrors(page);
+  const api = await mockBackend(page);
+  Object.assign(api.micra, structuredClone(SEED));
+  api.micra.admin = false;
+  await page.goto('/micra.html', { waitUntil: 'load' });
+  const splash = page.getByTestId('micra-splash');
+  await expect(splash).toBeVisible();
+  await splash.click();
+  await expect(splash).toHaveCount(0);
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('¿Quién pasa con café');
+  await expect(splash).toHaveCount(0);
+  expect(errors).toEqual([]);
+  await ctx.close();
+});

@@ -6,6 +6,8 @@ import platform from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
+import Splash from './Splash.jsx';
+import { IconNear, IconCup, IconOut } from './icons.jsx';
 import './micra-app.css';
 
 // Micra (/micra): la app que abre el botón «Micra» del sitio. Es la misma para
@@ -159,14 +161,15 @@ export default function MicraApp() {
       {viewMode === 'client' && (
         <nav className="mapp-tabs" aria-label="Micra">
           <button type="button" className={route.view === 'home' || route.view === 'barista-card' ? 'on' : ''} onClick={() => go('/micra')}>
-            <span aria-hidden="true">◎</span>Cerca
+            <IconNear />Cerca
           </button>
           <button type="button" className={route.view === 'holds' ? 'on' : ''} onClick={() => go('/micra/apartados')}>
-            <span aria-hidden="true">☕</span>Mis apartados
+            <IconCup />Mis apartados
           </button>
-          <a href={platform.siteUrl('/')}><span aria-hidden="true">↗</span>aceropress</a>
+          <a href={platform.siteUrl('/')}><IconOut />aceropress</a>
         </nav>
       )}
+      {platform.native && <Splash />}
     </div>
   );
 }

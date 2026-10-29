@@ -218,3 +218,30 @@ export function recentFiados(day, limit = 6) {
   for (const s of day?.sales ?? []) if (s.fiado_name && !seen.includes(s.fiado_name)) seen.push(s.fiado_name);
   return seen.slice(0, limit);
 }
+
+/**
+ * En qué va el apartado del cliente, para la tarjeta de etapas:
+ *   0 Apartado · 1 Salió (el barista avisó) · 2 En tu cuadra · 3 Recibido
+ * «En tu cuadra» solo cuando el barista salió y es su hora de pasar; nunca se
+ * promete una posición que no avisó.
+ */
+export const HOLD_STAGES = ['Apartado', 'Salió', 'En tu cuadra', 'Recibido'];
+export function holdStage(hold, barista, now = new Date()) {
+  if (!hold) return null;
+  if (hold.status === 'served') return 3;
+  if (hold.status !== 'waiting') return null;
+  const s = status(barista, now);
+  if (s === 'live' && inWindow(barista, now)) return 2;
+  return s === 'live' ? 1 : 0;
+}
+
+/** La salida del barista: desde cuándo, hasta cuándo y qué tanto va (0–1). */
+export function outProgress(liveUntil, now = new Date(), minutes = 240) {
+  const end = Date.parse(liveUntil);
+  if (!liveUntil || Number.isNaN(end) || end <= now.getTime()) return null;
+  const start = end - minutes * 60000;
+  const pct = Math.min(1, Math.max(0, (now.getTime() - start) / (end - start)));
+  const left = Math.min(minutes, Math.max(0, Math.round((end - now.getTime()) / 60000)));
+  const leftLabel = left >= 60 ? `${Math.floor(left / 60)} h ${left % 60 ? `${left % 60} min` : ''}`.trim() : `${left} min`;
+  return { start: new Date(start), end: new Date(end), pct, leftLabel };
+}

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   PRODUCTS, menuOf, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
-  baristaPath, newRef, recentFiados,
+  baristaPath, newRef, recentFiados, outProgress,
 } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
+import Figure from './Elenco.jsx';
+import { IconThermo } from './icons.jsx';
 
 // Modo barista: salí, quién me espera, +1 por taza, fiados y el día. Pensado
 // para una mano, al sol y con mala señal: los +1 se guardan en el celular y
@@ -33,6 +35,7 @@ export function BaristaJoin({ session, onLinked, team = false }) {
   if (!session) {
     return (
       <section className="mapp-join-page">
+        <Figure name="sombrilla" className="is-join" />
         <p className="mapp-kicker">Para baristas</p>
         <h1 className="mapp-title">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
         <ul className="mapp-perks">
@@ -197,7 +200,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
   const queued = readQueue().filter((s) => (s.asId ?? null) === asId);
   const counts = { ...sum.byProduct };
   for (const s of queued) counts[s.product] = (counts[s.product] || 0) + s.qty;
-  const live = day.live_until && Date.parse(day.live_until) > Date.now();
+  const prog = outProgress(day.live_until, new Date(), OUT_MINUTES);
+  const live = !!prog;
   const first = day.name.split(' ')[0];
 
   const plusOne = (product, fiado = null) => {
@@ -259,19 +263,33 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
           <button type="button" className="mapp-link" onClick={() => onPickAs?.(null)}>Cambiar de barista</button>
         </p>
       )}
-      <section className="mapp-hello">
-        <p className="mapp-kicker">{live ? `En la calle hasta ${time(day.live_until)}` : 'Hoy'}</p>
-        <h1 className="mapp-title is-small">{greeting()}, {first}.</h1>
-        {live ? (
-          <button type="button" className="mapp-btn is-stop" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
-        ) : (
+      {live ? (
+        <section className="mapp-now is-out" aria-label="Tu salida">
+          <p className="mapp-now-kicker">Saliste a las {time(prog.start)}<span className="mapp-now-live">En la calle</span></p>
+          <h1 className="mapp-now-hello">{greeting()}, {first}.</h1>
+          <p className="mapp-now-title">Hasta las {time(day.live_until)}</p>
+          <div className="mapp-outbar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida">
+            <i style={{ width: `${prog.pct * 100}%` }} /><em style={{ left: `${prog.pct * 100}%` }}><IconThermo /></em>
+          </div>
+          <p className="mapp-now-sub">quedan {prog.leftLabel}</p>
+          <dl className="mapp-now-kpis">
+            <div><dd>{sum.waitingCups}</dd><dt>te esperan</dt></div>
+            <div><dd>{money(sum.total)}</dd><dt>hoy llevas</dt></div>
+            <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
+          </dl>
+          <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
+        </section>
+      ) : (
+        <section className="mapp-hello">
+          <p className="mapp-kicker">Hoy</p>
+          <h1 className="mapp-title is-small">{greeting()}, {first}.</h1>
           <button type="button" className="mapp-btn is-cta is-big" onClick={() => out(true)} disabled={busy === 'out' || !day.public}>
             {busy === 'out' ? 'Avisando…' : 'Salí a vender'}
           </button>
-        )}
-        {!day.public && <p className="mapp-fine">Aún no apareces para los clientes: el equipo te activa cuando aceptes salir en Micra.</p>}
-        {day.public && !live && <p className="mapp-fine">Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.</p>}
-      </section>
+          {!day.public && <p className="mapp-fine">Aún no apareces para los clientes: el equipo te activa cuando aceptes salir en Micra.</p>}
+          {day.public && <p className="mapp-fine">Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.</p>}
+        </section>
+      )}
 
       {error && <p className="mapp-error" role="alert">{error} <button type="button" className="mapp-link" onClick={() => setError(null)}>Cerrar</button></p>}
 
