@@ -167,3 +167,27 @@ test('al entrar con Google, el equipo va a su panel y el barista a su día', () 
   // Sin cuenta enlazada: a poner el código del equipo
   assert.equal(landingAfterLogin({ admin: false, barista: null }), '/micra/barista');
 });
+
+test('scoreboard: hoy con lo que no ha subido, contra ayer, meta y récord', async () => {
+  const { scoreboard } = await import('./micraApp.js');
+  const week = [
+    { day: '2026-10-23', cups: 20, total: 30000 }, { day: '2026-10-24', cups: 40, total: 60000 },
+    { day: '2026-10-25', cups: 0, total: 0 }, { day: '2026-10-26', cups: 10, total: 15000 },
+    { day: '2026-10-27', cups: 25, total: 37500 }, { day: '2026-10-28', cups: 30, total: 45000 },
+    { day: '2026-10-29', cups: 0, total: 0 },
+  ];
+  const day = { week, sales: [{ product: 'tinto', qty: 10, total: 15000 }], holds: [], fiados: [{ total: 3000 }] };
+  const b = scoreboard(day, [{ product: 'tinto', qty: 2 }], { tinto: 1500 });
+  assert.equal(b.cups, 12);
+  assert.equal(b.total, 18000);
+  assert.equal(b.goal, 40);
+  assert.equal(b.goalLeft, 28);
+  assert.equal(b.vsYesterday, -60);
+  assert.equal(b.record, false);
+  assert.equal(b.weekCups, 125 + 12);
+  assert.equal(b.owed, 3000);
+  const fresh = scoreboard({ week: [{ cups: 0, total: 0 }], sales: [], holds: [], fiados: [] });
+  assert.equal(fresh.goal, 30);
+  assert.equal(fresh.vsYesterday, null);
+  assert.equal(scoreboard({ ...day, sales: [{ product: 'tinto', qty: 41, total: 61500 }] }).record, true);
+});

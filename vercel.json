@@ -6,8 +6,32 @@
     }
   },
   "rewrites": [
-    { "source": "/api/v1/(.*)", "destination": "/api/v1?__path=$1" },
-    { "source": "/escuela", "destination": "/escuela.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/api/v1?__path=$1"
+    },
+    {
+      "source": "/escuela",
+      "destination": "/escuela.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/micra-app/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
   ]
 }

@@ -262,3 +262,30 @@ export function landingAfterLogin({ admin, barista }) {
   if (admin) return '/micra/equipo';
   return '/micra/barista';
 }
+
+/**
+ * El tablero de arriba del barista: lo de hoy (con lo que aún no sube), cómo va
+ * contra ayer y contra su mejor día de la semana, y la meta del día (su mejor
+ * día, o 30 tazas si la semana está vacía). `queued`: ventas en cola sin señal.
+ */
+export function scoreboard(day, queued = [], prices = {}) {
+  const sum = daySummary(day);
+  const extraCups = queued.reduce((a, s) => a + (s.qty || 0), 0);
+  const extraMoney = queued.reduce((a, s) => a + (Number(prices[s.product]) || 0) * (s.qty || 0), 0);
+  const cups = sum.cups + extraCups;
+  const total = sum.total + extraMoney;
+  const week = day?.week ?? [];
+  const past = week.slice(0, -1);
+  const yesterday = past.at(-1)?.cups ?? null;
+  const best = Math.max(0, ...past.map((d) => d.cups));
+  const goal = best > 0 ? best : 30;
+  const weekCups = past.reduce((a, d) => a + d.cups, 0) + cups;
+  const weekMoney = past.reduce((a, d) => a + Number(d.total || 0), 0) + total;
+  const vsYesterday = yesterday ? Math.round(((cups - yesterday) / yesterday) * 100) : null;
+  return {
+    cups, total, owed: sum.owed, waitingCups: sum.waitingCups,
+    goal, goalPct: Math.min(1, cups / goal), goalLeft: Math.max(0, goal - cups),
+    vsYesterday, record: best > 0 && cups > best,
+    weekCups, weekMoney,
+  };
+}
