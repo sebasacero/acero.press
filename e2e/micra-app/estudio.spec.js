@@ -87,18 +87,26 @@ test('equipo: la encuesta de una ficha y «Registrar un barista» abre la cámar
   await enc.getByRole('button', { name: 'Cerrar' }).click();
   await expect(enc).toHaveCount(0);
 
+  // La ficha rápida: la cámara primero (el GPS se lee solo), todo lo demás opcional
   await page.getByRole('button', { name: 'Registrar un barista' }).click();
   await expect(page).toHaveURL(/\/micra\/ficha$/);
-  const sheet = page.getByRole('dialog', { name: 'Ficha de un tintero' });
-  await expect(sheet).toBeVisible();
-  await expect(page.locator('.mstudio.is-camera')).toHaveCount(1);
-  await sheet.getByPlaceholder(/Don Jairo/).fill('Don Jairo');
-  await sheet.getByRole('option', { name: 'Chapinero' }).click();
-  await sheet.getByRole('button', { name: '📍 Usar mi ubicación' }).click();
-  await expect(sheet.getByTestId('tintero-gps')).toContainText('Marcado · ±9 m');
-  await sheet.getByRole('button', { name: 'Guardar tintero' }).click();
-  await expect(page.getByRole('dialog', { name: 'Encuesta de Don Jairo' })).toBeVisible();
-  expect(api.find('/api/v1/bi/tinteros', 'POST').data).toMatchObject({ name: 'Don Jairo', localidad: 'Chapinero', lat: 4.6577 });
+  const flow = page.locator('.mff');
+  await expect(flow).toHaveAttribute('data-screen', 'foto');
+  await expect(flow.getByRole('button', { name: 'GPS ±9 m' })).toBeVisible();
+  await flow.getByRole('button', { name: 'Sin foto ›' }).click();
+  await expect(flow).toHaveAttribute('data-screen', 'quien');
+  await flow.getByPlaceholder(/Don Jairo/).fill('Don Jairo');
+  await flow.getByTestId('ficha-save').click();
+  await expect(flow).toHaveAttribute('data-screen', 'extras');
+  await expect(flow.getByRole('status')).toContainText('Don Jairo');
+  expect(api.find('/api/v1/bi/tinteros', 'POST').data).toMatchObject({ name: 'Don Jairo', lat: 4.6577, gps_accuracy_m: 9 });
+  // Sin su permiso de publicidad no hay tarjeta ni video; la encuesta sí, una pregunta por pantalla
+  await expect(flow.getByTestId('extra-tarjeta')).toBeDisabled();
+  await flow.getByTestId('extra-encuesta').click();
+  await expect(page.getByTestId('survey-wizard')).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+  await flow.getByTestId('ficha-new').click();
+  await expect(flow).toHaveAttribute('data-screen', 'foto');
 
   // La cámara con filtros también está en su pestaña; al cerrarla se vuelve al estudio
   await page.goto('/micra/camara', { waitUntil: 'load' });
@@ -117,4 +125,12 @@ test('un barista sin equipo no ve el estudio ni la cámara del equipo', async ({
   await page.goto('/micra/camara', { waitUntil: 'load' });
   await expect(page.locator('.mapp-main')).toBeVisible();
   await expect(page.locator('.mstudio')).toHaveCount(0);
+  // Pero sí tiene la cámara con filtros para sus redes: sin venta, sin ficha, sin publicar en ACERO
+  // (este barista del simulador no tiene día enlazado: se entra por la ruta, que es la del botón de su inicio)
+  await page.goto('/micra/video', { waitUntil: 'load' });
+  await expect(page.locator('.mstudio.is-camera')).toHaveCount(1);
+  await expect(page.locator('.mst-ticket')).toHaveCount(0);
+  await expect(page.locator('.mst-tintero')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cerrar la cámara' }).click();
+  await expect(page).toHaveURL(/\/micra\/barista$/);
 });

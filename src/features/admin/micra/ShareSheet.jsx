@@ -12,7 +12,7 @@ import { IconCamera, IconChat, IconDownload, IconGrid, IconShare } from './icons
 export default function ShareSheet({
   out, sale, kind, format, videoMode, cardRef, cardKey, caption, autoCaption, setCaption, hashtags, setHashtags,
   linkedOrderId, canShare, onPublish, onNewCard, onOpenPublications, guardLogo, onClose, docked, onRegistered,
-  busy: studioBusy = false, linkedPhone = null,
+  busy: studioBusy = false, linkedPhone = null, lite = false,
 }) {
   const thumbRef = useRef(null);
   const [notice, setNotice] = useState(null); // { ok, text }
@@ -120,12 +120,13 @@ export default function ShareSheet({
   const videoReady = !!out.cardVideo;
   const pct = out.progress !== null ? Math.round(out.progress * 100) : null;
   const dests = [
-    { id: 'ig', label: 'Instagram', sub: PUBLISH_LABEL[kindIG], aria: PUBLISH_ARIA[kindIG], Icon: IconCamera, run: publish },
+    // Un barista de la app (lite) comparte en sus redes, no en las de ACERO ni en Publicaciones
+    !lite && { id: 'ig', label: 'Instagram', sub: PUBLISH_LABEL[kindIG], aria: PUBLISH_ARIA[kindIG], Icon: IconCamera, run: publish },
     { id: 'wa', label: 'WhatsApp', sub: 'cliente', Icon: IconChat, run: whatsapp },
     canShare && { id: 'share', label: 'Compartir', sub: 'menú del celular', Icon: IconShare, run: share, disabled: videoMode && !videoReady },
     { id: 'download', label: 'Descargar', sub: videoMode ? (out.cardVideo?.ext?.toUpperCase() || 'Video') : 'PNG', Icon: IconDownload, run: download },
     // Guardada una vez basta (otra subida sería una fila repetida)
-    { id: 'save', label: 'Publicaciones', sub: out.savedUrl ? '✓ Guardada' : 'Guardar', Icon: IconGrid, run: save, on: !!out.savedUrl, disabled: !!out.savedUrl },
+    !lite && { id: 'save', label: 'Publicaciones', sub: out.savedUrl ? '✓ Guardada' : 'Guardar', Icon: IconGrid, run: save, on: !!out.savedUrl, disabled: !!out.savedUrl },
   ].filter(Boolean);
 
   return (

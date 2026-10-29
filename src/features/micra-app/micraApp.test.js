@@ -126,7 +126,8 @@ test('rutas internas de /micra', () => {
   assert.deepEqual(parseRoute('/micra/apartados'), { view: 'holds' });
   assert.deepEqual(parseRoute('/micra/estudio'), { view: 'study' });
   assert.deepEqual(parseRoute('/micra/camara'), { view: 'camera' });
-  assert.deepEqual(parseRoute('/micra/ficha'), { view: 'camera', start: 'tintero' });
+  assert.deepEqual(parseRoute('/micra/ficha'), { view: 'ficha' });
+  assert.deepEqual(parseRoute('/micra/video'), { view: 'video' });
 });
 
 test('referencias e iniciales', () => {

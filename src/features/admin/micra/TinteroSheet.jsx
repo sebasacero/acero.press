@@ -39,7 +39,7 @@ async function postTintero(body) {
   return data;
 }
 
-export default function TinteroSheet({ photo, onTakePhoto, onClearPhoto, canShoot, docked, onClose, onSaved, onMakeCard, canCard = true }) {
+export default function TinteroSheet({ photo, onTakePhoto, onClearPhoto, canShoot, docked, onClose, onSaved, onMakeCard, onTicket, canCard = true }) {
   const [form, setForm] = useState(() => ({ ...EMPTY_TINTERO }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -141,6 +141,11 @@ export default function TinteroSheet({ photo, onTakePhoto, onClearPhoto, canShoo
             <button type="button" className="msheet-btn is-primary is-big" disabled={busy || !onMakeCard || !canCard || !(consented || adOk)} onClick={shoot}>
               {busy ? 'Guardando…' : 'Tomar la foto de su tarjeta'}
             </button>
+            {onTicket && (
+              <button type="button" className="msheet-btn" disabled={busy} onClick={() => onTicket({ ...saved, surveyed: card.surveyed })} data-testid="tintero-ticket">
+                Ticket · le vendí algo
+              </button>
+            )}
             <button type="button" className="msheet-btn is-ghost" disabled={busy} onClick={() => finish(card.surveyed)}>Listo, sin tarjeta</button>
           </>
         )}

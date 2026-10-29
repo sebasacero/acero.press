@@ -41,7 +41,7 @@ export function Multi({ label, field, options, form, set }) {
   );
 }
 
-function Amount({ label, field, presets, form, set, placeholder, inputMode = 'decimal', fmt = String, hint }) {
+export function Amount({ label, field, presets, form, set, placeholder, inputMode = 'decimal', fmt = String, hint }) {
   return (
     <div className="msheet-group">
       <label className="msheet-label" htmlFor={`srv-in-${field}`}>{label}</label>
@@ -59,7 +59,7 @@ function Amount({ label, field, presets, form, set, placeholder, inputMode = 'de
   );
 }
 
-function Brand({ form, set }) {
+export function Brand({ form, set }) {
   const known = BRANDS.includes(form.coffee_brand);
   const other = !!form.coffee_brand && !known;
   return (
@@ -75,6 +75,34 @@ function Brand({ form, set }) {
     </div>
   );
 }
+
+/**
+ * Las mismas preguntas, una por pantalla (SurveyWizard en la app): { kind, label, field, ... }.
+ * `when` esconde una pregunta que depende de otra.
+ */
+export const SURVEY_STEPS = [
+  { kind: 'amount', label: 'Tazas al día', field: 'cups_per_day', presets: PRESETS.cups_per_day, placeholder: 'Otro número', inputMode: 'numeric', section: 'Su negocio' },
+  { kind: 'amount', label: 'Horas al día', field: 'hours_per_day', presets: PRESETS.hours_per_day, placeholder: 'Otro número', section: 'Su negocio' },
+  { kind: 'choice', label: 'Días a la semana', field: 'days_per_week', options: PRESETS.days_per_week.map((d) => [d, String(d)]), grid: true, section: 'Su negocio' },
+  { kind: 'choice', label: '¿Hace cuánto vende café?', field: 'years_selling', options: OPTIONS.years_selling, section: 'Su negocio' },
+  { kind: 'choice', label: '¿Y en este lugar?', field: 'years_here', options: OPTIONS.years_here, section: 'Su negocio' },
+  { kind: 'brand', label: 'Qué café usa', field: 'coffee_brand', section: 'Su café' },
+  { kind: 'amount', label: 'Libras a la semana (de 500 g)', field: 'libras_week', presets: PRESETS.libras_week, fmt: fmtLb, placeholder: 'Otra cantidad', section: 'Su café' },
+  { kind: 'amount', label: 'A cuánto compra la libra', field: 'price_libra', placeholder: '$ por libra de 500 g', inputMode: 'numeric', section: 'Su café' },
+  { kind: 'choice', label: 'Dónde lo compra', field: 'buys_where', options: OPTIONS.buys_where, section: 'Su café' },
+  { kind: 'choice', label: '¿Vendería una taza de especialidad?', field: 'would_sell_specialty', options: OPTIONS.would_sell_specialty, section: 'Café de especialidad' },
+  { kind: 'amount', label: '¿A cuánto la vendería?', field: 'specialty_price', placeholder: '$ por taza', inputMode: 'numeric', section: 'Café de especialidad' },
+  { kind: 'choice', label: '¿Le interesa un kit AeroPress?', field: 'kit_interest', options: OPTIONS.kit_interest, section: 'Café de especialidad' },
+  { kind: 'choice', label: '¿Cómo lo pagaría?', field: 'kit_payment', options: OPTIONS.kit_payment, section: 'Café de especialidad' },
+  { kind: 'choice', label: '¿Qué preferiría: una nueva preparación o un termo con café listo para vender?', field: 'offer_choice', options: OPTIONS.offer_choice, section: 'Café de especialidad' },
+  { kind: 'amount', label: '¿Cuántas tazas del termo vendería al día?', field: 'thermo_cups_day', presets: PRESETS.thermo_cups_day, placeholder: 'Otro número', inputMode: 'numeric', section: 'Café de especialidad', when: (f) => f.offer_choice === 'termo' },
+  { kind: 'choice', label: '¿Tiene celular con datos?', field: 'has_smartphone', options: OPTIONS.has_smartphone, section: 'Celular y pagos' },
+  { kind: 'multi', label: '¿Cómo le pagan?', field: 'payments', options: OPTIONS.payments, section: 'Celular y pagos' },
+  { kind: 'choice', label: 'Género', field: 'gender', options: OPTIONS.gender, section: 'Quién es · opcional' },
+  { kind: 'choice', label: 'Edad', field: 'age_range', options: OPTIONS.age_range, section: 'Quién es · opcional' },
+  { kind: 'choice', label: '¿Es su ingreso principal?', field: 'main_income', options: OPTIONS.main_income, section: 'Quién es · opcional' },
+  { kind: 'notes', label: 'Nota (opcional, no sale en el informe)', field: 'notes', section: 'Para terminar' },
+];
 
 export default function SurveyForm({ form, onChange, name }) {
   const set = (patch) => onChange({ ...form, ...patch });

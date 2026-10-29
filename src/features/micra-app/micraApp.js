@@ -203,7 +203,9 @@ export function parseRoute(pathname) {
   // Herramientas del equipo en la calle: el estudio y la cámara de Micra (con la ficha abierta)
   if (p === '/micra/estudio') return { view: 'study' };
   if (p === '/micra/camara') return { view: 'camera' };
-  if (p === '/micra/ficha') return { view: 'camera', start: 'tintero' };
+  // La ficha rápida (mapear primero) y la cámara con filtros para un barista de la app (videos para las redes)
+  if (p === '/micra/ficha') return { view: 'ficha' };
+  if (p === '/micra/video') return { view: 'video' };
   return { view: 'home' };
 }
 

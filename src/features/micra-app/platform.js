@@ -4,6 +4,7 @@
 // setPlatform(), para que el sitio nunca descargue código de Capacitor.
 
 import { supabase } from '../../shared/lib/supabaseClient.js';
+import { hasWebBluetooth, printCanvas, webBluetoothTransport } from '../admin/micra/printer.js';
 
 // Dentro de la app no hay «origen» público (es capacitor://localhost): los enlaces
 // que se comparten y los que salen de Micra apuntan al sitio
@@ -34,6 +35,27 @@ const web = {
     provider: 'google',
     options: { redirectTo: window.location.origin + (next || window.location.pathname) + window.location.search },
   }),
+  /**
+   * Compartir una imagen (el ticket) con el menú del celular: desde ahí va a WhatsApp,
+   * a la app de Phomemo o a Imprimir. Sin menú, se descarga. Devuelve si se abrió el menú.
+   */
+  shareImage: async ({ blob, fileName, title, text }) => {
+    const file = new File([blob], fileName, { type: blob.type });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title, text }).catch(() => {});
+      return true;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: fileName });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    return false;
+  },
+  /** La impresora Phomemo por Bluetooth: en la web solo donde hay Web Bluetooth (Chrome). */
+  printer: {
+    available: () => hasWebBluetooth(),
+    print: (canvas, { dots, onStatus }) => printCanvas(canvas, webBluetoothTransport(), { dots, onStatus }),
+  },
   /** El color de la barra de arriba del sistema, de día o de noche. */
   setNight: (night) => {
     const meta = document.querySelector('meta[name="theme-color"]');

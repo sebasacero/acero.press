@@ -272,7 +272,7 @@ const MicraCamera = forwardRef(function MicraCamera({
       if ((e.key === ' ' || e.key === 'Enter') && !onButton) { e.preventDefault(); k.shutter(); }
       else if (e.key === 'ArrowLeft' && !recRef.current) { e.preventDefault(); k.stepFilter(-1); }
       else if (e.key === 'ArrowRight' && !recRef.current) { e.preventDefault(); k.stepFilter(1); }
-      else if (e.key.toLowerCase() === 'v' && !recRef.current) k.onOpenSale();
+      else if (e.key.toLowerCase() === 'v' && !recRef.current) k.onOpenSale?.();
       else if (e.key.toLowerCase() === 'f' && !recRef.current) k.onOpenFormat();
     };
     window.addEventListener('keydown', onKey);
@@ -380,9 +380,11 @@ const MicraCamera = forwardRef(function MicraCamera({
               </button>
             ))}
           </div>
-          <button type="button" className="mst-ticket" onClick={onOpenSale} disabled={recording} aria-label="Venta">
-            {ticketLabel}
-          </button>
+          {onOpenSale && (
+            <button type="button" className="mst-ticket" onClick={onOpenSale} disabled={recording} aria-label="Venta">
+              {ticketLabel}
+            </button>
+          )}
           {onOpenTintero && (
             <button type="button" className="mst-tintero" onClick={onOpenTintero} disabled={recording} aria-label="Registrar un tintero">
               Tintero
