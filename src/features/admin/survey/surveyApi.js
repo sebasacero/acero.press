@@ -1,9 +1,10 @@
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import { apiUrl } from '../../../shared/lib/apiBase.js';
 
 /** Guarda una encuesta por la API de Acero (solo el owner; la base exige el permiso del tintero). */
 export async function postSurvey(tinteroId, body) {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(`/api/v1/bi/tinteros/${encodeURIComponent(tinteroId)}/surveys`, {
+  const res = await fetch(apiUrl(`/api/v1/bi/tinteros/${encodeURIComponent(tinteroId)}/surveys`), {
     method: 'POST',
     headers: { Authorization: `Bearer ${session?.access_token ?? ''}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

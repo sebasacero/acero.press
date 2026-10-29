@@ -11,6 +11,7 @@ from __future__ import annotations
 from urllib.parse import parse_qsl, urlencode
 
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .bi.routes import router as bi_router
@@ -51,6 +52,16 @@ class RestoreVercelPath:
 
 
 app.add_middleware(RestoreVercelPath)
+# La app Micra instalada (Capacitor) llama desde su propio origen: iOS sirve en
+# capacitor://localhost y Android en https://localhost. Va con el token en la
+# cabecera, sin cookies, así que no se abren credenciales a nadie más.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["capacitor://localhost", "https://localhost", "http://localhost"],
+    allow_methods=["GET", "POST", "PATCH", "PUT"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=86400,
+)
 app.include_router(bi_router, prefix=PREFIX)
 
 
