@@ -5,6 +5,7 @@ import MapCanvas from './MapCanvas.jsx';
 import { StreetPhone, BaristaPhone } from './AppPhones.jsx';
 import { SheetFrame, Segs, Odometer } from './parts.jsx';
 import StoreButtons from './StoreButtons.jsx';
+import { personaSrc } from '../home/sections/StreetPeople.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
 import { useStreetMap } from '../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
@@ -99,6 +100,9 @@ function Slide({ kind, active, onSelect, street = null, streetLayers = null, wha
         fields={textFields(kind)}
         onSaved={reloadTexts}
       />
+
+      {/* Una persona de la calle parada sobre el borde de la hoja: la que pide con AeroPress y la que vive del café */}
+      <img className={`essp-persona essp-persona--${kind}`} src={personaSrc(isOrder ? 'aeropress' : 'sombrilla')} alt="" decoding="async" aria-hidden="true" />
 
       <div className="essp-in">
         <hr className="essp-dash" />

@@ -3,6 +3,8 @@ import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
 import { SheetFrame } from '../esspresale/parts.jsx';
 import StepScrolly from '../home/sections/StepScrolly.jsx';
+import { personaSrc } from '../home/sections/StreetPeople.jsx';
+import StreetScene from '../home/sections/StreetScene.jsx';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx';
 import { lessonsFor } from './lessons.js';
@@ -21,6 +23,8 @@ import './school.css';
 //   3. Las seis lecciones en tarjetas; se abre una a la vez, en su lugar, en computador y en celular.
 // /escuela#leccion-3 abre esa lección (para mandarla por WhatsApp).
 const num = (i) => String(i + 1).padStart(2, '0');
+// La persona de la calle que acompaña cada lección en su tarjeta (ilustraciones, sin nombre)
+const LESSON_PERSONA = { meet: 'aeropress', first: 'carrito', measure: 'ruana', taste: 'pareja', street: 'sombrilla', price: 'ruta' };
 const reducedMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** Lo que tiene cada lección: entrada, la figura, la lista, el consejo, la práctica y para dónde seguir. */
@@ -167,8 +171,10 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
 
   return (
     <main className="school school-page">
-      <div className="school-sheet">
+      <div className="school-sheet sp-sheet">
         <SheetFrame />
+        {/* La calle del guion al pie: la cabecera, la persona y las cifras se paran en el andén */}
+        <StreetScene className="sp-street" seed={11} />
         <Navbar variant="sheet" tone="paper" navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
         <div className="school-in">
           <hr className="essp-dash" />
@@ -186,6 +192,8 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
               </div>
               <div className="essp-loc">{t('school.loc')} · {t('school.total').replace('{min}', minutes)}</div>
             </div>
+            {/* Una persona de la calle con su carrito: la Escuela es para quien prepara en la calle */}
+            <img className="sp-persona" src={personaSrc('carrito')} alt="" decoding="async" aria-hidden="true" />
             {/* La receta de un vistazo, como las cifras de Micra en la portada */}
             <ul className="sp-glance" aria-label={t('school.glanceLabel')}>
               {t('school.glance').map(([v, k]) => <li key={v}><b>{v}</b><span>{k}</span></li>)}
@@ -203,6 +211,8 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
         steps={recipe.steps}
         labels={{ dots: recipe.dots, goStep: recipe.goStep, swipe: recipe.swipe }}
         source={recipe.source}
+        persona={personaSrc('aeropress')}
+        streetSeed={5}
         ctas={<button type="button" className="essp-btn" onClick={openCook}>{timerLabel}</button>}
       />
 
@@ -218,6 +228,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
 
       <div className="school-sheet school-lessons" id="lecciones">
         <SheetFrame />
+        <StreetScene className="sp-street" seed={23} noon />
         <div className="school-in">
           <section className="sc" aria-labelledby="lecciones-title">
             <header className="sc-head">
@@ -255,6 +266,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
                           {!isOpen && <span className="sa-lead">{l.lead}</span>}
                           <small>{l.mins} {t('school.min')}{isSeen ? ` · ✓ ${t('school.seen')}` : ''}</small>
                         </span>
+                        {!isOpen && <img className="sa-persona" src={personaSrc(LESSON_PERSONA[l.key] ?? 'aeropress')} alt="" loading="lazy" decoding="async" aria-hidden="true" />}
                         <span className="sa-chev" aria-hidden="true">{isOpen ? '−' : '+'}</span>
                       </button>
                     </h3>
