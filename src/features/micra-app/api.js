@@ -60,9 +60,11 @@ export const me = () => call('tintero_me');
 export const ownerDay = () => call('micra_owner_day');
 export const invite = (id) => call('tintero_invite', { p_tintero_id: id });
 
+// El panel del equipo (estudio, encuestas, cámara con filtros) es solo del dueño:
+// otro rol de admin_users entra a Micra como cualquier barista
 export async function isAdmin(userId) {
   const { data, error } = await supabase.from('admin_users').select('id, role').eq('auth_user_id', userId).maybeSingle();
-  return !error && !!data;
+  return !error && data?.role === 'owner';
 }
 
 // En el celular instalado se entra por el navegador del sistema y se vuelve por enlace (native/)

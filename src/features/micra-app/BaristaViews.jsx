@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   PRODUCTS, menuOf, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
   baristaPath, newRef, recentFiados, outProgress,
@@ -13,6 +13,8 @@ import { Cargando } from './Animado.jsx';
 // para una mano, al sol y con mala señal: los +1 se guardan en el celular y
 // suben cuando hay red (el mismo client_ref no cuenta dos veces).
 
+const MicraMap = lazy(() => import('./MicraMap.jsx'));
+
 const QUEUE_KEY = 'micra_sales_queue_v1';
 const OUT_MINUTES = 240;
 
@@ -20,7 +22,28 @@ const readQueue = () => { try { return JSON.parse(localStorage.getItem(QUEUE_KEY
 const writeQueue = (q) => { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch { /* sin memoria: sube de una */ } };
 const time = (iso) => new Date(iso).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' });
 
-export function BaristaJoin({ session, onLinked, team = false }) {
+/** Lo primero al entrar: el mapa con dónde estás y los baristas de alrededor. */
+function NearMap({ selfId = null, night = false, go }) {
+  const [list, setList] = useState(null);
+  const [me, setMe] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    api.listBaristas().then((l) => alive && setList(l ?? [])).catch(() => alive && setList([]));
+    api.onePosition().then((p) => alive && setMe(p));
+    return () => { alive = false; };
+  }, []);
+  const others = (list ?? []).filter((b) => b.id !== selfId);
+  return (
+    <section className="mapp-glass mapp-nearby" aria-labelledby="mapp-nearby">
+      <p className="mapp-cota" id="mapp-nearby">Cerca de ti{list ? ` · ${others.length === 1 ? '1 barista' : `${others.length} baristas`}` : ''}</p>
+      <Suspense fallback={<div className="mapp-map" aria-hidden="true" />}>
+        <MicraMap baristas={others} me={me} theme={night ? 'noche' : 'plano'} onPick={(id) => go?.(baristaPath(id))} />
+      </Suspense>
+    </section>
+  );
+}
+
+export function BaristaJoin({ session, onLinked, team = false, night = false, go }) {
   const fromUrl = new URLSearchParams(window.location.search).get('codigo') ?? '';
   const [code, setCode] = useState(fromUrl.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6));
   const [busy, setBusy] = useState(false);
@@ -58,6 +81,11 @@ export function BaristaJoin({ session, onLinked, team = false }) {
   };
   return (
     <form className="mapp-join-page" onSubmit={submit}>
+      <NearMap night={night} go={go} />
+      <section className="mapp-glass" aria-labelledby="mapp-asks">
+        <p className="mapp-cota" id="mapp-asks">Solicitudes cerca · nadie todavía</p>
+        <p className="mapp-muted">Cuando enlaces tu cuenta, aquí te llegan los clientes que te apartan café.</p>
+      </section>
       <p className="mapp-kicker">Para baristas</p>
       <h1 className="mapp-title is-small">Escribe tu código.</h1>
       <p className="mapp-lede">Son seis letras y números que te dio el equipo de Micra. Sirven una vez y vencen en 7 días.</p>
@@ -130,7 +158,7 @@ function Digits({ value, label }) {
   );
 }
 
-export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
+export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false }) {
   const [day, setDay] = useState(null);
   const [error, setError] = useState(null);
   const [missing, setMissing] = useState(false);
@@ -294,10 +322,12 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
 
       {error && <p className="mapp-error" role="alert">{error} <button type="button" className="mapp-link" onClick={() => setError(null)}>Cerrar</button></p>}
 
+      <NearMap selfId={day.id} night={night} go={go} />
+
       {menu.length === 0 ? <Prices day={day} asId={asId} onSaved={load} first /> : (
         <>
           <section className="mapp-glass" aria-labelledby="mapp-wait">
-            <p className="mapp-cota" id="mapp-wait">Te esperan · {waiting.length ? `${sum.waitingCups} ${sum.waitingCups === 1 ? 'taza' : 'tazas'}` : 'nadie todavía'}</p>
+            <p className="mapp-cota" id="mapp-wait">Solicitudes cerca · Te esperan · {waiting.length ? `${sum.waitingCups} ${sum.waitingCups === 1 ? 'taza' : 'tazas'}` : 'nadie todavía'}</p>
             {waiting.length === 0 && (
               <p className="mapp-muted">Cuando un cliente te aparte, sale aquí. Comparte tu enlace para que te encuentren.</p>
             )}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
   meters, distanceLabel, sortBaristas, filterBaristas, daySummary, weekBars, weekdayLetter, fiadoMessage,
-  parseRoute, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
+  parseRoute, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
 // 26 oct 2026, 7:30 a. m. en Bogotá (UTC−5)
@@ -157,4 +157,12 @@ test('outProgress: cuánto lleva la salida y cuánto le queda', () => {
   assert.equal(outProgress('2026-10-26T12:00:00Z', now), null);
   assert.equal(outProgress(null, now), null);
   assert.equal(outProgress('2026-10-26T12:40:00Z', now).leftLabel, '10 min');
+});
+
+test('al entrar con Google, el equipo va a su panel y el barista a su día', () => {
+  assert.equal(landingAfterLogin({ admin: true, barista: null }), '/micra/equipo');
+  assert.equal(landingAfterLogin({ admin: true, barista: { id: 'b1' } }), '/micra/barista');
+  assert.equal(landingAfterLogin({ admin: false, barista: { id: 'b1' } }), '/micra/barista');
+  // Sin cuenta enlazada: a poner el código del equipo
+  assert.equal(landingAfterLogin({ admin: false, barista: null }), '/micra/barista');
 });

@@ -7,7 +7,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { Share } from '@capacitor/share';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { setApiBase } from '../../../shared/lib/apiBase.js';
-import { SITE, setPlatform } from '../platform.js';
+import { SITE, markLogin, setPlatform } from '../platform.js';
 import { AUTH_REDIRECT, authFromUrl, micraPathFromUrl, startPath } from './deepLink.js';
 import MicraApp from '../MicraApp.jsx';
 import '../../../index.css';
@@ -38,8 +38,8 @@ setPlatform({
   },
   // Google no deja entrar desde una vista web dentro de la app: se abre el navegador
   // del sistema y Supabase vuelve a la app por el esquema propio (AUTH_REDIRECT)
-  signIn: async (next) => {
-    if (next) try { sessionStorage.setItem('micra_after_login', next); } catch { /* sin memoria */ }
+  signIn: async () => {
+    markLogin();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: AUTH_REDIRECT, skipBrowserRedirect: true },
@@ -58,9 +58,7 @@ async function openUrl(url) {
     if (auth.code) await supabase.auth.exchangeCodeForSession(auth.code);
     else if (auth.access_token) await supabase.auth.setSession(auth);
     else window.alert(`No se pudo entrar: ${auth.error}`);
-    let next = null;
-    try { next = sessionStorage.getItem('micra_after_login'); sessionStorage.removeItem('micra_after_login'); } catch { /* sin memoria */ }
-    if (next && next !== window.location.pathname) go(next);
+    // A qué panel ir lo decide MicraApp cuando sabe si es del equipo o barista
     return;
   }
   const path = micraPathFromUrl(url);
