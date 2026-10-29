@@ -249,7 +249,11 @@ compartir, entrar con Google, abrir WhatsApp o el sitio) está en
    el build los mete dentro de la app (son las llaves públicas; nada privado).
 5. **Supabase → Authentication → URL Configuration → Redirect URLs**: agrega
    `com.aceropress.micra://auth`. Es por donde Google devuelve a la persona a la
-   app después de entrar; sin eso, «Entrar con Google» se queda en el navegador.
+   app después de entrar; sin eso, Supabase la manda al **Site URL** (hoy
+   `https://www.aceropress.com/admin`) y la persona queda en la sesión del sitio
+   en vez de la app. Para Micra en el navegador agrega también
+   `https://www.aceropress.com/micra/**`. Al volver, el equipo entra a su panel
+   (`/micra/equipo`) y el barista a su día.
 
 ### 10.2 Correrla
 

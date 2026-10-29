@@ -221,3 +221,20 @@ test('barista en la calle: la cabecera roja dice hasta cuándo, cuánto va y lo 
   await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('al volver de Google, el equipo cae en su panel y el barista en su día', async ({ browser }) => {
+  // La vuelta de Google llega a /micra/barista con la marca de «acaba de entrar»
+  const team = await open(browser, { who: 'team' });
+  await team.page.addInitScript(() => { localStorage.setItem('micra_login_pending', String(Date.now())); });
+  await team.page.goto('/micra/barista', { waitUntil: 'load' });
+  await expect(team.page).toHaveURL(/\/micra\/equipo$/);
+  await expect(team.page.getByRole('tab', { name: 'Equipo' })).toHaveAttribute('aria-selected', 'true');
+  expect(team.errors).toEqual([]);
+
+  const barista = await open(browser, { who: 'barista' });
+  await barista.page.addInitScript(() => { localStorage.setItem('micra_login_pending', String(Date.now())); });
+  await barista.page.goto('/micra/barista', { waitUntil: 'load' });
+  await expect(barista.page.getByRole('tab', { name: 'Barista' })).toHaveAttribute('aria-selected', 'true');
+  await expect(barista.page).toHaveURL(/\/micra\/barista$/);
+  expect(barista.errors).toEqual([]);
+});

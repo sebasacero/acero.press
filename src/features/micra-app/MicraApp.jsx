@@ -1,8 +1,8 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { isNight, parseRoute } from './micraApp.js';
+import { isNight, landingAfterLogin, parseRoute } from './micraApp.js';
 import * as api from './api.js';
-import platform from './platform.js';
+import platform, { takeLogin } from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
@@ -127,6 +127,15 @@ export default function MicraApp() {
     // Solo al cargar: después cada quien navega
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [who.loading]);
+
+  // Recién entrado con Google: cada quien a su panel (el equipo al suyo, no al del barista)
+  useEffect(() => {
+    if (who.loading || !who.session || !takeLogin()) return;
+    const to = landingAfterLogin(who);
+    try { localStorage.setItem(MODE_KEY, to === '/micra/equipo' ? 'owner' : 'barista'); } catch { /* sin memoria */ }
+    go(to);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [who.loading, who.session]);
 
   const switchMode = (m) => {
     try { localStorage.setItem(MODE_KEY, m); } catch { /* sin memoria */ }

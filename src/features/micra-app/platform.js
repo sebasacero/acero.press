@@ -9,6 +9,20 @@ import { supabase } from '../../shared/lib/supabaseClient.js';
 // que se comparten y los que salen de Micra apuntan al sitio
 export const SITE = 'https://www.aceropress.com';
 
+// Marca que la persona pidió entrar: al volver con la sesión, MicraApp la lleva
+// a su panel (equipo o barista). Vive en localStorage porque en el celular la
+// vuelta de Google puede abrir la app de nuevo.
+export const LOGIN_KEY = 'micra_login_pending';
+export function markLogin() {
+  try { localStorage.setItem(LOGIN_KEY, String(Date.now())); } catch { /* sin memoria */ }
+}
+/** ¿Se acaba de entrar? (marca de menos de 15 min). La consume. */
+export function takeLogin(now = Date.now()) {
+  let at = null;
+  try { at = Number(localStorage.getItem(LOGIN_KEY)); localStorage.removeItem(LOGIN_KEY); } catch { /* sin memoria */ }
+  return Boolean(at) && now - at < 15 * 60 * 1000;
+}
+
 const web = {
   native: false,
   /** Dirección completa de una ruta del sitio, para compartir o salir de Micra. */
@@ -30,10 +44,13 @@ const web = {
       { enableHighAccuracy: precise, timeout, maximumAge: precise ? 0 : 120000 },
     );
   }),
-  signIn: (next) => supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + (next || window.location.pathname) + window.location.search },
-  }),
+  signIn: (next) => {
+    markLogin();
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + (next || window.location.pathname) + window.location.search },
+    });
+  },
   /** El color de la barra de arriba del sistema, de día o de noche. */
   setNight: (night) => {
     const meta = document.querySelector('meta[name="theme-color"]');
