@@ -7,6 +7,7 @@ import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
 import { IconThermo } from './icons.jsx';
+import { Cargando } from './Animado.jsx';
 
 // Modo barista: salí, quién me espera, +1 por taza, fiados y el día. Pensado
 // para una mano, al sol y con mala señal: los +1 se guardan en el celular y
@@ -79,7 +80,7 @@ function Picker({ onPick }) {
       <p className="mapp-cota">Modo barista · equipo</p>
       <h1 className="mapp-title is-small">¿Como quién entras?</h1>
       <p className="mapp-muted">Lo que hagas aquí queda en la libreta de ese barista. Para probar, usa una ficha de prueba.</p>
-      {list === null && <p className="mapp-muted">Cargando…</p>}
+      {list === null && <Cargando />}
       <ul className="mapp-list">
         {(list ?? []).map((b) => (
           <li key={b.id}>
@@ -192,7 +193,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go }) {
     );
   }
   if (error && !day) return <p className="mapp-error" role="alert">No se pudo leer tu día: {error} <button type="button" className="mapp-link" onClick={load}>Reintentar</button></p>;
-  if (!day) return <p className="mapp-muted">Cargando tu día…</p>;
+  if (!day) return <Cargando fig="aeropress">Cargando tu día…</Cargando>;
 
   const menu = menuOf(day);
   const sum = daySummary(day);

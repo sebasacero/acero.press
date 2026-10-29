@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { money, cupsLabel, weekBars, weekdayLetter, baristaPath } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
+import { Cargando } from './Animado.jsx';
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle), qué le falta a cada barista para vender por Micra y el código para
@@ -42,7 +43,7 @@ export default function OwnerView({ onActAs, go }) {
   };
 
   if (error && !data) return <p className="mapp-error" role="alert">{error}</p>;
-  if (!data) return <p className="mapp-muted">Cargando el día…</p>;
+  if (!data) return <Cargando fig="ruana">Cargando el día…</Cargando>;
 
   const list = data.baristas;
   const tot = list.reduce((a, b) => ({ cups: a.cups + b.cups, total: a.total + Number(b.total), waiting: a.waiting + b.waiting, served: a.served + b.served, live: a.live + (b.live_until ? 1 : 0) }), { cups: 0, total: 0, waiting: 0, served: 0, live: 0 });

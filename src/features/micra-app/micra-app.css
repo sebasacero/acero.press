@@ -486,3 +486,9 @@
   .mapp-list > li, .mapp-now, .mapp-hero, .mapp-chips, .mapp-fig.is-draw .pi, .mapp-fig.is-draw .pz, .mapp-fig.is-draw .pr { animation: none; }
   .mapp-skel { animation: none; }
 }
+
+/* Esperas con personaje en movimiento (Animado.jsx) */
+.mapp-loading { display: grid; justify-items: center; gap: 6px; padding: 18px 0 8px; text-align: center; }
+.mapp-loading .mapp-muted { margin: 0; }
+.mapp-anim { display: block; height: 180px; width: auto; border-radius: 16px; background: #F7F3E8; object-fit: contain; }
+.mapp.is-night .mapp-anim { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); }
