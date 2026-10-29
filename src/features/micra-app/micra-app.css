@@ -553,3 +553,10 @@
 
 /* Barista: el mapa de lo que hay cerca, arriba de las solicitudes */
 .mapp-nearby .mapp-map { margin: 8px 0 0; }
+
+/* Mapa de calor del estudio (StudyHeatMap) */
+.mapp-heat { margin: 4px 0 12px; }
+.mapp-map.is-heat { height: 320px; margin: 0; }
+.mapp-heat-legend { display: flex; align-items: center; gap: 8px; margin-top: 8px; font: 600 11px/1 "JetBrains Mono", monospace; color: var(--m-muted, rgba(255,255,255,.65)); }
+.mapp-heat-legend i { flex: 1; height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgb(43,43,209), rgb(0,179,230), rgb(38,208,124), rgb(245,225,0), rgb(255,140,0), rgb(255,31,31)); }
+.mapp-heat-legend b { margin-left: 6px; color: inherit; }

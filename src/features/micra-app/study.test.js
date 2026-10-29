@@ -36,3 +36,18 @@ test('el GPS del celular se guarda redondeado y solo dentro de Bogotá', () => {
   assert.match(gpsPatch({ lat: 6.24, lng: -75.58 }).error, /fuera de Bogotá/);
   assert.match(gpsPatch(null).error, /permiso/);
 });
+
+test('heatPoints: solo las fichas con GPS; el peso sale de las tazas por hora', async () => {
+  const { heatPoints } = await import('./study.js');
+  const g = heatPoints([
+    { id: 'a', lat: 4.65, lng: -74.06, cups_per_hour: 80 },
+    { id: 'b', lat: '4.60', lng: '-74.10', cups_per_hour: 4 },
+    { id: 'c', lat: 4.7, lng: -74.05 },
+    { id: 'd', lat: null, lng: -74.05 },
+  ]);
+  assert.equal(g.type, 'FeatureCollection');
+  assert.deepEqual(g.features.map((f) => f.properties.id), ['a', 'b', 'c']);
+  assert.deepEqual(g.features[1].geometry.coordinates, [-74.1, 4.6]);
+  assert.deepEqual(g.features.map((f) => f.properties.weight), [1, 0.3, 0.5]);
+  assert.deepEqual(heatPoints(null).features, []);
+});
