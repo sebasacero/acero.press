@@ -1,32 +1,40 @@
-/* === Escuela: la hoja de plano de la portada (esspresale.css) para aprender ===
-   Las piezas .essp-* (cota, título con marcador, panel, cajetín) leen estos colores.
-   El gris del texto secundario es más oscuro que --ink-soft: sobre el papel este
-   pasa 4,5:1 (texto pequeño) y aquí se lee mucho texto pequeño. */
+/* === Escuela: la calle del guion de Micra (crema, calle a trazo, tarjetas blancas con sombra,
+   fichas redondas, tarjeta roja) para aprender. Las piezas .essp-* (cota, título con marcador,
+   botones) leen estos colores. El gris del texto secundario es más oscuro que --ink-soft: aquí se
+   lee mucho texto pequeño y sobre el crema pasa 4,5:1. */
 .school {
   --school-soft: #555D7A;
-  --essp-fg: var(--ink); --essp-soft: var(--school-soft); --essp-line: var(--ink); --essp-block: rgba(237, 230, 211, .95);
+  --essp-fg: var(--ink); --essp-soft: var(--school-soft); --essp-line: var(--ink); --essp-block: #fff;
+  --st-cream: #F5EEE2; --st-paper: #FBF7EF; --st-sand: #E3D3B8;
+  --card-shadow: 0 30px 80px rgba(28, 37, 65, .14), 0 4px 14px rgba(28, 37, 65, .06);
+  --chip-shadow: 0 10px 28px rgba(28, 37, 65, .12);
+  /* La calle al pie de cada hoja: alto del dibujo y, desde abajo, la línea del andén */
+  --street-h: 300px;
+  --street-ground: max(5.7cqi, calc(var(--street-h) * .19));
   color: var(--ink);
 }
 .school-sheet {
-  position: relative; container-type: inline-size;
-  background-color: var(--paper);
-  background-image:
-    repeating-linear-gradient(0deg, rgba(42, 53, 80, .09) 0 1px, transparent 1px 135px),
-    repeating-linear-gradient(90deg, rgba(42, 53, 80, .09) 0 1px, transparent 1px 135px),
-    linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: auto, auto, 27px 27px, 27px 27px;
+  position: relative; container-type: inline-size; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(227, 211, 184, .45) 100%), var(--st-cream);
 }
 .school-sheet .essp-sheet { z-index: 1; }
+.sp-street { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: var(--street-h); z-index: 0; }
 .school-in { position: relative; z-index: 2; display: grid; gap: 26px; padding: 52px 58px 50px; }
 .school-page .school-in { padding-top: 112px; } /* deja libre el menú, como en la portada */
+/* Las hojas con calle terminan en el andén: lo de abajo (persona, cifras, cajetín) se para en él */
+.sp-sheet .school-in, .school-lessons .school-in { padding-bottom: var(--street-ground); }
+.school .essp-btn.is-ghost { background: #fff; }
+.school .essp-loc { padding: 9px 14px 9px 12px; border-radius: 999px; background: #fff; box-shadow: var(--chip-shadow); max-width: 100%; line-height: 1.4; }
 
 .school-title { font-size: clamp(2rem, 4.2cqi, 4.2rem); }
 /* La frase es larga: girada, sin este aire se monta sobre la última línea */
 .school-title .essp-script { margin-top: .45em; }
-.school-lede { max-width: 54ch; }
+/* El texto va en una ficha blanca: así se lee aunque detrás pasen las fachadas */
+.school-lede { max-width: 54ch; padding: 14px 18px; border-radius: 18px; background: #fff; box-shadow: var(--chip-shadow); }
 .school-num {
-  font-family: 'JetBrains Mono', monospace; font-size: .74rem; font-weight: 700; line-height: 1.2; color: var(--ink);
-  border: 2px solid var(--ink); border-radius: 2px; padding: .15rem .4rem; background: var(--cream);
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 700; line-height: 1; color: var(--ink);
+  border: 2px solid var(--ink); background: #fff;
 }
 .school-list-body { display: grid; gap: 2px; min-width: 0; }
 .school-list-body b { font-family: 'Archivo', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: .02em; color: var(--ink); }
@@ -34,14 +42,17 @@
 .school-fig { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: .08em; color: var(--school-soft); text-transform: uppercase; }
 
 /* --- Cabeza de la página: qué es y dos caminos (preparar ya o ir a las lecciones) --- */
-.sp-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; align-items: end; }
+.sp-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 380px); gap: 40px; align-items: end; }
+/* La barista del carrito parada en el andén, entre el texto y las cifras */
+.sp-persona { display: block; height: clamp(240px, 26cqi, 380px); width: auto; align-self: end; }
 .sp-copy { display: grid; gap: 16px; justify-items: start; }
 .sp-head .essp-ctas { flex-wrap: wrap; }
-.sp-glance { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.sp-glance li { display: grid; gap: 6px; padding: 16px 16px 14px; color: #fff; border-radius: 14px; background: linear-gradient(160deg, #34353d 0%, #1c1d23 100%); border: 1px solid rgba(255, 255, 255, .22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 12px 30px rgba(20, 20, 26, .18); }
-.sp-glance b { font: 800 clamp(26px, 3cqi, 38px)/1 'Archivo', sans-serif; letter-spacing: -.01em; }
+/* La receta de un vistazo: las fichas blancas de cifras del guion («TAZAS HOY · 23») */
+.sp-glance { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sp-glance li { display: grid; gap: 4px; padding: 16px 18px 14px; border-radius: 18px; background: #fff; box-shadow: var(--chip-shadow); }
+.sp-glance b { font: 700 clamp(26px, 3cqi, 36px)/1 'JetBrains Mono', monospace; letter-spacing: -.03em; color: var(--ink); }
 .sp-glance li:first-child b { color: var(--red); }
-.sp-glance span { font: 700 11px/1.2 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: rgba(255, 255, 255, .75); }
+.sp-glance span { font: 600 11px/1.2 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--school-soft); }
 
 /* --- Las lecciones: tarjetas en rejilla; la abierta ocupa todo el ancho, en su lugar --- */
 .school-lessons .school-in { padding-top: 64px; }
@@ -49,32 +60,37 @@
 .sc-head { display: grid; gap: 10px; justify-items: start; }
 .sc-title { font-size: clamp(1.8rem, 3.4cqi, 3rem); }
 .sc-text { margin: 0; font-size: 16px; line-height: 1.55; max-width: 60ch; }
-.sp-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-family: 'JetBrains Mono', monospace; }
+/* Tu avance: ficha blanca con la barra en rojo */
+.sp-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 8px 8px 8px 18px; border-radius: 999px; background: #fff; box-shadow: var(--chip-shadow); font-family: 'JetBrains Mono', monospace; }
 .sp-segs { display: flex; gap: 4px; width: 132px; }
-.sp-segs i { flex: 1; height: 10px; background: rgba(42, 53, 80, .16); }
+.sp-segs i { flex: 1; height: 10px; border-radius: 5px; background: rgba(42, 53, 80, .14); }
 .sp-segs i.on { background: var(--red); }
 .sp-progress-text { font-size: 13px; color: var(--ink); }
-.sp-progress .essp-btn { box-shadow: none; }
+.sp-progress .essp-btn { box-shadow: none; border-radius: 999px; }
 
-.sa { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.sa-item { background: rgba(247, 243, 232, .95); border: 1.5px solid var(--ink); border-radius: 10px; scroll-margin-top: 16px; min-width: 0; }
-.sa-item.is-open { grid-column: 1 / -1; border-width: 2px; box-shadow: 4px 5px 0 0 rgba(42, 53, 80, .14); }
-.sa-item.is-seen .school-num { border-color: var(--red); }
+/* Las seis tarjetas blancas; en cada una, cerrada, una persona de la calle a la derecha */
+.sa { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.sa-item { background: #fff; border-radius: 22px; box-shadow: var(--card-shadow); scroll-margin-top: 16px; min-width: 0; overflow: hidden; }
+.sa-item.is-open { grid-column: 1 / -1; }
+.sa-item.is-seen .school-num { background: var(--red); border-color: var(--red); color: #fff; }
 .sa-h { margin: 0; }
 .sa-h button {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; min-height: 58px; padding: 14px 16px;
-  font: inherit; color: inherit; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 9px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 14px; align-items: start; width: 100%; min-height: 58px; padding: 16px 16px 0 18px;
+  font: inherit; color: inherit; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 22px;
 }
-.sa-h button:hover { background: rgba(255, 255, 255, .5); }
+.sa-item:not(.is-open) .sa-h button { padding-bottom: 0; }
+.sa-item.is-open .sa-h button { padding-bottom: 14px; }
+.sa-h button:hover { background: var(--st-paper); }
 .sa-h button:focus-visible { outline: 2px solid var(--red); outline-offset: -3px; }
-.sa-item.is-open .school-num { background: var(--ink); color: var(--cream); }
+.sa-persona { display: block; height: 118px; width: auto; max-width: 96px; object-fit: contain; object-position: bottom; align-self: end; margin: 6px -4px 0 0; }
+.sa-item.is-open .school-num { background: var(--ink); border-color: var(--ink); color: #fff; }
 .sa-item.is-open .school-list-body b { font-size: clamp(17px, 2cqi, 22px); }
 .sa-lead {
   font-size: 14px; line-height: 1.45; color: var(--school-soft); margin: 2px 0 4px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.sa-chev { font: 700 22px/1 'JetBrains Mono', monospace; color: var(--ink); }
-.sa-panel { display: grid; gap: 16px; padding: 14px 18px 18px; border-top: 1px dashed rgba(42, 53, 80, .4); }
+.sa-chev { font: 700 22px/1 'JetBrains Mono', monospace; color: var(--ink); padding-top: 4px; }
+.sa-panel { display: grid; gap: 16px; padding: 14px 20px 20px; border-top: 1px dashed rgba(42, 53, 80, .3); }
 .sl-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; list-style: none; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .sl-more summary::-webkit-details-marker { display: none; }
 .sl-more summary::before { content: '+'; display: grid; place-items: center; width: 22px; height: 22px; border: 1.5px solid var(--ink); border-radius: 50%; font-size: 14px; }
@@ -92,17 +108,17 @@
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; padding: 9px 12px;
   border-left: 3px solid transparent; border-radius: 2px 10px 10px 2px; transition: background-color .25s ease, border-color .25s ease;
 }
-.sv-steps li.is-on { border-left-color: var(--red); background: var(--cream); box-shadow: 2px 3px 0 0 rgba(42, 53, 80, .12); }
-.sv-n { font: 700 12px/1.2 'JetBrains Mono', monospace; border: 2px solid var(--ink); border-radius: 2px; padding: .15rem .4rem; background: var(--cream); }
-.sv-steps li.is-on .sv-n { background: var(--ink); color: var(--cream); }
-.sv-steps li.is-done .sv-n { border-color: var(--red); }
+.sv-steps li.is-on { border-left-color: transparent; border-radius: 16px; background: var(--ink); color: #fff; box-shadow: 0 16px 40px rgba(28, 37, 65, .2); }
+.sv-steps li.is-on small { color: rgba(255, 255, 255, .75); }
+.sv-n { font: 700 12px/1.2 'JetBrains Mono', monospace; border: 2px solid var(--ink); border-radius: 999px; padding: .2rem .45rem; background: #fff; color: var(--ink); }
+.sv-steps li.is-on .sv-n { background: var(--red); border-color: var(--red); color: #fff; }
+.sv-steps li.is-done .sv-n { background: var(--red); border-color: var(--red); color: #fff; }
 .sv-steps b { display: block; font: 800 15px/1.3 'Archivo', sans-serif; text-transform: uppercase; letter-spacing: .02em; }
 .sv-steps small { display: block; font-size: 14px; line-height: 1.45; color: var(--school-soft); }
 .sv-copy .essp-ctas { flex-wrap: wrap; }
 .sv-stage {
-  display: grid; place-items: center; padding: 40px 24px; border-radius: 24px;
-  background: linear-gradient(160deg, #34353d 0%, #1c1d23 100%); border: 1px solid rgba(255, 255, 255, .12);
-  box-shadow: 0 30px 60px -30px rgba(20, 20, 26, .55);
+  display: grid; place-items: center; padding: 40px 24px; border-radius: 40px;
+  background: var(--st-sand); box-shadow: var(--card-shadow);
 }
 .sv-phone { transform: rotate(-2deg); }
 .sv-screen { background: #fff; color: #F4F2EC; }
@@ -151,7 +167,7 @@
   background-color: var(--cream);
   background-image: linear-gradient(rgba(42, 53, 80, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 53, 80, .06) 1px, transparent 1px);
   background-size: 18px 18px;
-  border: 1.5px solid var(--ink); border-radius: 4px 10px 4px 10px;
+  border: 1.5px solid var(--ink); border-radius: 16px;
 }
 .sf-cota {
   display: flex; justify-content: space-between; gap: 10px; padding-bottom: 8px; border-bottom: 1px dashed rgba(42, 53, 80, .4);
@@ -262,15 +278,15 @@
   .sf-stations li { grid-template-columns: 24px 1fr; justify-items: start; align-items: center; text-align: left; }
 }
 
-/* Cierre: el cajetín con la invitación al piloto */
-/* Cajetín de cierre (antes compartía estilos con la tabla del banner de la portada, que ya no existe) */
-.school-cta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border: 2.5px solid var(--essp-line); background: var(--essp-block); }
-.school-cta > div { min-width: 0; }
-.school-cta > div + div { border-left: 1.5px solid var(--essp-line); }
-.school-cta > div { padding: 14px 18px; }
-.school-cta > div:first-child { display: grid; gap: 4px; }
-.school-cta > div:first-child b { font-family: 'Archivo', sans-serif; font-size: 20px; text-transform: uppercase; white-space: normal; overflow: visible; text-overflow: clip; }
-.school-cta > div:first-child span { font-family: 'Archivo', sans-serif; font-size: 14px; letter-spacing: 0; line-height: 1.5; color: var(--school-soft); }
+/* Cierre: la tarjeta roja del guion («Salí a vender»), parada en el andén */
+.school-cta { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: stretch; width: min(100%, 820px); border-radius: 28px; overflow: hidden; background: #fff; box-shadow: var(--card-shadow); }
+.school-cta > div { min-width: 0; padding: 22px 26px; }
+.school-cta > div:first-child { display: grid; gap: 6px; align-content: center; background: var(--red); color: #fff; }
+.school-cta > div:first-child b { font-family: 'Archivo', sans-serif; font-size: 22px; letter-spacing: -.01em; line-height: 1.15; white-space: normal; overflow: visible; text-overflow: clip; }
+.school-cta > div:first-child span { font-family: 'Archivo', sans-serif; font-size: 14px; letter-spacing: 0; line-height: 1.5; color: rgba(255, 255, 255, .88); }
+.school-cta .essp-ctas { align-items: center; align-self: center; flex-wrap: wrap; }
+.school-cta .essp-btn { box-shadow: none; }
+.school-cta .essp-btn.is-ghost { color: var(--ink); }
 
 /* --- Modo preparar: pantalla completa --- */
 .cook { position: fixed; inset: 0; z-index: 1000; overflow-y: auto; background: #0E0F13; color: #F2F2F0; }
@@ -321,7 +337,8 @@
   .sl-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'fig' 'text'; }
   .sl-grid > .sf { position: static; max-width: 520px; }
   .sa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sp-head { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 28px; }
+  .sp-head { grid-template-columns: minmax(0, 1fr) auto minmax(0, 300px); gap: 28px; }
+  .sp-persona { height: 240px; }
   .st-in { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -333,14 +350,18 @@
   .school-page .school-in { padding-top: 78px; }
   .school-sheet .essp-dash { display: none; }
   .school-title { font-size: clamp(1.9rem, 9cqi, 2.4rem); }
+  .school { --street-h: 170px; }
   .sp-head { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  /* En celular la barista queda al final, parada en el andén a la derecha */
+  .sp-persona { height: 180px; justify-self: end; margin: -6px 10px 0 0; order: 3; }
   .sp-glance { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-  .sp-glance li { padding: 10px 8px; border-radius: 10px; gap: 4px; }
+  .sp-glance li { padding: 10px 8px; border-radius: 12px; gap: 4px; }
   .sp-glance b { font-size: clamp(16px, 5.4cqi, 22px); }
   .sp-glance span { font-size: 9.5px; letter-spacing: .04em; }
   .school-lessons .school-in { padding-top: 40px; }
-  .sa { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .sa-h button { padding: 12px 14px; }
+  .sa { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sa-h button { padding: 12px 12px 0 14px; gap: 10px; }
+  .sa-persona { height: 72px; max-width: 60px; margin-top: 0; }
   .sa-lead { display: none; } /* en el celular basta el título: la lista entera cabe en una pantalla */
   .sa-panel { padding: 12px 14px 16px; }
   .sl-grid { gap: 16px; }
@@ -352,8 +373,8 @@
   .sf { padding: 12px 12px 14px; }
   .sf-taste-fixes { font-size: 12.5px; }
 
-  .school-cta { grid-template-columns: minmax(0, 1fr); }
-  .school-cta > div + div { border-left: 0; border-top: 1.5px solid var(--essp-line); }
+  .school-cta { grid-template-columns: minmax(0, 1fr); border-radius: 22px; }
+  .school-cta > div { padding: 18px 20px; }
   .school-cta .essp-ctas { flex-wrap: wrap; }
   .school-cta .essp-ctas .essp-btn { flex: 1 1 auto; justify-content: center; }
   .st-cta { justify-self: stretch; justify-content: center; }
