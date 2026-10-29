@@ -82,5 +82,5 @@ test('isOffline distingue la red caída de un error de la API', () => {
 
 test('los pasos y los extras están completos', () => {
   assert.deepEqual(STEPS, ['foto', 'quien', 'extras']);
-  assert.deepEqual(EXTRAS.map((e) => e.id), ['encuesta', 'video', 'tarjeta', 'ticket']);
+  assert.deepEqual(EXTRAS.map((e) => e.id), ['encuesta', 'video', 'tarjeta', 'recorrido', 'ticket']);
 });

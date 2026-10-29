@@ -16,6 +16,7 @@ import Viewfinder from './Viewfinder.jsx';
 // Sin señal, la ficha se guarda en el celular y sube cuando vuelva la red.
 
 const SurveyWizard = lazy(() => import('./SurveyWizard.jsx'));
+const RouteCapture = lazy(() => import('./RouteCapture.jsx'));
 const BUCKET = 'estudio';
 const HANDOFF_KEY = 'micra_handoff_v1';
 
@@ -207,6 +208,17 @@ export default function FichaFlow({ go }) {
     );
   }
 
+  if (screen === 'recorrido') {
+    return (
+      <div className="mff">
+        <Suspense fallback={null}>
+          <RouteCapture tintero={saved} start={gps && !gps.error ? gps : null} onClose={() => setScreen('extras')}
+            onSaved={({ distance }) => { setDone((d) => ({ ...d, recorrido: distance })); setScreen('extras'); }} />
+        </Suspense>
+      </div>
+    );
+  }
+
   if (screen === 'encuesta') {
     return (
       <div className="mff">
@@ -229,11 +241,11 @@ export default function FichaFlow({ go }) {
           {EXTRAS.map((x) => {
             const did = done[x.id];
             const blocked = x.needsConsent && !canCard;
-            const run = x.id === 'encuesta' ? () => setScreen('encuesta') : x.id === 'ticket' ? () => openCamera('sale') : () => openCamera(x.id === 'video' ? 'video' : 'photo');
+            const run = x.id === 'encuesta' ? () => setScreen('encuesta') : x.id === 'recorrido' ? () => setScreen('recorrido') : x.id === 'ticket' ? () => openCamera('sale') : () => openCamera(x.id === 'video' ? 'video' : 'photo');
             return (
               <button key={x.id} type="button" className={`mff-extra ${did ? 'is-done' : ''}`} disabled={(!saved.id && x.id !== 'ticket') || blocked} onClick={run} data-testid={`extra-${x.id}`}>
                 <b>{did ? '✓ ' : ''}{x.label}</b>
-                <small>{blocked ? (saved.id ? 'necesita su permiso de publicidad' : 'cuando suba la ficha') : did ? (x.id === 'encuesta' ? `${did} respuestas` : 'hecho') : x.sub}</small>
+                <small>{blocked ? (saved.id ? 'necesita su permiso de publicidad' : 'cuando suba la ficha') : did ? (x.id === 'encuesta' ? `${did} respuestas` : x.id === 'recorrido' ? `${(did / 1000).toFixed(1).replace('.', ',')} km` : 'hecho') : x.sub}</small>
               </button>
             );
           })}

@@ -160,7 +160,7 @@ export default function StudyView({ go }) {
         <div><dt>Con foto</dt><dd>{n.foto}<small> de {n.total}</small></dd></div>
       </dl>
 
-      <Suspense fallback={null}><StudyHeatMap rows={rows} /></Suspense>
+      <Suspense fallback={null}><StudyHeatMap rows={rows} routes={data.routes ?? []} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Fichas · {n.total - n.done} con algo pendiente</p>

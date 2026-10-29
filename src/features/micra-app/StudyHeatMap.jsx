@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { themeChanges } from '../../shared/lib/mapTheme.js';
 import { heatPoints } from './study.js';
+import { routeSectors } from './routeStudy.js';
 
 // Mapa de calor del estudio de calle (equipo): dónde están los vendedores que
 // ya mapeamos. Lejos se ve el calor (azul → rojo, el mismo degradado del mapa
@@ -18,6 +19,31 @@ function applyTheme(map, theme) {
   }
 }
 
+const RAMP = ['interpolate', ['linear'], ['heatmap-density'],
+  0, 'rgba(43,43,209,0)', 0.15, 'rgb(43,43,209)', 0.3, 'rgb(0,179,230)', 0.5, 'rgb(38,208,124)',
+  0.68, 'rgb(245,225,0)', 0.84, 'rgb(255,140,0)', 1, 'rgb(255,31,31)'];
+
+// Recorridos: el calor sale de los sectores (cuántos carritos distintos pasan) y encima los trazos
+function addRouteLayers(map, sectors) {
+  map.addSource('sectores', { type: 'geojson', data: sectors.cells });
+  map.addSource('trazos', { type: 'geojson', data: sectors.lines });
+  map.addLayer({
+    id: 'sectores-calor', type: 'heatmap', source: 'sectores', maxzoom: 17,
+    layout: { visibility: 'none' },
+    paint: {
+      'heatmap-weight': ['get', 'weight'],
+      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 10, 1, 13, 1.6, 16, 2.4],
+      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 16, 13, 34, 16, 90],
+      'heatmap-opacity': 0.8,
+      'heatmap-color': RAMP,
+    },
+  });
+  map.addLayer({
+    id: 'trazos', type: 'line', source: 'trazos', layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#fff', 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 1, 16, 3], 'line-opacity': 0.55 },
+  });
+}
+
 function addLayers(map, data) {
   map.addSource('fichas', { type: 'geojson', data });
   map.addLayer({
@@ -30,9 +56,7 @@ function addLayers(map, data) {
       'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 13, 2, 16, 3],
       'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 18, 13, 36, 16, 70],
       'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.85, 17, 0.4],
-      'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-        0, 'rgba(43,43,209,0)', 0.15, 'rgb(43,43,209)', 0.3, 'rgb(0,179,230)', 0.5, 'rgb(38,208,124)',
-        0.68, 'rgb(245,225,0)', 0.84, 'rgb(255,140,0)', 1, 'rgb(255,31,31)'],
+      'heatmap-color': RAMP,
     },
   });
   map.addLayer({
@@ -60,13 +84,17 @@ function frame(map, data) {
   }
 }
 
-export default function StudyHeatMap({ rows, theme = 'noche' }) {
+export default function StudyHeatMap({ rows, routes = [], theme = 'noche' }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const [state, setState] = useState('loading');
+  const [mode, setMode] = useState('puestos'); // puestos | recorridos
   const data = heatPoints(rows);
   const dataRef = useRef(data);
   dataRef.current = data;
+  const sectors = routeSectors(routes);
+  const sectorsRef = useRef(sectors);
+  sectorsRef.current = sectors;
 
   useEffect(() => {
     let map = null;
@@ -91,6 +119,7 @@ export default function StudyHeatMap({ rows, theme = 'noche' }) {
         applyTheme(map, theme);
         // Un cambio de estilo (el respaldo de OSM) borra las capas: se vuelven a poner
         if (!map.getSource('fichas')) addLayers(map, dataRef.current);
+        if (!map.getSource('sectores')) addRouteLayers(map, sectorsRef.current);
         frame(map, dataRef.current);
         mapRef.current = map;
         setState('ready');
@@ -108,14 +137,41 @@ export default function StudyHeatMap({ rows, theme = 'noche' }) {
     map.getSource('fichas')?.setData(dataRef.current);
   }, [key, state]);
 
+  const routesKey = `${routes.length}:${sectors.cells.features.length}`;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (state !== 'ready' || !map) return;
+    map.getSource('sectores')?.setData(sectorsRef.current.cells);
+    map.getSource('trazos')?.setData(sectorsRef.current.lines);
+  }, [routesKey, state]);
+
+  // Un modo a la vez: los puestos mapeados o los sectores que recorren
+  useEffect(() => {
+    const map = mapRef.current;
+    if (state !== 'ready' || !map) return;
+    const show = (id, on) => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'); };
+    show('fichas-calor', mode === 'puestos');
+    show('fichas-puntos', mode === 'puestos');
+    show('sectores-calor', mode === 'recorridos');
+    show('trazos', mode === 'recorridos');
+  }, [mode, state]);
+
   if (state === 'off') return null;
   return (
     <figure className="mapp-heat">
-      <div className="mapp-map is-heat" ref={box} data-testid="study-heatmap" role="region" aria-label={`Mapa de calor del estudio: ${data.features.length} puestos con GPS`} />
+      <div className="mapp-heat-modes" role="group" aria-label="Qué muestra el mapa">
+        <button type="button" aria-pressed={mode === 'puestos'} onClick={() => setMode('puestos')}>Puestos</button>
+        <button type="button" aria-pressed={mode === 'recorridos'} onClick={() => setMode('recorridos')} data-testid="heat-routes">Recorridos</button>
+      </div>
+      <div className="mapp-map is-heat" ref={box} data-testid="study-heatmap" role="region"
+        aria-label={mode === 'puestos' ? `Mapa de calor del estudio: ${data.features.length} puestos con GPS` : `Sectores que recorren ${sectors.carts} carritos`} />
       <figcaption className="mapp-heat-legend">
-        <span>Menos</span><i aria-hidden="true" /><span>Más vendedores</span>
-        <b>{data.features.length} con GPS</b>
+        <span>Menos</span><i aria-hidden="true" /><span>{mode === 'puestos' ? 'Más vendedores' : 'Más carritos pasan'}</span>
+        <b>{mode === 'puestos' ? `${data.features.length} con GPS` : `${sectors.carts} carritos · ${routes.length} recorridos`}</b>
       </figcaption>
+      {mode === 'recorridos' && (routes.length === 0
+        ? <p className="mapp-muted">Aún no hay recorridos. En la ficha de un carrito toca «Su recorrido».</p>
+        : sectors.top[0]?.carts > 1 && <p className="mapp-heat-top">El sector más recorrido: {sectors.top[0].carts} carritos distintos.</p>)}
     </figure>
   );
 }

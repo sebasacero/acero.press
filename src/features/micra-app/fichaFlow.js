@@ -104,6 +104,7 @@ export const EXTRAS = [
   { id: 'encuesta', label: 'Encuesta', sub: '2 min · si tiene tiempo', needsConsent: false },
   { id: 'video', label: 'Video con filtro', sub: 'preparación o saludo, para las redes', needsConsent: true },
   { id: 'tarjeta', label: 'Su tarjeta', sub: 'foto «Tintero aliado»', needsConsent: true },
+  { id: 'recorrido', label: 'Su recorrido', sub: 'por dónde pasa el carrito', needsConsent: false },
   { id: 'ticket', label: 'Ticket', sub: 'le vendí algo', needsConsent: false },
 ];
 

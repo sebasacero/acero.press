@@ -3,7 +3,8 @@
   "appName": "Micra",
   "webDir": "dist-micra",
   "android": {
-    "path": "android"
+    "path": "android",
+    "useLegacyBridge": true
   },
   "ios": {
     "path": "ios",

@@ -25,6 +25,9 @@ import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
 
 const isSchoolRoute = () => /^\/escuela\/?$/.test(window.location.pathname);
+// Privacidad (/privacidad): la enlaza el permiso de ubicación de Micra
+const PrivacyPage = lazy(() => import('./features/legal/PrivacyPage.jsx'));
+const isPrivacyRoute = () => /^\/privacidad\/?$/.test(window.location.pathname);
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -43,7 +46,9 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <AdminUIProvider>
-            {school ? (
+            {isPrivacyRoute() ? (
+              <Suspense fallback={null}><PrivacyPage /></Suspense>
+            ) : school ? (
               <Suspense fallback={<div style={{ minHeight: '100svh', background: 'var(--paper)' }} />}>
                 <SchoolPage navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
               </Suspense>

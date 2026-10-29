@@ -308,7 +308,7 @@ async def piloto(days: int = Query(90, ge=1, le=365), sb: Supabase = Depends(own
     # Recorridos de los tinteros con la app Mi ruta (resumen, sin los puntos crudos)
     routes, routes_ready = await _optional(
         lambda: sb.select("tintero_routes", {
-            "select": "id,tintero_id,started_at,ended_at,points_n,distance_m,stops,path",
+            "select": "id,tintero_id,started_at,ended_at,points_n,distance_m,stops,path,source",
             "started_at": f"gte.{since}", "order": "started_at.desc", "limit": "300",
         }), [])
     waitlist = {"cliente": 0, "barista": 0}

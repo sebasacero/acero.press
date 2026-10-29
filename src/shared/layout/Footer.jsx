@@ -64,7 +64,7 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <p>{t('footer.copyright')}</p>
-        <a href="#">{t('footer.terms')}</a>
+        <a href="/privacidad">{t('footer.terms')}</a>
       </div>
     </>
   );
