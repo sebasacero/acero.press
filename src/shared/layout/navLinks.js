@@ -10,7 +10,7 @@ export function navItems() {
   const onSchool = /^\/escuela\/?$/.test(window.location.pathname);
   // En el orden de la portada. Sin «Inicio» (lo hace el logo) ni «Contacto» (el pie y el botón de WhatsApp están siempre)
   return [
-    { key: 'app', href: homeLink('#micra'), className: 'nav-app-link' },
+    { key: 'app', href: '/micra', className: 'nav-app-link' }, // la app Micra (/micra), no una sección
     { key: 'posts', href: homeLink('#publicaciones') }, // las fichas de redes, dentro de Micra
     { key: 'beans', href: homeLink('#beans') },
     { key: 'recipes', href: homeLink('#recetas') }, // las recetas de la casa, en la vitrina del local

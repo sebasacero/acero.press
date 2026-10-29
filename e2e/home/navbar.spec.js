@@ -37,7 +37,7 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await expect(menu(page).getByRole('link')).toHaveText(LINKS_ES);
 
   // En la portada son saltos dentro de la página
-  for (const [name, id] of [['Tienda', 'beans'], ['Campeones', 'metodo'], ['Micra', 'micra'], ['Publicaciones', 'publicaciones'], ['Recetas', 'recetas']]) {
+  for (const [name, id] of [['Tienda', 'beans'], ['Campeones', 'metodo'], ['Publicaciones', 'publicaciones'], ['Recetas', 'recetas']]) {
     await toTop(page);
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/#${id}$`));
@@ -52,11 +52,16 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await expect(menu(page).getByRole('link', { name: 'Aprende' })).toHaveAttribute('aria-current', 'page');
 
   // Desde la Escuela, los enlaces vuelven a la portada, a su sección
-  for (const [name, id] of [['Campeones', 'metodo'], ['Tienda', 'beans'], ['Micra', 'micra']]) {
+  for (const [name, id] of [['Campeones', 'metodo'], ['Tienda', 'beans']]) {
     await page.goto('/escuela', { waitUntil: 'load' });
     await menu(page).getByRole('link', { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`^[^#]*/#${id}$`));
     await inView(page, id);
+  }
+  // «Micra» no es una sección: abre la app, desde la portada y desde la Escuela
+  for (const from of ['/', '/escuela']) {
+    await page.goto(from, { waitUntil: 'load' });
+    await expect(menu(page).getByRole('link', { name: 'Micra', exact: true })).toHaveAttribute('href', '/micra');
   }
   await page.goto('/escuela', { waitUntil: 'load' });
   await page.getByRole('link', { name: 'ACERO.press' }).click();

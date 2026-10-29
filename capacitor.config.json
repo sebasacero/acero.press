@@ -1,0 +1,20 @@
+{
+  "appId": "com.aceropress.micra",
+  "appName": "Micra",
+  "webDir": "dist-micra",
+  "android": {
+    "path": "android"
+  },
+  "ios": {
+    "path": "ios",
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#FFFFFF",
+      "showSpinner": false
+    }
+  }
+}

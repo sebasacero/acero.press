@@ -220,3 +220,71 @@ pip install -r requirements.txt uvicorn
 npm run api    # FastAPI en el puerto 8000
 npm run dev    # el sitio; /api/v1 pasa a FastAPI
 ```
+
+---
+
+## 10. App Micra en Android e iOS (Capacitor)
+
+La app instalable de Micra son las mismas pantallas de `/micra`, metidas en un
+proyecto nativo de Android (`android/`, Gradle) y otro de iOS (`ios/`, Xcode con
+Swift Package Manager, sin CocoaPods). Lo que el celular hace distinto (GPS,
+compartir, entrar con Google, abrir WhatsApp o el sitio) está en
+`src/features/micra-app/native/main.jsx`. Identificador: `com.aceropress.micra`.
+
+### 10.1 Lo que necesitas en el Mac (una sola vez)
+
+1. **Node 22** (el mismo del sitio) y `npm install` en la carpeta del repo.
+2. **Xcode** (App Store). Ábrelo una vez, acepta la licencia y en
+   *Settings → Components* descarga la plataforma **iOS** (trae el simulador).
+   Si tienes varias versiones: `sudo xcode-select -s /Applications/Xcode.app`.
+3. **Android Studio** (developer.android.com/studio). En el asistente deja el
+   SDK por defecto; en *Device Manager* crea un teléfono (p. ej. Pixel 8, API 36).
+   Y en `~/.zshrc`:
+   ```
+   export ANDROID_HOME="$HOME/Library/Android/sdk"
+   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+   export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator"
+   ```
+4. El mismo `.env` del sitio con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`:
+   el build los mete dentro de la app (son las llaves públicas; nada privado).
+5. **Supabase → Authentication → URL Configuration → Redirect URLs**: agrega
+   `com.aceropress.micra://auth`. Es por donde Google devuelve a la persona a la
+   app después de entrar; sin eso, «Entrar con Google» se queda en el navegador.
+
+### 10.2 Correrla
+
+| Desde | iPhone (simulador) | Android (emulador) |
+|---|---|---|
+| Terminal de VS Code | `npm run micra:ios` | `npm run micra:android` |
+| VS Code, sin terminal | ⇧⌘P → *Tasks: Run Task* → «Micra: iPhone (simulador)» | ⇧⌘P → *Tasks: Run Task* → «Micra: Android (emulador)» |
+| El IDE nativo | `npm run micra:xcode` y ▶ en Xcode | `npm run micra:studio` y ▶ en Android Studio |
+
+`micra:ios` / `micra:android` compilan la web de Micra (`vite.micra.config.js` →
+`dist-micra/`), la copian a los dos proyectos (`cap sync`) y preguntan en qué
+simulador o emulador abrirla. La primera vez Xcode baja los paquetes de Capacitor
+(unos minutos, necesita internet). Cada cambio en `src/` necesita volver a correr
+el comando.
+
+VS Code recomienda la extensión **Ionic** (`.vscode/extensions.json`): agrega un
+panel con *Run On iOS* / *Run On Android* y la lista de simuladores.
+
+### 10.3 Iconos y pantalla de arranque
+
+Salen del kit `icono-micra/` (la lata Día; Noche y Teñida para el modo oscuro y
+teñido de iOS 18; frente adaptativo y una tinta para Android 13+). Ya están en
+`ios/App/App/Assets.xcassets/` y `android/app/src/main/res/mipmap-*`. Para
+cambiarlos por el termo, reemplaza esos PNG con los de `icono-micra/termo/`
+(mismos nombres y tamaños).
+
+### 10.4 Lo que falta para las tiendas
+
+- **App Store**: cuenta de Apple Developer (USD 99/año), elegir el *Team* en
+  Xcode (*Signing & Capabilities*), *Product → Archive* y subir a TestFlight.
+- **Google Play**: cuenta de desarrollador (USD 25, una vez), una llave de firma
+  (*Build → Generate Signed App Bundle*) y subir el `.aab` a prueba interna.
+- Cuando estén, sus enlaces van en `app_config` `app_store_url` / `play_store_url`
+  y los botones de la portada dejan de decir «Pronto».
+- Enlaces `https://www.aceropress.com/micra/...` que abran la app (Universal
+  Links / App Links) necesitan el Team ID de Apple y la huella de la llave de
+  Android; hoy esos enlaces abren la web y la app solo responde a
+  `com.aceropress.micra://`.

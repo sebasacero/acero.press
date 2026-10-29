@@ -25,6 +25,8 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(micra.locator('.micra-steps li')).toHaveCount(3);
   await expect(micra.getByRole('list', { name: 'El estudio de calle hoy' }).locator('b')).toHaveText(['40', '1', '2']);
   await expect(micra.getByRole('group', { name: 'Descarga la app Micra' })).toBeVisible();
+  // El primer botón abre la app de verdad
+  await expect(micra.getByRole('link', { name: 'Abrir la app' })).toHaveAttribute('href', '/micra');
   // Abajo, las fichas de redes con su video y el botón de la app
   const banners = micra.locator('#publicaciones .posts-banner');
   await expect(banners).toHaveCount(3);
