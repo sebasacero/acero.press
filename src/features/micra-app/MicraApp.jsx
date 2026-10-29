@@ -15,6 +15,8 @@ import { Cargando } from './Animado.jsx';
 const StudyView = lazy(() => import('./StudyView.jsx'));
 // La cámara de Micra del panel (filtros, tarjetas, venta y ficha del estudio), la misma pieza
 const MicraStudio = lazy(() => import('../admin/micra/MicraStudio.jsx'));
+// La ficha rápida del estudio (mapear primero), también aparte
+const FichaFlow = lazy(() => import('./FichaFlow.jsx'));
 
 // Micra (/micra): la app que abre el botón «Micra» del sitio. Es la misma para
 // todos y cambia según quién entra:
@@ -114,8 +116,10 @@ export default function MicraApp() {
   const [actAs, setActAs] = useState(null);
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
-  const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera';
-  const viewMode = teamView ? 'owner' : route.view === 'barista' ? 'barista' : 'client';
+  const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
+  // /micra/video: la cámara con filtros para un barista de la app (o el equipo); vive en el modo barista
+  const videoView = route.view === 'video';
+  const viewMode = teamView ? 'owner' : route.view === 'barista' || videoView ? 'barista' : 'client';
 
   // Al entrar a /micra, el barista y el equipo caen en su modo de siempre
   useEffect(() => {
@@ -154,9 +158,14 @@ export default function MicraApp() {
     else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} night={night} />;
     else if (who.barista) body = <BaristaHome go={go} night={night} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
+  } else if (videoView) {
+    if (who.loading) body = <Cargando />;
+    else if (who.barista || who.admin) body = <Cargando fig="caminando">Abriendo la cámara…</Cargando>;
+    else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (teamView) {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
+    else if (route.view === 'ficha') body = <Suspense fallback={<Cargando fig="caminando" />}><FichaFlow go={go} /></Suspense>;
     else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
   } else body = <ClientHome go={go} night={night} />;
@@ -201,10 +210,10 @@ export default function MicraApp() {
           </button>
         </nav>
       )}
-      {route.view === 'camera' && who.admin && (
-        // A pantalla completa sobre el estudio; al salir se vuelve a él
+      {((route.view === 'camera' && who.admin) || (videoView && (who.barista || who.admin))) && (
+        // A pantalla completa sobre el estudio (equipo) o sobre el inicio del barista; `lite`: sin venta, ficha ni publicar
         <Suspense fallback={null}>
-          <MicraStudio key={route.start ?? 'cam'} startWith={route.start ?? null} onExit={() => go('/micra/estudio')} />
+          <MicraStudio key={route.view} lite={videoView && !who.admin} onExit={() => go(videoView ? '/micra/barista' : '/micra/estudio')} />
         </Suspense>
       )}
       {platform.native && <Splash />}

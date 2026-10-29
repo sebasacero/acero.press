@@ -417,6 +417,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           {showPrices
             ? <Prices day={day} asId={asId} onSaved={() => { setShowPrices(false); load(); }} />
             : <button type="button" className="mapp-link" onClick={() => setShowPrices(true)}>Cambiar mis precios</button>}
+          <section className="mapp-glass">
+            <p className="mapp-cota">Para tus redes</p>
+            <p>Un video o una foto con los filtros de Micra: tu café, tu puesto, la app. Lo compartes donde quieras.</p>
+            <button type="button" className="mapp-btn is-small" onClick={() => go('/micra/video')} data-testid="barista-video">🎥 Hacer un video con filtro</button>
+          </section>
           {!asId && <a className="mapp-link" href={platform.siteUrl('/ruta')}>Medir mi recorrido (Mi ruta)</a>}
         </>
       )}

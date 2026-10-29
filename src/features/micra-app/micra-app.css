@@ -507,5 +507,49 @@
 .mapp-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
 .mapp-check input { width: 22px; height: 22px; accent-color: var(--m-cta); }
 
+/* ── Ficha rápida (FichaFlow): cámara primero, pantallas de un paso, extras al final ── */
+.mff{ position:fixed; inset:0; z-index:60; background:#0E0F12; color:#fff; display:flex; flex-direction:column; }
+.mff-screen{ padding-top:env(safe-area-inset-top); }
+.mff-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px; min-height:56px; }
+.mff-top.is-over{ position:absolute; top:0; left:0; right:0; padding-top:calc(8px + env(safe-area-inset-top)); z-index:2; background:linear-gradient(rgba(0,0,0,.55), transparent); }
+.mff-back{ width:44px; height:44px; border-radius:50%; border:0; background:rgba(255,255,255,.14); color:#fff; font-size:26px; line-height:1; }
+.mff-step{ flex:1; text-align:center; font:600 13px/1.2 "JetBrains Mono", monospace; letter-spacing:.04em; text-transform:uppercase; color:rgba(255,255,255,.85); }
+.mff-gps{ min-height:44px; padding:0 12px; border-radius:999px; border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.35); color:#fff; font:600 12px/1 "JetBrains Mono", monospace; white-space:nowrap; }
+.mff-gps.is-ok{ border-color:#2E8B57; color:#9ef0bf; }
+.mff-gps.is-warn{ border-color:#F5B83D; color:#ffd88a; }
+.mff-gps.is-wait{ color:rgba(255,255,255,.7); }
+.mff-skip{ min-height:44px; padding:0 14px; border:0; background:none; color:rgba(255,255,255,.85); font-size:14px; font-weight:600; }
+.mff-skip.is-over{ position:absolute; right:10px; bottom:calc(132px + env(safe-area-inset-bottom)); z-index:2; background:rgba(0,0,0,.4); border-radius:999px; }
+.mff-body{ flex:1; overflow:auto; padding:8px 16px 16px; display:flex; flex-direction:column; gap:14px; }
+.mff-foot{ display:flex; gap:10px; padding:10px 16px calc(12px + env(safe-area-inset-bottom)); background:#0E0F12; border-top:1px solid rgba(255,255,255,.08); }
+.mff-foot > *{ flex:1 1 auto; }
+.mff-photo-row{ display:flex; gap:12px; align-items:flex-start; }
+.mff-thumb{ width:96px; height:96px; border-radius:12px; object-fit:cover; flex:0 0 auto; background:#1a1c22; }
+.mff-thumb.is-empty{ border:1px dashed rgba(255,255,255,.35); color:rgba(255,255,255,.75); font-size:12px; }
+.mff-switches{ display:flex; flex-direction:column; gap:8px; flex:1; }
+.msheet-input.is-big{ font-size:18px; min-height:52px; }
+.mff-summary{ margin:0; padding-left:18px; color:rgba(255,255,255,.8); font-size:14px; line-height:1.6; }
+.mff-extras{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.mff-extra{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-height:72px; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#fff; text-align:left; }
+.mff-extra b{ font-size:15px; }
+.mff-extra small{ font-size:12px; color:rgba(255,255,255,.65); line-height:1.3; }
+.mff-extra.is-done{ border-color:#2E8B57; }
+.mff-extra:disabled{ opacity:.45; }
+.mff-survey .srv-progress{ margin:0 16px; }
+
+/* ── Visor (Viewfinder) ── */
+.mvf{ position:relative; flex:1; background:#000; overflow:hidden; display:flex; flex-direction:column; }
+.mvf-video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.mvf[data-status="off"] .mvf-video{ display:none; }
+.mvf-off{ position:absolute; top:40%; left:24px; right:24px; text-align:center; color:rgba(255,255,255,.8); font-size:15px; }
+.mvf-bar{ position:absolute; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:space-around; padding:18px 24px calc(22px + env(safe-area-inset-bottom)); background:linear-gradient(transparent, rgba(0,0,0,.6)); }
+.mvf-shutter{ width:78px; height:78px; border-radius:50%; border:4px solid #fff; background:transparent; padding:4px; }
+.mvf-shutter span{ display:block; width:100%; height:100%; border-radius:50%; background:#fff; }
+.mvf-shutter:active span{ transform:scale(.9); }
+.mvf-shutter.is-system{ background:#fff; font-size:30px; }
+.mvf-shutter:disabled{ opacity:.4; }
+.mvf-side{ width:48px; height:48px; border-radius:50%; border:0; background:rgba(255,255,255,.2); color:#fff; font-size:22px; }
+.mff-survey{ display:flex; flex-direction:column; flex:1; min-height:0; }
+
 /* Barista: el mapa de lo que hay cerca, arriba de las solicitudes */
 .mapp-nearby .mapp-map { margin: 8px 0 0; }

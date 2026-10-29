@@ -552,3 +552,10 @@
 .msheet-place-field.is-wide{ display:flex; flex-direction:column; gap:4px; width:100%; }
 .mtin-cuadra summary{ cursor:pointer; font-size:13px; color:rgba(255,255,255,.75); padding:6px 0; }
 .mtin-cuadra[open] summary{ margin-bottom:6px; }
+
+/* ── Ticket (TicketSheet): la vista previa es el mismo canvas que va a la impresora ── */
+.mtk-preview{ background:#fff; border-radius:12px; padding:10px; display:flex; justify-content:center; }
+.mtk-preview canvas{ width:100%; max-width:300px; height:auto; image-rendering:auto; }
+.mtk-actions{ display:flex; flex-direction:column; gap:8px; }
+.mtk-next{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.mtk-next > *{ flex:1 1 auto; }

@@ -41,6 +41,8 @@
 	<string>Micra usa el micrófono solo cuando grabas un video para una tarjeta.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Micra usa tu ubicación para mostrarte los baristas que pasan cerca y, si eres barista, para marcar dónde saliste a vender.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Micra usa el Bluetooth para imprimir el ticket en una impresora Phomemo.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

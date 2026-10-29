@@ -5,9 +5,13 @@ import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Geolocation } from '@capacitor/geolocation';
 import { Share } from '@capacitor/share';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { BleClient } from '@capacitor-community/bluetooth-le';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { setApiBase } from '../../../shared/lib/apiBase.js';
 import { SITE, markLogin, setPlatform } from '../platform.js';
+import { printCanvas } from '../../admin/micra/printer.js';
+import { SERVICE, WRITE, NOTIFY } from '../../admin/micra/phomemo.js';
 import { AUTH_REDIRECT, authFromUrl, micraPathFromUrl, startPath } from './deepLink.js';
 import MicraApp from '../MicraApp.jsx';
 import '../../../index.css';
@@ -15,6 +19,38 @@ import '../../../index.css';
 // Micra instalada en Android e iOS (Capacitor, micra.html → dist-micra/). Son las
 // mismas pantallas de /micra; aquí solo se cambia lo que en el celular se hace
 // distinto: GPS, compartir, salir a WhatsApp o al sitio y entrar con Google.
+
+const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(String(r.result).split(',')[1]);
+  r.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+  r.readAsDataURL(blob);
+});
+
+// La Phomemo por el Bluetooth del celular (plugin BLE). `printerId` es la de la última
+// vez: se intenta conectar directo y, si no está, se abre el selector del sistema.
+function bleTransport(printerId) {
+  let id = null;
+  return {
+    async connect(onNotify) {
+      await BleClient.initialize({ androidNeverForLocation: true });
+      let name = null;
+      if (printerId) {
+        try { await BleClient.connect(printerId); id = printerId; } catch { id = null; }
+      }
+      if (!id) {
+        const d = await BleClient.requestDevice({ services: [SERVICE] });
+        await BleClient.connect(d.deviceId);
+        id = d.deviceId;
+        name = d.name ?? null;
+      }
+      await BleClient.startNotifications(id, SERVICE, NOTIFY, (v) => onNotify(new Uint8Array(v.buffer))).catch(() => { /* sin avisos */ });
+      return { id, name };
+    },
+    write: (bytes) => BleClient.write(id, SERVICE, WRITE, new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)),
+    async disconnect() { if (id) await BleClient.disconnect(id); },
+  };
+}
 
 const go = (path) => {
   window.history.pushState(null, '', path);
@@ -30,6 +66,16 @@ setPlatform({
   // Capacitor abre fuera de la app (WhatsApp, Safari, Chrome) todo lo que no es localhost
   openExternal: (url) => { window.location.href = url; },
   share: ({ title, text, url }) => Share.share({ title, text, url, dialogTitle: title }).catch(() => {}),
+  // El ticket como archivo: el menú del celular lo lleva a WhatsApp, a la app de Phomemo o a Imprimir
+  shareImage: async ({ blob, fileName, title, text }) => {
+    const { uri } = await Filesystem.writeFile({ path: fileName, data: await blobToBase64(blob), directory: Directory.Cache });
+    await Share.share({ title, text, files: [uri], dialogTitle: title }).catch(() => {});
+    return true;
+  },
+  printer: {
+    available: () => true,
+    print: (canvas, { dots, onStatus, printerId }) => printCanvas(canvas, bleTransport(printerId), { dots, onStatus }),
+  },
   position: async (timeout = 8000, precise = false) => {
     try {
       const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: precise, timeout, maximumAge: precise ? 0 : 120000 });

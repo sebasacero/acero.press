@@ -24,6 +24,7 @@ import LayersSheet from './LayersSheet.jsx';
 import BackgroundSheet from './BackgroundSheet.jsx';
 import FormatSheet from './FormatSheet.jsx';
 import FilterSheet from './FilterSheet.jsx';
+import TicketSheet from './TicketSheet.jsx';
 import { IconBack, IconCamera, IconDownload, IconShare, IconUndo } from './icons.jsx';
 import './micra.css';
 
@@ -53,7 +54,9 @@ function useDesktop() {
 }
 
 // startWith: 'tintero' abre la ficha sobre la cámara (la app Micra entra así desde Estudio)
-export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
+// lite: la cámara con filtros para un barista de la app (foto, video, compartir): sin venta,
+// sin ficha del estudio y sin publicar en las redes de ACERO
+export default function MicraStudio({ onExit, onOpenTool, startWith = null, lite = false }) {
   const [prefs] = useState(loadPrefs);
   const { varieties, weather, now, minuteKey } = useMicraData();
   const desktop = useDesktop();
@@ -94,6 +97,9 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
   const [drawn, setDrawn] = useState(null);
   const [coach, setCoach] = useState(() => !flag(COACH_KEY));
   const [ticketFlash, setTicketFlash] = useState(false);
+  // El tintero de la ficha que se acaba de levantar: su venta sale con ticket (imprimir o enviar)
+  const [ticketFor, setTicketFor] = useState(null);
+  const [ticket, setTicket] = useState(null); // { rec, tintero } la venta cuyo ticket está abierto
   const cardRef = useRef(null);
   const countdown = useRef(0);
   useEffect(() => () => clearInterval(countdown.current), []);
@@ -121,6 +127,19 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
     window.addEventListener(MICRA_INTENT_EVENT, onIntent);
     return () => window.removeEventListener(MICRA_INTENT_EVENT, onIntent);
   }, []);
+  // Lo que manda la ficha rápida de la app (FichaFlow.handoff): para quién abre la cámara y para qué
+  useEffect(() => {
+    let h = null;
+    try { h = JSON.parse(sessionStorage.getItem('micra_handoff_v1') || 'null'); sessionStorage.removeItem('micra_handoff_v1'); } catch { /* sin memoria */ }
+    if (!h?.tintero || lite) return;
+    setTicketFor(h.tintero);
+    if (h.mode === 'sale') { if (h.tintero.phone) sale.setPhone(h.tintero.phone); setSheet('sale'); return; }
+    // Foto o video con su tarjeta «Tintero aliado» ya llena
+    setCamMode(h.mode === 'video' ? 'video' : 'photo');
+    pendingAd.current = h.tintero;
+    setKind('announce');
+    setPresetIds((p) => ({ ...p, announce: 'tintero' }));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filtro «Tintero aliado»: el tintero de la tarjeta. Su ubicación tapa la de la barra
   // mientras dura el filtro; al salir de él, la de la barra vuelve.
@@ -417,11 +436,24 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
   const linkedOrderId = linkedSale?.orderId ?? null;
   // La venta de esta tarjeta (la enlazable o la que ya se publicó con ella)
   const saleSold = linkedSale ?? sale.cardSale;
-  const onSaleRegistered = (rec) => {
+  // El ticket de una venta: la venta registrada más lo que useSale ya soltó (subtotales y método de pago,
+  // que en este render todavía son los de la venta que se acaba de hacer)
+  const ticketOf = (rec) => ({
+    rec: {
+      ...rec,
+      payMethod: sale.payMethod,
+      lines: rec.lines.map((l, i) => ({ ...l, subtotal: String(sale.lines[i]?.variant?.id) === String(l.variantId) ? sale.lines[i].subtotal : null })),
+    },
+    tintero: ticketFor,
+  });
+  const openTicket = (rec) => { setTicket(ticketOf(rec)); setSheet('ticket'); };
+  const onSaleRegistered = (rec, { fromSheet = false } = {}) => {
     // Cierra la hoja de venta (no la de «Enviar a» que se abrió para compartir)
     if (!desktop) setSheet((s) => (s === 'sale' ? null : s));
     setTicketFlash(true);
     setTimeout(() => setTicketFlash(false), 6000);
+    // En la calle, la venta al tintero de la ficha sigue con su ticket
+    if (fromSheet && ticketFor && !rec.replay) { openTicket(rec); return; }
     showToast({
       text: rec.replay ? `✓ Esa venta ya estaba registrada · ${money(rec.total)}`
         : rec.stockError ? `✓ Venta registrada · ${money(rec.total)} (el inventario no se actualizó)` : `✓ Venta registrada · ${money(rec.total)}`,
@@ -441,7 +473,9 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
     if (elements.logo.shown) { fn(); return; }
     setConfirm({ type: 'noLogo', onYes: fn });
   };
-  const quickDest = primaryDest(format, canShare);
+  const primary = primaryDest(format, canShare);
+  // Un barista de la app no publica en las redes de ACERO: su botón rápido comparte o descarga
+  const quickDest = lite && primary === 'ig' ? (canShare ? 'share' : 'download') : primary;
   const igK = igKind(format, videoMode);
 
   const publishNow = async (orderId) => {
@@ -620,7 +654,7 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
             context={stage === 'edit' ? 'editor' : 'camera'}
             docked={docked}
             onClose={closeSheet}
-            onRegistered={onSaleRegistered}
+            onRegistered={(rec) => onSaleRegistered(rec, { fromSheet: true })}
             sendLabel={quickDest === 'share' ? 'Registrar y compartir' : quickDest === 'download' ? 'Registrar y descargar' : 'Registrar y publicar'}
             onRegisterAndSend={async () => {
               if (quickDest === 'share') {
@@ -655,9 +689,17 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
             canCard={stage === 'camera'}
             docked={docked}
             onClose={() => { clearSnap(); closeSheet(); }}
+            onTicket={(t) => {
+              // Le vendió algo ahí mismo: la venta con su WhatsApp y, al registrarla, el ticket
+              clearSnap();
+              setTicketFor(t);
+              if (t.phone) sale.setPhone(t.phone);
+              setSheet('sale');
+            }}
             onMakeCard={(t) => {
               // Después de la encuesta: la cámara en «Tintero aliado» con su tarjeta ya llena, lista para la foto
               clearSnap();
+              setTicketFor(t);
               if (camMode === 'plain') setCamMode('photo');
               if (kind === 'announce' && preset?.usesTintero) pickTintero(t);
               else {
@@ -671,8 +713,24 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
             onSaved={(t) => {
               clearSnap();
               closeSheet();
-              showToast({ text: `✓ ${t.name} quedó en el estudio${t.hadPhoto ? ' con su foto' : ''}${t.surveyed ? ' y su encuesta' : ''}.`, ttl: 5000 });
+              setTicketFor(t);
+              showToast({
+                text: `✓ ${t.name} quedó en el estudio${t.hadPhoto ? ' con su foto' : ''}${t.surveyed ? ' y su encuesta' : ''}.`,
+                ttl: 8000,
+                action: { label: 'Ticket', run: () => { if (t.phone) sale.setPhone(t.phone); setSheet('sale'); } },
+              });
             }}
+          />
+        );
+      case 'ticket':
+        return ticket && (
+          <TicketSheet
+            rec={ticket.rec}
+            tintero={ticket.tintero}
+            docked={docked}
+            onClose={() => { setTicket(null); closeSheet(); }}
+            onNewSale={() => { setTicket(null); setSheet('sale'); }}
+            onNewSurvey={() => { setTicket(null); setTicketFor(null); setSheet('tintero'); }}
           />
         );
       case 'tinteroAd':
@@ -682,6 +740,7 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
       case 'share':
         return (
           <ShareSheet
+            lite={lite}
             out={out} sale={sale} kind={kind} format={format} videoMode={videoMode} cardRef={cardRef} cardKey={cardKey}
             caption={caption} autoCaption={autoCaption} setCaption={setCaption} hashtags={hashtags} setHashtags={setHashtags}
             linkedOrderId={linkedOrderId} canShare={canShare} onRegistered={onSaleRegistered}
@@ -818,8 +877,8 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
             paused={hold}
             onCapture={takeCapture}
             onEditText={(key) => setTextKey(key)}
-            onOpenSale={() => setSheet('sale')}
-            onOpenTintero={() => setSheet('tintero')}
+            onOpenSale={lite ? null : () => setSheet('sale')}
+            onOpenTintero={lite ? null : () => setSheet('tintero')}
             adTinteroName={preset?.usesTintero ? adTintero?.name ?? '' : null}
             onPickTintero={() => setSheet('tinteroAd')}
             ticketLabel={ticketLabel}

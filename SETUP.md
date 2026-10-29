@@ -292,3 +292,27 @@ cambiarlos por el termo, reemplaza esos PNG con los de `icono-micra/termo/`
   Links / App Links) necesitan el Team ID de Apple y la huella de la llave de
   Android; hoy esos enlaces abren la web y la app solo responde a
   `com.aceropress.micra://`.
+
+### 10.5 El ticket y la impresora Phomemo
+
+Después de una venta (el botón `$` de la cámara, o «Ticket · le vendí algo» al
+final de la ficha de un tintero) se abre la hoja **Ticket**: el recibo como
+imagen del ancho del papel, con tres salidas y lo que sigue en la calle (Nueva
+venta, Nueva encuesta).
+
+- **Imprimir en la Phomemo** (dentro de la app, y en Chrome de Android o
+  computador): por Bluetooth LE, con el protocolo ESC/POS de estas impresoras
+  (`src/features/admin/micra/phomemo.js`). Modelos: **M02 y T02** (53 mm, 203 dpi,
+  384 puntos) y **M02 Pro / M02S** (300 dpi, 576 puntos); se elige en la misma
+  hoja y queda guardado en el celular. La primera vez el sistema pregunta cuál
+  impresora; después se conecta sola. No sirve con la M02X ni con las de
+  etiquetas (M110, M120, M220): usan otro protocolo.
+- **Imprimir con la app de Phomemo**: el ticket va al menú de compartir del
+  celular; ahí se elige la app de Phomemo (o «Imprimir», si hay AirPrint). Es el
+  camino en Safari y donde no hay Bluetooth.
+- **Enviar por WhatsApp**: el mismo ticket en texto al número de la venta.
+
+Permisos: iOS `NSBluetoothAlwaysUsageDescription` (`Info.plist`); Android
+`BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` (`AndroidManifest.xml`). Plugins:
+`@capacitor-community/bluetooth-le` y `@capacitor/filesystem` (el archivo que se
+comparte). No hay variables de entorno nuevas.
