@@ -35,6 +35,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Micra usa la cámara para la foto del puesto en el estudio de calle y para las tarjetas con filtros.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Micra usa el micrófono solo cuando grabas un video para una tarjeta.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Micra usa tu ubicación para mostrarte los baristas que pasan cerca y, si eres barista, para marcar dónde saliste a vender.</string>
 	<key>LSRequiresIPhoneOS</key>

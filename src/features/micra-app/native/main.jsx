@@ -6,6 +6,7 @@ import { Browser } from '@capacitor/browser';
 import { Geolocation } from '@capacitor/geolocation';
 import { Share } from '@capacitor/share';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import { setApiBase } from '../../../shared/lib/apiBase.js';
 import { SITE, setPlatform } from '../platform.js';
 import { AUTH_REDIRECT, authFromUrl, micraPathFromUrl, startPath } from './deepLink.js';
 import MicraApp from '../MicraApp.jsx';
@@ -20,16 +21,19 @@ const go = (path) => {
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
 
+// La API de Acero (estudio de calle) vive en el sitio, no dentro de la app
+setApiBase(SITE);
+
 setPlatform({
   native: true,
   siteUrl: (path = '/') => SITE + path,
   // Capacitor abre fuera de la app (WhatsApp, Safari, Chrome) todo lo que no es localhost
   openExternal: (url) => { window.location.href = url; },
   share: ({ title, text, url }) => Share.share({ title, text, url, dialogTitle: title }).catch(() => {}),
-  position: async (timeout = 8000) => {
+  position: async (timeout = 8000, precise = false) => {
     try {
-      const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout, maximumAge: 120000 });
-      return { lat: p.coords.latitude, lng: p.coords.longitude };
+      const p = await Geolocation.getCurrentPosition({ enableHighAccuracy: precise, timeout, maximumAge: precise ? 0 : 120000 });
+      return { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy };
     } catch { return null; }
   },
   // Google no deja entrar desde una vista web dentro de la app: se abre el navegador

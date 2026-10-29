@@ -200,6 +200,10 @@ export function parseRoute(pathname) {
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/barista') return { view: 'barista' };
   if (p === '/micra/equipo') return { view: 'owner' };
+  // Herramientas del equipo en la calle: el estudio y la cámara de Micra (con la ficha abierta)
+  if (p === '/micra/estudio') return { view: 'study' };
+  if (p === '/micra/camara') return { view: 'camera' };
+  if (p === '/micra/ficha') return { view: 'camera', start: 'tintero' };
   return { view: 'home' };
 }
 

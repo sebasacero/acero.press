@@ -492,3 +492,17 @@
 .mapp-loading .mapp-muted { margin: 0; }
 .mapp-anim { display: block; height: 180px; width: auto; border-radius: 16px; background: #F7F3E8; object-fit: contain; }
 .mapp.is-night .mapp-anim { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); }
+
+/* ── Estudio de calle (equipo) ───────────────────────────────────── */
+.mapp.is-owner.has-tabs .mapp-main { padding-bottom: calc(96px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+.mapp-study > .mapp-btn.is-ghost { margin: 10px 0 0; }
+.mapp-study > .mapp-btn.is-cta { margin-top: 12px; }
+.mapp-notice { border: 1px solid var(--m-green); color: var(--m-green); background: color-mix(in srgb, var(--m-green) 8%, var(--m-bg)); border-radius: 12px; padding: 10px 12px; font-weight: 600; margin: 12px 0 0; }
+.mapp-study-row { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: start; }
+.mapp-study-row > div { display: grid; gap: 3px; min-width: 0; }
+.mapp-study-thumb { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; background: var(--m-line); display: grid; place-items: center; font: 600 .62rem 'JetBrains Mono', monospace; color: var(--m-soft); text-transform: uppercase; text-align: center; }
+.mapp-study-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; }
+.mapp-study-fix { display: grid; gap: 12px; margin: 8px 0 4px; padding: 12px; border-radius: 14px; background: color-mix(in srgb, var(--m-cold) 6%, transparent); border: 1px solid var(--m-line); }
+.mapp-study-fix > div { display: grid; gap: 6px; justify-items: start; }
+.mapp-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.mapp-check input { width: 22px; height: 22px; accent-color: var(--m-cta); }

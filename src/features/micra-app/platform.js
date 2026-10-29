@@ -21,13 +21,13 @@ const web = {
     platform.openExternal(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`);
     return Promise.resolve();
   },
-  /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
-  position: (timeout = 8000) => new Promise((resolve) => {
+  /** Un punto del GPS, una sola vez (para «Salí»; `precise` para marcar un puesto). Sin permiso o sin señal: null. */
+  position: (timeout = 8000, precise = false) => new Promise((resolve) => {
     if (!navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
       () => resolve(null),
-      { enableHighAccuracy: false, timeout, maximumAge: 120000 },
+      { enableHighAccuracy: precise, timeout, maximumAge: precise ? 0 : 120000 },
     );
   }),
   signIn: (next) => supabase.auth.signInWithOAuth({

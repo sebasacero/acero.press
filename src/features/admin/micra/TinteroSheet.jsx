@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import { apiUrl } from '../../../shared/lib/apiBase.js';
 import Sheet from './Sheet.jsx';
 import { LOCALIDADES, LOCALIDAD_GROUPS, isValidPlace, placeLabel, editPlace } from './place.js';
 import { EMPTY_TINTERO, END_HOURS, START_HOURS, TINTERO_OPTIONS, buildTintero, canUploadPhoto, fichaProgress, hourLabel, photoPath } from './tinteroForm.js';
@@ -25,7 +26,7 @@ const BUCKET = 'estudio';
 
 async function postTintero(body) {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch('/api/v1/bi/tinteros', {
+  const res = await fetch(apiUrl('/api/v1/bi/tinteros'), {
     method: 'POST',
     headers: { Authorization: `Bearer ${session?.access_token ?? ''}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

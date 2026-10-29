@@ -1,9 +1,10 @@
 import { supabase } from '../../../shared/lib/supabaseClient.js';
+import { apiUrl } from '../../../shared/lib/apiBase.js';
 
 /** API de BI de Acero con la sesión del owner (fichas de tinteros). */
 export async function biApi(path, { method = 'GET', body } = {}) {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(`/api/v1/bi${path}`, {
+  const res = await fetch(apiUrl(`/api/v1/bi${path}`), {
     method,
     headers: { Authorization: `Bearer ${session?.access_token ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,

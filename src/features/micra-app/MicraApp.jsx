@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { isNight, parseRoute } from './micraApp.js';
 import * as api from './api.js';
@@ -7,15 +7,21 @@ import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
-import { IconNear, IconCup, IconOut } from './icons.jsx';
+import { IconNear, IconCup, IconOut, IconToday, IconClipboard, IconCamera } from './icons.jsx';
 import './micra-app.css';
 import { Cargando } from './Animado.jsx';
+
+// Lo del equipo en la calle se descarga solo al abrirlo: quien busca café no lo paga
+const StudyView = lazy(() => import('./StudyView.jsx'));
+// La cámara de Micra del panel (filtros, tarjetas, venta y ficha del estudio), la misma pieza
+const MicraStudio = lazy(() => import('../admin/micra/MicraStudio.jsx'));
 
 // Micra (/micra): la app que abre el botón «Micra» del sitio. Es la misma para
 // todos y cambia según quién entra:
 //   · cualquiera (sin cuenta): los baristas cerca y «apártame» → modo cliente
 //   · un barista con su cuenta enlazada: su día (salí, te esperan, +1, fiados)
-//   · el equipo (admin_users): además, el resumen del día y actuar como un barista
+//   · el equipo (admin_users): además, el resumen del día y actuar como un barista,
+//     el estudio de calle (ficha, encuesta, foto con GPS) y la cámara con filtros
 // Se instala desde el navegador (public/micra.webmanifest).
 
 const MODE_KEY = 'micra_mode_v1';
@@ -108,7 +114,8 @@ export default function MicraApp() {
   const [actAs, setActAs] = useState(null);
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
-  const viewMode = route.view === 'owner' ? 'owner' : route.view === 'barista' ? 'barista' : 'client';
+  const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera';
+  const viewMode = teamView ? 'owner' : route.view === 'barista' ? 'barista' : 'client';
 
   // Al entrar a /micra, el barista y el equipo caen en su modo de siempre
   useEffect(() => {
@@ -138,16 +145,18 @@ export default function MicraApp() {
     else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} />;
     else if (who.barista) body = <BaristaHome go={go} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} />;
-  } else if (route.view === 'owner') {
+  } else if (teamView) {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
+    else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
   } else body = <ClientHome go={go} night={night} />;
+  const teamTabs = teamView && who.admin;
 
   return (
-    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}`}>
+    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}`}>
       <header className="mapp-top">
-        <button type="button" className="mapp-brand" onClick={() => go(viewMode === 'client' ? '/micra' : route.view === 'owner' ? '/micra/equipo' : '/micra/barista')} aria-label="Micra, inicio">
+        <button type="button" className="mapp-brand" onClick={() => go(viewMode === 'client' ? '/micra' : viewMode === 'owner' ? '/micra/equipo' : '/micra/barista')} aria-label="Micra, inicio">
           micra<i>.</i>
         </button>
         <ModeSwitch modes={modes} mode={viewMode} onChange={switchMode} />
@@ -169,6 +178,25 @@ export default function MicraApp() {
           </button>
           <a href={platform.siteUrl('/')}><IconOut />aceropress</a>
         </nav>
+      )}
+      {teamTabs && (
+        <nav className="mapp-tabs" aria-label="Equipo">
+          <button type="button" className={route.view === 'owner' ? 'on' : ''} onClick={() => go('/micra/equipo')}>
+            <IconToday />Hoy
+          </button>
+          <button type="button" className={route.view === 'study' ? 'on' : ''} onClick={() => go('/micra/estudio')}>
+            <IconClipboard />Estudio
+          </button>
+          <button type="button" className={route.view === 'camera' ? 'on' : ''} onClick={() => go('/micra/camara')}>
+            <IconCamera />Cámara
+          </button>
+        </nav>
+      )}
+      {route.view === 'camera' && who.admin && (
+        // A pantalla completa sobre el estudio; al salir se vuelve a él
+        <Suspense fallback={null}>
+          <MicraStudio key={route.start ?? 'cam'} startWith={route.start ?? null} onExit={() => go('/micra/estudio')} />
+        </Suspense>
       )}
       {platform.native && <Splash />}
     </div>

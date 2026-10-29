@@ -52,7 +52,8 @@ function useDesktop() {
   return on;
 }
 
-export default function MicraStudio({ onExit, onOpenTool }) {
+// startWith: 'tintero' abre la ficha sobre la cámara (la app Micra entra así desde Estudio)
+export default function MicraStudio({ onExit, onOpenTool, startWith = null }) {
   const [prefs] = useState(loadPrefs);
   const { varieties, weather, now, minuteKey } = useMicraData();
   const desktop = useDesktop();
@@ -82,7 +83,7 @@ export default function MicraStudio({ onExit, onOpenTool }) {
 
   // ── Interfaz ──
   const [selection, setSelection] = useState(null);
-  const [sheet, setSheet] = useState(() => (readMicraIntent() === 'sale' ? 'sale' : null));
+  const [sheet, setSheet] = useState(() => startWith ?? (readMicraIntent() === 'sale' ? 'sale' : null));
   const [textKey, setTextKey] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [zones, setZones] = useState('off');

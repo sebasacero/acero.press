@@ -23,3 +23,12 @@ export const IconBars = () => (
 export const IconCheck = () => (
   <svg {...base} width={12} height={12} strokeWidth={2.6}><path d="m5 12.5 4 4L19 7" /></svg>
 );
+export const IconToday = () => (
+  <svg {...base}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>
+);
+export const IconClipboard = () => (
+  <svg {...base}><rect x="5" y="4" width="14" height="17" rx="2.5" /><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3" /></svg>
+);
+export const IconCamera = () => (
+  <svg {...base}><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8l1.4-2h4.6l1.4 2h1.8A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z" /><circle cx="12" cy="12.5" r="3.5" /></svg>
+);
