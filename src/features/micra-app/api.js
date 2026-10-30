@@ -1,6 +1,7 @@
 import { supabase } from '../../shared/lib/supabaseClient.js';
+import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { newRef } from './micraApp.js';
-import platform from './platform.js';
+import platform, { markLogin } from './platform.js';
 
 // Llamadas de la app Micra a la base (supabase/migrations/20261026210000_micra_app.sql).
 // Todas por funciones: la base pone precios y decide quién puede qué. `as` es el
@@ -60,11 +61,15 @@ export const baristaPay = (id) => call('micra_barista_pay', { p_tintero_id: id }
 export const setPay = (p, asId) => call('micra_barista_pay_set', { p_nequi: p.nequi || null, p_daviplata: p.daviplata || null, ...as(asId) });
 export const fiadoPaid = (name, asId) => call('micra_fiado_paid', { p_name: name, ...as(asId) });
 export const claim = (code) => call('tintero_claim', { p_code: code });
+// Con la sesión del SMS: la base busca la ficha con ese número (20261030120000_micra_phone_login.sql)
+export const claimPhone = () => call('tintero_claim_phone');
 export const me = () => call('tintero_me');
 
 // Equipo
 export const ownerDay = () => call('micra_owner_day');
 export const invite = (id) => call('tintero_invite', { p_tintero_id: id });
+export const baristaPhones = () => call('micra_barista_phones');
+export const setBaristaPhone = (id, phone) => call('micra_barista_phone_set', { p_tintero_id: id, p_phone: phone || null });
 
 // El panel del equipo (estudio, encuestas, cámara con filtros) es solo del dueño:
 // otro rol de admin_users entra a Micra como cualquier barista
@@ -76,6 +81,23 @@ export async function isAdmin(userId) {
 // En el celular instalado se entra por el navegador del sistema y se vuelve por enlace (native/)
 export const signIn = (next) => platform.signIn(next);
 export const signOut = () => supabase.auth.signOut();
+
+// Entrar con el celular: Supabase manda el SMS y revisa el código. No hay ida y
+// vuelta por el navegador, así que es igual en la web y en la app instalada.
+// `phone` va como +573001234567 (normalizeCoPhone).
+async function auth(run) {
+  const { data, error } = await run();
+  if (error) throw Object.assign(new Error(error.message), { code: error.code, status: error.status });
+  return data;
+}
+export const sendSmsCode = (phone) => auth(() => supabase.auth.signInWithOtp({ phone, options: { shouldCreateUser: true } }));
+export const verifySmsCode = (phone, token) => {
+  markLogin(); // al tener la sesión, MicraApp lleva al barista a su inicio
+  return auth(() => supabase.auth.verifyOtp({ phone, token, type: 'sms' }));
+};
+
+// El WhatsApp del equipo (app_config; el mismo respaldo que WhatsAppButton)
+export const teamWhatsApp = () => fetchAppConfig('whatsapp_number', '573152125327');
 
 /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
 export const onePosition = (timeout) => platform.position(timeout);

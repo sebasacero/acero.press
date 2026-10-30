@@ -54,6 +54,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   let orderN = 0;
   // App Micra (supabase/migrations/20261026210000_micra_app.sql): baristas públicos, apartados y la libreta
   const micra = { baristas: [], holds: [], sales: [], admin: true, missing: false };
+  // Entrar por SMS (Supabase Auth, proveedor Phone): el código que «llega» y el número ya verificado
+  const sms = { code: '123456', sent: [], phone: null, down: false };
 
   // Como micra_record_sale / micra_void_sale (supabase/migrations/20261021120000_micra_atomic_sale.sql)
   const summary = (o, replay) => ({ order_id: o.id, total: o.total, status: o.status, replay, place: o.place ?? null, stock: [...o.net].map(([variant_id, applied]) => ({ variant_id, applied })) });
@@ -188,6 +190,23 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     try { data = req.postDataJSON(); } catch { data = req.postData(); }
     if (m !== 'GET') calls.push({ m, p, q: u.search, data });
 
+    // Supabase Auth por SMS: signInWithOtp (POST /auth/v1/otp) y verifyOtp (POST /auth/v1/verify)
+    const authFail = (status, code, msg) => json(status, { code: status, error_code: code, msg });
+    if (p.endsWith('/auth/v1/otp') && m === 'POST') {
+      if (sms.down) return authFail(400, 'phone_provider_disabled', 'Unsupported phone provider');
+      sms.sent.push(data.phone);
+      return json(200, {});
+    }
+    if (p.endsWith('/auth/v1/verify') && m === 'POST') {
+      if (data.type !== 'sms' || data.token !== sms.code || !sms.sent.includes(data.phone)) return authFail(403, 'otp_expired', 'Token has expired or is invalid');
+      sms.phone = data.phone.replace(/\D/g, ''); // auth.users.phone va sin el +
+      const now = Math.floor(Date.now() / 1000);
+      return json(200, {
+        access_token: 'sms-token', token_type: 'bearer', expires_in: 3600, expires_at: now + 3600, refresh_token: 'sms-refresh',
+        user: { id: 'u-sms', aud: 'authenticated', role: 'authenticated', phone: sms.phone, phone_confirmed_at: new Date().toISOString(), app_metadata: { provider: 'phone' }, user_metadata: {} },
+      });
+    }
+
     // App Micra, en memoria (como las funciones de 20261026210000_micra_app.sql)
     const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps))$/)?.[1];
     if (mfn) {
@@ -214,6 +233,19 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       // La tarjeta de sellos del cliente: solo si los datos de prueba la traen
       if (mfn === 'micra_my_stamps') return M.stamps ? json(200, M.stamps) : fail(404, 'PGRST202', 'Could not find the function micra_my_stamps');
       if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) h.status = 'cancelled'; return json(200, !!h); }
+      // El celular de cada barista (20261030120000_micra_phone_login.sql); M.phonesMissing: sin la migración
+      const co = (v) => { const d = String(v ?? '').replace(/\D/g, '').replace(/^(0057|57)(?=3\d{9}$)/, ''); return /^3\d{9}$/.test(d) ? `57${d}` : null; };
+      if (mfn === 'micra_barista_phones' || mfn === 'micra_barista_phone_set') {
+        if (M.phonesMissing) return fail(404, 'PGRST202', `Could not find the function public.${mfn} in the schema cache`);
+        if (!M.admin) return fail(403, '42501', 'Solo el equipo ve los celulares.');
+        if (mfn === 'micra_barista_phones') return json(200, Object.fromEntries(M.baristas.filter((x) => x.phone).map((x) => [x.id, x.phone])));
+        const phone = co(data.p_phone);
+        if (data.p_phone && !phone) return fail(400, '22023', 'El celular es de 10 dígitos y empieza por 3.');
+        const other = phone && M.baristas.find((x) => x.id !== data.p_tintero_id && co(x.phone) === phone);
+        if (other) return fail(409, '23505', `Ese número ya lo tiene ${other.full ?? other.name}. Un número es de un solo barista.`);
+        M.baristas.find((x) => x.id === data.p_tintero_id).phone = phone;
+        return json(200, { id: data.p_tintero_id, phone });
+      }
       const b = actor();
       if (mfn === 'micra_owner_day') {
         if (!M.admin) return fail(403, '42501', 'Solo el equipo ve el resumen.');
@@ -270,6 +302,19 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       if (rpc === 'tintero_claim') {
         if (String(data.p_code).toUpperCase() !== r.code) return fail('22023', 'Ese código no sirve o ya venció. Pídele uno nuevo al equipo de Micra.');
         r.me = { id: 'tintero-1', name: 'Marlene Rojas', zone: 'Chapinero', consent_at: null };
+        return json(200, meOf());
+      }
+      // Como tintero_claim_phone: el número es el verificado por el SMS, nunca uno que mande el celular
+      if (rpc === 'tintero_claim_phone') {
+        if (micra.phonesMissing) return json(404, { code: 'PGRST202', message: 'Could not find the function public.tintero_claim_phone in the schema cache', details: null, hint: null });
+        if (r.me) return json(200, meOf());
+        if (!sms.phone) return fail('42501', 'Entra con tu número de celular para buscar tu perfil de barista.');
+        const digits = (v) => String(v ?? '').replace(/\D/g, '').replace(/^(0057|57)(?=3\d{9}$)/, '');
+        const hits = micra.baristas.filter((x) => x.phone && digits(x.phone) === digits(sms.phone));
+        if (!hits.length) return fail('P0002', 'Tu número no está registrado en Micra. Escríbele al equipo por WhatsApp para que lo agreguen, o entra con el código de seis letras que te dieron.');
+        if (hits.length > 1) return fail('21000', 'Tu número aparece en más de un perfil. Escríbele al equipo de Micra por WhatsApp para enlazarte.');
+        hits[0].mine = true;
+        r.me = { id: hits[0].id, name: hits[0].full ?? hits[0].name, zone: hits[0].referencia, consent_at: null };
         return json(200, meOf());
       }
       if (rpc === 'tintero_consent') { r.me.consent_at = data.p_accept ? new Date().toISOString() : null; if (!data.p_accept) r.routes.forEach((x) => { x.ended_at ??= new Date().toISOString(); }); return json(200, meOf()); }
@@ -352,6 +397,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     surveys,
     ruta,
     micra,
+    sms,
     clear: () => { calls.length = 0; },
     find: (path, method) => calls.find((c) => c.p.endsWith(path) && (!method || c.m === method)),
     all: (path, method) => calls.filter((c) => c.p.endsWith(path) && (!method || c.m === method)),

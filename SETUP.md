@@ -79,6 +79,41 @@ No lo puedo hacer yo por ti (mis herramientas no crean usuarios de auth):
    values ('<uuid-del-usuario>', 'owner', 'Tu nombre');
    ```
 
+### 1.5 Entrar con el celular por SMS (baristas de la app Micra)
+El barista entra a `/micra/barista` con su número (+57) y un código de seis
+números que le llega por SMS; si ese número está en su ficha, cae directo en su
+perfil. El SMS lo manda Supabase Auth con un proveedor externo: sin este paso,
+la app dice «La entrada por SMS todavía no está activa» y sigue sirviendo
+«Entrar con Google» + el código de seis letras.
+
+1. **Proveedor de SMS** (uno): Twilio (recomendado: Twilio Verify o un Messaging
+   Service), MessageBird, Vonage o Textlocal. En Twilio, en **Messaging →
+   Settings → Geo permissions** deja solo **Colombia**: así nadie gasta tu saldo
+   mandando SMS a otros países.
+2. **Supabase Dashboard → Authentication → Sign In / Providers → Phone** →
+   actívalo → escoge el proveedor → pega sus credenciales (Account SID, Auth
+   Token y Message Service SID en Twilio) directo en el dashboard, nunca en el
+   código ni en el chat. Deja **Enable phone confirmations** encendido.
+3. En la misma pantalla: **SMS OTP Length = 6** (la app pide seis números),
+   **SMS OTP Expiry** de 300 a 600 s y la **plantilla del SMS**, por ejemplo:
+   ```
+   Micra: tu código para entrar es {{ .Code }}. No se lo des a nadie.
+   ```
+4. **Authentication → Rate Limits**: revisa «SMS sent per hour» (por defecto es
+   bajo para un día de muchos baristas entrando a la vez).
+5. Para probar sin gastar SMS: en **Providers → Phone → Test phone numbers and
+   OTPs** agrega, p. ej., `573001234567=123456`.
+6. Aplica la migración `supabase/migrations/20261030120000_micra_phone_login.sql`
+   (crea `tintero_claim_phone`, `micra_barista_phones`, `micra_barista_phone_set`
+   y deja `tinteros.phone` como `57XXXXXXXXXX`).
+7. Pon el celular de cada barista: app Micra → **Equipo → Baristas → «Poner su
+   celular»** (o en la ficha del estudio). Un número es de un solo barista; si
+   dos fichas tienen el mismo, la app no enlaza ninguna y le pide escribir al
+   equipo.
+
+No hay redirect: funciona igual en la web y en la app instalada (no necesita
+`com.aceropress.micra://auth` ni Redirect URLs).
+
 ---
 
 ## 2. Número de WhatsApp — ya no está en el código

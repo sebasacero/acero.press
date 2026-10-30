@@ -28,7 +28,8 @@ test('quickBody: con datos, van limpios; un nombre de una letra se reemplaza', (
   const { body } = quickBody({ ...EMPTY_FICHA, name: 'J', referencia: ' Puerta de Plaza de las Américas ', phone: '300 123 4567', localidad: 'Kennedy', formato: 'carrito', products: ['tinto', 'perico', 'nada'], tinto_price: '1.500', termos: '3', hora_inicio: 6, notes: 'Llega a las 6' }, null, { now: at });
   assert.equal(body.name, 'Puesto · Puerta de Plaza de las Américas');
   assert.equal(body.referencia, 'Puerta de Plaza de las Américas');
-  assert.equal(body.phone, '573001234567'); // waDigits le pone el indicativo de Colombia
+  assert.equal(body.phone, '573001234567'); // con el 57: igual que el número con el que entra por SMS
+  assert.equal(quickBody({ ...EMPTY_FICHA, phone: '+57 300 123 4567' }).body.phone, '573001234567');
   assert.equal(body.localidad, 'Kennedy');
   assert.equal(body.formato, 'carrito');
   assert.deepEqual(body.products, ['tinto', 'perico']);

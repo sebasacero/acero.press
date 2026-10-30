@@ -3,17 +3,19 @@ import { money, cupsLabel, weekBars, weekdayLetter, baristaPath } from './micraA
 import * as api from './api.js';
 import platform from './platform.js';
 import { Cargando } from './Animado.jsx';
+import { formatCoPhone, normalizeCoPhone } from './phone.js';
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
-// calle), qué le falta a cada barista para vender por Micra y el código para
-// enlazarlo. «Actuar como» abre su modo barista.
+// calle), qué le falta a cada barista para vender por Micra, su celular (con
+// él entra por SMS y queda enlazado solo) o el código para enlazarlo. «Actuar
+// como» abre su modo barista.
 
 const STAGE = { prospecto: 'Prospecto', piloto: 'Piloto', activo: 'Activo', pausa: 'Pausa' };
 
 /** Lo que le falta a un barista para recibir apartados, en orden. */
-function missingStep(b) {
+function missingStep(b, phone) {
   if (!b.public) return 'Falta su permiso para salir en público (ficha › publicidad)';
-  if (!b.linked) return 'Falta enlazar su cuenta';
+  if (!b.linked) return phone ? 'Falta enlazar su cuenta: que entre con su celular' : 'Falta enlazar su cuenta: pon su celular o genera un código';
   if (!b.has_prices) return 'Faltan sus precios';
   return null;
 }
@@ -22,8 +24,12 @@ export default function OwnerView({ onActAs, go }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [codes, setCodes] = useState({});
+  // { id: '573001234567' }; null mientras carga o si falta la migración del SMS (no se muestra)
+  const [phones, setPhones] = useState(null);
+  const [editing, setEditing] = useState(null); // { id, value }
   const load = useCallback(() => {
     api.ownerDay().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.missing ? 'Falta activar las tablas de Micra en la base (migración 20261026210000_micra_app).' : e.message));
+    api.baristaPhones().then((p) => setPhones(p ?? {})).catch(() => setPhones(null));
   }, []);
   useEffect(() => {
     load();
@@ -37,6 +43,15 @@ export default function OwnerView({ onActAs, go }) {
       setCodes((c) => ({ ...c, [b.id]: r.code }));
     } catch (e) { setError(e.message); }
   };
+  const savePhone = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api.setBaristaPhone(editing.id, normalizeCoPhone(editing.value) ?? editing.value.trim());
+      setPhones((p) => ({ ...p, [r.id]: r.phone }));
+      setEditing(null);
+      setError(null);
+    } catch (err) { setError(err.message); }
+  };
   const sendCode = (b, code) => {
     const url = platform.siteUrl(`/micra/barista?codigo=${code}`);
     platform.openExternal(`https://wa.me/?text=${encodeURIComponent(`Hola, ${b.name.split(' ')[0]}. Este es tu enlace para entrar a Micra: ${url} (tu código es ${code}, vence en 7 días).`)}`);
@@ -47,7 +62,7 @@ export default function OwnerView({ onActAs, go }) {
 
   const list = data.baristas;
   const tot = list.reduce((a, b) => ({ cups: a.cups + b.cups, total: a.total + Number(b.total), waiting: a.waiting + b.waiting, served: a.served + b.served, live: a.live + (b.live_until ? 1 : 0) }), { cups: 0, total: 0, waiting: 0, served: 0, live: 0 });
-  const ready = list.filter((b) => !missingStep(b)).length;
+  const ready = list.filter((b) => !missingStep(b, phones?.[b.id])).length;
   const bars = weekBars(data.week);
 
   return (
@@ -80,7 +95,8 @@ export default function OwnerView({ onActAs, go }) {
         <p className="mapp-cota">Baristas · {ready} de {list.length} listos para vender por Micra</p>
         <ul className="mapp-team">
           {list.map((b) => {
-            const step = missingStep(b);
+            const phone = phones?.[b.id] ?? null;
+            const step = missingStep(b, phone);
             const code = codes[b.id] ?? b.invite_code;
             return (
               <li key={b.id}>
@@ -90,6 +106,18 @@ export default function OwnerView({ onActAs, go }) {
                 </div>
                 <span className="mapp-muted">{b.referencia || b.localidad || 'Sin lugar'} · {cupsLabel(b.cups)} · {money(b.total)}{b.waiting ? ` · ${b.waiting} esperando` : ''}</span>
                 {step && <span className="mapp-todo">{step}</span>}
+                {phones && (editing?.id === b.id ? (
+                  <form className="mapp-team-phone" onSubmit={savePhone}>
+                    <input type="tel" inputMode="tel" placeholder="300 123 4567" aria-label={`Celular de ${b.name}`} value={editing.value} onChange={(e) => setEditing({ id: b.id, value: formatCoPhone(e.target.value) })} autoFocus />
+                    <button type="submit" className="mapp-btn is-small" disabled={editing.value.trim() !== '' && !normalizeCoPhone(editing.value)}>Guardar</button>
+                    <button type="button" className="mapp-link" onClick={() => setEditing(null)}>Cancelar</button>
+                  </form>
+                ) : (
+                  <span className="mapp-row-btns">
+                    {phone && <span className="mapp-muted">Cel. {formatCoPhone(phone)}</span>}
+                    <button type="button" className="mapp-link" onClick={() => setEditing({ id: b.id, value: phone ? formatCoPhone(phone) : '' })}>{phone ? 'Cambiar celular' : 'Poner su celular'}</button>
+                  </span>
+                ))}
                 <span className="mapp-row-btns">
                   {!b.linked && (code
                     ? <><code className="mapp-code-chip">{code}</code><button type="button" className="mapp-link" onClick={() => sendCode(b, code)}>Enviar por WhatsApp</button></>

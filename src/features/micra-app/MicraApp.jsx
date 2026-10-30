@@ -155,8 +155,11 @@ export default function MicraApp() {
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
-    else if (who.admin && (actAs || !who.barista)) body = <BaristaHome asId={actAs} onPickAs={setActAs} admin go={go} night={night} tab={route.tab} />;
+    // «Cambiar de barista» vuelve a Equipo, donde está «Actuar como»
+    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} />;
     else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} />;
+    // El equipo sin ficha propia ve la entrada de los baristas (sin mandar SMS)
+    else if (who.admin) body = <BaristaJoin session={who.session} preview night={night} go={go} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (videoView) {
     if (who.loading) body = <Cargando />;
