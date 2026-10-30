@@ -114,7 +114,7 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null, lite
     () => (varieties ?? []).find((v) => String(v.id) === String(varietyId)) ?? varieties?.[0] ?? null,
     [varieties, varietyId]
   );
-  const preset = kind === 'recipe' ? null : presetOf(kind, presetIds[kind]);
+  const preset = kind === 'recipe' ? null : presetOf(kind, presetIds[kind], { lite });
   const onPhoto = stage === 'camera' ? camMode !== 'plain' : bg === 'media' && !!capture;
   const look = useCardLook({ kind, preset, onPhoto, hasCobrand: !!cobrand, saved: prefs });
   const { elements, texts } = look;
@@ -796,7 +796,7 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null, lite
       case 'filter':
         return (
           <FilterSheet
-            kind={kind} onKind={setKind} varieties={varieties} varietyId={variety?.id} onVariety={setVarietyId}
+            kind={kind} onKind={setKind} varieties={varieties} varietyId={variety?.id} onVariety={setVarietyId} lite={lite}
             presetId={preset?.id} onPreset={(id) => setPresetIds((p) => ({ ...p, [kind]: id }))}
             onClose={closeSheet}
             docked={docked}
@@ -877,6 +877,7 @@ export default function MicraStudio({ onExit, onOpenTool, startWith = null, lite
             paused={hold}
             onCapture={takeCapture}
             onEditText={(key) => setTextKey(key)}
+            lite={lite}
             onOpenSale={lite ? null : () => setSheet('sale')}
             onOpenTintero={lite ? null : () => setSheet('tintero')}
             adTinteroName={preset?.usesTintero ? adTintero?.name ?? '' : null}
