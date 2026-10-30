@@ -14,7 +14,7 @@
     "SplashScreen": {
       "launchShowDuration": 600,
       "launchAutoHide": true,
-      "backgroundColor": "#FFFFFF",
+      "backgroundColor": "#F5EFE4",
       "showSpinner": false
     },
     "CapacitorUpdater": {

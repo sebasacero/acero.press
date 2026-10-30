@@ -43,7 +43,20 @@ function useManifest() {
     const prevColor = meta?.content;
     const prevTitle = document.title;
     document.title = 'Micra · café en la calle';
-    return () => { if (existing) link.setAttribute('href', prevHref); else link.remove(); document.title = prevTitle; if (meta && prevColor) meta.content = prevColor; };
+    // La pestaña y el inicio del iPhone llevan el termo de Micra; el sitio vuelve a su lata al salir
+    const icons = [...document.querySelectorAll('link[rel="icon"]')].map((el) => [el, el.getAttribute('href')]);
+    icons.forEach(([el]) => el.setAttribute('href', '/image/micra-icon-32.png'));
+    const touch = document.createElement('link');
+    touch.rel = 'apple-touch-icon';
+    touch.href = '/image/micra-icon-180.png';
+    document.head.appendChild(touch);
+    return () => {
+      if (existing) link.setAttribute('href', prevHref); else link.remove();
+      document.title = prevTitle;
+      if (meta && prevColor) meta.content = prevColor;
+      icons.forEach(([el, href]) => el.setAttribute('href', href));
+      touch.remove();
+    };
   }, []);
 }
 
