@@ -139,3 +139,19 @@ test('un barista sin equipo no ve el estudio ni la cámara del equipo', async ({
   await page.getByRole('button', { name: 'Cerrar la cámara' }).click();
   await expect(page).toHaveURL(/\/micra\/barista$/);
 });
+
+test('el dueño en modo barista tampoco ve la ficha ni la encuesta en la cámara', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/video', { waitUntil: 'load' });
+  await expect(page.locator('.mstudio.is-camera')).toHaveCount(1);
+  await expect(page.locator('.mst-ticket')).toHaveCount(0);
+  await expect(page.locator('.mst-tintero')).toHaveCount(0);
+  await page.click('.mc-kinds button:has-text("Anuncio")');
+  await expect(page.getByRole('option', { name: 'Tintero aliado' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cerrar la cámara' }).click();
+  await expect(page).toHaveURL(/\/micra\/barista$/);
+  // En Equipo sí sigue la cámara completa, con la ficha
+  await page.goto('/micra/camara', { waitUntil: 'load' });
+  await expect(page.locator('.mst-tintero')).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
