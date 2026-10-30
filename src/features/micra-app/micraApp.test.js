@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
-  meters, distanceLabel, sortBaristas, filterBaristas, daySummary, weekBars, weekdayLetter, fiadoMessage,
+  meters, distanceLabel, sortBaristas, filterBaristas, pickBaristas, daySummary, weekBars, weekdayLetter, fiadoMessage,
   parseRoute, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
@@ -84,6 +84,11 @@ test('la lista: favoritos, luego en la calle, luego su hora, luego el más cerca
   const sorted = sortBaristas(list, { me, now: MORNING });
   assert.deepEqual(filterBaristas(sorted, 'live').map((b) => b.id), ['c', 'b', 'a']);
   assert.deepEqual(filterBaristas(sorted, 'perico').map((b) => b.id), ['d']);
+  // La bebida y «Ahora» se combinan
+  assert.deepEqual(pickBaristas(sorted).map((b) => b.id), ['c', 'b', 'a', 'd']);
+  assert.deepEqual(pickBaristas(sorted, { drink: 'perico' }).map((b) => b.id), ['d']);
+  assert.deepEqual(pickBaristas(sorted, { drink: 'perico', now: true }).map((b) => b.id), []);
+  assert.deepEqual(pickBaristas(sorted, { now: true }).map((b) => b.id), ['c', 'b', 'a']);
 });
 
 test('el día del barista: tazas, plata, fiado y quién espera', () => {

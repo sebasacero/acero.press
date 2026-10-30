@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  sortBaristas, filterBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
-  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting,
+  sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
+  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, PRODUCTS,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
@@ -16,13 +16,8 @@ import { figureFor } from './motivation.js';
 
 const MicraMap = lazy(() => import('./MicraMap.jsx'));
 
-const FILTERS = [
-  ['all', 'Todos'],
-  ['live', 'Ahora'],
-  ['tinto', 'Tinto'],
-  ['perico', 'Perico'],
-  ['aromatica', 'Aromática'],
-];
+// Lo que el cliente busca, encima del mapa: todo o una bebida
+const DRINKS = [['all', 'Todo'], ...PRODUCTS.map((p) => [p.id, p.label])];
 
 function useBaristas() {
   const [state, setState] = useState({ list: null, error: null, missing: false });
@@ -138,11 +133,12 @@ function BaristaRow({ b, onOpen, i = 0 }) {
 export function ClientHome({ go, night }) {
   const [{ list, error, missing }, reload] = useBaristas();
   const { me, ask, asking } = useMe();
-  const [filter, setFilter] = useState('all');
+  const [drink, setDrink] = useState('all');
+  const [nowOnly, setNowOnly] = useState(false);
   const [favs] = useState(api.favorites);
   // Cada barista lleva el número de su fila, el mismo que su pin en el mapa
   const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }).map((b, i) => ({ ...b, n: i + 1 })), [list, me, favs]);
-  const shown = filterBaristas(sorted, filter);
+  const shown = pickBaristas(sorted, { drink, now: nowOnly });
   const live = sorted.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
   // Si ya apartó hoy, arriba va cómo va eso, no la bienvenida
@@ -172,16 +168,28 @@ export function ClientHome({ go, night }) {
         </section>
       )}
 
+      {/* El mapa grande y, encima, qué quiere tomar: los pines muestran solo a quien lo vende */}
+      <div className="mapp-mapwrap">
+        <div className="mapp-chips is-drinks" role="group" aria-label="¿Qué quieres tomar?">
+          {DRINKS.map(([id, label]) => (
+            <button key={id} type="button" className={drink === id ? 'on' : ''} aria-pressed={drink === id} onClick={() => setDrink(id)}>{label}</button>
+          ))}
+        </div>
+        {sorted.length > 0 ? (
+          <Suspense fallback={<div className="mapp-map is-big is-loading" />}>
+            <MicraMap baristas={shown} me={me} theme={night ? 'noche' : 'plano'} onPick={open} big />
+          </Suspense>
+        ) : <div className={`mapp-map is-big ${list === null ? 'is-loading' : ''}`} />}
+      </div>
+
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">
           {!me && (
             <button type="button" className="mapp-near" onClick={ask} disabled={asking}>{asking ? 'Buscando…' : '◎ Cerca de mí'}</button>
           )}
-          {FILTERS.map(([id, label]) => (
-            <button key={id} type="button" className={filter === id ? 'on' : ''} aria-pressed={filter === id} onClick={() => setFilter(id)}>
-              {label}{id === 'live' && live > 0 ? ` · ${live}` : ''}
-            </button>
-          ))}
+          <button type="button" className={nowOnly ? 'on' : ''} aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)}>
+            Ahora{live > 0 ? ` · ${live}` : ''}
+          </button>
         </div>
       </div>
 
@@ -193,11 +201,6 @@ export function ClientHome({ go, night }) {
         <ul className="mapp-list is-cards" aria-label="Baristas">
           {shown.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
         </ul>
-      )}
-      {sorted.length > 0 && (
-        <Suspense fallback={<div className="mapp-map is-loading" />}>
-          <MicraMap baristas={sorted} me={me} theme={night ? 'noche' : 'plano'} onPick={open} />
-        </Suspense>
       )}
       {list && !error && shown.length === 0 && (
         <div className="mapp-empty">

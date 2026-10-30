@@ -28,7 +28,7 @@ function pin(b, onPick) {
   return el;
 }
 
-export default function MicraMap({ baristas, me, theme, onPick }) {
+export default function MicraMap({ baristas, me, theme, onPick, big = false }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const libRef = useRef(null);
@@ -92,10 +92,10 @@ export default function MicraMap({ baristas, me, theme, onPick }) {
     else if (pts.length > 1) {
       const lngs = pts.map((p) => p[0]);
       const lats = pts.map((p) => p[1]);
-      map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 48, maxZoom: 15, duration: 0 });
+      map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: big ? { top: 76, bottom: 40, left: 40, right: 40 } : 48, maxZoom: 15, duration: 0 }); // en el grande, las bebidas van arriba
     }
-  }, [baristas, me, state]);
+  }, [baristas, me, state, big]);
 
   if (state === 'off') return null;
-  return <div className="mapp-map" ref={box} data-testid="micra-map" aria-label="Mapa de los baristas" role="region" />;
+  return <div className={`mapp-map${big ? ' is-big' : ''}`} ref={box} data-testid="micra-map" aria-label="Mapa de los baristas" role="region" />;
 }
