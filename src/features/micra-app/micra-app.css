@@ -889,3 +889,38 @@
 .mapp-takehome b, .mapp-takehome small { display: block; }
 .mapp-takehome small { color: var(--m-soft); margin-top: 2px; }
 .mapp-takehome i { margin-left: auto; font-style: normal; font-size: 1.4rem; color: var(--m-soft); }
+
+/* ── Mapa en vivo (LiveMap.jsx): como Uber al ponerse «en línea» ─────
+   Demanda en rojo (el único rojo), estudio en tinta: azul oscuro de día,
+   crema de noche. Mismos colores que las capas de MicraMap. */
+.mapp-live { --zone-demand: var(--red, #DE1B1B); --zone-study: #1F2452; margin: 4px 0 12px; }
+.mapp.is-night .mapp-live { --zone-study: #EDE6D3; }
+.mapp-live .mapp-cota { display: flex; align-items: center; gap: 8px; }
+.mapp-live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--m-green); box-shadow: 0 0 0 0 rgba(31, 138, 91, .5); animation: mapp-online 1.8s infinite; }
+@keyframes mapp-online { 70% { box-shadow: 0 0 0 8px rgba(31, 138, 91, 0); } 100% { box-shadow: 0 0 0 0 rgba(31, 138, 91, 0); } }
+@media (prefers-reduced-motion: reduce) { .mapp-live-dot { animation: none; } }
+.mapp-live-count { margin: 4px 0 8px; font: 700 1rem/1.3 'Archivo', system-ui, sans-serif; color: var(--m-fg); }
+.mapp-live .mapp-map.is-big { height: clamp(340px, 58vh, 540px); }
+.mapp-live-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 0; padding: 0; font: 600 .74rem/1.2 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-live-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.mapp-live-legend i { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+.mapp-live-legend i.is-demand { background: color-mix(in srgb, var(--zone-demand) 42%, transparent); border: 1.5px solid var(--zone-demand); }
+.mapp-live-legend i.is-study { background: color-mix(in srgb, var(--zone-study) 22%, transparent); border: 1px dashed var(--zone-study); }
+.mapp-live-legend i.is-pin { border-radius: 50%; background: var(--m-cta); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
+.mapp-live-wait { margin: 8px 0 0; font-size: .9rem; color: var(--m-fg); }
+.mapp-live.is-preview .mapp-map { margin: 8px 0 0; }
+.mapp-live-wrap { position: relative; }
+.mapp-live-nudge {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; margin: 0; padding: 10px 12px; border-radius: 14px;
+  background: var(--m-fg); color: var(--m-bg); font: 700 .88rem/1.3 'Archivo', system-ui, sans-serif; text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .25); pointer-events: none;
+}
+/* Pin con nombre: la etiqueta debajo (el marcador de MapLibre ya es absolute: no cambiarle position) */
+.mapp-pin.is-named { width: 34px; height: 34px; font-size: .74rem; }
+.mapp-pin-name {
+  position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); white-space: nowrap;
+  padding: 2px 7px; border-radius: 999px; background: var(--m-bg); color: var(--m-fg);
+  font: 700 .7rem/1.3 'Archivo', system-ui, sans-serif; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); pointer-events: none;
+}
+.mapp-seek-note { margin: 0 0 10px; font-size: .8rem; }
+.mapp-seek-note .mapp-link { font-size: inherit; }

@@ -15,6 +15,9 @@ import { figureFor } from './motivation.js';
 // el celular guarda su identificador, el nombre y los favoritos.
 
 const MicraMap = lazy(() => import('./MicraMap.jsx'));
+// «Busco café» y su aviso llegan aparte: la app ya está al borde del límite del bundle
+const SeekNote = lazy(() => import('./SeekNote.jsx'));
+const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
 // Lo que el cliente busca, encima del mapa: todo o una bebida
 const DRINKS = [['all', 'Todo'], ...PRODUCTS.map((p) => [p.id, p.label])];
@@ -41,8 +44,10 @@ function useMe() {
   const [asking, setAsking] = useState(false);
   const ask = async () => {
     setAsking(true);
-    setMe(await api.onePosition());
+    const p = await api.onePosition();
+    setMe(p);
     setAsking(false);
+    return p;
   };
   return { me, ask, asking };
 }
@@ -136,6 +141,10 @@ export function ClientHome({ go, night }) {
   const [drink, setDrink] = useState('all');
   const [nowOnly, setNowOnly] = useState(false);
   const [favs] = useState(api.favorites);
+  // «Busco café»: con la ubicación dada, la zona aproximada (no el punto) y la bebida
+  // le dicen a los baristas dónde quieren café; una vez cada 15 min (api.seekCoffee)
+  const askNear = async () => { const p = await ask(); if (p) seek(p, drink); };
+  const pickDrink = (id) => { setDrink(id); if (me) seek(me, id); };
   // Cada barista lleva el número de su fila, el mismo que su pin en el mapa
   const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }).map((b, i) => ({ ...b, n: i + 1 })), [list, me, favs]);
   const shown = pickBaristas(sorted, { drink, now: nowOnly });
@@ -172,7 +181,7 @@ export function ClientHome({ go, night }) {
       <div className="mapp-mapwrap">
         <div className="mapp-chips is-drinks" role="group" aria-label="¿Qué quieres tomar?">
           {DRINKS.map(([id, label]) => (
-            <button key={id} type="button" className={drink === id ? 'on' : ''} aria-pressed={drink === id} onClick={() => setDrink(id)}>{label}</button>
+            <button key={id} type="button" className={drink === id ? 'on' : ''} aria-pressed={drink === id} onClick={() => pickDrink(id)}>{label}</button>
           ))}
         </div>
         {sorted.length > 0 ? (
@@ -185,13 +194,14 @@ export function ClientHome({ go, night }) {
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">
           {!me && (
-            <button type="button" className="mapp-near" onClick={ask} disabled={asking}>{asking ? 'Buscando…' : '◎ Cerca de mí'}</button>
+            <button type="button" className="mapp-near" onClick={askNear} disabled={asking}>{asking ? 'Buscando…' : '◎ Cerca de mí'}</button>
           )}
           <button type="button" className={nowOnly ? 'on' : ''} aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)}>
             Ahora{live > 0 ? ` · ${live}` : ''}
           </button>
         </div>
       </div>
+      <Suspense fallback={null}><SeekNote /></Suspense>
 
       {list === null && <Skeleton />}
       {error && (

@@ -19,8 +19,8 @@ export const THEMES = {
   },
 };
 
-// Capas del mapa que no son del estudio (las del piloto empiezan así y no se tocan)
-const OURS = /^ventas-/;
+// Capas nuestras que no se tocan: las del piloto (ventas-) y las zonas del mapa en vivo de Micra (zonas-)
+const OURS = /^(ventas|zonas)-/;
 const has = (id, ...words) => words.some((w) => id.includes(w));
 
 function roadColor(id, T) {

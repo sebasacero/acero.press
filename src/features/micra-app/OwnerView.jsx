@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { money, cupsLabel, weekBars, weekdayLetter, baristaPath } from './micraApp.js';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { money, cupsLabel, weekBars, weekdayLetter, baristaPath, isNight } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { Cargando } from './Animado.jsx';
 import { formatCoPhone, normalizeCoPhone } from './phone.js';
+
+const LivePanel = lazy(() => import('./LiveMap.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle), qué le falta a cada barista para vender por Micra, su celular (con
@@ -87,6 +89,9 @@ export default function OwnerView({ onActAs, go }) {
         <div><dt>Apartados</dt><dd>{tot.waiting + tot.served}<small> · {tot.served} entregados</small></dd></div>
         <div><dt>En la calle</dt><dd>{tot.live}<small> de {list.length}</small></dd></div>
       </dl>
+
+      {/* Lo mismo que ve un barista en la calle: todos los que salieron y dónde quieren café */}
+      <Suspense fallback={null}><LivePanel mode="team" night={isNight()} go={go} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Tazas por día · 7 días</p>

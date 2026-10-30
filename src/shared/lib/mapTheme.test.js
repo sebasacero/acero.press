@@ -36,6 +36,9 @@ test('sin íconos ni edificios 3D; los nombres llevan tinta y halo de papel', ()
 
 test('las capas del estudio y los temas desconocidos no se tocan; las propiedades son del tipo de cada capa', () => {
   assert.equal(themeLayer(L('ventas-calor', 'heatmap'), 'plano'), null);
+  // Las zonas del mapa en vivo (MicraMap) conservan su color y su transparencia
+  assert.equal(themeLayer(L('zonas-demanda', 'fill'), 'noche'), null);
+  assert.equal(themeLayer(L('zonas-estudio-borde', 'line'), 'plano'), null);
   assert.equal(themeLayer(L('background', 'background'), 'calles'), null);
   const changes = themeChanges([L('background', 'background'), L('osm', 'raster'), L('ventas-cuadras', 'circle'), L('road_minor', 'line', 'transportation')], 'plano');
   for (const [, kind, prop] of changes) {
