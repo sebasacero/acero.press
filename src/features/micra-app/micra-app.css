@@ -494,7 +494,10 @@
   padding: 10vh 24px calc(10vh + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
   animation: mapp-splash-out .3s 1.3s both;
 }
-.mapp-splash .mapp-fig { width: min(70vw, 300px); max-height: 55vh; }
+.mapp-splash .mapp-termo { width: min(26vw, 112px); height: auto; overflow: visible; animation: mapp-termo-float 1.6s ease-in-out infinite; }
+.mapp-termo-cap { transform-box: fill-box; transform-origin: center; animation: mapp-termo-cap 1.3s ease-in-out both; }
+@keyframes mapp-termo-float { 50% { transform: translateY(-8px); } }
+@keyframes mapp-termo-cap { 30%, 70% { transform: translateY(-16px) rotate(-10deg); } }
 .mapp-splash-brand { margin: 14px 0 0; font: 800 2.6rem 'Archivo', sans-serif; letter-spacing: -.03em; }
 .mapp-splash-brand i { font-style: normal; color: var(--m-cta); }
 .mapp-splash-cota { margin: 0; font: 500 .7rem 'JetBrains Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--m-soft); }
@@ -502,7 +505,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mapp-list > li, .mapp-now, .mapp-hero, .mapp-chips, .mapp-fig.is-draw .pi, .mapp-fig.is-draw .pz, .mapp-fig.is-draw .pr { animation: none; }
-  .mapp-skel { animation: none; }
+  .mapp-skel, .mapp-splash .mapp-termo, .mapp-termo-cap { animation: none; }
 }
 
 /* Esperas con personaje en movimiento (Animado.jsx) */

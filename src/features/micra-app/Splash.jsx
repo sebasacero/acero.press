@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import Figure from './Elenco.jsx';
+import Termo from './Termo.jsx';
 
-// El arranque de la app instalada: el barista de ruana se dibuja a trazo
-// mientras carga lo primero. Dura poco más de un segundo, se puede tocar para
+// El arranque de la app instalada: el termo de Micra flota y se destapa
+// mientras carga lo primero (sigue al arranque nativo, que es el mismo termo). Dura poco más de un segundo, se puede tocar para
 // saltarlo y una sola vez por sesión; con «menos movimiento» ni aparece.
 
 const SHOWN_KEY = 'micra_splash_shown';
@@ -22,7 +22,7 @@ export default function Splash() {
   if (!on) return null;
   return (
     <div className="mapp-splash" role="presentation" onClick={() => setOn(false)} data-testid="micra-splash">
-      <Figure name="ruana" draw />
+      <Termo />
       <p className="mapp-splash-brand">micra<i>.</i></p>
       <p className="mapp-splash-cota">Café especial más cerca de ti</p>
     </div>
