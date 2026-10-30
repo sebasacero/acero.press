@@ -189,7 +189,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     if (m !== 'GET') calls.push({ m, p, q: u.search, data });
 
     // App Micra, en memoria (como las funciones de 20261026210000_micra_app.sql)
-    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day))$/)?.[1];
+    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps))$/)?.[1];
     if (mfn) {
       const M = micra;
       const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
@@ -211,6 +211,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         if (h) Object.assign(h, vals); else { h = { id: `apartado-${M.holds.length + 1}`, tintero_id: b.id, client_ref: data.p_client_ref, for_day: today, ...vals }; M.holds.push(h); }
         return json(200, h);
       }
+      // La tarjeta de sellos del cliente: solo si los datos de prueba la traen
+      if (mfn === 'micra_my_stamps') return M.stamps ? json(200, M.stamps) : fail(404, 'PGRST202', 'Could not find the function micra_my_stamps');
       if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) h.status = 'cancelled'; return json(200, !!h); }
       const b = actor();
       if (mfn === 'micra_owner_day') {

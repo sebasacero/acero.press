@@ -9,13 +9,18 @@ import platform from './platform.js';
 export function StampsCard() {
   const [s, setS] = useState(null);
   useEffect(() => { api.myStamps().then(setS).catch(() => setS(null)); }, []);
-  if (!s) return null;
+  // Sin datos de sellos (o con una respuesta rara) no se muestra la tarjeta
+  if (!s || !Number.isFinite(s.toward)) return null;
   const per = s.per ?? 10;
   return (
     <section className="mapp-glass mapp-stamps" aria-label="Tus sellos" data-testid="stamps">
-      <p className="mapp-cota">Tus sellos · {per} tazas = 1 tinto gratis</p>
+      <p className="mapp-cota">Tu tarjeta · {per} tazas = 1 tinto gratis<b>{s.toward} de {per}</b></p>
       <ol className="mapp-stamps-row" aria-label={`${s.toward} de ${per} sellos`}>
-        {Array.from({ length: per }, (_, i) => <li key={i} className={i < s.toward ? 'on' : ''} aria-hidden="true">☕</li>)}
+        {Array.from({ length: per }, (_, i) => (
+          <li key={i} className={`${i < s.toward ? 'on' : ''} ${i === per - 1 ? 'is-gift' : ''}`} aria-hidden="true">
+            <svg viewBox="0 0 24 26"><path d="M3 6h15v9a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7z" /><path d="M18 9h2a3 3 0 0 1 0 6h-2" /></svg>
+          </li>
+        ))}
       </ol>
       {s.available > 0
         ? <p className="mapp-stamps-free" role="status">🎁 Tienes {s.available === 1 ? 'un tinto gratis' : `${s.available} tintos gratis`}: díselo a tu barista al recibir.</p>

@@ -32,3 +32,12 @@ export const IconClipboard = () => (
 export const IconCamera = () => (
   <svg {...base}><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8l1.4-2h4.6l1.4 2h1.8A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z" /><circle cx="12" cy="12.5" r="3.5" /></svg>
 );
+export const IconHome = () => (
+  <svg {...base}><path d="M4 11 12 4.5 20 11v8a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z" /></svg>
+);
+export const IconCap = () => (
+  <svg {...base}><path d="m2.5 9 9.5-4.5L21.5 9 12 13.5z" /><path d="M6.5 11v4.5c3 2.6 8 2.6 11 0V11M21.5 9v5" /></svg>
+);
+export const IconWallet = () => (
+  <svg {...base}><rect x="3.5" y="6" width="17" height="13" rx="2.5" /><path d="M3.5 9.5h17M15.5 14h2" /></svg>
+);

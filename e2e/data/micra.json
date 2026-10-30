@@ -1,4 +1,5 @@
 {
+  "stamps": { "cups": 7, "toward": 7, "available": 0, "per": 10 },
   "baristas": [
     { "id": "60000000-0000-0000-0000-000000000001", "name": "Marlene", "full": "Marlene Rojas", "mine": true, "stage": "piloto", "localidad": "Chapinero", "referencia": "Cl. 57 con Cra. 7", "lat": 4.643, "lng": -74.064, "hora_inicio": 6, "hora_fin": 11, "products": ["tinto", "perico", "aromatica", "ponque"], "prices": { "tinto": 1500, "perico": 2000, "aromatica": 1500 }, "payments": ["efectivo", "nequi"], "takes_holds": true, "live_until": "2099-01-01T00:00:00Z" },
     { "id": "60000000-0000-0000-0000-000000000002", "name": "Jairo", "stage": "piloto", "localidad": "Chapinero", "referencia": "Cl. 59 con Cra. 12", "lat": 4.646, "lng": -74.066, "hora_inicio": 6, "hora_fin": 20, "products": ["tinto", "perico"], "prices": { "tinto": 1300, "perico": 1800 }, "payments": ["efectivo", "nequi", "daviplata"], "takes_holds": true },

@@ -190,7 +190,8 @@ export const baristaPath = (id) => `/micra/b/${id}`;
  *   /micra               inicio según quién entra
  *   /micra/b/<id>        un barista (lo que abre el QR del termo)
  *   /micra/apartados     mis apartados de hoy
- *   /micra/barista       el modo barista (entrar y enlazar si falta)
+ *   /micra/barista       el modo barista (entrar y enlazar si falta), pestaña Hoy
+ *   /micra/barista/vender · /aprende · /cuenta   sus otras pestañas
  *   /micra/equipo        el modo del equipo
  */
 export function parseRoute(pathname) {
@@ -199,6 +200,9 @@ export function parseRoute(pathname) {
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/barista') return { view: 'barista' };
+  // Las pestañas del barista: vender, aprender y su plata (Hoy es /micra/barista)
+  const t = p.match(/^\/micra\/barista\/(vender|aprende|cuenta)$/);
+  if (t) return { view: 'barista', tab: t[1] };
   if (p === '/micra/equipo') return { view: 'owner' };
   // Herramientas del equipo en la calle: el estudio y la cámara de Micra (con la ficha abierta)
   if (p === '/micra/estudio') return { view: 'study' };

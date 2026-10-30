@@ -122,6 +122,9 @@ test('rutas internas de /micra', () => {
   assert.deepEqual(parseRoute('/micra/b/60000000-0000-0000-0000-00000000000A'), { view: 'barista-card', id: '60000000-0000-0000-0000-00000000000a' });
   assert.deepEqual(parseRoute('/micra/b/<script>'), { view: 'home' });
   assert.deepEqual(parseRoute('/micra/barista'), { view: 'barista' });
+  assert.deepEqual(parseRoute('/micra/barista/vender'), { view: 'barista', tab: 'vender' });
+  assert.deepEqual(parseRoute('/micra/barista/aprende/'), { view: 'barista', tab: 'aprende' });
+  assert.deepEqual(parseRoute('/micra/barista/otra'), { view: 'home' });
   assert.deepEqual(parseRoute('/micra/equipo'), { view: 'owner' });
   assert.deepEqual(parseRoute('/micra/apartados'), { view: 'holds' });
   assert.deepEqual(parseRoute('/micra/estudio'), { view: 'study' });
