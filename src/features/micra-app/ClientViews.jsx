@@ -9,6 +9,7 @@ import platform from './platform.js';
 import Figure from './Elenco.jsx';
 import { IconThermo, IconCheck, IconOut } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
+import { figureFor } from './motivation.js';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
@@ -106,17 +107,21 @@ function inviteText() {
   return `¿Vendes café en la calle? Con Micra tus clientes te apartan los tintos antes de que llegues. Escríbele al equipo: ${url}`;
 }
 
+/** Cada barista en su tarjeta: su personaje, si está en la calle, dónde y su tinto. El número es el de su pin. */
 function BaristaRow({ b, onOpen, i = 0 }) {
   const menu = menuOf(b);
   return (
-    <li style={{ '--i': i }}>
-      <button type="button" className="mapp-row" onClick={() => onOpen(b.id)}>
-        <Avatar b={b} />
+    <li style={{ '--i': i }} className={`is-${b.status}`}>
+      <button type="button" className="mapp-row mapp-bcard" onClick={() => onOpen(b.id)}>
+        <span className="mapp-bcard-top">
+          <StatusBadge s={b.status} />
+          <Avatar b={b} />
+        </span>
+        <Figure name={figureFor(b.id)} className="is-card" />
         <span className="mapp-row-main">
           <b>{b.name}{b.favorite && <span className="mapp-fav" aria-label="Tu barista"> ★</span>}</b>
           <span>{b.referencia || b.localidad || 'En la calle'}{b.distance != null ? ` · ${distanceLabel(b.distance)}` : ''}</span>
           <span className="mapp-row-meta">
-            <StatusBadge s={b.status} />
             {windowLabel(b.hora_inicio, b.hora_fin) && <em>{windowLabel(b.hora_inicio, b.hora_fin)}</em>}
           </span>
         </span>
@@ -124,6 +129,7 @@ function BaristaRow({ b, onOpen, i = 0 }) {
           {menu[0] && <span className="mapp-price"><small>{menu[0].label}</small>{money(menu[0].price)}</span>}
           {b.waiting > 0 && <span className="mapp-waiting">{b.waiting} lo esperan</span>}
         </span>
+        <span className={`mapp-bcard-cta ${b.takes_holds ? '' : 'is-ghost'}`} aria-hidden="true">{b.takes_holds ? 'Apártame' : 'Ver dónde está'}</span>
       </button>
     </li>
   );
@@ -158,18 +164,12 @@ export function ClientHome({ go, night }) {
       ) : (
         <section className="mapp-hero">
           <div>
-            <p className="mapp-kicker">Café de la calle · Bogotá</p>
+            <p className="mapp-kicker">{live > 0 ? `${live === 1 ? '1 barista' : `${live} baristas`} en la calle ahora` : 'Café de la calle · Bogotá'}</p>
             <h1 className="mapp-title is-home">¿Quién pasa con café <span className="mapp-script">cerca?</span></h1>
             <p className="mapp-lede">Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.</p>
           </div>
           <Figure name="caminando" className="is-hero" />
         </section>
-      )}
-
-      {sorted.length > 0 && (
-        <Suspense fallback={<div className="mapp-map is-loading" />}>
-          <MicraMap baristas={sorted} me={me} theme={night ? 'noche' : 'plano'} onPick={open} />
-        </Suspense>
       )}
 
       <div className="mapp-bar">
@@ -190,9 +190,14 @@ export function ClientHome({ go, night }) {
         <p className="mapp-error" role="alert">No se pudo cargar la lista. <button type="button" className="mapp-link" onClick={reload}>Reintentar</button></p>
       )}
       {list && shown.length > 0 && (
-        <ul className="mapp-list" aria-label="Baristas">
+        <ul className="mapp-list is-cards" aria-label="Baristas">
           {shown.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
         </ul>
+      )}
+      {sorted.length > 0 && (
+        <Suspense fallback={<div className="mapp-map is-loading" />}>
+          <MicraMap baristas={sorted} me={me} theme={night ? 'noche' : 'plano'} onPick={open} />
+        </Suspense>
       )}
       {list && !error && shown.length === 0 && (
         <div className="mapp-empty">
@@ -202,6 +207,8 @@ export function ClientHome({ go, night }) {
           <a className="mapp-btn is-ghost" href={`https://wa.me/?text=${encodeURIComponent(inviteText())}`} target="_blank" rel="noopener noreferrer">Invitar a mi barista</a>
         </div>
       )}
+
+      <StampsCard />
 
       <section className="mapp-join">
         <div>

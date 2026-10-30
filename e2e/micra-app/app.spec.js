@@ -99,6 +99,10 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await expect(page).toHaveURL(/\/micra\/barista$/);
   await expect(page.getByRole('heading', { name: /Marlene\.$/ })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Equipo' })).toHaveCount(0);
+  // Vender es su propia pestaña: ahí cuenta y entrega
+  const tabs = page.getByRole('navigation', { name: 'Barista' });
+  await tabs.getByRole('button', { name: /Vender/ }).click();
+  await expect(page).toHaveURL(/\/micra\/barista\/vender$/);
   await expect(page.getByTestId('micra-count-tinto')).toHaveText('2');
 
   // Entregar a la portería: sus 3 tintos entran a la libreta
@@ -118,6 +122,8 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await page.getByRole('button', { name: 'Fié un perico' }).click();
   await page.getByLabel('Nombre de quien te debe').fill('Don Luis taxi');
   await page.getByRole('button', { name: 'Anotar fiado' }).click();
+  // Quién le debe está en «Mi plata»
+  await tabs.getByRole('button', { name: /Mi plata/ }).click();
   const luis = page.getByRole('listitem').filter({ hasText: 'Don Luis taxi' });
   await expect(luis).toContainText('$2.000');
   await expect(luis.getByRole('link', { name: 'Cobrar' })).toHaveAttribute('href', /wa\.me.*Don%20Luis%20taxi/);
@@ -125,6 +131,7 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await expect(luis).toHaveCount(0);
 
   // Ya volví
+  await tabs.getByRole('button', { name: /Hoy/ }).click();
   await page.getByRole('button', { name: 'Ya volví' }).click();
   await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
   expect(api.find('/rpc/micra_barista_out').data.p_minutes).toBe(0);
@@ -135,7 +142,7 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
 
 test('barista sin señal: el +1 se cuenta igual y sube una sola vez cuando vuelve la red', async ({ browser }) => {
   const { page, api, errors } = await open(browser, { who: 'barista' });
-  await page.goto('/micra/barista', { waitUntil: 'load' });
+  await page.goto('/micra/barista/vender', { waitUntil: 'load' });
   await expect(page.getByTestId('micra-count-perico')).toHaveText('2');
   await page.route('https://mock.supabase.co/rest/v1/rpc/micra_barista_sale', (r) => r.abort('failed'));
   await page.getByRole('button', { name: 'Vendí un perico' }).click();
@@ -175,6 +182,7 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
 
   await page.getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
   await expect(page.getByText('Actuando como')).toContainText('Jairo');
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
   await page.getByRole('button', { name: 'Vendí un tinto' }).click();
   await expect(page.getByTestId('micra-count-tinto')).toHaveText('1');
   expect(api.find('/rpc/micra_barista_sale').data.p_tintero_id).toBe(SEED.baristas[1].id);
@@ -250,5 +258,73 @@ test('el panel del equipo es solo del dueño: otro rol de admin entra como baris
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   await expect(page.getByText('Esta parte es del equipo de Micra.')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Equipo' })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('barista: la racha de la semana, su meta y la fiesta al cumplirla; luego comparte su día', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  delete seed.baristas[0].live_until;
+  const { page, errors } = await open(browser, { who: 'barista', seed });
+  await page.addInitScript(() => { localStorage.removeItem('micra_goal_v1'); localStorage.removeItem('micra_party_v1'); });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  // Semana de prueba: vendió los tres días anteriores y hoy ya lleva 4 tazas
+  await expect(page.getByTestId('streak')).toContainText('4 días');
+  await expect(page.getByRole('list', { name: 'Tu semana' }).getByRole('listitem')).toHaveCount(7);
+  // La meta sale de su mejor día (25) y se cambia en un toque
+  const goal = page.getByRole('region', { name: 'Meta de hoy' });
+  await expect(goal.getByRole('progressbar')).toHaveAttribute('aria-valuemax', '25');
+  await goal.getByRole('button', { name: 'Cambiar' }).click();
+  await goal.getByRole('button', { name: '10', exact: true }).click();
+  await expect(goal.getByRole('progressbar')).toHaveAttribute('aria-valuemax', '10');
+
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
+  await expect(page.getByTestId('sell-cups')).toHaveText('4');
+  await page.getByRole('button', { name: 'Vendí un tinto' }).click();
+  await expect(page.getByTestId('toast')).toContainText('¡Llevas 5! Te faltan 5');
+  for (let i = 0; i < 5; i += 1) await page.getByRole('button', { name: 'Vendí un tinto' }).click();
+  const party = page.getByRole('dialog', { name: 'Meta cumplida' });
+  await expect(party).toContainText('10 tazas');
+  await party.getByRole('button', { name: 'Compartir mi día' }).click();
+  const story = page.getByRole('dialog', { name: 'Mi día' });
+  await expect(story).toContainText('El día de Marlene');
+  await expect(story).toContainText('10');
+  await story.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(story).toHaveCount(0);
+  // Una vez al día: deshacer y volver a llegar no repite la fiesta
+  await page.getByRole('button', { name: 'Deshacer el último' }).click();
+  await expect(page.getByTestId('sell-cups')).toHaveText('9');
+  await page.getByRole('button', { name: 'Vendí un perico' }).click();
+  await expect(page.getByTestId('sell-cups')).toHaveText('10');
+  await expect(party).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('barista: aprende en un camino de lecciones; lo visto queda marcado y Hoy ofrece la siguiente', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.addInitScript(() => { localStorage.removeItem('acero.escuela.vistas'); });
+  await page.goto('/micra/barista/aprende', { waitUntil: 'load' });
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu camino a');
+  await expect(page.getByTestId('level')).toContainText('0 de 6 lecciones');
+  await page.getByRole('button', { name: 'Empezar' }).click();
+  const lesson = page.getByRole('dialog');
+  await expect(lesson.getByRole('heading', { name: 'Conoce tu AeroPress' })).toBeVisible();
+  await lesson.getByRole('button', { name: 'Ya la vi ✓' }).click();
+  await expect(page.getByTestId('level')).toContainText('1 de 6 lecciones');
+  await expect(page.getByRole('button', { name: /Lección 1: Conoce tu AeroPress \(vista\)/ })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Hoy/ }).click();
+  await expect(page.getByTestId('next-lesson')).toContainText('Lección 2 · Tu primera taza');
+  expect(errors).toEqual([]);
+});
+
+test('cliente: los baristas en tarjetas con su personaje y la tarjeta de 10 tazas', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra', { waitUntil: 'load' });
+  const cards = page.getByRole('list', { name: 'Baristas' }).getByRole('listitem');
+  await expect(cards.first().locator('.mapp-fig svg')).toBeVisible();
+  await expect(cards.first()).toContainText('Apártame');
+  // Wilson aún no recibe apartados: su tarjeta no promete apartar
+  await expect(cards.filter({ hasText: 'Wilson' })).toContainText('Ver dónde está');
+  await expect(page.getByTestId('stamps')).toContainText('7 de 10');
+  await expect(page.getByTestId('stamps')).toContainText('Te faltan 3');
   expect(errors).toEqual([]);
 });

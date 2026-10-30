@@ -18,6 +18,9 @@ const FIGURES = {
 
 const cache = {};
 
+/** El SVG de un personaje como texto (para dibujarlo en un lienzo). */
+export const loadFigure = (name) => (cache[name] ? Promise.resolve(cache[name]) : FIGURES[name]?.().then((m) => { cache[name] = m.default; return m.default; }));
+
 export default function Figure({ name, draw = false, className = '' }) {
   const [svg, setSvg] = useState(cache[name] ?? null);
   useEffect(() => {
