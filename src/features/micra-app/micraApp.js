@@ -147,6 +147,9 @@ export function filterBaristas(list, filter) {
   return list.filter((b) => b.prices?.[filter] != null);
 }
 
+/** Lo que el cliente busca: una bebida (o todas) y, si quiere, solo quien está ahora. */
+export const pickBaristas = (list, { drink = 'all', now = false } = {}) => filterBaristas(filterBaristas(list, drink), now ? 'live' : 'all');
+
 /** El resumen del día del barista desde su libreta. */
 export function daySummary(day) {
   const sales = day?.sales ?? [];

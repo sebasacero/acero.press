@@ -79,8 +79,15 @@ test('cliente: un barista sin cuenta en Micra no ofrece apartar; el filtro y el 
   await page.getByRole('button', { name: '‹ Baristas' }).click();
   // El favorito sube al primer lugar
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem').first()).toContainText('Wilson');
-  await page.getByRole('button', { name: 'Perico' }).click();
+  // Las bebidas van encima del mapa, que es grande
+  const drinks = page.getByRole('group', { name: '¿Qué quieres tomar?' });
+  await expect(page.locator('.mapp-mapwrap .mapp-map')).toBeVisible();
+  expect((await page.locator('.mapp-mapwrap .mapp-map').boundingBox()).height).toBeGreaterThanOrEqual(320);
+  await drinks.getByRole('button', { name: 'Perico' }).click();
+  await expect(drinks.getByRole('button', { name: 'Perico' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(2);
+  await drinks.getByRole('button', { name: 'Todo' }).click();
+  await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem').first()).toContainText('Wilson');
   expect(errors).toEqual([]);
 });
 

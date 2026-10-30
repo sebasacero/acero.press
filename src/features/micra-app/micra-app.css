@@ -220,6 +220,12 @@
   cursor: pointer;
 }
 .mapp-chips button.on { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
+/* El mapa del cliente: grande, con las bebidas encima */
+.mapp-mapwrap { position: relative; margin: 4px 0 8px; }
+.mapp-map.is-big { height: clamp(320px, 56vh, 520px); margin: 0; }
+.mapp-chips.is-drinks { position: absolute; z-index: 2; top: 10px; left: 10px; right: 10px; padding: 2px; }
+.mapp-chips.is-drinks button { background: var(--m-bg); box-shadow: 0 2px 10px rgba(0, 0, 0, .14); }
+.mapp-chips.is-drinks button.on { background: var(--m-fg); color: var(--m-bg); }
 .mapp-near { color: var(--m-cold); }
 .mapp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .mapp-row {
