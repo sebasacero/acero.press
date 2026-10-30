@@ -194,9 +194,102 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
   await expect(page.getByTestId('micra-count-tinto')).toHaveText('1');
   expect(api.find('/rpc/micra_barista_sale').data.p_tintero_id).toBe(SEED.baristas[1].id);
 
-  // Sin ficha propia, el modo barista pide escoger a quién
+  // Cambiar de barista vuelve a Equipo, donde está «Actuar como»
   await page.getByRole('button', { name: 'Cambiar de barista' }).click();
-  await expect(page.getByRole('heading', { name: '¿Como quién entras?' })).toBeVisible();
+  await expect(page).toHaveURL(/\/micra\/equipo$/);
+  await expect(page.getByRole('button', { name: 'Actuar como' }).first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+// ── Entrar con el celular (SMS) ─────────────────────────────────────────
+/** Nadie enlazado; `phone` en la ficha de Marlene (como lo guarda la base). */
+async function openSms(browser, { phone = '573001234567' } = {}) {
+  const seed = structuredClone(SEED);
+  seed.baristas.forEach((b) => { delete b.mine; });
+  seed.baristas[0].phone = phone;
+  return open(browser, { seed });
+}
+
+test('barista: entra con su celular y el código del SMS y cae en su inicio, sin código de invitación', async ({ browser }) => {
+  const { page, api, errors } = await openSms(browser);
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  await expect(page.getByRole('heading', { name: '¿Como quién entras?' })).toHaveCount(0);
+  const phone = page.getByLabel('Tu celular');
+  await phone.fill('3001234567');
+  await expect(phone).toHaveValue('300 123 4567');
+  await page.getByRole('button', { name: 'Enviarme el código' }).click();
+  expect(api.sms.sent).toEqual(['+573001234567']);
+
+  await expect(page.getByText('Te mandamos un SMS al')).toContainText('300 123 4567');
+  await expect(page.getByRole('button', { name: /Reenviar en \d+ s/ })).toBeDisabled();
+  const code = page.getByLabel('Código del SMS');
+  await expect(code).toHaveAttribute('autocomplete', 'one-time-code');
+  // Un código malo se dice en español; con los seis números buenos entra solo
+  await code.fill('111111');
+  await expect(page.getByRole('alert')).toContainText('no sirve o ya venció');
+  await code.fill('123456');
+
+  await expect(page.getByRole('heading', { name: /Marlene\.$/ })).toBeVisible();
+  await expect(page).toHaveURL(/\/micra\/barista$/);
+  // La base lee el número de la sesión: el celular no lo manda
+  const claim = api.find('/rpc/tintero_claim_phone');
+  expect(JSON.stringify(claim.data ?? {})).not.toContain('300');
+  expect(api.micra.baristas[0].mine).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('barista: un número que no está registrado lo dice y deja el WhatsApp del equipo y el código', async ({ browser }) => {
+  const { page, api, errors } = await openSms(browser);
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  await page.getByLabel('Tu celular').fill('+57 310 999 8877');
+  await page.getByRole('button', { name: 'Enviarme el código' }).click();
+  await page.getByLabel('Código del SMS').fill('123456');
+
+  const box = page.getByTestId('phone-not-found');
+  await expect(box).toContainText('310 999 8877');
+  await expect(box.getByRole('alert')).toContainText('Tu número no está registrado en Micra');
+  await expect(box.getByRole('button', { name: 'Escribirle al equipo por WhatsApp' })).toBeVisible();
+  // El camino del código sigue ahí
+  await expect(page.getByLabel('Código', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Entrar con otro número' })).toBeVisible();
+  expect(api.micra.baristas.some((b) => b.mine)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('barista sin cuenta: «Entrar con Google» sigue debajo, para quien tiene el código de seis letras', async ({ browser }) => {
+  const { page, errors } = await openSms(browser);
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  const oauth = page.waitForRequest(/\/auth\/v1\/authorize\?provider=google/);
+  await page.getByRole('button', { name: 'Entrar con Google' }).click();
+  expect((await oauth).url()).toContain('redirect_to=');
+  expect(errors.filter((e) => !/Failed to fetch|ERR_/.test(e))).toEqual([]);
+});
+
+test('equipo: la pestaña Barista muestra la entrada por SMS (sin mandar nada) y pone el celular de un barista', async ({ browser }) => {
+  const { page, api, errors } = await open(browser, { who: 'team' });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  await expect(page.getByTestId('team-preview')).toContainText('Así entran los baristas');
+  await expect(page.getByRole('heading', { name: '¿Como quién entras?' })).toHaveCount(0);
+  await page.getByLabel('Tu celular').fill('3001234567');
+  await page.getByRole('button', { name: 'Enviarme el código' }).click();
+  await expect(page.getByRole('status')).toContainText('No se mandó nada');
+  expect(api.sms.sent).toEqual([]);
+
+  await page.getByRole('button', { name: 'Actuar como › Equipo' }).click();
+  await expect(page).toHaveURL(/\/micra\/equipo$/);
+  const wilson = page.getByRole('listitem').filter({ hasText: 'Wilson' });
+  await expect(wilson).toContainText('pon su celular o genera un código');
+  await wilson.getByRole('button', { name: 'Poner su celular' }).click();
+  await wilson.getByLabel('Celular de Wilson').fill('310 999 8877');
+  await wilson.getByRole('button', { name: 'Guardar' }).click();
+  await expect(wilson).toContainText('Cel. 310 999 8877');
+  await expect(wilson).toContainText('que entre con su celular');
+  expect(api.micra.baristas[2].phone).toBe('573109998877');
+  // Un número es de un solo barista
+  await page.getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Poner su celular' }).click();
+  await page.getByLabel('Celular de Jairo').fill('3109998877');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByRole('alert')).toContainText('Ese número ya lo tiene Wilson');
   expect(errors).toEqual([]);
 });
 

@@ -14,6 +14,7 @@ import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
 import { PaySettings } from './Loyalty.jsx';
 import { km } from '../ruta/track.js';
+import { formatCoPhone } from './phone.js';
 
 // Modo barista en cuatro pestañas: Hoy (la racha, salir, la meta, quién te
 // espera), Vender (+1 por taza y fiados), Aprende (las lecciones) y Mi plata.
@@ -25,6 +26,9 @@ const MicraMap = lazy(() => import('./MicraMap.jsx'));
 const Aprende = lazy(() => import('./Aprende.jsx'));
 const Party = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Party })));
 const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.DayStory })));
+// La entrada por SMS solo la descarga quien va a entrar (no el cliente que busca café)
+const PhoneLogin = lazy(() => import('./PhoneLogin.jsx'));
+const TeamWhatsApp = lazy(() => import('./PhoneLogin.jsx').then((m) => ({ default: m.TeamWhatsApp })));
 
 const QUEUE_KEY = 'micra_sales_queue_v1';
 const OUT_MINUTES = 240;
@@ -54,11 +58,24 @@ function NearMap({ selfId = null, night = false, go }) {
   );
 }
 
-export function BaristaJoin({ session, onLinked, team = false, night = false, go }) {
+export function BaristaJoin({ session, onLinked, team = false, preview = false, night = false, go }) {
   const fromUrl = new URLSearchParams(window.location.search).get('codigo') ?? '';
   const [code, setCode] = useState(fromUrl.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  // Entró con su celular: la base busca la ficha con ese número y lo enlaza sola
+  const smsPhone = !team && !preview ? session?.user?.phone || null : null;
+  const [byPhone, setByPhone] = useState(smsPhone ? 'busy' : null);
+  useEffect(() => {
+    if (!smsPhone) return undefined;
+    let alive = true;
+    setByPhone('busy');
+    api.claimPhone()
+      .then(() => { if (alive) { setByPhone(null); onLinked(); } })
+      .catch((e) => alive && setByPhone({ error: e.missing ? 'La entrada por SMS todavía no está activa. Entra con el código de seis letras que te dio el equipo.' : e.message }));
+    return () => { alive = false; };
+  }, [smsPhone]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (team && session) {
     return (
       <div className="mapp-empty">
@@ -67,22 +84,36 @@ export function BaristaJoin({ session, onLinked, team = false, night = false, go
       </div>
     );
   }
-  if (!session) {
+  if (!session || preview) {
     return (
       <section className="mapp-join-page">
+        {preview && (
+          <p className="mapp-acting" data-testid="team-preview">
+            Así entran los baristas
+            <button type="button" className="mapp-link" onClick={() => go?.('/micra/equipo')}>Actuar como › Equipo</button>
+          </p>
+        )}
         <Figure name="sombrilla" className="is-join" />
         <p className="mapp-kicker">Para baristas</p>
         <h1 className="mapp-title">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
+        {/* Lo primero después del título: entrar es lo que vino a hacer */}
+        <Suspense fallback={<Cargando />}><PhoneLogin preview={preview} /></Suspense>
+        {!preview && (
+          // El camino de antes (Google + código de seis letras) sigue para quien ya lo tiene
+          <div className="mapp-join-alt">
+            <p className="mapp-fine">¿Te dieron un código de seis letras?</p>
+            <button type="button" className="mapp-link" onClick={() => api.signIn('/micra/barista')}>Entrar con Google</button>
+          </div>
+        )}
         <ul className="mapp-perks">
           <li><b>Te apartan antes de que llegues.</b> Tus clientes ven a qué hora pasas y te dicen «guárdame dos».</li>
           <li><b>Cuentas con un dedo.</b> +1 por taza, y al final del día sabes cuánto hiciste.</li>
           <li><b>Tus fiados en orden.</b> Quién te debe y cuánto, y se lo cobras por WhatsApp.</li>
         </ul>
-        <button type="button" className="mapp-btn is-cta" onClick={() => api.signIn('/micra/barista')}>Entrar con Google</button>
-        <p className="mapp-fine">Necesitas el código de seis letras que te da el equipo de Micra. ¿No lo tienes? Escríbenos por WhatsApp desde aceropress.com.</p>
       </section>
     );
   }
+  if (byPhone === 'busy') return <Cargando fig="caminando">Buscando tu perfil…</Cargando>;
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
@@ -92,6 +123,13 @@ export function BaristaJoin({ session, onLinked, team = false, night = false, go
   };
   return (
     <form className="mapp-join-page" onSubmit={submit}>
+      {byPhone?.error && (
+        <section className="mapp-glass" aria-labelledby="mapp-not-found" data-testid="phone-not-found">
+          <p className="mapp-cota" id="mapp-not-found">Tu celular · {formatCoPhone(smsPhone)}</p>
+          <p className="mapp-error" role="alert">{byPhone.error}</p>
+          <Suspense fallback={null}><TeamWhatsApp phone={smsPhone} /></Suspense>
+        </section>
+      )}
       <NearMap night={night} go={go} />
       <section className="mapp-glass" aria-labelledby="mapp-asks">
         <p className="mapp-cota" id="mapp-asks">Solicitudes cerca · nadie todavía</p>
@@ -106,30 +144,8 @@ export function BaristaJoin({ session, onLinked, team = false, night = false, go
       </label>
       {error && <p className="mapp-error" role="alert">{error}</p>}
       <button type="submit" className="mapp-btn is-cta" disabled={busy || code.length !== 6}>{busy ? 'Revisando…' : 'Enlazar mi cuenta'}</button>
-      <button type="button" className="mapp-link" onClick={api.signOut}>Entrar con otra cuenta</button>
+      <button type="button" className="mapp-link" onClick={api.signOut}>{smsPhone ? 'Entrar con otro número' : 'Entrar con otra cuenta'}</button>
     </form>
-  );
-}
-
-function Picker({ onPick }) {
-  const [list, setList] = useState(null);
-  useEffect(() => { api.ownerDay().then((d) => setList(d?.baristas ?? [])).catch(() => setList([])); }, []);
-  return (
-    <section className="mapp-glass">
-      <p className="mapp-cota">Modo barista · equipo</p>
-      <h1 className="mapp-title is-small">¿Como quién entras?</h1>
-      <p className="mapp-muted">Lo que hagas aquí queda en la libreta de ese barista. Para probar, usa una ficha de prueba.</p>
-      {list === null && <Cargando />}
-      <ul className="mapp-list">
-        {(list ?? []).map((b) => (
-          <li key={b.id}>
-            <button type="button" className="mapp-row" onClick={() => onPick(b.id)}>
-              <span className="mapp-row-main"><b>{b.name}</b><span>{b.referencia || b.localidad || '—'} · {b.stage}</span></span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 
@@ -373,7 +389,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [last, setLast] = useState(null); // la última venta, para deshacer
   const [busy, setBusy] = useState(null);
   const [showPrices, setShowPrices] = useState(false);
-  const [needsPick, setNeedsPick] = useState(false);
   const [goalPick, setGoalPick] = useState(null); // la meta que escogió en esta sesión
   const [toast, setToast] = useState(null);
   const [party, setParty] = useState(false);
@@ -385,13 +400,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     try {
       setDay(await api.baristaDay(asId));
       setError(null);
-      setNeedsPick(false);
     } catch (e) {
       if (e.missing) setMissing(true);
-      else if (admin && !asId) setNeedsPick(true);
       else setError(e.message);
     }
-  }, [asId, admin]);
+  }, [asId]);
   useEffect(() => { setDay(null); prevCups.current = null; load(); }, [load]);
 
   // Sube los +1 que quedaron en el celular (sin señal); el mismo ref no se duplica
@@ -441,7 +454,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     return () => clearTimeout(id);
   }, [toast]);
 
-  if (needsPick) return <Picker onPick={onPickAs} />;
   if (missing) {
     return (
       <div className="mapp-empty">

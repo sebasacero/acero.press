@@ -5,7 +5,7 @@
 import { gpsPatch } from './study.js';
 import { isLocalidad } from '../admin/micra/place.js';
 import { TINTERO_OPTIONS } from '../admin/micra/tinteroForm.js';
-import { waDigits } from '../admin/micra/captions.js';
+import { storedPhone } from './phone.js';
 
 /** Pantallas del recorrido, en orden; «detalle» y «encuesta» solo si se piden. */
 export const STEPS = ['foto', 'quien', 'extras'];
@@ -51,11 +51,10 @@ export function quickBody(form, gps = null, { now = Date.now() } = {}) {
   };
   const ref = String(form.referencia ?? '').trim();
   if (ref) body.referencia = ref.slice(0, 80);
-  const phone = waDigits(form.phone ?? '');
-  if (phone) {
-    if (!/^[0-9]{7,15}$/.test(phone)) return { error: 'El WhatsApp no se entiende: solo números, con el indicativo si no es de Colombia.' };
-    body.phone = phone;
-  }
+  // El mismo formato con el que el barista entra por SMS (tintero_claim_phone lo busca así)
+  const phone = storedPhone(form.phone);
+  if (phone === null) return { error: 'El WhatsApp no se entiende: solo números, con el indicativo si no es de Colombia.' };
+  if (phone) body.phone = phone;
   if (form.localidad) {
     if (!isLocalidad(form.localidad)) return { error: 'Esa localidad no está en el estudio.' };
     body.localidad = form.localidad;

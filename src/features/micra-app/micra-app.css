@@ -391,6 +391,13 @@
 .mapp-perks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .mapp-perks li { background: var(--m-glass); border: 1px solid var(--m-line); border-radius: 16px; padding: 12px 14px; line-height: 1.45; color: var(--m-soft); }
 .mapp-perks b { color: var(--m-fg); display: block; }
+.mapp-phone-login { display: grid; gap: 12px; }
+.mapp-phone { display: flex; align-items: center; gap: 8px; }
+.mapp-phone i { font-style: normal; font: 600 1.1rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-phone input { font-family: 'JetBrains Mono', monospace; letter-spacing: .04em; }
+.mapp-link:disabled { opacity: .5; cursor: default; text-decoration: none; }
+.mapp-join-alt { display: grid; justify-items: start; gap: 0; border-top: 1px solid var(--m-line); padding-top: 6px; }
+.mapp-join-alt .mapp-fine { margin: 0; }
 
 /* ── Modo equipo ─────────────────────────────────────────────────── */
 .mapp-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
@@ -403,6 +410,8 @@
 .mapp-team li:last-child { border-bottom: 0; }
 .mapp-team-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .mapp-todo { font: 600 .8rem 'JetBrains Mono', monospace; color: var(--m-cold); }
+.mapp-team-phone { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.mapp-team-phone input { flex: 1 1 150px; min-height: 44px; border-radius: 10px; border: 1px solid var(--m-line); background: var(--m-bg); color: var(--m-fg); padding: 0 10px; font: 500 1rem 'JetBrains Mono', monospace; }
 .mapp-code-chip { font: 700 1rem 'JetBrains Mono', monospace; letter-spacing: .15em; padding: 6px 10px; border-radius: 8px; border: 1px dashed var(--m-cold); }
 
 @media (min-width: 900px) {
@@ -460,7 +469,7 @@
 .mapp-hero { display: grid; grid-template-columns: minmax(0, 1fr) 118px; gap: 8px; align-items: end; }
 .mapp-fig.is-hero { width: 112px; margin: 0 0 2px; }
 .mapp-fig.is-empty { width: 150px; margin: 0 auto 10px; }
-.mapp-fig.is-join { width: min(78%, 280px); margin: 0 auto -8px; }
+.mapp-fig.is-join { width: min(46%, 180px); margin: 0 auto -8px; } /* chica: el número tiene que verse sin bajar */
 .mapp-fig.is-draw .pz, .mapp-fig.is-draw .pr { animation: mapp-ink-fill .5s 1s both; }
 .mapp-fig.is-draw .pi { animation: mapp-ink-draw 1.1s cubic-bezier(.4, 0, .2, 1) both; }
 @keyframes mapp-ink-draw { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
