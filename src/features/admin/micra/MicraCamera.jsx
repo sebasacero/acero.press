@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { drawEspresaleCard, FORMATS, pickVideoType } from '../espresaleCard.js';
-import { CARD_KINDS, PRESETS, presetOf } from '../micraFilters.js';
+import { CARD_KINDS, presetOf, presetsFor } from '../micraFilters.js';
 import FilterCarousel from './FilterCarousel.jsx';
 import { IconClose, IconFlip, IconGallery } from './icons.jsx';
 
@@ -26,6 +26,7 @@ const MicraCamera = forwardRef(function MicraCamera({
   varieties, variety, onVariety, kind, onKind, presetId, onPreset,
   format, onOpenFormat, weather, elements, texts, priceText, filterExtra, cobrand,
   mode, onMode, paused, onCapture, onEditText, onOpenSale, onOpenTintero, adTinteroName = null, onPickTintero, ticketLabel, onExit, note, onRecording,
+  lite = false,
 }, ref) {
   const videoRef = useRef(null);
   const cardRef = useRef(null);
@@ -120,7 +121,7 @@ const MicraCamera = forwardRef(function MicraCamera({
   }, [paused, status, recording]);
 
   // El filtro: la tarjeta se dibuja una vez por cambio (transparente sobre el video; en Plano, el papel)
-  const preset = kind === 'recipe' ? null : presetOf(kind, presetId);
+  const preset = kind === 'recipe' ? null : presetOf(kind, presetId, { lite });
   useEffect(() => {
     const c = cardRef.current;
     if (!c) return;
@@ -131,7 +132,7 @@ const MicraCamera = forwardRef(function MicraCamera({
   // Filtros de la sección: en Receta, las variedades; en las otras, sus modelos
   const filters = kind === 'recipe'
     ? (varieties ?? []).map((v) => ({ id: v.id, name: v.name, thumb: v.image_url || null }))
-    : PRESETS[kind].map((p) => ({ id: p.id, name: p.name, glyph: p.glyph }));
+    : presetsFor(kind, { lite }).map((p) => ({ id: p.id, name: p.name, glyph: p.glyph }));
   const selectedId = kind === 'recipe' ? variety?.id : preset?.id;
   const selectedName = kind === 'recipe' ? variety?.name : preset?.name;
   const selectFilter = useCallback((id) => {

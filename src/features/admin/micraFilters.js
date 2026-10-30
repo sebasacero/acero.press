@@ -66,7 +66,14 @@ export const PRESETS = {
   ],
 };
 
-export const presetOf = (kind, id) => (PRESETS[kind] ?? []).find((p) => p.id === id) ?? PRESETS[kind]?.[0] ?? null;
+// Los modelos que ve cada cámara: «Tintero aliado» es solo del equipo; la cámara
+// lite (un barista o un cliente de la app) no lo muestra ni lo deja elegir.
+export const presetsFor = (kind, { lite = false } = {}) => (PRESETS[kind] ?? []).filter((p) => !(lite && p.usesTintero));
+
+export const presetOf = (kind, id, opts) => {
+  const list = presetsFor(kind, opts);
+  return list.find((p) => p.id === id) ?? list[0] ?? null;
+};
 
 // Micra siempre abre en la cámara. Otras entradas (⌘K «Registrar una venta»)
 // dejan una intención para que el estudio abra, además, la hoja de Venta: se

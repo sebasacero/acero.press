@@ -1,11 +1,11 @@
-import { CARD_KINDS, PRESETS } from '../micraFilters.js';
+import { CARD_KINDS, presetsFor } from '../micraFilters.js';
 import Sheet from './Sheet.jsx';
 
 /** Filtro de la tarjeta desde el editor: sección y modelo (o variedad). */
-export default function FilterSheet({ kind, onKind, varieties, varietyId, onVariety, presetId, onPreset, onClose, docked }) {
+export default function FilterSheet({ kind, onKind, varieties, varietyId, onVariety, presetId, onPreset, onClose, docked, lite = false }) {
   const items = kind === 'recipe'
     ? (varieties ?? []).map((v) => ({ id: String(v.id), name: v.name, thumb: v.image_url, on: String(v.id) === String(varietyId), run: () => onVariety(v.id) }))
-    : PRESETS[kind].map((p) => ({ id: p.id, name: p.name, glyph: p.glyph, on: p.id === presetId, run: () => onPreset(p.id) }));
+    : presetsFor(kind, { lite }).map((p) => ({ id: p.id, name: p.name, glyph: p.glyph, on: p.id === presetId, run: () => onPreset(p.id) }));
   return (
     <Sheet title="Filtro" onClose={onClose} docked={docked}>
       <div className="mc-kinds is-sheet" role="tablist" aria-label="Sección">
