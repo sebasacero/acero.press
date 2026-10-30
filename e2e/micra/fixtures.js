@@ -53,7 +53,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   const byRef = new Map();
   let orderN = 0;
   // App Micra (supabase/migrations/20261026210000_micra_app.sql): baristas públicos, apartados y la libreta
-  const micra = { baristas: [], holds: [], sales: [], admin: true, missing: false };
+  // pings: «busco café» ({ lat, lng, drink, ref, at | ago }), study: puestos del estudio con GPS ({ lat, lng })
+  const micra = { baristas: [], holds: [], sales: [], pings: [], study: [], admin: true, missing: false };
   // Entrar por SMS (Supabase Auth, proveedor Phone): el código que «llega» y el número ya verificado
   const sms = { code: '123456', sent: [], phone: null, down: false };
 
@@ -208,7 +209,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     // App Micra, en memoria (como las funciones de 20261026210000_micra_app.sql)
-    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps))$/)?.[1];
+    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps|seek|live_map))$/)?.[1];
     if (mfn) {
       const M = micra;
       const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
@@ -245,6 +246,47 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         if (other) return fail(409, '23505', `Ese número ya lo tiene ${other.full ?? other.name}. Un número es de un solo barista.`);
         M.baristas.find((x) => x.id === data.p_tintero_id).phone = phone;
         return json(200, { id: data.p_tintero_id, phone });
+      }
+      // Mapa en vivo (como 20261030180000_micra_live_map.sql): celdas de 0,004°, zonas de 2 o más
+      const cell = (v) => Math.round((Math.floor(Number(v) / 0.004 + 1e-9) * 0.004 + 0.002) * 1e4) / 1e4;
+      const ageMin = (x) => (x.at ? (Date.now() - x.at) / 60000 : x.ago ?? 0);
+      if (mfn === 'micra_seek') {
+        if (String(data.p_ref ?? '').length < 8) return fail(400, '22023', 'Llave del celular inválida.');
+        const lat = Number(data.p_cell_lat);
+        const lng = Number(data.p_cell_lng);
+        if (!(lat >= 3.7 && lat <= 4.85 && lng >= -74.5 && lng <= -73.95)) return json(200, { accepted: false, reason: 'fuera' });
+        if (M.pings.some((x) => x.ref === data.p_ref && ageMin(x) < 15)) return json(200, { accepted: false, reason: 'reciente' });
+        M.pings.push({ lat: cell(lat), lng: cell(lng), drink: ['tinto', 'perico', 'aromatica'].includes(data.p_drink) ? data.p_drink : 'all', ref: data.p_ref, at: Date.now() });
+        return json(200, { accepted: true });
+      }
+      if (mfn === 'micra_live_map') {
+        const self = M.admin ? null : M.baristas.find((x) => x.mine);
+        if (!self && !M.admin) return fail(403, '42501', 'El mapa en vivo es para baristas enlazados.');
+        const minutes = Math.min(60, Math.max(15, data?.p_minutes ?? 45));
+        const isLive = (x) => x.live_until && new Date(x.live_until) > new Date();
+        const groups = new Map();
+        const add = (lat, lng, kind, drink) => {
+          const k = `${cell(lat)},${cell(lng)}`;
+          const g = groups.get(k) ?? { lat: cell(lat), lng: cell(lng), pings: 0, holds: 0, drinks: { tinto: 0, perico: 0, aromatica: 0, all: 0 } };
+          g[kind] += 1;
+          g.drinks[drink] += 1;
+          groups.set(k, g);
+        };
+        M.pings.filter((x) => ageMin(x) <= minutes).forEach((x) => add(x.lat, x.lng, 'pings', x.drink ?? 'all'));
+        M.holds.filter((h) => h.status === 'waiting' && h.tintero_id !== self?.id).forEach((h) => {
+          const t = M.baristas.find((x) => x.id === h.tintero_id);
+          if (t?.lat != null) add(t.lat, t.lng, 'holds', 'all');
+        });
+        const studyCells = new Map();
+        M.study.forEach((x) => { const k = `${cell(x.lat)},${cell(x.lng)}`; studyCells.set(k, { lat: cell(x.lat), lng: cell(x.lng), n: (studyCells.get(k)?.n ?? 0) + 1 }); });
+        return json(200, {
+          minutes, cell_deg: 0.004, min_count: 2,
+          baristas: M.baristas.filter((x) => isLive(x) && x.lat != null && (x.public !== false || M.admin || x === self))
+            .map((x) => ({ id: x.id, name: x.name, referencia: x.referencia, lat: x.lat, lng: x.lng, live_until: x.live_until, me: x === self })),
+          demand: [...groups.values()].map((g) => ({ ...g, n: g.pings + g.holds })).filter((g) => g.n >= 2).sort((a, b) => b.n - a.n),
+          study: [...studyCells.values()].filter((c) => c.n >= 2),
+          waiting_cups: self ? M.holds.filter((h) => h.tintero_id === self.id && h.status === 'waiting').reduce((a, h) => a + h.cups, 0) : 0,
+        });
       }
       const b = actor();
       if (mfn === 'micra_owner_day') {

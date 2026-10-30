@@ -33,7 +33,8 @@ export function toggleFavorite(id) {
 // La migración aún no se aplicó: la app lo dice en vez de mostrar un error técnico
 export const isMissing = (error) => error?.code === 'PGRST202' || error?.code === '42883' || /Could not find the function/.test(error?.message || '');
 
-async function call(fn, args) {
+/** Una función de la base (para los módulos que llegan aparte, como seek.js). */
+export async function call(fn, args) {
   const { data, error } = await supabase.rpc(fn, args);
   if (error) throw Object.assign(new Error(error.message), { code: error.code, missing: isMissing(error) });
   return data;

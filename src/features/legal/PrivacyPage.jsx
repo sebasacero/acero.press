@@ -4,7 +4,7 @@ import './privacy.css';
 // La sección «Ubicación» es la que enlaza el permiso de «Salí a vender» en la app
 // (#ubicacion). Si cambia lo que se hace con un dato, este texto cambia en el mismo commit.
 
-const UPDATED = '29 de octubre de 2026';
+const UPDATED = '30 de octubre de 2026';
 
 export default function PrivacyPage() {
   return (
@@ -32,6 +32,7 @@ export default function PrivacyPage() {
         <li>hacer análisis estadísticos de las zonas donde se vende café, que se presentan agregados y nunca con tu nombre.</li>
       </ul>
       <p>La ven tú y el equipo de ACERO.press; otros vendedores y los clientes solo ven tu punto aproximado (una cuadra) mientras estás en la calle. Puedes pausarla o retirar este permiso cuando quieras desde la app, y pedir que borremos tus recorridos.</p>
+      <p id="zona">Si buscas café en Micra y tocas <b>«Cerca de mí»</b>, tu ubicación se usa en tu celular para ordenar a los baristas. Además, Micra envía <b>solo tu zona aproximada</b> (un cuadro de unos 400 m) y la bebida que buscas, como máximo una vez cada 15 minutos, para que los baristas sepan dónde quieren café. No enviamos tu ubicación exacta ni tu nombre, y la base no guarda el identificador de tu celular (solo una huella que cambia cada día). Los baristas ven solo zonas donde hay dos personas o más, nunca a una persona. Cada señal se borra a la hora. Puedes desactivarlo con «No mostrar mi zona».</p>
 
       <h2>Tus derechos</h2>
       <p>Puedes conocer, actualizar, rectificar y pedir que se supriman tus datos, y retirar tu autorización. Escríbenos por WhatsApp o a nuestras redes indicando tu nombre y lo que pides; respondemos en los plazos de la ley (10 días hábiles para consultas, 15 para reclamos).</p>

@@ -351,3 +351,19 @@ Permisos: iOS `NSBluetoothAlwaysUsageDescription` (`Info.plist`); Android
 `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` (`AndroidManifest.xml`). Plugins:
 `@capacitor-community/bluetooth-le` y `@capacitor/filesystem` (el archivo que se
 comparte). No hay variables de entorno nuevas.
+
+### 10.6 El mapa en vivo (baristas en línea y dónde quieren café)
+
+Un paso a mano, una sola vez: aplicar la migración
+`supabase/migrations/20261030180000_micra_live_map.sql` en Supabase (con la
+aprobación del dueño, como toda DDL). Crea la tabla `micra_demand` (sin acceso
+directo: RLS sin políticas) y las funciones `micra_seek` (el «busco café» del
+cliente, abierta a anónimos) y `micra_live_map` (baristas enlazados y equipo).
+Mientras no esté aplicada, la app no se rompe: el cliente no manda nada y el
+barista ve «El mapa en vivo abre muy pronto» (la vista previa cae a la lista de
+baristas de siempre).
+
+Las señales viejas (más de 60 min) se borran solas dentro de esas mismas
+funciones; no hace falta pg_cron. Si un día pasan horas sin que nadie use la
+app, quedan unas filas vencidas hasta la siguiente llamada (ninguna sale en el
+mapa: la lectura filtra por la ventana). No hay variables de entorno nuevas.

@@ -24,6 +24,8 @@ import { formatCoPhone } from './phone.js';
 // celular y suben cuando hay red (el mismo client_ref no cuenta dos veces).
 
 const MicraMap = lazy(() => import('./MicraMap.jsx'));
+// El mapa en vivo llega aparte (la app ya pesa cerca del límite del bundle)
+const LivePanel = lazy(() => import('./LiveMap.jsx'));
 // Aprender, la fiesta de la meta y la tarjeta del día llegan solo al abrirlos
 const Aprende = lazy(() => import('./Aprende.jsx'));
 // El muro de Hoy (precios, videos, puestos, recetas, noticias)
@@ -685,6 +687,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             {day.public && <p className="mapp-fine is-center">{waiting.length ? <><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron para hoy · meta <b>{goal} tazas</b></> : 'Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.'}</p>}
           </>
         )}
+        {/* En la calle: el mapa en vivo, como al ponerse «en línea» */}
+        {live && <Suspense fallback={null}><LivePanel live selfId={day.id} night={night} go={go} /></Suspense>}
         {errorBox}
         {menu.length === 0 ? <Prices day={day} asId={asId} onSaved={load} first /> : (
           <>
@@ -724,7 +728,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <Waiting {...waitingProps} />
           </>
         )}
-        <NearMap selfId={day.id} night={night} go={go} />
+        {/* Sin salir: la vista previa (estudio y quién está en la calle) con la invitación a salir */}
+        {!live && <Suspense fallback={null}><LivePanel selfId={day.id} night={night} go={go} /></Suspense>}
       </>
     );
   }
