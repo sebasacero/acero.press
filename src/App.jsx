@@ -20,6 +20,8 @@ import BrewGuide from './features/home/sections/BrewGuide.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
 import ConsentBanner from './shared/layout/ConsentBanner.jsx';
 import { trackWhatsAppClicks } from './shared/lib/analytics.js';
+// La piel de la app Micra sobre toda la web: va después de las hojas de cada sección
+import './shared/styles/estilo-app.css';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda la receta oficial en cinco pasos (BrewGuide), que lleva a ella.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));

@@ -128,6 +128,7 @@ test('rutas internas de /micra', () => {
   assert.deepEqual(parseRoute('/micra/b/<script>'), { view: 'home' });
   assert.deepEqual(parseRoute('/micra/barista'), { view: 'barista' });
   assert.deepEqual(parseRoute('/micra/barista/vender'), { view: 'barista', tab: 'vender' });
+  assert.deepEqual(parseRoute('/micra/barista/hoy'), { view: 'barista', tab: 'hoy' });
   assert.deepEqual(parseRoute('/micra/barista/aprende/'), { view: 'barista', tab: 'aprende' });
   assert.deepEqual(parseRoute('/micra/barista/otra'), { view: 'home' });
   assert.deepEqual(parseRoute('/micra/equipo'), { view: 'owner' });

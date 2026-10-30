@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import Navbar from '../../shared/layout/Navbar.jsx';
-import MapCanvas from './MapCanvas.jsx';
-import { StreetPhone, BaristaPhone } from './AppPhones.jsx';
-import { SheetFrame, Segs, Odometer } from './parts.jsx';
 import StoreButtons from './StoreButtons.jsx';
-import { personaSrc } from '../home/sections/StreetPeople.jsx';
+import LiveCard, { DayCard } from './LiveCard.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
-import { useStreetMap } from '../../shared/lib/useStreetMap.js';
 import { fetchAppConfig } from '../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../shared/layout/WhatsAppButton.jsx';
 import { useEditableTexts } from '../../shared/lib/editableTexts.js';
@@ -16,9 +12,6 @@ import './esspresale.css';
 // Primera sección del sitio: dos banners dibujados como las tarjetas de redes,
 // en carrusel, uno después del otro: «Pide café en AeroPress a domicilio» y
 // «Vive del café con tu AeroPress». Pasan solos y con el dedo (pedido del usuario).
-
-// Cifras del celular y del panel de «Para tinteros»: un día de ejemplo, marcado como tal
-const EXAMPLE_DAY = { stops: ['1', '4'], specs: ['3,2 km', '14', '38'] };
 
 // Textos de cada banner que se cambian con su lápiz (app_config essp_<banner>_<campo>_<idioma>).
 const TEXT_KEYS = ['title1', 'title2', 'script', 'loc', 'lede', 'panelText'];
@@ -31,25 +24,12 @@ const textFields = (kind) => [
   { key: `essp_${kind}_panelText`, label: 'Texto del panel oscuro', multiline: true },
 ];
 
-/** Cifras del panel y del celular: lo que micra_street_map cuenta, o guiones mientras llega. */
-const digitsOf = (n) => (n === null ? ['—'] : String(n).padStart(2, '0').split(''));
-
-
-const BG_VIEW = (w) =>
-  w < 760
-    ? { style: 'plano', c: 12, k: 80, ax: 0.6, ay: 0.62, s: 9, heat: 0.8 }
-    : { style: 'plano', c: 12, k: 82, ax: 0.8, ay: 0.5, s: Math.max(8, w / 150), heat: 0.9, labels: 1.1 };
-
-// Con datos del estudio de calle, el fondo dibuja el calor real de las ventas
-// y los tinteros registrados; sin datos, la demanda de ejemplo de siempre.
-const withLayers = (layers) => (w) => (layers ? { ...BG_VIEW(w), heatPoints: layers.heatPoints, pinPoints: layers.pinPoints, pins: layers.pinPoints.length > 0 } : BG_VIEW(w));
-
 // Cada banner dura su turno y pasa al siguiente; se detiene mientras el cursor o
 // el foco están encima. Sin flechas ni píldoras (pedido del usuario): pasa solo,
 // con el dedo, o con «Soy barista»; por eso nunca deja de pasar del todo.
 const TURN_MS = 8000;
 
-function Slide({ kind, active, onSelect, street = null, streetLayers = null, whatsapp, stores }) {
+function Slide({ kind, active, onSelect, whatsapp, stores }) {
   const { t } = useLanguage();
   const ref = useRef(null);
   const [text, reloadTexts] = useEditableTexts(TEXT_KEYS.map((f) => `essp_${kind}_${f}`));
@@ -59,13 +39,6 @@ function Slide({ kind, active, onSelect, street = null, streetLayers = null, wha
   // Un solo h1 en la portada: el de la primera diapositiva; la otra es un h2
   const Title = isOrder ? 'h1' : 'h2';
   const title = [text(`essp_${kind}_title1`, base('title')[0]), text(`essp_${kind}_title2`, base('title')[1])];
-  const specs = base('specs');
-  // Datos reales del estudio (null hasta que lleguen): tazas, cuadras con venta, tinteros
-  const cups = street ? street.cups : null;
-  const blocks = street ? street.blocks : null;
-  const tinteros = street ? street.tinteros : null;
-  const show = (n) => (n === null ? '—' : String(n));
-
   // La diapositiva oculta no debe recibir foco ni lectores de pantalla.
   useEffect(() => {
     if (ref.current) ref.current.inert = !active;
@@ -79,20 +52,6 @@ function Slide({ kind, active, onSelect, street = null, streetLayers = null, wha
       aria-label={t(`essp.tabs.${kind}`)}
       aria-hidden={!active}
     >
-      <div className="essp-bg" aria-hidden="true">
-        {isOrder ? (
-          <>
-            <MapCanvas view={withLayers(streetLayers)} redrawKey={streetLayers} />
-            <div className="essp-paper-fade" />
-          </>
-        ) : (
-          <>
-            <div className="essp-photo" />
-            <div className="essp-grid-light" />
-          </>
-        )}
-      </div>
-      <SheetFrame />
       <SectionEditButton
         section={t(`essp.tabs.${kind}`)}
         fig={base('tag')}
@@ -100,9 +59,6 @@ function Slide({ kind, active, onSelect, street = null, streetLayers = null, wha
         fields={textFields(kind)}
         onSaved={reloadTexts}
       />
-
-      {/* Una persona de la calle parada sobre el borde de la hoja: la que pide con AeroPress y la que vive del café */}
-      <img className={`essp-persona essp-persona--${kind}`} src={personaSrc(isOrder ? 'aeropress' : 'sombrilla')} alt="" decoding="async" aria-hidden="true" />
 
       <div className="essp-in">
         <hr className="essp-dash" />
@@ -118,41 +74,23 @@ function Slide({ kind, active, onSelect, street = null, streetLayers = null, wha
             <div className="essp-ctas">
               {isOrder ? (
                 <>
-                  <a className="essp-btn" href="#beans">{base('cta')}</a>
-                  <button type="button" className="essp-btn is-ghost" onClick={() => onSelect(1)}>{base('cta2')}</button>
+                  <a className="essp-btn" href="/micra">{base('cta')}</a>
+                  <button type="button" className="essp-btn is-link" onClick={() => onSelect(1)}>{base('cta2')}</button>
                 </>
               ) : (
                 <>
                   <a className="essp-btn" href={whatsapp} target="_blank" rel="noopener noreferrer">{base('cta')}</a>
-                  <a className="essp-btn is-ghost" href="/escuela">{base('cta2')}</a>
+                  <a className="essp-btn is-link" href="/escuela">{base('cta2')}</a>
                 </>
               )}
             </div>
           </div>
 
-          {/* Debajo del iPhone, pequeños, los botones de las tiendas (sin enlace dicen «Pronto») */}
+          {/* La app viva (quién está en la calle) o el día del barista; las tiendas solo cuando hay enlace */}
           <div className="essp-hero-device">
-            {isOrder ? <StreetPhone className="essp-hero-phone" street={street} layers={streetLayers} /> : <BaristaPhone className="essp-hero-phone" />}
-            <StoreButtons appStoreUrl={stores.apple} playStoreUrl={stores.google} />
+            {isOrder ? <LiveCard /> : <DayCard />}
+            {(stores.apple || stores.google) && <StoreButtons appStoreUrl={stores.apple} playStoreUrl={stores.google} />}
           </div>
-
-          <aside className="essp-panel" aria-label={k('panelFig')}>
-            {/* Sin puntos reales el mapa dibuja una demanda de ejemplo: el panel no dice «datos reales» encima */}
-            <div className="essp-panel-cota"><span>{k('panelFig')}</span><span className="essp-badge">{isOrder && !streetLayers ? base('panelBadgeDemo') : k('panelBadge')}</span></div>
-            <div className="essp-panel-label">{k('panelLabel')}</div>
-            <div className="essp-odo-row">
-              <Odometer digits={isOrder ? digitsOf(cups) : EXAMPLE_DAY.stops} />
-              <span className="essp-odo-sep">/</span>
-              <span className="essp-odo-target">{isOrder ? `${show(blocks)} ${blocks === 1 ? base('target1') : base('target')}` : k('days')}</span>
-            </div>
-            <Segs filled={isOrder ? Math.min(20, blocks ?? 0) : 10} className="essp-bar" />
-            <div className="essp-specs">
-              {(isOrder ? [show(cups), show(blocks), show(tinteros)] : EXAMPLE_DAY.specs).map((v, i) => (
-                <div key={i}><b>{v}</b><span>{specs[i]}</span></div>
-              ))}
-            </div>
-            <p className="essp-panel-text">{k('panelText')}</p>
-          </aside>
         </div>
       </div>
     </section>
@@ -163,7 +101,6 @@ const BARISTA_HASHES = ['#baristas', '#tinteros'];
 
 export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
-  const { layers: streetLayers, summary: street } = useStreetMap();
   // #baristas (el menú, un enlace compartido) abre «Para baristas»; #tinteros sigue sirviendo para enlaces viejos
   const [index, setIndex] = useState(() => (BARISTA_HASHES.includes(window.location.hash) ? 1 : 0));
   // Pasa solo, salvo si llega con #baristas (vino a ese banner) o pidió menos movimiento
@@ -230,7 +167,7 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
     >
       <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-        <Slide kind="order" active={index === 0} onSelect={select} street={street} streetLayers={streetLayers} stores={stores} />
+        <Slide kind="order" active={index === 0} onSelect={select} stores={stores} />
         <Slide kind="barista" active={index === 1} onSelect={select} whatsapp={whatsapp} stores={stores} />
       </div>
     </header>

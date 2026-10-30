@@ -106,10 +106,9 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await expect(page).toHaveURL(/\/micra\/barista$/);
   await expect(page.getByRole('heading', { name: /Marlene\.$/ })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Equipo' })).toHaveCount(0);
-  // Vender es su propia pestaña: ahí cuenta y entrega
+  // Vender es su inicio: ahí sale, cuenta y entrega
   const tabs = page.getByRole('navigation', { name: 'Barista' });
-  await tabs.getByRole('button', { name: /Vender/ }).click();
-  await expect(page).toHaveURL(/\/micra\/barista\/vender$/);
+  await expect(tabs.getByRole('button', { name: /Vender/ })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByTestId('micra-count-tinto')).toHaveText('2');
 
   // Entregar a la portería: sus 3 tintos entran a la libreta
@@ -138,7 +137,7 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await expect(luis).toHaveCount(0);
 
   // Ya volví
-  await tabs.getByRole('button', { name: /Hoy/ }).click();
+  await tabs.getByRole('button', { name: /Vender/ }).click();
   await page.getByRole('button', { name: 'Ya volví' }).click();
   await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
   expect(api.find('/rpc/micra_barista_out').data.p_minutes).toBe(0);
@@ -426,5 +425,29 @@ test('cliente: los baristas en tarjetas con su personaje y la tarjeta de 10 taza
   await expect(cards.filter({ hasText: 'Wilson' })).toContainText('Ver dónde está');
   await expect(page.getByTestId('stamps')).toContainText('7 de 10');
   await expect(page.getByTestId('stamps')).toContainText('Te faltan 3');
+  expect(errors).toEqual([]);
+});
+
+test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y Vender pide café por WhatsApp', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.goto('/micra/barista/hoy', { waitUntil: 'load' });
+  await expect(page.getByRole('heading', { name: 'Hoy en la calle' })).toBeVisible();
+  await expect(page.getByTestId('price-card')).toContainText('$1.300');
+  const feed = page.getByTestId('feed');
+  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  // Los chips filtran: en «Puestos» solo quedan los puestos de otros baristas
+  await page.getByRole('tab', { name: 'Puestos' }).click();
+  await expect(feed).not.toContainText('World of Coffee');
+  await expect(feed.getByRole('button', { name: 'Ver en el mapa ›' }).first()).toBeVisible();
+  // Publicar lleva a lo que ya existe
+  await page.getByRole('button', { name: '＋ Publicar' }).click();
+  await expect(page.getByTestId('publish')).toContainText('Video con filtro');
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
+  await page.getByTestId('coffee-bar').click();
+  const order = page.getByTestId('coffee-order');
+  await order.getByRole('button', { name: '2 kg' }).click();
+  await expect(order.getByTestId('coffee-order-send')).toHaveAttribute('href', /wa\.me\/\d+\?text=.*2%20kilos/);
   expect(errors).toEqual([]);
 });

@@ -827,3 +827,65 @@
   .mapp-streak, .mapp-toast, .mapp-party, .mapp-storywrap, .mapp-lesson { animation: none; }
   .mapp-goalcup .is-steam, .mapp-path li.is-now .mapp-stop { animation: none; }
 }
+
+/* ── Vender como inicio: la racha en una fila y el café que se pide ── */
+.mapp-streakrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 12px; }
+.mapp-streakrow .mapp-weekcups { margin: 0; gap: 4px; }
+.mapp-streakrow .mapp-weekcups svg { width: 20px; height: 22px; }
+.mapp-streakpill { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; background: var(--m-glass); box-shadow: var(--m-shadow); font: 700 .78rem 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.mapp-coffeebar { appearance: none; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; margin: 6px 0 12px; padding: 10px 16px; border: 0; border-radius: 16px; background: var(--m-fg); color: var(--m-bg); font: 500 .95rem 'Archivo', sans-serif; text-align: left; cursor: pointer; }
+.mapp-coffeebar > span:nth-child(2) { flex: 1; }
+.mapp-coffeebar u { font: 700 .9rem 'JetBrains Mono', monospace; text-underline-offset: 3px; }
+
+/* ── Hojas que suben desde abajo (Pedir café, Publicar) ── */
+.mapp-sheetwrap { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; justify-content: flex-end; }
+.mapp-sheet-scrim { position: absolute; inset: 0; border: 0; background: rgba(20, 22, 27, .45); cursor: pointer; }
+.mapp-sheet { position: relative; width: 100%; max-width: 560px; margin: 0 auto; padding: 10px 20px calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); border-radius: 28px 28px 0 0; background: var(--m-bg); box-shadow: 0 -18px 40px -20px rgba(31, 36, 82, .5); animation: mapp-in .28s cubic-bezier(.2, .7, .2, 1) both; }
+.mapp-sheet-handle { display: block; width: 44px; height: 5px; margin: 0 auto 14px; border-radius: 5px; background: var(--m-line); }
+.mapp-sheet .mapp-btn.is-cta { margin-top: 14px; }
+.mapp-btn.is-disabled { opacity: .45; pointer-events: none; }
+.mapp-chips.is-big { flex-wrap: wrap; margin-top: 12px; }
+.mapp-chips.is-big button { min-height: 52px; min-width: 64px; font-size: 1rem; }
+.mapp-publish { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.mapp-publish > * { appearance: none; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 12px; border: 0; border-radius: 14px; background: var(--m-glass); box-shadow: var(--m-shadow); color: var(--m-fg); font: 700 .95rem 'Archivo', sans-serif; text-decoration: none; text-align: left; cursor: pointer; }
+.mapp-publish > *:disabled { opacity: .45; cursor: default; }
+.mapp-publish span { font-size: 1.2rem; }
+
+/* ── Hoy: el muro del barismo ── */
+.mapp-feed-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.mapp-feed-head .mapp-title { margin-bottom: 4px; }
+.mapp-btn.is-dark { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); flex: 0 0 auto; }
+.mapp-chips.is-scroll { margin: 10px -16px 14px; padding: 0 16px; }
+.mapp-chips.is-scroll button { font-family: 'JetBrains Mono', monospace; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.mapp-posts { display: grid; gap: 12px; }
+.mapp-post { background: var(--m-glass); border: 1px solid var(--m-glass-edge); border-radius: 22px; box-shadow: var(--m-shadow); padding: 14px 16px; overflow: hidden; }
+.mapp-post > footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.mapp-post-who { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.mapp-post-who b { display: block; font-size: 1rem; }
+.mapp-post-who small { display: block; font: 500 .74rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-post-av { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--m-bg); font: 900 .8rem 'Archivo', sans-serif; }
+.mapp-post-av.is-house { background: var(--m-ink); color: #fff; }
+.mapp.is-night .mapp-post-av.is-house { color: #0E0F12; }
+.mapp-fig.is-avatar { display: block; height: 64px; margin-top: 18px; }
+.mapp-fig.is-avatar svg { height: 100%; width: auto; }
+.mapp-post-title { font: 800 1.1rem/1.2 'Archivo', sans-serif; margin: 0 0 4px; }
+.mapp-post-text { color: var(--m-soft); line-height: 1.4; margin: 0 0 4px; }
+.mapp-post-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+.mapp-post-chips span { padding: 6px 10px; border-radius: 10px; background: var(--m-bg); font: 700 .8rem 'JetBrains Mono', monospace; }
+.mapp-post-video { display: block; width: calc(100% + 32px); margin: 8px -16px -14px; aspect-ratio: 4 / 5; max-height: 420px; object-fit: cover; background: #111; }
+.mapp-tag { font: 700 .68rem 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .08em; color: var(--m-soft); }
+.mapp-post.is-mine .mapp-script { font-size: 1.5rem; margin: 0 0 4px; }
+.mapp-pricecard { background: var(--m-ink); border-color: transparent; color: #fff; }
+.mapp.is-night .mapp-pricecard { background: #1C2140; }
+.mapp-pricecard header { display: flex; align-items: center; justify-content: space-between; }
+.mapp-pricecard .mapp-cota { color: rgba(255, 255, 255, .78); margin: 0; }
+.mapp-pricecard dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 12px; margin: 10px 0 0; }
+.mapp-pricecard dd { margin: 0; font: 900 1.45rem/1 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-pricecard dt { margin-top: 4px; font: 600 .64rem 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .06em; opacity: .78; }
+.mapp-pricecard small { display: block; margin-top: 2px; font: 500 .66rem 'JetBrains Mono', monospace; opacity: .6; }
+.mapp-link.is-onink, .mapp-fine.is-onink { color: rgba(255, 255, 255, .85); }
+.mapp-takehome { display: flex; align-items: center; gap: 12px; min-height: 64px; margin-top: 12px; color: var(--m-fg); text-decoration: none; }
+.mapp-takehome > span:first-child { font-size: 1.5rem; }
+.mapp-takehome b, .mapp-takehome small { display: block; }
+.mapp-takehome small { color: var(--m-soft); margin-top: 2px; }
+.mapp-takehome i { margin-left: auto; font-style: normal; font-size: 1.4rem; color: var(--m-soft); }

@@ -2,7 +2,7 @@
 // la meta del día, los avisos al pasar de 5 en 5 y el camino de lecciones.
 // Todo sale de lo que ya trae la base (la semana y la libreta) o de lo que el
 // celular recuerda; nada de esto es saldo ni promete dinero.
-import { weekdayLetter, money, cupsLabel } from './micraApp.js';
+import { weekdayLetter, cupsLabel } from './micraApp.js';
 
 /** Metas que se pueden escoger en un toque. */
 export const GOAL_CHOICES = [10, 15, 20, 25, 30, 40];
@@ -91,10 +91,10 @@ export function figureFor(id) {
   return CAST[h % CAST.length];
 }
 
-/** Lo que dice «Compartir mi día» (va con la tarjeta y su enlace). */
-export function dayStory({ cups, total, streak = 0 }) {
+/** Lo que dice «Compartir mi día» (va con la tarjeta y su enlace). Sin pesos: sale a las redes. */
+export function dayStory({ cups, streak = 0 }) {
   const racha = streak > 1 ? ` y ${streak} días seguidos en la calle` : '';
-  return `Hoy vendí ${cupsLabel(cups)} de café${total > 0 ? ` (${money(total)})` : ''}${racha}. Apártame el tuyo en Micra:`;
+  return `Hoy vendí ${cupsLabel(cups)} de café${racha}. Apártame el tuyo en Micra:`;
 }
 
 /** Qué tan llena va la taza de la meta (0–1). */
