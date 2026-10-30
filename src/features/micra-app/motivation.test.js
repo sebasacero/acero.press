@@ -74,7 +74,7 @@ test('cada barista tiene siempre el mismo personaje', () => {
 });
 
 test('compartir mi día y la taza que se llena', () => {
-  assert.equal(dayStory({ cups: 17, total: 25500, streak: 5 }), 'Hoy vendí 17 tazas de café ($25.500) y 5 días seguidos en la calle. Apártame el tuyo en Micra:');
+  assert.equal(dayStory({ cups: 17, total: 25500, streak: 5 }), 'Hoy vendí 17 tazas de café y 5 días seguidos en la calle. Apártame el tuyo en Micra:');
   assert.equal(dayStory({ cups: 1, total: 0, streak: 1 }), 'Hoy vendí 1 taza de café. Apártame el tuyo en Micra:');
   assert.equal(fillOf(5, 20), 0.25);
   assert.equal(fillOf(30, 20), 1);

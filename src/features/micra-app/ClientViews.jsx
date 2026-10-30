@@ -210,6 +210,14 @@ export function ClientHome({ go, night }) {
           <a className="mapp-btn is-ghost" href={`https://wa.me/?text=${encodeURIComponent(inviteText())}`} target="_blank" rel="noopener noreferrer">Invitar a mi barista</a>
         </div>
       )}
+      {list && !error && shown.length === 0 && !missing && (
+        // Sin nadie cerca, el café se lleva a casa: la tienda de ACERO.press
+        <a className="mapp-glass mapp-takehome" href={platform.siteUrl('/#beans')} data-testid="take-home">
+          <span aria-hidden="true">☕</span>
+          <span><b>Llévatelo a casa</b><small>Café de origen y AeroPress de la tienda de ACERO.press</small></span>
+          <i aria-hidden="true">›</i>
+        </a>
+      )}
 
       <StampsCard />
 

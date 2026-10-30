@@ -90,7 +90,8 @@ async function drawStory({ name, cups, total, streak, distance, url, fig }) {
   g.restore();
   g.fillStyle = '#16181F'; g.font = '900 300px Archivo, sans-serif'; g.fillText(String(cups), 80, 650);
   g.font = '800 64px Archivo, sans-serif'; g.fillText(cups === 1 ? 'taza de café' : 'tazas de café', 90, 740);
-  const stats = [[total > 0 ? money(total) : '—', 'VENDIDO'], [String(streak), streak === 1 ? 'DÍA SEGUIDO' : 'DÍAS SEGUIDOS']];
+  // Sin pesos: la tarjeta sale a las redes y lo que lleva encima no se anuncia (seguridad en la calle)
+  const stats = [[String(streak), streak === 1 ? 'DÍA SEGUIDO' : 'DÍAS SEGUIDOS']];
   if (distance > 0) stats.push([km(distance), 'CAMINADOS']);
   stats.forEach(([v, l], i) => {
     const y = 880 + i * 150;
@@ -133,7 +134,6 @@ export function DayStory({ name, cups, total, streak, fig, km: distance = 0, url
         <p className="mapp-story-n">{cups}</p>
         <p className="mapp-story-unit">{cups === 1 ? 'taza de café' : 'tazas de café'}</p>
         <dl className="mapp-story-stats">
-          <div><dd>{total > 0 ? money(total) : '—'}</dd><dt>vendido</dt></div>
           <div><dd>{streak}</dd><dt>{streak === 1 ? 'día seguido' : 'días seguidos'}</dt></div>
           {distance > 0 && <div><dd>{km(distance)}</dd><dt>caminados</dt></div>}
         </dl>

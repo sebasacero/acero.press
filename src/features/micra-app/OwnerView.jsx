@@ -64,6 +64,7 @@ export default function OwnerView({ onActAs, go }) {
   const tot = list.reduce((a, b) => ({ cups: a.cups + b.cups, total: a.total + Number(b.total), waiting: a.waiting + b.waiting, served: a.served + b.served, live: a.live + (b.live_until ? 1 : 0) }), { cups: 0, total: 0, waiting: 0, served: 0, live: 0 });
   const ready = list.filter((b) => !missingStep(b, phones?.[b.id])).length;
   const bars = weekBars(data.week);
+  const week = (data.week ?? []).reduce((a, d) => ({ cups: a.cups + (d.cups || 0), total: a.total + Number(d.total || 0), holds: a.holds + (d.holds || 0) }), { cups: 0, total: 0, holds: 0 });
 
   return (
     <div className="mapp-owner">
@@ -72,6 +73,14 @@ export default function OwnerView({ onActAs, go }) {
         <h1 className="mapp-title is-small">El día de Micra</h1>
       </section>
       {error && <p className="mapp-error" role="alert">{error}</p>}
+      <section className="mapp-pricecard mapp-post" aria-label="Esta semana" data-testid="owner-week">
+        <p className="mapp-cota">Esta semana · 7 días</p>
+        <dl>
+          <div><dd>{week.cups}</dd><dt>tazas</dt></div>
+          <div><dd>{money(week.total)}</dd><dt>vendido</dt></div>
+          <div><dd>{week.holds}</dd><dt>apartados</dt></div>
+        </dl>
+      </section>
       <dl className="mapp-kpis">
         <div><dt>Tazas</dt><dd data-testid="owner-cups">{tot.cups}</dd></div>
         <div><dt>Vendido</dt><dd>{money(tot.total)}</dd></div>

@@ -31,6 +31,12 @@ const translations = {
     essp: {
       store: { label: 'Descarga la app Micra', appleTop: 'Descárgalo en', googleTop: 'Disponible en', soon: 'Muy pronto en', badge: 'Pronto' },
       tabs: { order: 'Pide café', barista: 'Ser barista' },
+      live: {
+        label: 'Quién está en la calle', live: 'en la calle ahora', usual: 'suele estar ahora', off: 'Nadie en la calle ahora',
+        offText: 'Mira en el mapa a qué hora pasan los baristas por tu cuadra.', tinto: 'tinto', passes: 'Suele pasar', hold: 'Apártame', map: 'Ver el mapa',
+        how: 'Así funciona', steps: ['Mira quién pasa por tu cuadra', 'Aparta de 1 a 6 tazas', 'Pagas al recibir'],
+        dayTag: 'Tu día, como en la app', example: 'Ejemplo', streak: 'Tu racha', streakN: '4 días', streakSub: 'saliendo a vender seguidos', goal: 'Meta de hoy: 25 tazas', goalSub: 'ayer vendiste 17', coffee: 'Te queda café para 2 días', order: 'Pedir',
+      },
       mapLabel: 'Mapa de Bogotá con las ventas en la calle y los baristas',
       order: {
         tag: 'FIG. 01 — HOY VENDEMOS EN',
@@ -39,7 +45,7 @@ const translations = {
         script: 'a domicilio',
         loc: 'BOGOTÁ, 2.600 MSNM · BARRA PORTÁTIL',
         lede: '¡Conoce quién está más cerca para pedir tu café especial!',
-        cta: 'Ver la tienda',
+        cta: 'Ver quién pasa cerca',
         cta2: 'Soy barista',
         panelFig: 'FIG. 01 — EL ESTUDIO',
         panelBadge: 'DATOS REALES',
@@ -463,6 +469,12 @@ const translations = {
     essp: {
       store: { label: 'Get the Micra app', appleTop: 'Download on the', googleTop: 'Get it on', soon: 'Coming soon to', badge: 'Soon' },
       tabs: { order: 'Order coffee', barista: 'Be a barista' },
+      live: {
+        label: 'Who is on the street', live: 'on the street now', usual: 'usually around now', off: 'Nobody on the street right now',
+        offText: 'Check the map to see when baristas pass by your block.', tinto: 'tinto', passes: 'Usually passes', hold: 'Save me one', map: 'See the map',
+        how: 'How it works', steps: ['See who passes by your block', 'Save 1 to 6 cups', 'Pay when you get it'],
+        dayTag: 'Your day, as in the app', example: 'Example', streak: 'Your streak', streakN: '4 days', streakSub: 'selling in a row', goal: 'Today’s goal: 25 cups', goalSub: 'yesterday you sold 17', coffee: 'Coffee left for 2 days', order: 'Order',
+      },
       mapLabel: 'Map of Bogotá with street sales and street baristas',
       order: {
         tag: 'FIG. 01 — SELLING TODAY AT',
@@ -471,7 +483,7 @@ const translations = {
         script: 'to your door',
         loc: 'BOGOTÁ, 2,600 MASL · PORTABLE BAR',
         lede: 'See who is closest and order your specialty coffee!',
-        cta: 'Visit the shop',
+        cta: 'See who is nearby',
         cta2: 'I sell tinto',
         panelFig: 'FIG. 01 — THE STUDY',
         panelBadge: 'REAL DATA',
@@ -894,6 +906,12 @@ const translations = {
     essp: {
       store: { label: 'Micraアプリを入手', appleTop: 'ダウンロード', googleTop: '入手する', soon: '近日公開', badge: '近日' },
       tabs: { order: 'コーヒーを頼む', barista: 'バリスタになる' },
+      live: {
+        label: '今、通りにいる人', live: '今、通りにいます', usual: 'いつもこの時間にいます', off: '今、通りに誰もいません',
+        offText: 'バリスタがあなたのブロックを通る時間を地図で確認しましょう。', tinto: 'ティント', passes: 'いつもの時間', hold: '取り置き', map: '地図を見る',
+        how: '使い方', steps: ['近くを通る人を見る', '1〜6杯を取り置き', '受け取る時に支払う'],
+        dayTag: 'アプリで見るあなたの一日', example: '例', streak: '連続記録', streakN: '4日', streakSub: '続けて販売中', goal: '今日の目標：25杯', goalSub: '昨日は17杯', coffee: 'コーヒーはあと2日分', order: '注文',
+      },
       mapLabel: '路上販売とバリスタを示すボゴタの地図',
       order: {
         tag: '図01 — 本日の出店場所',
@@ -902,7 +920,7 @@ const translations = {
         script: 'デリバリー',
         loc: 'ボゴタ · 標高2,600m · 持ち運べるバー',
         lede: 'いちばん近くのバリスタを見つけて、スペシャルティコーヒーを注文しよう！',
-        cta: 'ショップを見る',
+        cta: '近くのバリスタを見る',
         cta2: 'バリスタの方へ',
         panelFig: '図01 — 調査',
         panelBadge: '実データ',

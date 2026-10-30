@@ -40,12 +40,13 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(micra.locator('.essp-phone-who')).toContainText('1 cuadras · 2 baristas');
   // En público se dice «baristas»; sin nombres
   await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
-  // Los banners principales de la web en línea van arriba, con los botones de las tiendas bajo el iPhone
+  // Los banners principales van arriba: el primero muestra quién está en la calle (micra_baristas) y lleva a la app
   const hero = page.locator('#baristas');
   await expect(hero.getByRole('heading', { level: 1 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
-  const stores = hero.getByRole('group', { name: 'Descarga la app Micra' }).first();
-  await expect(stores.getByRole('img', { name: 'Muy pronto en App Store' })).toBeVisible();
-  await expect(stores.getByRole('img', { name: 'Muy pronto en Google Play' })).toBeVisible();
+  await expect(hero.getByTestId('hero-live').first()).toBeVisible();
+  await expect(hero.getByRole('link', { name: 'Ver quién pasa cerca' }).first()).toHaveAttribute('href', '/micra');
+  // Sin enlace a las tiendas, el banner no muestra sus botones
+  await expect(hero.getByRole('group', { name: 'Descarga la app Micra' })).toHaveCount(0);
   await hero.getByRole('button', { name: 'Soy barista' }).click();
   await expect(hero.getByRole('heading', { level: 2 }).filter({ hasText: 'Vive' })).toContainText(/Vive\s*del café\.\s*con tu AeroPress/);
   await expect(hero.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /wa\.me\/\d+\?text=/);

@@ -1,0 +1,110 @@
+/* Estilo app (30 oct 2026): la web se viste como la app Micra. Crema de la
+   calle, tarjetas blancas con sombra, un solo botón rojo redondeado por tramo,
+   enlaces azules y el menú de vidrio flotante. Va después de las hojas de cada
+   sección: solo cambia la piel, no el orden ni el contenido. */
+:root {
+  --app-cream: #F5EFE4;
+  --app-fg: #14161B;
+  --app-soft: #5D6475;
+  --app-ink: #1F2452;
+  --app-cold: #2457C5;
+  --app-line: rgba(20, 22, 27, .12);
+  --app-shadow: 0 1px 0 rgba(31, 36, 82, .05), 0 14px 30px -18px rgba(31, 36, 82, .45);
+}
+body { background: var(--app-cream); }
+
+/* Sin la hoja de plano con marco: la calle crema de la app */
+.essp-sheet, .essp-dash, .essp-loc::before { display: none; }
+.essp-hero, .micra, .lh, .brew, .product-section.shop { background: var(--app-cream) !important; }
+.essp-slide, .essp-slide--photo { --essp-fg: var(--app-fg); --essp-soft: var(--app-soft); --essp-line: var(--app-line); color: var(--app-fg); }
+
+/* Títulos como la app: Archivo 900 en caja normal */
+.essp-title { text-transform: none; font-weight: 900; letter-spacing: -.035em; line-height: 1; }
+.essp-tag { color: var(--app-cold); letter-spacing: .14em; }
+.essp-new, .essp-badge { background: var(--app-cold); border-radius: 99px; padding: 3px 9px; }
+.essp-loc { color: var(--app-soft); }
+.essp-lede { color: var(--app-soft); font-weight: 400; }
+
+/* Botones: rojo lleno y redondeado (lo que se toca), blanco con borde, o enlace azul */
+.essp-btn {
+  border-radius: 18px; text-transform: none; letter-spacing: 0; font-size: 1.05rem; font-weight: 800;
+  min-height: 56px; padding: 0 26px; justify-content: center; border-color: var(--red); background: var(--red);
+  box-shadow: 0 12px 24px -12px rgba(222, 27, 27, .85);
+}
+.essp-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 26px -12px rgba(222, 27, 27, .9); }
+.essp-btn.is-ghost { background: #fff; color: var(--app-fg); border: 1.5px solid var(--app-line); box-shadow: var(--app-shadow); }
+.essp-btn.is-ghost:hover { box-shadow: var(--app-shadow); }
+.essp-btn.is-link { background: none; border: 0; box-shadow: none; color: var(--app-cold); text-decoration: underline; text-underline-offset: 5px; padding: 0 8px; min-height: 44px; }
+.essp-btn.is-link:hover { transform: none; box-shadow: none; }
+
+/* Menú de vidrio flotante */
+.navbar.navbar--sheet { padding: 10px 16px 0; }
+.navbar--sheet .navbar-content {
+  background: rgba(255, 253, 248, .92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, .9); border-radius: 24px; box-shadow: 0 12px 32px -14px rgba(31, 36, 82, .45);
+  padding: 8px 10px 8px 16px; color: var(--app-fg);
+}
+.navbar--sheet.navbar--photo { color: var(--app-fg); }
+.nav-links .nav-app-link { background: var(--red); color: #fff !important; border: 0; border-radius: 14px; padding: 8px 14px; }
+
+/* Banner: el texto a la izquierda y la app viva a la derecha */
+.essp-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+.essp-hero-device { padding-top: 0; justify-items: stretch; }
+.essp-live {
+  position: relative; overflow: hidden; min-height: 460px; padding: 22px 22px 62px;
+  background: #fff; border-radius: 28px; box-shadow: var(--app-shadow); color: var(--app-fg); text-align: left;
+}
+.essp-live-tag {
+  position: absolute; right: 14px; top: 14px; z-index: 2; background: var(--app-cold); color: #fff;
+  font: 700 10px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; transform: rotate(2deg);
+}
+.essp-live-persona { position: absolute; right: 18px; bottom: 44px; height: 78%; max-height: 400px; width: auto; z-index: 1; pointer-events: none; }
+.essp-live-who { position: relative; z-index: 2; width: min(270px, 60%); display: grid; gap: 8px; justify-items: start; margin-top: 26px; }
+.essp-live-pill {
+  display: inline-flex; align-items: center; gap: 7px; background: #E2F2E9; color: #1F8A5B; border-radius: 99px; padding: 5px 10px;
+  font: 700 11px 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: .06em;
+}
+.essp-live-pill i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.essp-live-pill.is-off, .essp-live-pill.is-wait { background: var(--app-cream); color: var(--app-soft); }
+.essp-live-name { margin: 0; font: 900 30px/1 'Archivo', sans-serif; letter-spacing: -.03em; }
+.essp-live-cota { margin: 0; font: 700 11px 'JetBrains Mono', monospace; color: var(--red); text-transform: uppercase; letter-spacing: .12em; }
+.essp-live-place { margin: 0; color: var(--app-soft); font-size: 14px; line-height: 1.4; }
+.essp-live-win { margin: 0; background: var(--app-cream); border-radius: 12px; padding: 8px 10px; font-size: 13px; line-height: 1.4; }
+.essp-live-coffee { margin: 0; background: var(--app-fg); color: #fff; border-radius: 12px; padding: 8px 10px; font-size: 13px; }
+.essp-live-cups { display: flex; gap: 5px; margin: 0; }
+.essp-live-cups svg { width: 22px; height: 20px; fill: #fff; stroke: #C9BFAE; stroke-width: 1.6; }
+.essp-live-cups .is-on svg { fill: var(--red); stroke: var(--app-ink); }
+.essp-live .essp-btn { min-height: 48px; font-size: 15px; padding: 0 18px; }
+.essp-live-how { position: relative; z-index: 2; width: min(280px, 60%); margin-top: 22px; }
+.essp-live-how p { margin: 0; font: 700 10px 'JetBrains Mono', monospace; color: var(--app-soft); text-transform: uppercase; letter-spacing: .12em; }
+.essp-live-how ol { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.essp-live-how li { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+.essp-live-how b { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--app-cream); display: grid; place-items: center; font-size: 13px; }
+.essp-live-anden {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 42px; background: #F7F2E9; border-top: 2.5px solid var(--app-ink);
+  background-image: repeating-linear-gradient(90deg, transparent 0 79px, rgba(31, 36, 82, .35) 79px 80px);
+}
+.essp-hero-device .essp-stores { justify-content: flex-start; }
+
+@media (max-width: 900px) {
+  .essp-main { grid-template-columns: 1fr; gap: 24px; }
+  .essp-in { padding: 96px 16px 40px; }
+  .essp-ctas { flex-direction: column; align-items: stretch; }
+  .essp-ctas .essp-btn.is-link { align-self: center; }
+  .essp-live { min-height: 0; padding: 16px 16px 58px; }
+  .essp-live-persona { height: 240px; right: 6px; }
+  .essp-live-who { width: 62%; margin-top: 30px; }
+  .essp-live-how { display: none; }
+  .essp-live-name { font-size: 26px; }
+}
+
+/* Celular: el banner crece con su tarjeta (sin cortar a la altura de la pantalla) */
+@container (max-width: 760px) {
+  .essp-slide .essp-in { height: auto; min-height: 0; padding: 92px 16px 36px; overflow: visible; }
+  .essp-slide .essp-hero-device { align-self: stretch; order: 3; }
+  .essp-ctas { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  .essp-ctas .essp-btn { padding: 0 20px; font-size: 1.05rem; letter-spacing: 0; flex: none; }
+  .essp-ctas .essp-btn.is-link { align-self: center; }
+  .navbar.navbar--sheet { top: 10px; left: 10px; right: 10px; padding: 0; }
+  .navbar--sheet .navbar-content { padding: 6px 6px 6px 12px; }
+}
