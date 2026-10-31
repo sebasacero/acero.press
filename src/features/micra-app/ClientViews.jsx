@@ -7,7 +7,7 @@ import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconCheck, IconOut } from './icons.jsx';
+import { IconThermo, IconCheck, IconOut, IconToday } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 
@@ -135,6 +135,39 @@ function BaristaRow({ b, onOpen, i = 0 }) {
   );
 }
 
+/**
+ * Las historias de arriba, como en Instagram: primero Hoy (el muro del café) y
+ * luego los baristas, los que están en la calle primero, con el aro rojo y
+ * «AHORA». Tocar uno abre su página para apartar.
+ */
+function Stories({ baristas, go }) {
+  return (
+    <ul className="mapp-hists" aria-label="Historias" data-testid="stories">
+      <li>
+        <button type="button" className="mapp-hist is-hoy" onClick={() => go('/micra/hoy')} aria-label="Hoy en el café">
+          <span className="mapp-hist-ring"><span className="mapp-hist-av"><IconToday /></span></span>
+          <small>Hoy</small>
+        </button>
+      </li>
+      {baristas.map((b) => {
+        const live = b.status === 'live';
+        const first = String(b.name ?? '').split(' ')[0];
+        return (
+          <li key={b.id}>
+            <button type="button" className={`mapp-hist ${live ? 'is-live' : ''}`} onClick={() => go(baristaPath(b.id))} aria-label={`${first}${live ? ', en la calle ahora' : ''}`}>
+              <span className="mapp-hist-ring">
+                <span className="mapp-hist-av"><Figure name={figureFor(b.id)} className="is-avatar" /></span>
+                {live && <i className="mapp-hist-tag" aria-hidden="true">AHORA</i>}
+              </span>
+              <small>{first}</small>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function ClientHome({ go, night }) {
   const [{ list, error, missing }, reload] = useBaristas();
   const { me, ask, asking } = useMe();
@@ -160,21 +193,19 @@ export function ClientHome({ go, night }) {
 
   return (
     <div className="mapp-client">
+      <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
+      {/* Arriba, como el inicio de una red social: las historias de los baristas */}
+      <Stories baristas={sorted} go={go} />
       {hold && holdBarista ? (
         <>
           <p className="mapp-kicker is-hello">{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</p>
-          <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
           <HoldCard hold={hold} barista={holdBarista} go={go} />
         </>
       ) : (
-        <section className="mapp-hero">
-          <div>
-            <p className="mapp-kicker">{live > 0 ? `${live === 1 ? '1 barista' : `${live} baristas`} en la calle ahora` : 'Café de la calle · Bogotá'}</p>
-            <h1 className="mapp-title is-home">¿Quién pasa con café <span className="mapp-script">cerca?</span></h1>
-            <p className="mapp-lede">Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.</p>
-          </div>
-          <Figure name="caminando" className="is-hero" />
-        </section>
+        <p className="mapp-feedline" data-testid="home-line">
+          <b>{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</b>{' '}
+          {live > 0 ? `${live === 1 ? '1 barista está' : `${live} baristas están`} en la calle ahora: apártale y recoge cuando pase.` : 'Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.'}
+        </p>
       )}
 
       {/* El mapa grande y, encima, qué quiere tomar: los pines muestran solo a quien lo vende */}

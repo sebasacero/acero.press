@@ -451,6 +451,34 @@ test('cliente: los baristas en tarjetas con su personaje y la tarjeta de 10 taza
   expect(errors).toEqual([]);
 });
 
+test('cliente como Instagram: historias de los baristas arriba, mensajes al equipo y la barra de cinco íconos', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.baristas[1].live_until = new Date(Date.now() + 60 * 60000).toISOString();
+  const { page, errors } = await open(browser, { seed });
+  await page.goto('/micra', { waitUntil: 'load' });
+  // Arriba: Hoy y luego los baristas; quien está en la calle lleva «AHORA»
+  const stories = page.getByTestId('stories');
+  await expect(stories.getByRole('button').first()).toHaveAccessibleName('Hoy en el café');
+  await expect(stories.getByRole('button', { name: /en la calle ahora/ }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+/);
+  // Sin «Soy barista» ni círculo arriba: el perfil va abajo
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Mi perfil' })).toHaveCount(0);
+  const nav = page.getByRole('navigation', { name: 'Micra' });
+  await expect(nav.getByRole('button')).toHaveCount(5);
+  await expect(nav.getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page');
+  // El «+» abre la hoja de publicar del muro (receta, café o barista, por WhatsApp)
+  await nav.getByRole('button', { name: 'Publicar' }).click();
+  await expect(page.getByTestId('publish').getByRole('link')).toHaveCount(3);
+  await page.getByTestId('publish').getByRole('button', { name: 'Cerrar' }).click({ force: true });
+  // Una historia abre la página del barista
+  await stories.getByRole('button', { name: /en la calle ahora/ }).first().click();
+  await expect(page).toHaveURL(/\/micra\/b\//);
+  await nav.getByRole('button', { name: 'Mi perfil' }).click();
+  await expect(page).toHaveURL(/\/micra\/perfil$/);
+  await expect(nav.getByRole('button', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page');
+  expect(errors).toEqual([]);
+});
+
 test('cliente: Hoy es el muro del café, sin logros ni ideas de foto; publicar le escribe al equipo', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });

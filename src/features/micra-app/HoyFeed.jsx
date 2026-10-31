@@ -274,6 +274,11 @@ function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false }) 
   );
 }
 
+/** El «＋» de la barra del cliente: la misma hoja de publicar del muro. */
+export function ClientPublish({ onClose }) {
+  return <PublishSheet client onClose={onClose} />;
+}
+
 /** El equipo agrega una publicación de la FNC, una marca o una finca (queda en app_config). */
 function CuratedForm({ current, onSaved, onCancel }) {
   const [v, setV] = useState({ org: 'FNC', by: 'Federación Nacional de Cafeteros', title: '', text: '', source: '', image: '' });
