@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
-  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, PRODUCTS,
+  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
@@ -14,13 +14,10 @@ import { figureFor } from './motivation.js';
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
 
-const MicraMap = lazy(() => import('./MicraMap.jsx'));
 // «Busco café» y su aviso llegan aparte: la app ya está al borde del límite del bundle
 const SeekNote = lazy(() => import('./SeekNote.jsx'));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
-// Lo que el cliente busca, encima del mapa: todo o una bebida
-const DRINKS = [['all', 'Todo'], ...PRODUCTS.map((p) => [p.id, p.label])];
 
 function useBaristas() {
   const [state, setState] = useState({ list: null, error: null, missing: false });
@@ -107,7 +104,7 @@ function inviteText() {
   return `¿Vendes café en la calle? Con Micra tus clientes te apartan los tintos antes de que llegues. Escríbele al equipo: ${url}`;
 }
 
-/** Cada barista en su tarjeta: su personaje, si está en la calle, dónde y su tinto. El número es el de su pin. */
+/** Cada barista en su tarjeta: su personaje, si está en la calle, dónde y su tinto. */
 function BaristaRow({ b, onOpen, i = 0 }) {
   const menu = menuOf(b);
   return (
@@ -168,7 +165,7 @@ function Stories({ baristas, go }) {
   );
 }
 
-export function ClientHome({ go, night }) {
+export function ClientHome({ go }) {
   const [{ list, error, missing }, reload] = useBaristas();
   const { me, ask, asking } = useMe();
   const [drink, setDrink] = useState('all');
@@ -178,8 +175,8 @@ export function ClientHome({ go, night }) {
   // le dicen a los baristas dónde quieren café; una vez cada 15 min (api.seekCoffee)
   const askNear = async () => { const p = await ask(); if (p) seek(p, drink); };
   const pickDrink = (id) => { setDrink(id); if (me) seek(me, id); };
-  // Cada barista lleva el número de su fila, el mismo que su pin en el mapa
-  const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }).map((b, i) => ({ ...b, n: i + 1 })), [list, me, favs]);
+  const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }), [list, me, favs]);
+  const counts = drinkCounts(sorted);
   const shown = pickBaristas(sorted, { drink, now: nowOnly });
   const live = sorted.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
@@ -208,19 +205,19 @@ export function ClientHome({ go, night }) {
         </p>
       )}
 
-      {/* El mapa grande y, encima, qué quiere tomar: los pines muestran solo a quien lo vende */}
-      <div className="mapp-mapwrap">
-        <div className="mapp-chips is-drinks" role="group" aria-label="¿Qué quieres tomar?">
-          {DRINKS.map(([id, label]) => (
-            <button key={id} type="button" className={drink === id ? 'on' : ''} aria-pressed={drink === id} onClick={() => pickDrink(id)}>{label}</button>
+      {/* Sin mapa: qué quiere tomar, en botones grandes; la lista de abajo muestra solo a quien lo vende */}
+      <section className="mapp-drinks" aria-labelledby="mapp-drinks-q">
+        <h2 className="mapp-drinks-q" id="mapp-drinks-q">¿Qué te gustaría tomar <span className="mapp-script">hoy?</span></h2>
+        <div className="mapp-drinks-grid" role="group" aria-label="¿Qué te gustaría tomar hoy?">
+          {DRINK_CHOICES.map((d) => (
+            <button key={d.id} type="button" className={drink === d.id ? 'on' : ''} aria-pressed={drink === d.id} onClick={() => pickDrink(d.id)} data-testid={`drink-${d.id}`}>
+              <span className="mapp-drink-ico" aria-hidden="true">{d.icon}</span>
+              <b>{d.label}</b>
+              {list && <small>{counts[d.id] === 1 ? '1 barista' : `${counts[d.id]} baristas`}</small>}
+            </button>
           ))}
         </div>
-        {sorted.length > 0 ? (
-          <Suspense fallback={<div className="mapp-map is-big is-loading" />}>
-            <MicraMap baristas={shown} me={me} theme={night ? 'noche' : 'plano'} onPick={open} big />
-          </Suspense>
-        ) : <div className={`mapp-map is-big ${list === null ? 'is-loading' : ''}`} />}
-      </div>
+      </section>
 
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">

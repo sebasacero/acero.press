@@ -147,6 +147,19 @@ export function filterBaristas(list, filter) {
   return list.filter((b) => b.prices?.[filter] != null);
 }
 
+// «¿Qué te gustaría tomar hoy?»: los botones del inicio del cliente, con «Lo que haya» (todas)
+export const DRINK_CHOICES = [
+  { id: 'tinto', label: 'Tinto', icon: '☕' },
+  { id: 'perico', label: 'Perico', icon: '🥛' },
+  { id: 'aromatica', label: 'Aromática', icon: '🍵' },
+  { id: 'all', label: 'Lo que haya', icon: '✨' },
+];
+
+/** Cuántos baristas tienen cada bebida (con precio); «all» cuenta a todos. */
+export function drinkCounts(list) {
+  return Object.fromEntries(DRINK_CHOICES.map((d) => [d.id, filterBaristas(list ?? [], d.id).length]));
+}
+
 /** Lo que el cliente busca: una bebida (o todas) y, si quiere, solo quien está ahora. */
 export const pickBaristas = (list, { drink = 'all', now = false } = {}) => filterBaristas(filterBaristas(list, drink), now ? 'live' : 'all');
 

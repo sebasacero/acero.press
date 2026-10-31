@@ -206,7 +206,7 @@ export default function MicraApp() {
     else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} /></Suspense>;
     else if (route.tab === 'perfil') body = <Suspense fallback={<Cargando />}><OwnerProfile go={go} onSignedOut={() => setActAs(null)} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
-  } else body = <ClientHome go={go} night={night} />;
+  } else body = <ClientHome go={go} />;
   const teamTabs = teamView && who.admin;
   // «Mi perfil», arriba a la derecha: las iniciales del barista, o la silueta (cliente, equipo, actuando como)
   const acting = who.admin && actAs;

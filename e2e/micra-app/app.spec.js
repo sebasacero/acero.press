@@ -79,14 +79,17 @@ test('cliente: un barista sin cuenta en Micra no ofrece apartar; el filtro y el 
   await page.getByRole('button', { name: '‹ Baristas' }).click();
   // El favorito sube al primer lugar
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem').first()).toContainText('Wilson');
-  // Las bebidas van encima del mapa, que es grande
-  const drinks = page.getByRole('group', { name: '¿Qué quieres tomar?' });
-  await expect(page.locator('.mapp-mapwrap .mapp-map')).toBeVisible();
-  expect((await page.locator('.mapp-mapwrap .mapp-map').boundingBox()).height).toBeGreaterThanOrEqual(320);
-  await drinks.getByRole('button', { name: 'Perico' }).click();
-  await expect(drinks.getByRole('button', { name: 'Perico' })).toHaveAttribute('aria-pressed', 'true');
+  // Sin mapa: «¿Qué te gustaría tomar hoy?» en botones grandes, con cuántos baristas la tienen
+  await expect(page.getByRole('heading', { name: '¿Qué te gustaría tomar hoy?' })).toBeVisible();
+  await expect(page.locator('.mapp-map')).toHaveCount(0);
+  const drinks = page.getByRole('group', { name: '¿Qué te gustaría tomar hoy?' });
+  await expect(drinks.getByRole('button')).toHaveCount(4);
+  await expect(drinks.getByRole('button', { name: 'Lo que haya' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('drink-perico')).toContainText('2 baristas');
+  await drinks.getByRole('button', { name: /Perico/ }).click();
+  await expect(drinks.getByRole('button', { name: /Perico/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(2);
-  await drinks.getByRole('button', { name: 'Todo' }).click();
+  await drinks.getByRole('button', { name: /Lo que haya/ }).click();
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem').first()).toContainText('Wilson');
   expect(errors).toEqual([]);
 });
@@ -299,7 +302,7 @@ test('equipo: la pestaña Barista muestra la entrada por SMS (sin mandar nada) y
   expect(errors).toEqual([]);
 });
 
-test('cliente con apartado: arriba va «Tu apartado» con sus etapas; los pines llevan el número de la fila', async ({ browser }) => {
+test('cliente con apartado: arriba va «Tu apartado» con sus etapas; las tarjetas llevan las iniciales', async ({ browser }) => {
   const seed = structuredClone(SEED);
   seed.holds.push({ id: 'apartado-mio', tintero_id: MARLENE, client_ref: 'MI-CEL', name: 'Sebas', items: [{ product: 'tinto', qty: 2, unit_price: 1500 }], cups: 2, total: 3000, status: 'waiting' });
   const { page, errors } = await open(browser, { seed });
@@ -311,10 +314,9 @@ test('cliente con apartado: arriba va «Tu apartado» con sus etapas; los pines 
   // Marlene avisó que salió: la etapa actual es «Salió» (o «En tu cuadra» si es su hora)
   await expect(card.getByRole('list', { name: 'Etapas' }).locator('[aria-current="step"]')).toHaveText(/Salió|En tu cuadra/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('¿Quién pasa con café');
-  // El número de cada fila es el del pin
+  // Sin mapa ya no hay pines: cada tarjeta lleva las iniciales de su barista
   const rows = page.getByRole('list', { name: 'Baristas' }).getByRole('listitem');
-  await expect(rows.first().locator('.mapp-av')).toHaveText('1');
-  await expect(rows.nth(2).locator('.mapp-av')).toHaveText('3');
+  await expect(rows.first().locator('.mapp-av')).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}$/);
   await card.getByRole('button', { name: 'Ver a Marlene' }).click();
   await expect(page).toHaveURL(new RegExp(`/micra/b/${MARLENE}$`));
   expect(errors).toEqual([]);

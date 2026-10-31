@@ -282,12 +282,8 @@
   cursor: pointer;
 }
 .mapp-chips button.on { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
-/* El mapa del cliente: grande, con las bebidas encima */
-.mapp-mapwrap { position: relative; margin: 4px 0 8px; }
+/* El mapa grande (el mapa en vivo del barista) */
 .mapp-map.is-big { height: clamp(320px, 56vh, 520px); margin: 0; }
-.mapp-chips.is-drinks { position: absolute; z-index: 2; top: 10px; left: 10px; right: 10px; padding: 2px; }
-.mapp-chips.is-drinks button { background: var(--m-bg); box-shadow: 0 2px 10px rgba(0, 0, 0, .14); }
-.mapp-chips.is-drinks button.on { background: var(--m-fg); color: var(--m-bg); }
 .mapp-near { color: var(--m-cold); }
 .mapp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .mapp-row {
@@ -1307,3 +1303,16 @@
 .mapp-tab-av svg { width: 17px !important; height: 17px !important; stroke-width: 2.2 !important; }
 .mapp-tabs.is-ig .is-me.on .mapp-tab-av { box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 3.5px var(--m-fg); }
 .mapp.is-client .mapp-main { padding-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+
+/* «¿Qué te gustaría tomar hoy?»: las bebidas en botones grandes, sin mapa (31 oct) */
+.mapp-drinks { margin: 0 0 12px; }
+.mapp-drinks-q { margin: 0 0 12px; font: 800 1.5rem/1.1 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-drinks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mapp-drinks-grid button { appearance: none; border: 0; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; min-height: 78px; padding: 12px 14px; border-radius: 20px; background: var(--m-glass); box-shadow: var(--m-shadow); color: var(--m-fg); text-align: left; cursor: pointer; transition: background-color .2s ease, color .2s ease, transform .15s ease; }
+.mapp-drinks-grid button:active { transform: scale(.97); }
+.mapp-drinks-grid b { grid-column: 2; align-self: end; font: 800 1.1rem/1.15 'Archivo', sans-serif; }
+.mapp-drinks-grid small { grid-column: 2; align-self: start; font: 500 .74rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-drink-ico { grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; background: #F5EFE4; font-size: 1.55rem; line-height: 1; }
+.mapp-drinks-grid button.on { background: var(--m-cta); color: #fff; box-shadow: 0 12px 24px -14px rgba(222, 27, 27, .8); }
+.mapp-drinks-grid button.on small { color: rgba(255, 255, 255, .88); }
+.mapp-drinks-grid button.on .mapp-drink-ico { background: rgba(255, 255, 255, .2); }

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
-  meters, distanceLabel, sortBaristas, filterBaristas, pickBaristas, daySummary, weekBars, weekdayLetter, fiadoMessage,
+  meters, distanceLabel, sortBaristas, filterBaristas, pickBaristas, drinkCounts, DRINK_CHOICES, daySummary, weekBars, weekdayLetter, fiadoMessage,
   parseRoute, redTop, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
@@ -214,4 +214,11 @@ test('la barra de arriba va en rojo solo en Vender y en la calle', () => {
   assert.equal(redTop({ view: 'barista', tab: 'perfil' }, true), false);
   assert.equal(redTop({ view: 'home' }, true), false);
   assert.equal(redTop(null, true), false);
+});
+
+test('«¿Qué te gustaría tomar hoy?»: cuántos baristas tienen cada bebida', () => {
+  const list = [{ prices: { tinto: 1500, perico: 2000 } }, { prices: { tinto: 1300 } }, { prices: {} }];
+  assert.deepEqual(drinkCounts(list), { tinto: 2, perico: 1, aromatica: 0, all: 3 });
+  assert.deepEqual(drinkCounts(null), { tinto: 0, perico: 0, aromatica: 0, all: 0 });
+  assert.equal(DRINK_CHOICES.at(-1).id, 'all');
 });
