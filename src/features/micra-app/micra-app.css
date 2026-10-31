@@ -1316,3 +1316,34 @@
 .mapp-drinks-grid button.on { background: var(--m-cta); color: #fff; box-shadow: 0 12px 24px -14px rgba(222, 27, 27, .8); }
 .mapp-drinks-grid button.on small { color: rgba(255, 255, 255, .88); }
 .mapp-drinks-grid button.on .mapp-drink-ico { background: rgba(255, 255, 255, .2); }
+
+/* El muro de Hoy dentro del inicio del cliente: separado de lo de arriba como el feed de Instagram */
+.mapp-feed.is-embedded { margin: 22px -16px 0; padding: 18px 16px 0; border-top: 1px solid var(--m-line); }
+
+/* Publicaciones de los baristas: el formulario, las suyas con su estado y la revisión del equipo */
+.mapp-compose-pick { appearance: none; width: 100%; display: grid; justify-items: center; gap: 4px; margin: 0 0 12px; padding: 26px 16px; border: 2px dashed var(--m-line); border-radius: 20px; background: var(--m-glass); color: var(--m-fg); cursor: pointer; }
+.mapp-compose-pick span { font-size: 2rem; }
+.mapp-compose-pick b { font: 800 1.05rem 'Archivo', sans-serif; }
+.mapp-compose-pick small { color: var(--m-soft); font-size: .82rem; }
+.mapp-compose-media { position: relative; margin: 0 0 12px; border-radius: 18px; overflow: hidden; background: #16181F; }
+.mapp-compose-media img, .mapp-compose-media video { display: block; width: 100%; max-height: 46vh; object-fit: contain; }
+.mapp-compose-media .mapp-link { position: absolute; right: 10px; bottom: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; text-decoration: none; }
+.mapp-compose-done { display: flex; align-items: center; gap: 12px; padding: 14px 0 8px; }
+.mapp-compose-done span { font-size: 2rem; }
+.mapp-compose-done p { margin: 0; }
+.mapp-mine ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.mapp-mine li { display: flex; align-items: center; gap: 10px; }
+.mapp-mine-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mapp-mine-tag { flex: none; padding: 3px 8px; border-radius: 999px; font: 700 .68rem 'JetBrains Mono', monospace; background: var(--m-line); }
+.mapp-mine-tag.is-pending { background: color-mix(in srgb, #F5B66B 35%, transparent); }
+.mapp-mine-tag.is-approved { background: color-mix(in srgb, var(--m-green) 22%, transparent); }
+.mapp-mine-tag.is-rejected { background: color-mix(in srgb, var(--m-cta) 16%, transparent); }
+.mapp-review ul { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 14px; }
+.mapp-review li { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; }
+.mapp-review-media { width: 96px; height: 120px; border-radius: 14px; overflow: hidden; display: grid; place-items: center; background: #16181F; color: #fff; font-size: 1.6rem; }
+.mapp-review-media img, .mapp-review-media video { width: 100%; height: 100%; object-fit: cover; }
+.mapp-review-copy b { display: block; }
+.mapp-review-copy small { color: var(--m-soft); font-size: .78rem; }
+.mapp-review-copy p { margin: 6px 0 8px; }
+/* Lo de los baristas va vertical, como en Instagram (4:5) */
+.mapp-ig.is-publicaciones .mapp-ig-photo img, .mapp-ig.is-publicaciones .mapp-ig-photo video { aspect-ratio: 4 / 5; }

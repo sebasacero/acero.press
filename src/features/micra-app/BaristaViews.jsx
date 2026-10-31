@@ -656,7 +656,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       <>
         <Suspense fallback={<Cargando fig="caminando" />}>
           <HoyFeed
-            go={go} selfId={day.id} admin={admin || !!asId} mode={mode} trip={dayTrip}
+            go={go} selfId={day.id} asId={asId} admin={admin || !!asId} mode={mode} trip={dayTrip}
             me={{ name: first, streak, goalMet: board.cups >= goal && goal > 0, lessonsDone: lessonPath(lessonsFor('es'), readSeen()).done, lessonsTotal: lessonsFor('es').length }}
             canShareDay={board.cups > 0} onShareDay={() => setStory(true)}
           />

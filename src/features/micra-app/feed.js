@@ -9,6 +9,7 @@ import { windowLabel } from './micraApp.js';
 
 export const CHIPS = [
   ['todo', 'Todo'],
+  ['publicaciones', 'De los baristas'],
   ['logros', 'Logros'],
   ['publicar', 'Para publicar'],
   ['cafe', 'Café de Colombia'],
@@ -167,13 +168,15 @@ export function photoIdeas(dayKey = '', mode = null) {
 
 /**
  * El muro: el precio arriba (siempre hay uno, el del estudio), luego los logros
- * del barista, dos ideas para publicar, los puestos con su horario y lo de la
- * casa y lo curado, lo más nuevo primero.
+ * del barista, dos ideas para publicar, lo que publicaron los baristas (ya
+ * revisado por el equipo, lo más nuevo primero; posts.js), los puestos con su
+ * horario y lo de la casa y lo curado, lo más nuevo primero.
  */
-export function buildFeed({ baristas = [], selfId = null, me = null, prices = {}, house = HOUSE, curated = CURATED, dayKey = '', mode = null } = {}) {
+export function buildFeed({ baristas = [], selfId = null, me = null, prices = {}, house = HOUSE, curated = CURATED, dayKey = '', mode = null, posts = [] } = {}) {
   const items = [{ id: 'precio', kind: 'precios', prices, study: STUDY_TINTO }];
   items.push(...achievements(me));
   if (me) items.push(...photoIdeas(dayKey, mode));
+  items.push(...posts);
   const puestos = baristas.filter((b) => b.id !== selfId && (b.referencia || b.localidad)).map((b) => ({
     id: `puesto-${b.id}`, kind: 'puestos', by: b.name, baristaId: b.id, live: b.status === 'live',
     title: b.referencia || b.localidad, text: windowLabel(b.hora_inicio, b.hora_fin) ? `Suele pasar ${windowLabel(b.hora_inicio, b.hora_fin)}` : null,

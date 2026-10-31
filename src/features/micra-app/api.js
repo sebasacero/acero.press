@@ -114,6 +114,30 @@ export const verifySmsCode = (phone, token) => {
 // El WhatsApp del equipo (app_config; el mismo respaldo que WhatsAppButton)
 export const teamWhatsApp = () => fetchAppConfig('whatsapp_number', '573152125327');
 
+// Publicaciones de los baristas en Hoy (20261031160000_micra_barista_posts.sql)
+const POSTS_BUCKET = 'micra-posts';
+export const postsFeed = (limit = 30) => call('micra_posts_feed', { p_limit: limit });
+export const postsMine = (asId) => call('micra_posts_mine', as(asId));
+export const postsPending = () => call('micra_posts_pending');
+export const postReview = (id, approve) => call('micra_post_review', { p_id: id, p_approve: approve });
+export const postRemove = (id) => call('micra_post_remove', { p_id: id });
+
+/** Sube el archivo a la carpeta del barista y lo deja en revisión. */
+export async function publishPost({ path, blob, type, kind, caption, asId }) {
+  const { error } = await supabase.storage.from(POSTS_BUCKET).upload(path, blob, { contentType: type, upsert: false });
+  if (error) throw Object.assign(new Error(`No se pudo subir: ${error.message}`), { code: error.statusCode });
+  return call('micra_post_add', { p_kind: kind, p_path: path, p_caption: caption || null, ...as(asId) });
+}
+
+/** URLs firmadas (1 hora) de los archivos: ruta → URL. El bucket es privado. */
+export async function postUrls(paths) {
+  const list = [...new Set((paths ?? []).filter(Boolean))];
+  if (!list.length) return {};
+  const { data, error } = await supabase.storage.from(POSTS_BUCKET).createSignedUrls(list, 3600);
+  if (error) throw error;
+  return Object.fromEntries((data ?? []).filter((x) => x.signedUrl && !x.error).map((x) => [x.path, x.signedUrl]));
+}
+
 /** La lata de cold brew del sitio (page_sections `cold_brew`): de ahí sale su precio para el banner. */
 export async function coldBrewContent() {
   const { data, error } = await supabase.from('page_sections').select('content').eq('slug', 'cold_brew').maybeSingle();
