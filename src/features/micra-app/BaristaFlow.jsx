@@ -51,7 +51,7 @@ export function GoOutConsent({ needs, mode, busy, onAccept, onCancel }) {
         {needs.location && (
           <label className="mapp-check">
             <input type="checkbox" checked={loc} onChange={(e) => setLoc(e.target.checked)} data-testid="consent-location" />
-            <span><b>Usar mi ubicación mientras vendo.</b> {walking ? 'Caminando, grabamos tu recorrido' : 'Marcamos dónde estás'} para que te encuentren y para mejorar la app. Al tocar «Ya volví» deja de usarla.</span>
+            <span><b>Usar mi ubicación mientras vendo.</b> {walking ? 'Caminando, grabamos tu recorrido' : 'Marcamos dónde estás'} para que te encuentren y para mejorar la app. Al volver con la flecha (←) deja de usarla.</span>
           </label>
         )}
         <p className="mapp-fine">Después, tu celular te pide permiso para la ubicación: toca «Permitir». Puedes retirar estos permisos en Mi perfil. <a className="mapp-link" href={platform.siteUrl('/privacidad#ubicacion')} target="_blank" rel="noreferrer">Cómo usamos tu ubicación</a></p>

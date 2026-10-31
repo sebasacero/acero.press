@@ -48,6 +48,10 @@
 .mapp *, .mapp *::before, .mapp *::after { box-sizing: border-box; }
 
 /* ── Barra de arriba ─────────────────────────────────────────────── */
+/* El termo del icono en su baldosa a la izquierda; el modo y el círculo de
+   «Mi perfil» a la derecha. En Vender, con el barista en la calle, la barra es
+   roja (.is-redtop) y sigue sin corte en el encabezado de la salida hasta la
+   hora del celular. */
 .mapp-top {
   position: sticky;
   top: 0;
@@ -55,27 +59,41 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: max(10px, var(--safe-area-inset-top, env(safe-area-inset-top))) 16px 10px;
+  padding: max(10px, var(--safe-area-inset-top, env(safe-area-inset-top))) 14px 10px 12px;
   background: color-mix(in srgb, var(--m-bg) 82%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--m-line);
+  transition: background-color .25s ease, border-color .25s ease;
 }
 .mapp-brand {
+  flex: none;
   appearance: none;
   background: none;
   border: 0;
   color: var(--m-fg);
-  font: 800 1.45rem 'Archivo', sans-serif;
-  letter-spacing: -.02em;
   padding: 0;
   min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
 }
-.mapp-brand i { color: var(--m-cta); font-style: normal; }
+.mapp-brand-mark {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: #F5EFE4;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 1.5px rgba(31, 36, 82, .16), 0 4px 10px -6px rgba(31, 36, 82, .55);
+}
+.mapp-brand-mark .mapp-termo { width: auto; height: 30px; }
+.mapp-brand-mark .mapp-termo-cap { animation: none; }
+.mapp-brand-word { font: 800 1.35rem/1 'Archivo', sans-serif; letter-spacing: -.03em; }
+.mapp-brand-word i { color: var(--m-cta); font-style: normal; }
 .mapp-modes {
   margin-left: auto;
   display: flex;
+  gap: 2px;
   background: var(--m-glass);
   border: 1px solid var(--m-line);
   border-radius: 999px;
@@ -86,14 +104,15 @@
   border: 0;
   background: none;
   color: var(--m-soft);
-  font: 600 .82rem 'JetBrains Mono', monospace;
+  font: 700 .82rem 'Archivo', sans-serif;
   min-height: 38px;
   min-width: 44px;
   padding: 0 12px;
   border-radius: 999px;
   cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
 }
-.mapp-modes button.on { background: var(--m-fg); color: var(--m-bg); }
+.mapp-modes button.on { background: var(--m-fg); color: var(--m-bg); box-shadow: 0 3px 8px -4px rgba(0, 0, 0, .45); }
 .mapp-toplink {
   margin-left: auto;
   appearance: none;
@@ -107,28 +126,48 @@
   cursor: pointer;
 }
 
-/* «Mi perfil»: las iniciales (o la silueta) a la derecha de la barra */
+/* «Mi perfil»: el círculo lleno con las iniciales (o la silueta); con un aro
+   rojo en su página y el punto verde mientras el barista está en la calle */
 .mapp-mebtn {
+  position: relative;
   flex: none;
   appearance: none;
   width: 44px; height: 44px;
   border-radius: 50%;
-  border: 1px solid var(--m-line);
-  background: var(--m-glass);
-  color: var(--m-fg);
+  border: 0;
+  background: var(--m-fg);
+  color: var(--m-bg);
   display: inline-grid; place-items: center;
-  font: 700 .85rem 'JetBrains Mono', monospace;
+  font: 800 .9rem 'Archivo', sans-serif;
+  letter-spacing: .02em;
   cursor: pointer;
   padding: 0;
+  box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 3.5px var(--m-line);
 }
 .mapp-modes + .mapp-mebtn, .mapp-toplink + .mapp-mebtn { margin-left: 0; }
 .mapp-brand + .mapp-mebtn { margin-left: auto; }
-.mapp-mebtn.on { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
-/* Con las tres pestañas y el perfil, en un celular angosto se aprietan un poco */
-@media (max-width: 400px) {
+.mapp-mebtn.on { box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 4.5px var(--m-cta); }
+.mapp-mebtn-live { position: absolute; right: -2px; bottom: -2px; width: 14px; height: 14px; border-radius: 50%; background: #2BB673; border: 2.5px solid var(--m-bg); }
+
+/* En la calle: la barra roja, con lo de encima en blanco */
+.mapp.is-redtop .mapp-top { background: var(--m-cta); border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.mapp.is-redtop .mapp-brand { color: #fff; }
+.mapp.is-redtop .mapp-brand-word i { color: #F5EFE4; }
+.mapp.is-redtop .mapp-brand-mark { box-shadow: 0 4px 12px -6px rgba(0, 0, 0, .5); }
+.mapp.is-redtop .mapp-modes { background: rgba(0, 0, 0, .2); border-color: transparent; }
+.mapp.is-redtop .mapp-modes button { color: rgba(255, 255, 255, .85); }
+.mapp.is-redtop .mapp-modes button.on { background: #fff; color: var(--m-cta); }
+.mapp.is-redtop .mapp-toplink { color: #fff; border-color: rgba(255, 255, 255, .5); }
+.mapp.is-redtop .mapp-mebtn { background: #fff; color: var(--m-cta); box-shadow: 0 0 0 2px var(--m-cta), 0 0 0 3.5px rgba(255, 255, 255, .45); }
+.mapp.is-redtop .mapp-mebtn-live { border-color: var(--m-cta); }
+
+/* Con las tres pestañas y el perfil, en un celular angosto queda solo el termo */
+@media (max-width: 420px) {
   .mapp-top { gap: 8px; }
-  .mapp-modes button { padding: 0 9px; }
+  .mapp-top.has-3 .mapp-brand-word { display: none; }
+  .mapp-modes button { padding: 0 10px; }
 }
+@media (max-width: 350px) { .mapp-brand-word { display: none; } }
 
 .mapp-main {
   width: 100%;
@@ -480,7 +519,6 @@
 .mapp-now-kpis div { flex: 1; min-width: 0; background: rgba(255, 255, 255, .16); border-radius: 14px; padding: 10px 12px; }
 .mapp-now-kpis dd { margin: 0; font: 700 1.25rem 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; }
 .mapp-now-kpis dt { font-size: .72rem; opacity: .9; }
-.mapp-btn.is-onred { margin-top: 14px; background: #111; border-color: #111; color: #fff; }
 .mapp-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ── El elenco ───────────────────────────────────────────────────── */
@@ -1017,8 +1055,8 @@
 .mapp-barista.has-tabs button, .mapp-barista.has-tabs a, .mapp-barista.has-tabs input { scroll-margin: 96px 0 120px; }
 
 /* Vender en la calle: la taza que se llena (diseño del usuario, 31 oct) */
-.mapp-sellhead { grid-template-columns: 116px 1fr; grid-template-areas: 'top top' 'cup copy' 'kpis kpis' 'trip trip' 'btn btn'; align-items: center; column-gap: 14px; row-gap: 10px; margin: -18px -16px 0; padding: 16px 20px 44px; border-radius: 0 0 32px 32px; }
-.mapp-sellhead-top { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font: 500 .78rem 'JetBrains Mono', monospace; }
+.mapp-sellhead { grid-template-columns: 116px 1fr; grid-template-areas: 'top top' 'cup copy' 'kpis kpis' 'trip trip'; align-items: center; column-gap: 14px; row-gap: 10px; margin: -18px -16px 0; padding: 16px 20px 44px; border-radius: 0 0 32px 32px; }
+.mapp-sellhead-top { grid-area: top; display: flex; align-items: center; gap: 10px; margin: 0; font: 500 .78rem 'JetBrains Mono', monospace; }
 .mapp-sellhead .mapp-now-live { background: rgba(0, 0, 0, .28); font: 600 .7rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; }
 .mapp-sellhead .mapp-goalcup { grid-area: cup; width: 116px; height: 124px; }
 .mapp-sellhead-copy { grid-area: copy; min-width: 0; }
@@ -1030,7 +1068,11 @@
 .mapp-sellhead-kpis dd { margin: 0; font: 700 1.05rem 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mapp-sellhead-kpis dt { font-size: .72rem; opacity: .9; }
 .mapp-sellhead .mapp-trip { grid-area: trip; margin: 0; }
-.mapp-sellhead > .mapp-btn { grid-area: btn; margin: 0; }
+/* La flecha: vuelve a «¿Cómo sales hoy?» (sale del mapa; las ventas del día siguen) */
+.mapp-sellhead-back { flex: none; appearance: none; width: 44px; height: 44px; margin: -4px 0 -4px -6px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .2); color: #fff; display: inline-grid; place-items: center; cursor: pointer; }
+.mapp-sellhead-back:active { background: rgba(0, 0, 0, .34); }
+.mapp-sellhead-back:disabled { opacity: .6; }
+.mapp-sellhead-until { margin-left: auto; }
 /* La barra oscura del logro, montada sobre el borde de la cabecera */
 .mapp-sellbar { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; margin: -26px 4px 14px; padding: 13px 16px; border-radius: 16px; background: #16181F; color: #fff; box-shadow: 0 14px 28px -14px rgba(0, 0, 0, .6); font-size: .95rem; }
 .mapp-sellbar > span:nth-child(2) { flex: 1; min-width: 0; color: rgba(255, 255, 255, .78); }
@@ -1052,7 +1094,7 @@
 .mapp-sellhead .mapp-now-live { font-size: .64rem; letter-spacing: .06em; }
 @media (max-width: 360px) { .mapp-sellhead { grid-template-columns: 92px 1fr; } .mapp-sellhead .mapp-goalcup { width: 92px; height: 100px; } .mapp-sellhead-n { font-size: 3.6rem; } }
 .mapp-outmodes button .mapp-anim.is-mode { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; background: #F7F3E8; box-shadow: none; }
-.mapp-sellhead { grid-template-areas: 'top top' 'hello hello' 'cup copy' 'kpis kpis' 'time time' 'trip trip' 'btn btn'; }
+.mapp-sellhead { grid-template-areas: 'top top' 'hello hello' 'cup copy' 'kpis kpis' 'time time' 'trip trip'; }
 .mapp-sellhead-hello { grid-area: hello; margin: 0; font: 700 1rem 'Archivo', sans-serif; opacity: .92; }
 .mapp-sellhead-time { grid-area: time; display: flex; align-items: center; gap: 10px; }
 .mapp-sellhead-time small { font: 500 .72rem 'JetBrains Mono', monospace; white-space: nowrap; }
@@ -1077,9 +1119,8 @@
 .mapp-row-btns.is-qr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mapp-row-btns.is-qr .mapp-btn { width: 100%; }
 
-/* Los momentos del día (primera taza, racha, «Ya volví») y «Mi día en la calle» */
+/* Los momentos del día (primera taza, racha) y «Mi día en la calle» */
 .mapp-party-flame { position: absolute; right: calc(50% - 130px); top: 40px; z-index: 2; font-size: 2.6rem; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .3)); }
-.mapp-party.is-calle, .mapp-party.is-puesto { background: #16181F; }
 .mapp-routebox { margin: 12px 0 0; background: #fff; border-radius: 16px; overflow: hidden; position: relative; z-index: 1; }
 .mapp-routebox svg { display: block; width: 100%; height: auto; }
 .mapp-routebox-grid line { stroke: rgba(31, 36, 82, .08); stroke-width: 1.5; }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { storyVariant, storyFigure, routeLine, dayTripOf, streakBadgeToday, firstSaleMoment, backHomeMoment, goalTimeLabel } from './daycard.js';
+import { storyVariant, storyFigure, routeLine, dayTripOf, streakBadgeToday, firstSaleMoment, goalTimeLabel } from './daycard.js';
 
 test('la tarjeta y el dibujo siguen cómo sale', () => {
   assert.equal(storyVariant('caminando'), 'calle');
@@ -54,16 +54,6 @@ test('primera taza: racha que sigue, o el hito del día', () => {
   const c = firstSaleMoment({ streak: 7, goal: 15 });
   assert.equal(c.id, 'racha-7');
   assert.match(c.sub, /Una semana entera/);
-});
-
-test('«Ya volví»: caminando cuenta km y paradas; en el puesto, horas y meta', () => {
-  const w = backHomeMoment({ cups: 17, goal: 15, streak: 5, mode: 'caminando', distance: 4230, stops: 5, name: 'Jairo' });
-  assert.equal(w.big, '17 tazas');
-  assert.deepEqual(w.stats, [['4,2 km', 'caminados'], ['5', 'paradas'], ['5', 'días seguidos']]);
-  assert.equal(w.script, '¡Buen día, Jairo!');
-  const f = backHomeMoment({ cups: 9, goal: 15, streak: 1, mode: 'fijo', minutes: 135 });
-  assert.deepEqual(f.stats, [['2 h 15', 'en la calle'], ['9/15', 'meta'], ['1', 'día seguido']]);
-  assert.equal(backHomeMoment({ cups: 1, goal: 1, minutes: 40 }).stats[0][0], '40 min');
 });
 
 test('la hora de la meta, en Bogotá', () => {

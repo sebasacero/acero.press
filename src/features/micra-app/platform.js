@@ -79,10 +79,10 @@ const web = {
     available: () => hasWebBluetooth(),
     print: (canvas, { dots, onStatus }) => printCanvas(canvas, webBluetoothTransport(), { dots, onStatus }),
   },
-  /** El color de la barra de arriba del sistema, de día o de noche. */
-  setNight: (night) => {
+  /** El color de la barra de arriba del sistema: de día, de noche o el rojo de la salida. */
+  setNight: (night, red = false) => {
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = night ? '#0E0F12' : '#FFFFFF';
+    if (meta) meta.content = red ? '#DE1B1B' : night ? '#0E0F12' : '#FFFFFF';
   },
 };
 

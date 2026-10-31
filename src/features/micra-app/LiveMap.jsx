@@ -7,7 +7,7 @@ import * as api from './api.js';
 // activo, el barista ve a los otros baristas en la calle, dónde quieren café
 // (zonas de 2 señales o más, nunca personas) y dónde suelen estar los puestos
 // del estudio. Se refresca cada 30 s con la pantalla a la vista y se detiene
-// al ocultarla o con «Ya volví». Sin salir: una vista previa con el estudio y
+// al ocultarla o al volver con la flecha. Sin salir: una vista previa con el estudio y
 // la invitación a salir. El equipo lo ve igual, siempre en vivo.
 
 const MicraMap = lazy(() => import('./MicraMap.jsx'));

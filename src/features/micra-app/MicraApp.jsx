@@ -1,12 +1,13 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { isNight, landingAfterLogin, parseRoute, initials } from './micraApp.js';
+import { isNight, landingAfterLogin, parseRoute, initials, redTop } from './micraApp.js';
 import * as api from './api.js';
 import platform, { takeLogin } from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
+import Termo from './Termo.jsx';
 import { IconNear, IconCup, IconOut, IconToday, IconClipboard, IconCamera, IconUser } from './icons.jsx';
 import './micra-app.css';
 import { Cargando } from './Animado.jsx';
@@ -130,12 +131,15 @@ export default function MicraApp() {
   const [who, reloadWho] = useWho();
   // El equipo puede actuar como cualquier barista (para probar o ayudar en la calle)
   const [actAs, setActAs] = useState(null);
+  // Si el barista está en la calle (lo avisa BaristaHome): la barra va en rojo en Vender y su círculo lleva el punto verde
+  const [live, setLive] = useState(false);
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
   // /micra/video: la cámara con filtros para un barista de la app (o el equipo); vive en el modo barista
   const videoView = route.view === 'video';
   const viewMode = teamView ? 'owner' : route.view === 'barista' || videoView ? 'barista' : 'client';
+  const red = redTop(route, live);
 
   // Al entrar a /micra, el barista y el equipo caen en su modo de siempre
   useEffect(() => {
@@ -163,8 +167,8 @@ export default function MicraApp() {
   };
 
   useEffect(() => {
-    platform.setNight(night);
-  }, [night]);
+    platform.setNight(night, red);
+  }, [night, red]);
 
   let body;
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
@@ -173,8 +177,8 @@ export default function MicraApp() {
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
     // «Cambiar de barista» vuelve a Equipo, donde está «Actuar como»
-    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} />;
-    else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} />;
+    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} onLive={setLive} />;
+    else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} onLive={setLive} />;
     // El equipo sin ficha propia ve la entrada de los baristas (sin mandar SMS)
     else if (who.admin) body = <BaristaJoin session={who.session} preview night={night} go={go} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
@@ -200,10 +204,12 @@ export default function MicraApp() {
   const meInitials = viewMode === 'barista' && who.barista && !acting ? initials(who.barista.name) : null;
 
   return (
-    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}`}>
-      <header className="mapp-top">
+    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
+      <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
+        {/* El termo del icono en su baldosa crema (se ve igual sobre blanco, noche o rojo) y la palabra */}
         <button type="button" className="mapp-brand" onClick={() => go(viewMode === 'client' ? '/micra' : viewMode === 'owner' ? '/micra/equipo' : '/micra/barista')} aria-label="Micra, inicio">
-          micra<i>.</i>
+          <span className="mapp-brand-mark"><Termo /></span>
+          <span className="mapp-brand-word">micra<i>.</i></span>
         </button>
         <ModeSwitch modes={modes} mode={viewMode} onChange={switchMode} />
         {modes.length < 2 && viewMode === 'client' && (
@@ -215,6 +221,7 @@ export default function MicraApp() {
         {meTo && (
           <button type="button" className={`mapp-mebtn ${meOn ? 'on' : ''}`} onClick={() => go(meTo)} aria-label="Mi perfil" aria-current={meOn ? 'page' : undefined} data-testid="me-button">
             {meInitials ? <span>{meInitials}</span> : <IconUser />}
+            {live && viewMode === 'barista' && <i className="mapp-mebtn-live" aria-hidden="true" />}
           </button>
         )}
       </header>

@@ -64,8 +64,8 @@ export function Party({ cups, goal, streak, total, fig, onShare, onClose }) {
 
 /**
  * Los otros momentos del día, con la misma escena de la meta: la primera taza
- * (la racha sigue o llega a un hito) y el «Ya volví» (el resumen). El texto
- * sale de daycard.js; aquí solo se pinta.
+ * (la racha sigue o llega a un hito). El texto sale de daycard.js; aquí solo
+ * se pinta.
  */
 export function Moment({ moment, fig, onPrimary, onClose, closeLabel = 'Seguir' }) {
   const first = useDialog(onClose);

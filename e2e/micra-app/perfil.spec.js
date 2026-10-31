@@ -73,10 +73,10 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   await expect(page.getByTestId('profile-prices')).toContainText('$1.800');
   expect(api.find('/rpc/micra_barista_prices').data.p_tinto).toBe(1800);
 
-  // Cerrar sesión: está en la calle, así que primero «Ya volví»
+  // Cerrar sesión: está en la calle, así que primero sale del mapa
   await page.getByTestId('signout').click();
   await expect(page.getByTestId('signout-live')).toBeVisible();
-  await page.getByRole('button', { name: 'Ya volví y cerrar sesión' }).click();
+  await page.getByRole('button', { name: 'Salir del mapa y cerrar sesión' }).click();
   await expect(page).toHaveURL(/\/micra\/barista$/);
   await expect(page.getByRole('heading', { name: /Vende más/ })).toBeVisible();
   expect(api.all('/rpc/micra_barista_out').at(-1).data.p_minutes).toBe(0);
