@@ -963,3 +963,55 @@
 .mapp-confirm { margin-top: 18px; border: 1.5px solid var(--m-cta); }
 .mapp-confirm p { margin: 6px 0; line-height: 1.4; }
 .mapp-confirm .mapp-row-btns { margin-top: 10px; }
+
+/* Cómo sale: puesto fijo, sombrilla o caminando (iconos del logo, ronda 3) */
+.mapp-outmodes { margin: 14px 0 4px; }
+.mapp-outmodes > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.mapp-outmodes button {
+  appearance: none; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 132px; padding: 10px 6px 12px;
+  border: 2px solid transparent; border-radius: 20px; background: var(--m-glass); box-shadow: var(--m-shadow); color: var(--m-fg);
+  font: inherit; text-align: center; cursor: pointer; touch-action: manipulation;
+}
+.mapp-outmodes button img { width: 64px; height: 64px; border-radius: 16px; background: #F5EFE4; }
+.mapp-outmodes button b { font-size: .95rem; margin-top: 4px; }
+.mapp-outmodes button small { color: var(--m-soft); font-size: .72rem; line-height: 1.25; }
+.mapp-outmodes button.on { border-color: var(--m-cta); box-shadow: 0 10px 22px -12px rgba(222, 27, 27, .7); }
+.mapp-outmodes button.on b { color: var(--m-cta); }
+.mapp.is-night .mapp-outmodes button.on b { color: var(--m-fg); }
+
+/* El «+» para agregar productos propios, igual a las tarjetas de tinto, perico y aromática */
+.mapp-addtile { appearance: none; display: flex; align-items: center; gap: 12px; min-height: 120px; border: 2px dashed var(--m-line); background: transparent; box-shadow: none; color: var(--m-fg); font: inherit; text-align: left; cursor: pointer; }
+.mapp-addtile span:last-child { display: flex; flex-direction: column; }
+.mapp-addtile small { color: var(--m-soft); font-size: .8rem; }
+.mapp-addtile-plus { flex: 0 0 auto; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--m-cta); color: var(--m-cta-fg, #fff); font: 800 2rem/1 'JetBrains Mono', monospace; }
+.mapp-addtile.is-compact { min-height: 76px; padding: 10px; }
+.mapp-addtile.is-compact .mapp-addtile-plus { width: 44px; height: 44px; font-size: 1.6rem; }
+.mapp-addprod { display: grid; gap: 10px; grid-column: 1 / -1; }
+.mapp-pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 8px 0; }
+.mapp-tile.is-mini { display: flex; flex-direction: column; gap: 2px; min-height: 76px; padding: 12px; }
+.mapp-tile.is-mini b { font-size: 1rem; }
+.mapp-tile.is-mini span { font: 500 .9rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-tile.is-mini .mapp-link { align-self: flex-start; padding-left: 0; }
+
+/* Cómo te pagan: solo el medio */
+.mapp-paymethods { display: grid; gap: 10px; }
+.mapp-chips.is-wrap { flex-wrap: wrap; overflow: visible; }
+
+/* Logros del muro, como las llamas de Duolingo */
+.mapp-achieve { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: start; }
+.mapp-achieve-ico { position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: color-mix(in srgb, var(--m-cta) 12%, transparent); font-size: 2rem; }
+.mapp-achieve-ico b { position: absolute; right: -4px; bottom: -4px; min-width: 28px; height: 28px; padding: 0 6px; display: grid; place-items: center; border-radius: 14px; background: var(--m-cta); color: #fff; font: 800 .85rem 'JetBrains Mono', monospace; }
+.mapp-achieve.is-racha { background: var(--m-cta); color: #fff; }
+.mapp-achieve.is-racha .mapp-achieve-ico { background: rgba(255, 255, 255, .18); }
+.mapp-achieve.is-racha .mapp-achieve-ico b { background: #fff; color: var(--m-cta); }
+.mapp-achieve.is-racha .mapp-post-text, .mapp-achieve.is-racha .mapp-link { color: #fff; }
+.mapp-achieve.is-racha .mapp-tag { background: rgba(255, 255, 255, .2); color: #fff; }
+.mapp-achieve-bar { display: block; height: 8px; margin: 8px 0 2px; border-radius: 4px; background: var(--m-line); overflow: hidden; }
+.mapp-achieve-bar i { display: block; height: 100%; background: var(--m-cta); border-radius: 4px; }
+.mapp-post-av.is-idea { background: color-mix(in srgb, var(--m-cta) 12%, transparent); font-size: 1.3rem; }
+.mapp-idea { border: 2px dashed var(--m-line); }
+.mapp-post-img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 14px; margin: 8px 0; }
+.mapp-achieve footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.mapp-sheet .mapp-check { margin: 10px 0; }
+/* Lo que se enfoca o se lleva a la vista no queda bajo la barra de arriba ni bajo las pestañas */
+.mapp-barista.has-tabs button, .mapp-barista.has-tabs a, .mapp-barista.has-tabs input { scroll-margin: 96px 0 120px; }

@@ -39,6 +39,8 @@ trap 'rm -rf "$TMP"; "${ADMIN[@]}" -c "drop database if exists $DB" >/dev/null 2
 "${T[@]}" -f "$HERE/test_phone.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261030180000_micra_live_map.sql"
 "${T[@]}" -f "$HERE/test_live_map.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261031130000_micra_barista_flow.sql"
+"${T[@]}" -f "$HERE/test_flow.sql"
 "${T[@]}" -f "$HERE/seed.sql"
 "${T[@]}" -f "$HERE/test.sql"
 

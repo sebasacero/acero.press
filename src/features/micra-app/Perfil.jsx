@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { initials, menuOf, money, windowLabel, baristaPath, cupsLabel } from './micraApp.js';
+import { initials, menuOf, windowLabel, baristaPath, cupsLabel } from './micraApp.js';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
@@ -7,7 +7,9 @@ import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToC
 import { seekOff, setSeekOff } from './seek.js';
 import * as api from './api.js';
 import platform from './platform.js';
-import { StampsCard, PaySettings } from './Loyalty.jsx';
+import { StampsCard } from './Loyalty.jsx';
+import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
+import { methodsLabel } from './flow.js';
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
 // cuenta: lo que guarda el celular) y el equipo. Llega aparte (la app está al
@@ -17,7 +19,6 @@ import { StampsCard, PaySettings } from './Loyalty.jsx';
 
 const store = () => { try { return window.localStorage; } catch { return null; } };
 const fecha = (iso) => new Date(iso).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'long', year: 'numeric' });
-const pretty = (n) => (n ? `${n.slice(0, 3)} ${n.slice(3, 6)} ${n.slice(6)}` : '');
 
 function useUser() {
   const [user, setUser] = useState(undefined); // undefined: cargando · null: sin sesión
@@ -72,7 +73,7 @@ function Confirm({ title, children, confirmLabel, onConfirm, onCancel, busy, blo
  * «perfil») porque cerrar sesión necesita lo de ahí: «Ya volví», el recorrido y
  * la cola de ventas sin subir.
  */
-export function BaristaProfile({ day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board }) {
+export function BaristaProfile({ day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
   const own = !asId;
   const user = useUser();
   const [profile, setProfile] = useState(null);
@@ -101,10 +102,12 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
   const hours = p.hora_inicio != null ? windowLabel(p.hora_inicio, p.hora_fin) : publicCard ? windowLabel(publicCard.hora_inicio, publicCard.hora_fin) : null;
   const phone = maskPhone(p.phone) || (own ? maskPhone(user?.phone) : '');
   const method = own ? signInMethod(user) : null;
-  const menu = menuOf(day);
+  const menu = fullMenu ?? menuOf(day);
+  const [pubBusy, setPubBusy] = useState(false);
+  const [pubOverride, setPubOverride] = useState(null);
   const lessons = lessonsFor('es');
   const path = lessonPath(lessons, readSeen());
-  const isPublic = p.public ?? day.public;
+  const isPublic = pubOverride ?? extras?.public ?? p.public ?? day.public;
   const consentAt = own ? trip.consentAt : p.consent_at ?? null;
   const url = platform.siteUrl(baristaPath(day.id));
   const first = day.name.split(' ')[0];
@@ -147,6 +150,13 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
     } catch (e) { setError(e.message); }
     setWithdrawing(false);
   };
+  // Salir en el mapa: el barista lo prende o lo apaga desde aquí, cuando quiera
+  const togglePublic = async () => {
+    setPubBusy(true);
+    setError(null);
+    try { const r = await api.setPublic(!isPublic); setPubOverride(!!r?.public); onExtras?.(); } catch (e) { setError(e.missing ? 'Esto abre muy pronto: por ahora escríbele al equipo.' : e.message); }
+    setPubBusy(false);
+  };
   const share = () => platform.share({ title: `${first} en Micra`, text: 'Apártame tus tintos en Micra y te los tengo listos cuando pase:', url });
 
   return (
@@ -171,28 +181,22 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
       </section>
 
       <section className="mapp-glass" aria-label="Tus precios" data-testid="profile-prices">
-        <p className="mapp-cota">Tus precios</p>
-        {menu.length ? (
-          <ul className="mapp-menu">
-            {menu.map((m) => <li key={m.id}><span>{m.label}</span><b>{money(m.price)}</b></li>)}
-          </ul>
-        ) : <p className="mapp-muted">Todavía no tienes precios.</p>}
+        <p className="mapp-cota">Lo que vendes</p>
+        {menu.length === 0 && <p className="mapp-muted">Todavía no tienes precios.</p>}
+        <ProductGrid menu={menu} asId={asId} extrasCount={menu.filter((m) => m.custom).length} onChanged={onExtras} />
         {edit === 'prices'
           ? renderPrices({ onSaved: () => { setEdit(null); onReload(); } })
-          : <button type="button" className="mapp-link" onClick={() => setEdit('prices')}>Cambiar mis precios</button>}
+          : <button type="button" className="mapp-link" onClick={() => setEdit('prices')}>Cambiar precios de tinto, perico y aromática</button>}
       </section>
 
       <section className="mapp-glass" aria-label="Cómo te pagan">
         <p className="mapp-cota">Cómo te pagan</p>
-        {p.pay_nequi || p.pay_daviplata ? (
-          <dl className="mapp-plist">
-            {p.pay_nequi && <Row label="Nequi">{pretty(p.pay_nequi)}</Row>}
-            {p.pay_daviplata && <Row label="Daviplata">{pretty(p.pay_daviplata)}</Row>}
-          </dl>
-        ) : <p className="mapp-muted">Sin Nequi ni Daviplata: tus clientes te pagan en efectivo.</p>}
         {edit === 'pay'
-          ? <PaySettings day={{ ...day, pay_nequi: p.pay_nequi, pay_daviplata: p.pay_daviplata }} asId={asId} onSaved={() => { setEdit(null); api.baristaProfile(asId).then(setProfile).catch(() => {}); }} />
-          : <button type="button" className="mapp-link" onClick={() => setEdit('pay')}>Cambiar cómo me pagan</button>}
+          ? <PayMethods methods={extras?.payments} asId={asId} onCancel={() => setEdit(null)} onSaved={() => { setEdit(null); onExtras?.(); }} />
+          : <>
+            <p className="mapp-muted" data-testid="profile-pay">{extras?.payments?.length ? methodsLabel(extras.payments) : 'Efectivo'}</p>
+            <button type="button" className="mapp-link" onClick={() => setEdit('pay')}>Cambiar cómo me pagan</button>
+          </>}
       </section>
 
       <section className="mapp-glass" aria-label="Tu meta y tu racha">
@@ -215,9 +219,14 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
           <Row label="Tu ubicación al salir a vender" testid="profile-location">{consentAt ? `Permitida desde el ${fecha(consentAt)}` : 'No la compartes'}</Row>
         </dl>
         <p className="mapp-fine">
-          {isPublic ? 'Los clientes ven tu nombre de pila, tu punto y tus precios. Para dejar de salir, escríbele al equipo.' : 'Los clientes no te ven todavía: el equipo te activa cuando aceptes salir en Micra.'}
+          {isPublic ? 'Los clientes ven tu nombre de pila, tu punto y tus precios.' : 'Los clientes no te ven todavía. Actívalo aquí o al tocar «Salí a vender».'}
           {' '}Tu ubicación solo se usa mientras tienes activo «Salí a vender».
         </p>
+        {own && (
+          <button type="button" className={`mapp-btn is-small ${isPublic ? 'is-ghost' : 'is-cta'}`} onClick={togglePublic} disabled={pubBusy} data-testid="profile-public-toggle">
+            {pubBusy ? 'Un momento…' : isPublic ? 'Dejar de salir en el mapa' : 'Salir en el mapa de Micra'}
+          </button>
+        )}
         {own && consentAt && (
           <button type="button" className="mapp-btn is-small is-stop" onClick={withdraw} disabled={withdrawing} data-testid="consent-withdraw">{withdrawing ? 'Retirando…' : 'Retirar permiso de ubicación'}</button>
         )}

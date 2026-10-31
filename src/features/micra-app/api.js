@@ -61,6 +61,14 @@ export const holdRewards = (asId) => call('micra_hold_rewards', as(asId));
 export const redeemReward = (holdId, asId) => call('micra_reward_redeem', { p_hold_id: holdId, ...as(asId) });
 export const baristaPay = (id) => call('micra_barista_pay', { p_tintero_id: id });
 export const setPay = (p, asId) => call('micra_barista_pay_set', { p_nequi: p.nequi || null, p_daviplata: p.daviplata || null, ...as(asId) });
+// Flujo del barista (20261031130000_micra_barista_flow.sql): productos propios,
+// medios de pago sin número, cómo sale y aceptar el mapa público desde su cuenta
+export const baristaExtras = (asId) => call('micra_barista_extras', as(asId));
+export const addProduct = (label, price, asId) => call('micra_barista_product_add', { p_label: label, p_price: price, ...as(asId) });
+export const removeProduct = (key, asId) => call('micra_barista_product_remove', { p_key: key, ...as(asId) });
+export const setPublic = (on) => call('micra_barista_public', { p_on: on });
+export const setPayMethods = (methods, asId) => call('micra_barista_payments_set', { p_methods: methods, ...as(asId) });
+export const setOutMode = (mode, asId) => call('micra_barista_mode', { p_mode: mode, ...as(asId) });
 export const fiadoPaid = (name, asId) => call('micra_fiado_paid', { p_name: name, ...as(asId) });
 export const claim = (code) => call('tintero_claim', { p_code: code });
 // Con la sesión del SMS: la base busca la ficha con ese número (20261030120000_micra_phone_login.sql)

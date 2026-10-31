@@ -58,14 +58,16 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   await expect(page.getByTestId('profile-method')).toHaveText('Con tu celular (SMS)');
   await expect(page.getByTestId('profile-prices')).toContainText('$1.500');
   await expect(page.getByTestId('profile-prices')).toContainText('$2.000');
-  await expect(prof).toContainText('310 987 6543');
+  // Cómo le pagan: solo los medios, nunca un número
+  await expect(page.getByTestId('profile-pay')).toHaveText('Efectivo, Nequi');
+  await expect(prof).not.toContainText('310 987 6543');
   await expect(page.getByTestId('profile-public')).toContainText('Sí');
   await expect(page.getByTestId('profile-location')).toContainText('Permitida desde');
   await expect(page.getByTestId('profile-link')).toContainText(`/micra/b/${MARLENE}`);
   await expect(page.getByTestId('privacy-link')).toHaveAttribute('href', /\/privacidad$/);
 
   // Cambiar precios con el formulario de siempre
-  await prof.getByRole('button', { name: 'Cambiar mis precios' }).click();
+  await prof.getByRole('button', { name: 'Cambiar precios de tinto, perico y aromática' }).click();
   await page.getByLabel('Precio del tinto').fill('1800');
   await page.getByRole('button', { name: 'Guardar precios' }).click();
   await expect(page.getByTestId('profile-prices')).toContainText('$1.800');
