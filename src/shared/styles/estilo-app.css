@@ -45,6 +45,8 @@ body { background: var(--app-cream); }
   padding: 8px 10px 8px 16px; color: var(--app-fg);
 }
 .navbar--sheet.navbar--photo { color: var(--app-fg); }
+/* El menú es de vidrio claro en los dos banners: el idioma no puede ir en blanco */
+.navbar--sheet .lang-switcher--light .lang-btn, .navbar--sheet .lang-switcher--light .lang-btn.is-active { color: var(--app-fg); }
 .nav-links .nav-app-link { background: var(--red); color: #fff !important; border: 0; border-radius: 14px; padding: 8px 14px; }
 
 /* Banner: el texto a la izquierda y la app viva a la derecha */
@@ -91,7 +93,8 @@ body { background: var(--app-cream); }
   .essp-in { padding: 96px 16px 40px; }
   .essp-ctas { flex-direction: column; align-items: stretch; }
   .essp-ctas .essp-btn.is-link { align-self: center; }
-  .essp-live { min-height: 0; padding: 16px 16px 58px; }
+  /* Alto para la persona entera (240 px sobre el andén): sin él se cortaba la cabeza */
+  .essp-live { min-height: 310px; padding: 16px 16px 58px; }
   .essp-live-persona { height: 240px; right: 6px; }
   .essp-live-who { width: 62%; margin-top: 30px; }
   .essp-live-how { display: none; }
