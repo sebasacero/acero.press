@@ -32,6 +32,16 @@ test('el barista no se ve a sí mismo como puesto; sus logros e ideas salen solo
   assert.ok(f.every((i) => !/tazas|\$/.test(`${i.title ?? ''} ${i.kind === 'logros' ? i.text : ''}`)));
 });
 
+test('el cliente (sin día propio) ve el café: precio, puestos, café de Colombia, recetas, videos y noticias', () => {
+  const f = buildFeed({ baristas: B, dayKey: '2026-10-31' });
+  const kinds = new Set(f.map((i) => i.kind));
+  for (const k of ['precios', 'puestos', 'cafe', 'recetas', 'videos', 'noticias']) assert.ok(kinds.has(k), k);
+  assert.ok(!kinds.has('logros') && !kinds.has('publicar'));
+  const counts = chipCounts(f);
+  assert.equal(counts.logros, 0);
+  assert.equal(counts.publicar, 0);
+});
+
 test('la racha: invita a salir si hoy no vendió, a compartir si ya sumó', () => {
   const [r0] = achievements({ name: 'M', streak: { count: 0 } });
   assert.equal(r0.title, 'Empieza tu racha hoy');

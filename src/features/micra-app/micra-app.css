@@ -1196,3 +1196,76 @@
   width: 100%; min-height: 48px; margin: 8px 0 6px; border-radius: 12px; border: 1px solid var(--m-line);
   background: var(--m-bg); color: var(--m-fg); padding: 0 12px; font: 500 1rem 'Archivo', sans-serif;
 }
+
+/* ── Mi perfil, como en las apps de domicilios (31 oct) ──────────────── */
+/* El saludo sobre un degradé tibio, la tarjeta destacada y las secciones con accesos de a tres */
+.mapp-hello2 { display: flex; align-items: center; gap: 14px; margin: -18px -16px 16px; padding: 22px 20px 26px; background: radial-gradient(130% 150% at 0% 0%, color-mix(in srgb, var(--m-cta) 16%, transparent), transparent 62%), radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, #F5B66B 18%, transparent), transparent 60%); }
+.mapp-hello2-av { flex: none; width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: var(--m-glass); color: var(--m-cta); font: 800 1.45rem 'Archivo', sans-serif; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--m-cta) 35%, transparent), 0 8px 20px -12px rgba(31, 36, 82, .5); }
+.mapp-hello2-name { margin: 0; font: 800 1.75rem/1.05 'Archivo', sans-serif; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.mapp-hello2-sub { margin: 5px 0 0; color: var(--m-soft); font-weight: 600; font-size: .98rem; }
+
+.mapp-pclub { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 12px; margin: 0 0 14px; padding: 18px; border-radius: 24px; background: var(--m-glass); box-shadow: var(--m-shadow); }
+.mapp-pclub::after { content: ''; position: absolute; right: -40px; top: -50px; width: 170px; height: 170px; border-radius: 50%; background: color-mix(in srgb, var(--m-cta) 7%, transparent); pointer-events: none; }
+.mapp-pclub h2 { display: flex; align-items: center; gap: 10px; margin: 0; font: 800 1.2rem/1.15 'Archivo', sans-serif; }
+.mapp-pclub-mark { flex: none; display: grid; place-items: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 9px; background: var(--m-cta); color: #fff; font: 800 .8rem 'JetBrains Mono', monospace; transform: rotate(-4deg); }
+.mapp-pclub p { grid-column: 1; margin: 0; color: var(--m-soft); }
+.mapp-pclub .mapp-btn { position: relative; z-index: 1; grid-column: 2; grid-row: 1 / span 2; margin: 0; }
+.mapp-profile .mapp-stamps { margin-bottom: 14px; }
+
+.mapp-pgroup { margin: 0 0 14px; padding: 18px 12px 12px; border-radius: 24px; background: var(--m-glass); box-shadow: var(--m-shadow); }
+.mapp-pgroup h2 { margin: 0 8px 14px; font: 800 1.2rem 'Archivo', sans-serif; letter-spacing: -.01em; }
+.mapp-pgrid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 4px; }
+.mapp-ptile { position: relative; appearance: none; border: 0; background: none; color: var(--m-fg); display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 78px; padding: 8px 2px; border-radius: 16px; font: 700 .86rem/1.15 'Archivo', sans-serif; text-align: center; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mapp-ptile svg { width: 30px; height: 30px; stroke-width: 2.1; }
+.mapp-ptile span { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+.mapp-ptile b { color: var(--m-cta); }
+.mapp-ptile:active, .mapp-ptile:focus-visible { background: color-mix(in srgb, var(--m-fg) 6%, transparent); }
+.mapp-ptile-dot { position: absolute; top: 6px; left: calc(50% + 10px); width: 10px; height: 10px; border-radius: 50%; background: var(--m-cta); box-shadow: 0 0 0 2px var(--m-glass); }
+
+.mapp-sheet.is-scroll { max-height: 88vh; overflow-y: auto; overscroll-behavior: contain; }
+.mapp-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; }
+.mapp-sheet-head .mapp-title { margin: 0; }
+.mapp-sheet .mapp-plist { margin-bottom: 8px; }
+.mapp-sheet .mapp-btn.is-stop, .mapp-sheet .mapp-btn.is-ghost { margin-top: 10px; }
+
+.mapp-pfoot { margin: 22px 0 8px; text-align: center; color: var(--m-soft); font-size: .84rem; }
+.mapp-pfoot p { margin: 6px auto 0; max-width: 34ch; }
+.mapp-pfoot-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--m-fg); font: 800 1.2rem 'Archivo', sans-serif; letter-spacing: -.03em; }
+.mapp-pfoot-brand i { color: var(--m-cta); font-style: normal; }
+.mapp-pfoot .mapp-brand-mark { width: 30px; height: 30px; border-radius: 9px; }
+.mapp-pfoot .mapp-brand-mark .mapp-termo { height: 22px; }
+.mapp-profile > .mapp-signout { display: block; width: 100%; }
+
+/* ── El banner de la lata de cold brew ───────────────────────────────── */
+/* La hoja de plano crema del sitio con la lata original y el título a mano en
+   rojo; la persona de la calle como sombra detrás; abajo la franja roja */
+.mapp-promo { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); animation: mapp-in .25s both; }
+.mapp-promo-scrim { position: absolute; inset: 0; border: 0; background: rgba(20, 22, 27, .62); cursor: pointer; }
+.mapp-promo-card { position: relative; overflow: hidden; width: min(100%, 340px); height: min(calc(100vh - 150px), 470px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; border-radius: 26px; color: #1F2452; background:
+  linear-gradient(rgba(31, 36, 82, .07) 1px, transparent 1px) 0 0 / 22px 22px,
+  linear-gradient(90deg, rgba(31, 36, 82, .07) 1px, transparent 1px) 0 0 / 22px 22px,
+  #F5EFE4;
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, .6); animation: mapp-promo-in .45s cubic-bezier(.2, .9, .25, 1.15) both; }
+@keyframes mapp-promo-in { from { transform: translateY(24px) scale(.94); opacity: 0; } }
+.mapp-promo-ghost { position: absolute; right: -24%; top: -2%; height: 92%; width: auto; opacity: .09; filter: brightness(0); pointer-events: none; }
+.mapp-promo-h { position: relative; z-index: 1; margin: 0; padding: 22px 20px 0; display: grid; justify-items: start; font: 400 2.35rem/.92 'Permanent Marker', cursive; color: #DE1B1B; transform: rotate(-5deg); transform-origin: left top; }
+.mapp-promo-h span:last-child { margin-left: 18px; }
+.mapp-promo-can { position: relative; z-index: 1; justify-self: center; align-self: end; width: auto; height: 100%; max-height: 250px; min-height: 0; margin: -18px 0 -14px 70px; object-fit: contain; filter: drop-shadow(0 16px 14px rgba(31, 36, 82, .28)); animation: mapp-promo-can 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes mapp-promo-can { 50% { transform: translateY(-6px) rotate(2deg); } }
+.mapp-promo-band { position: relative; z-index: 2; padding: 16px 18px 16px; background: #DE1B1B; color: #F5EFE4; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 20px -14px rgba(120, 8, 8, .6); }
+.mapp-promo-foot { display: flex; align-items: center; gap: 14px; }
+.mapp-promo-logo { flex: none; width: 70px; height: 62px; border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 0; background: #F5EFE4; box-shadow: 0 8px 16px -10px rgba(0, 0, 0, .5); }
+.mapp-promo-logo b { font: 800 .95rem/1 'Archivo', sans-serif; letter-spacing: .04em; color: #1F2452; }
+.mapp-promo-logo i { font: 400 1.05rem/1 'Permanent Marker', cursive; font-style: normal; color: #DE1B1B; transform: rotate(-6deg); }
+.mapp-promo-copy { min-width: 0; padding-left: 14px; border-left: 2px solid rgba(245, 239, 228, .45); }
+.mapp-promo-name { margin: 0; font: 800 1.1rem/1.1 'Archivo', sans-serif; }
+.mapp-promo-sub { margin: 2px 0 0; font: 500 .92rem 'Archivo', sans-serif; opacity: .92; }
+.mapp-promo-big { margin: 4px 0 0; font: 800 2.1rem/1 'Archivo', sans-serif; letter-spacing: -.03em; }
+.mapp-promo-bottom { display: flex; align-items: flex-end; gap: 12px; margin-top: 12px; }
+.mapp-promo-fine { flex: 1; margin: 0; font: 500 .58rem/1.35 'JetBrains Mono', monospace; opacity: .88; }
+.mapp-promo-cta { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #fff; color: #DE1B1B; font: 800 1.05rem 'Archivo', sans-serif; text-decoration: none; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .55); }
+.mapp-promo-cta:focus { outline: none; }
+.mapp-promo-cta:focus-visible { outline: 3px solid rgba(255, 255, 255, .75); outline-offset: 3px; }
+.mapp-promo-x { position: relative; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .9); background: rgba(0, 0, 0, .25); color: #fff; display: grid; place-items: center; cursor: pointer; }
+@media (max-height: 640px) { .mapp-promo-h { font-size: 1.9rem; } .mapp-promo-big { font-size: 1.7rem; } }
+@media (prefers-reduced-motion: reduce) { .mapp-promo-card, .mapp-promo-can { animation: none; } }

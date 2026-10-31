@@ -15,6 +15,9 @@ import { km } from '../ruta/track.js';
 // (FNC, marcas y fincas, curado por el equipo), recetas y videos. «Publicar» lleva a lo
 // que ya existe (video con filtro, compartir mi día, mandar una receta al
 // equipo); el muro todavía no guarda publicaciones de los baristas.
+// El cliente ve el mismo muro en /micra/hoy (audience="client"): precios,
+// puestos, café de Colombia, recetas y videos, sin logros ni ideas de foto; su
+// «Publicar» le manda al equipo una receta, un café o un barista por WhatsApp.
 
 const PRICE_KEYS = ['micra_precio_carga', 'micra_precio_ny', 'micra_precio_fecha', 'micra_muro'];
 const dayLabel = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -112,7 +115,7 @@ function Tile({ tone, tag, children }) {
   );
 }
 
-function Post({ item, go, onShareDay, canShareDay, me, selfId }) {
+function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false }) {
   const shareLink = (title, url) => () => platform.share({ title, text: title, url });
   const meAv = <Figure name={figureFor(selfId)} className="is-avatar" />;
   if (item.kind === 'logros') {
@@ -198,7 +201,11 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId }) {
         <span className="mapp-ig-tag">Video</span>
       </div>
     );
-    return <Shell item={item} av={<span className="mapp-post-av is-house">AP</span>} who={item.by} where={`Video · ${ago(item.date)}`} media={media} title={item.title} text={item.text} cta={<button type="button" className="mapp-link" onClick={() => go('/micra/barista/aprende')}>Aprender esto ›</button>} />;
+    // Aprende es del barista; el cliente aprende en la Escuela del sitio
+    const cta = client
+      ? <a className="mapp-link" href={platform.siteUrl('/escuela')}>Aprender en la Escuela ›</a>
+      : <button type="button" className="mapp-link" onClick={() => go('/micra/barista/aprende')}>Aprender esto ›</button>;
+    return <Shell item={item} av={<span className="mapp-post-av is-house">AP</span>} who={item.by} where={`Video · ${ago(item.date)}`} media={media} title={item.title} text={item.text} cta={cta} />;
   }
   if (item.kind === 'recetas') {
     const media = (
@@ -218,10 +225,36 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId }) {
   );
 }
 
-function PublishSheet({ go, canShareDay, onShareDay, onClose }) {
+// Lo que el cliente le manda al equipo para el muro (sale cuando lo revisamos)
+const CLIENT_POSTS = [
+  ['☕', 'Tu receta', 'Hola, equipo de Micra. Les mando mi receta para el muro: café ___ g, agua ___ ml a ___ °C, tiempo ___.'],
+  ['🌱', 'Un café que te gustó', 'Hola, equipo de Micra. Les recomiendo este café para el muro: ___ (marca o finca), de ___. Lo probé en ___.'],
+  ['📍', 'Un barista de tu cuadra', 'Hola, equipo de Micra. Cerca de mí vende café un barista de la calle: en ___, de ___ a ___.'],
+];
+
+function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false }) {
   const [number, setNumber] = useState(null);
   useEffect(() => { api.teamWhatsApp().then(setNumber).catch(() => setNumber('573152125327')); }, []);
+  const wa = (text) => (number ? `https://wa.me/${number}?text=${encodeURIComponent(text)}` : undefined);
   const recipe = 'Hola, equipo de Micra. Les mando mi receta para el muro: café ___ g, agua ___ ml a ___ °C, tiempo ___.';
+  if (client) {
+    return (
+      <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Publicar" data-testid="publish">
+        <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" onClick={onClose} />
+        <section className="mapp-sheet">
+          <i className="mapp-sheet-handle" aria-hidden="true" />
+          <p className="mapp-cota">Publicar</p>
+          <h2 className="mapp-title is-small">¿Qué le cuentas al muro?</h2>
+          <div className="mapp-publish">
+            {CLIENT_POSTS.map(([icon, label, text]) => (
+              <a key={label} href={wa(text)} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">{icon}</span>{label}</a>
+            ))}
+          </div>
+          <p className="mapp-fine">Le llega al equipo por WhatsApp y sale aquí cuando lo revisamos, sin tu número ni tu nombre.</p>
+        </section>
+      </div>
+    );
+  }
   return (
     <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Publicar" data-testid="publish">
       <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" onClick={onClose} />
@@ -233,7 +266,7 @@ function PublishSheet({ go, canShareDay, onShareDay, onClose }) {
           <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">🎥</span>Video con filtro</button>
           <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">📍</span>Foto del puesto</button>
           <button type="button" onClick={() => { onClose(); onShareDay(); }} disabled={!canShareDay}><span aria-hidden="true">🗺️</span>Mi día de hoy</button>
-          <a href={number ? `https://wa.me/${number}?text=${encodeURIComponent(recipe)}` : undefined} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span>Una receta</a>
+          <a href={wa(recipe)} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span>Una receta</a>
         </div>
         <p className="mapp-fine">El video y tu día se comparten en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
       </section>
@@ -277,7 +310,8 @@ function CuratedForm({ current, onSaved, onCancel }) {
   );
 }
 
-export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay }) {
+export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista' }) {
+  const client = audience === 'client';
   const [baristas, setBaristas] = useState([]);
   const [cfg, setCfg] = useState({});
   const [chip, setChip] = useState('todo');
@@ -311,7 +345,7 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
       <header className="mapp-feed-head">
         <div>
           <p className="mapp-kicker">{today}</p>
-          <h1 className="mapp-title is-small">Hoy en la calle</h1>
+          <h1 className="mapp-title is-small">{client ? 'Hoy en el café' : 'Hoy en la calle'}</h1>
         </div>
         <button type="button" className="mapp-btn is-small is-dark" onClick={() => setPublishing(true)}>＋ Publicar</button>
       </header>
@@ -326,9 +360,9 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
       <div className="mapp-posts" data-testid="feed">
         {shown.map((item) => (item.kind === 'precios'
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
-          : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} />))}
+          : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} />))}
       </div>
-      {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} />}
+      {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} />}
     </div>
   );
 }

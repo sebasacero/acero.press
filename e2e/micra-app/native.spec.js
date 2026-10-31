@@ -43,6 +43,7 @@ test('app instalada: el barista ve su enlace con la dirección del sitio', async
   await expect(page.getByRole('link', { name: 'Medir mi recorrido (Mi ruta)' })).toHaveAttribute('href', 'https://www.aceropress.com/ruta');
   await expect(page.locator('.mapp-share')).toHaveCount(0);
   await page.getByRole('button', { name: 'Mi perfil' }).click();
+  await page.getByTestId('tile-datos').click();
   await expect(page.getByTestId('profile-link')).toHaveText(`www.aceropress.com/micra/b/${MARLENE}`);
   expect(errors).toEqual([]);
   await ctx.close();

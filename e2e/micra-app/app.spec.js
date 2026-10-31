@@ -451,6 +451,35 @@ test('cliente: los baristas en tarjetas con su personaje y la tarjeta de 10 taza
   expect(errors).toEqual([]);
 });
 
+test('cliente: Hoy es el muro del café, sin logros ni ideas de foto; publicar le escribe al equipo', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra', { waitUntil: 'load' });
+  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: /Hoy/ }).click();
+  await expect(page).toHaveURL(/\/micra\/hoy$/);
+  await expect(page.getByRole('heading', { name: 'Hoy en el café' })).toBeVisible();
+  await expect(page.getByTestId('price-card')).toContainText('$1.300');
+  const feed = page.getByTestId('feed');
+  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
+  await expect(page.locator('[data-testid^="feed-logro"], [data-testid="feed-idea"]')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Logros' })).toHaveCount(0);
+  // El video lleva a la Escuela del sitio, no a Aprende del barista
+  await page.getByRole('tab', { name: 'Videos' }).click();
+  await expect(feed.getByRole('link', { name: 'Aprender en la Escuela ›' })).toHaveAttribute('href', /\/escuela$/);
+  // Un puesto abre su tarjeta para apartar
+  await page.getByRole('tab', { name: 'Puestos' }).click();
+  await feed.getByRole('button', { name: 'Ver en el mapa ›' }).first().click();
+  await expect(page).toHaveURL(/\/micra\/b\//);
+  await page.goto('/micra/hoy', { waitUntil: 'load' });
+  // Publicar: receta, café o barista de su cuadra, por WhatsApp al equipo (sin cámara)
+  await page.getByRole('button', { name: '＋ Publicar' }).click();
+  const sheet = page.getByTestId('publish');
+  await expect(sheet).not.toContainText('Video con filtro');
+  await expect(sheet.getByRole('link', { name: /Un barista de tu cuadra/ })).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=/);
+  await expect(sheet.getByRole('link')).toHaveCount(3);
+  expect(errors).toEqual([]);
+});
+
 test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y Vender pide café por WhatsApp', async ({ browser }) => {
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista/hoy', { waitUntil: 'load' });
@@ -518,7 +547,10 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
 
   // Cómo le pagan: solo el medio, sin número
   await page.getByRole('button', { name: 'Mi perfil' }).click();
+  await page.getByTestId('tile-precios').click();
   await expect(page.getByTestId('product-grid')).toContainText('Empanada');
+  await page.keyboard.press('Escape');
+  await page.getByTestId('tile-pagos').click();
   await page.getByRole('button', { name: 'Cambiar cómo me pagan' }).click();
   const pay = page.getByTestId('pay-settings');
   await expect(pay.locator('input')).toHaveCount(0);
@@ -527,9 +559,13 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
   await expect(page.getByTestId('profile-pay')).toHaveText('Efectivo, Nequi, Daviplata');
   expect(api.find('/rpc/micra_barista_payments_set').data.p_methods).toEqual(['efectivo', 'nequi', 'daviplata']);
 
-  // En el perfil también se apaga y se prende el mapa
+  await page.keyboard.press('Escape');
+
+  // En el perfil (Permisos) también se apaga y se prende el mapa
+  await page.getByTestId('tile-permisos').click();
   await page.getByTestId('profile-public-toggle').click();
   await expect(page.getByTestId('profile-public')).toContainText('No');
+  await page.keyboard.press('Escape');
 
   // Mi plata ya no tiene «Tu enlace»
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi plata/ }).click();

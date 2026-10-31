@@ -21,6 +21,8 @@ const FichaFlow = lazy(() => import('./FichaFlow.jsx'));
 // «Mi perfil» y «Cerrar sesión» del cliente y del equipo (el del barista vive en BaristaHome)
 const ClientProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.ClientProfile })));
 const OwnerProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.OwnerProfile })));
+// Hoy del cliente: el mismo muro del barista (cargado aparte), sin logros ni ideas de foto
+const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 
 // Micra (/micra): la app que abre el botón «Micra» del sitio. Es la misma para
 // todos y cambia según quién entra:
@@ -173,6 +175,7 @@ export default function MicraApp() {
   let body;
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
+  else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" /></Suspense>;
   else if (route.view === 'me') body = who.loading ? <Cargando /> : <Suspense fallback={<Cargando />}><ClientProfile go={go} who={who} /></Suspense>;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
@@ -227,9 +230,12 @@ export default function MicraApp() {
       </header>
       <main className="mapp-main">{body}</main>
       {viewMode === 'client' && (
-        <nav className="mapp-tabs" aria-label="Micra">
+        <nav className="mapp-tabs is-four" aria-label="Micra">
           <button type="button" className={route.view === 'home' || route.view === 'barista-card' ? 'on' : ''} onClick={() => go('/micra')}>
             <IconNear />Cerca
+          </button>
+          <button type="button" className={route.view === 'feed' ? 'on' : ''} onClick={() => go('/micra/hoy')}>
+            <IconToday />Hoy
           </button>
           <button type="button" className={route.view === 'holds' ? 'on' : ''} onClick={() => go('/micra/apartados')}>
             <IconCup />Mis apartados
