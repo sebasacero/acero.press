@@ -1,0 +1,876 @@
+{
+ "stamps": {
+  "cups": 7,
+  "toward": 7,
+  "available": 0,
+  "per": 10
+ },
+ "baristas": [
+  {
+   "id": "60000000-0000-0000-0000-000000000001",
+   "name": "Marlene",
+   "full": "Marlene Rojas",
+   "stage": "piloto",
+   "localidad": "Chapinero",
+   "referencia": "Cl. 57 con Cra. 7",
+   "lat": 4.643,
+   "lng": -74.064,
+   "hora_inicio": 6,
+   "hora_fin": 11,
+   "products": [
+    "tinto",
+    "perico",
+    "aromatica",
+    "ponque"
+   ],
+   "prices": {
+    "tinto": 1500,
+    "perico": 2000,
+    "aromatica": 1500
+   },
+   "payments": [
+    "efectivo",
+    "nequi"
+   ],
+   "takes_holds": true,
+   "live_until": "2099-01-01T00:00:00Z"
+  },
+  {
+   "id": "60000000-0000-0000-0000-000000000002",
+   "name": "Jairo",
+   "stage": "piloto",
+   "localidad": "Chapinero",
+   "referencia": "Cl. 59 con Cra. 12",
+   "lat": 4.646,
+   "lng": -74.066,
+   "hora_inicio": 6,
+   "hora_fin": 20,
+   "products": [
+    "tinto",
+    "perico"
+   ],
+   "prices": {
+    "tinto": 1300,
+    "perico": 1800
+   },
+   "payments": [
+    "efectivo",
+    "nequi",
+    "daviplata"
+   ],
+   "takes_holds": true,
+   "last_active_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "60000000-0000-0000-0000-000000000003",
+   "name": "Wilson",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Cl. 54 con Cra. 9",
+   "lat": 4.64,
+   "lng": -74.062,
+   "hora_inicio": 14,
+   "hora_fin": 18,
+   "products": [
+    "tinto",
+    "aromatica",
+    "galletas"
+   ],
+   "prices": {
+    "tinto": 1200,
+    "aromatica": 1200
+   },
+   "payments": [
+    "efectivo"
+   ],
+   "takes_holds": false,
+   "phone": "573109998877"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000000",
+   "name": "Luz",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.62,
+   "lng": -74.14,
+   "public": true,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000001",
+   "name": "Fabio",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Portal Américas",
+   "lat": 4.623,
+   "lng": -74.137,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000002",
+   "name": "Rosa",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.626,
+   "lng": -74.134,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000003",
+   "name": "Hernán",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 38 Sur con Cra. 78",
+   "lat": 4.6290000000000004,
+   "lng": -74.131,
+   "public": true,
+   "takes_holds": false,
+   "invite_code": "P4ZQ8T",
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000004",
+   "name": "Gloria",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Hospital de Kennedy",
+   "lat": 4.632,
+   "lng": -74.128,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000005",
+   "name": "Édgar",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Corabastos, puerta 5",
+   "lat": 4.635,
+   "lng": -74.14,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000006",
+   "name": "Nubia",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 26 con Cra. 7",
+   "lat": 4.638,
+   "lng": -74.137,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000007",
+   "name": "Óscar",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cra. 13 con Cl. 63",
+   "lat": 4.62,
+   "lng": -74.134,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000008",
+   "name": "Blanca",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 72 con Cra. 11",
+   "lat": 4.623,
+   "lng": -74.131,
+   "public": true,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000009",
+   "name": "Javier",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.626,
+   "lng": -74.128,
+   "public": true,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000010",
+   "name": "Carmen",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Portal Américas",
+   "lat": 4.6290000000000004,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000011",
+   "name": "Álvaro",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.632,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000012",
+   "name": "Yolanda",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 38 Sur con Cra. 78",
+   "lat": 4.635,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000013",
+   "name": "Raúl",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Hospital de Kennedy",
+   "lat": 4.638,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000014",
+   "name": "Marta",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Corabastos, puerta 5",
+   "lat": 4.62,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000015",
+   "name": "Germán",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 26 con Cra. 7",
+   "lat": 4.623,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000016",
+   "name": "Olga",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cra. 13 con Cl. 63",
+   "lat": 4.626,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000017",
+   "name": "Pedro",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 72 con Cra. 11",
+   "lat": 4.6290000000000004,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000018",
+   "name": "Ruth",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.632,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000019",
+   "name": "Hugo",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Portal Américas",
+   "lat": 4.635,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000020",
+   "name": "Inés",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.638,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000021",
+   "name": "Iván",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 38 Sur con Cra. 78",
+   "lat": 4.62,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000022",
+   "name": "Sara",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Hospital de Kennedy",
+   "lat": 4.623,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000023",
+   "name": "Mauro",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Corabastos, puerta 5",
+   "lat": 4.626,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000024",
+   "name": "Elsa",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 26 con Cra. 7",
+   "lat": 4.6290000000000004,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000025",
+   "name": "Tito",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cra. 13 con Cl. 63",
+   "lat": 4.632,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000026",
+   "name": "Ana",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 72 con Cra. 11",
+   "lat": 4.635,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000027",
+   "name": "Nelson",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.638,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000028",
+   "name": "Flor",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Portal Américas",
+   "lat": 4.62,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000029",
+   "name": "Rubén",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.623,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000030",
+   "name": "Sin nombre 1",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 38 Sur con Cra. 78",
+   "lat": 4.626,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000031",
+   "name": "Sin nombre 2",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Hospital de Kennedy",
+   "lat": 4.6290000000000004,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000032",
+   "name": "Sin nombre 3",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Corabastos, puerta 5",
+   "lat": 4.632,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000033",
+   "name": "Sin nombre 4",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 26 con Cra. 7",
+   "lat": 4.635,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000034",
+   "name": "Sin nombre 5",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cra. 13 con Cl. 63",
+   "lat": 4.638,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000035",
+   "name": "Sin nombre 6",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 72 con Cra. 11",
+   "lat": 4.62,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000036",
+   "name": "Sin nombre 7",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.623,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000037",
+   "name": "Sin nombre 8",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Portal Américas",
+   "lat": 4.626,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000038",
+   "name": "Sin nombre 9",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.6290000000000004,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000039",
+   "name": "Sin nombre 10",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 38 Sur con Cra. 78",
+   "lat": 4.632,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000040",
+   "name": "Sin nombre 11",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Hospital de Kennedy",
+   "lat": 4.635,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000041",
+   "name": "Sin nombre 12",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Corabastos, puerta 5",
+   "lat": 4.638,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000042",
+   "name": "Sin nombre 13",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 26 con Cra. 7",
+   "lat": 4.62,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000043",
+   "name": "Sin nombre 14",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cra. 13 con Cl. 63",
+   "lat": 4.623,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000044",
+   "name": "Sin nombre 15",
+   "stage": "prospecto",
+   "localidad": "Kennedy",
+   "referencia": "Cl. 72 con Cra. 11",
+   "lat": 4.626,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000045",
+   "name": "Sin nombre 16",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.6290000000000004,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000046",
+   "name": "Sin nombre 17",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Portal Américas",
+   "lat": 4.632,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000047",
+   "name": "Sin nombre 18",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.635,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000048",
+   "name": "Sin nombre 19",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Cl. 38 Sur con Cra. 78",
+   "lat": 4.638,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000049",
+   "name": "Sin nombre 20",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Hospital de Kennedy",
+   "lat": 4.62,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000050",
+   "name": "Sin nombre 21",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Corabastos, puerta 5",
+   "lat": 4.623,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000051",
+   "name": "Sin nombre 22",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Cl. 26 con Cra. 7",
+   "lat": 4.626,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000052",
+   "name": "Sin nombre 23",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Cra. 13 con Cl. 63",
+   "lat": 4.6290000000000004,
+   "lng": -74.134,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000053",
+   "name": "Sin nombre 24",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Cl. 72 con Cra. 11",
+   "lat": 4.632,
+   "lng": -74.131,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000054",
+   "name": "Sin nombre 25",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Puerta principal Plaza de las Américas",
+   "lat": 4.635,
+   "lng": -74.128,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000055",
+   "name": "Sin nombre 26",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Portal Américas",
+   "lat": 4.638,
+   "lng": -74.14,
+   "public": false,
+   "takes_holds": false,
+   "created_at": "2026-10-29T12:00:51.175Z"
+  },
+  {
+   "id": "63000000-0000-0000-0000-000000000056",
+   "name": "Sin nombre 27",
+   "stage": "prospecto",
+   "localidad": "Chapinero",
+   "referencia": "Av. 1 de Mayo con Cra. 68",
+   "lat": 4.62,
+   "lng": -74.137,
+   "public": false,
+   "takes_holds": false,
+   "prices": {
+    "tinto": 1200
+   },
+   "created_at": "2026-10-29T12:00:51.175Z"
+  }
+ ],
+ "holds": [
+  {
+   "id": "apartado-a",
+   "tintero_id": "60000000-0000-0000-0000-000000000001",
+   "client_ref": "otro-cel-1",
+   "name": "Portería Ed. Alcalá",
+   "items": [
+    {
+     "product": "tinto",
+     "qty": 3,
+     "unit_price": 1500
+    }
+   ],
+   "cups": 3,
+   "total": 4500,
+   "status": "waiting"
+  },
+  {
+   "id": "apartado-b",
+   "tintero_id": "60000000-0000-0000-0000-000000000001",
+   "client_ref": "otro-cel-2",
+   "name": "Sebas · oficina 302",
+   "items": [
+    {
+     "product": "perico",
+     "qty": 1,
+     "unit_price": 2000
+    },
+    {
+     "product": "tinto",
+     "qty": 1,
+     "unit_price": 1500
+    }
+   ],
+   "cups": 2,
+   "total": 3500,
+   "status": "waiting"
+  }
+ ],
+ "sales": [
+  {
+   "id": "venta-a",
+   "ref": "r-a",
+   "tintero_id": "60000000-0000-0000-0000-000000000001",
+   "product": "tinto",
+   "qty": 1,
+   "total": 1500,
+   "at": "2026-10-26T11:40:00Z"
+  },
+  {
+   "id": "venta-b",
+   "ref": "r-b",
+   "tintero_id": "60000000-0000-0000-0000-000000000001",
+   "product": "tinto",
+   "qty": 1,
+   "total": 1500,
+   "at": "2026-10-26T11:45:00Z"
+  },
+  {
+   "id": "venta-c",
+   "ref": "r-c",
+   "tintero_id": "60000000-0000-0000-0000-000000000001",
+   "product": "perico",
+   "qty": 2,
+   "total": 4000,
+   "fiado_name": "Señora papelería",
+   "at": "2026-10-26T11:50:00Z"
+  }
+ ],
+ "clients": {
+  "total": 23,
+  "new_7d": 9,
+  "active": 14,
+  "frequent": 4,
+  "paused": 1,
+  "missed": 3
+ }
+}
