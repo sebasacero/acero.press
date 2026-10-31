@@ -79,7 +79,7 @@ function Slide({ kind, active, onSelect, whatsapp, stores }) {
                 </>
               ) : (
                 <>
-                  <a className="essp-btn" href={whatsapp} target="_blank" rel="noopener noreferrer">{base('cta')}</a>
+                  <a className="essp-btn is-wa" href={whatsapp} target="_blank" rel="noopener noreferrer">{base('cta')}</a>
                   <a className="essp-btn is-link" href="/escuela">{base('cta2')}</a>
                 </>
               )}
