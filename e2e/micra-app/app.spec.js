@@ -186,7 +186,9 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
   await wilson.getByRole('button', { name: 'Generar código' }).click();
   await expect(wilson.locator('code')).toHaveText('K7M2QX');
 
-  await page.getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
+  // Jairo ya está activo y no está en la calle: no sale en el resumen, se busca
+  await page.getByLabel('Buscar un barista').fill('jairo');
+  await page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
   await expect(page.getByText('Actuando como')).toContainText('Jairo');
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
   await page.getByRole('button', { name: 'Vendí un tinto' }).click();
@@ -285,7 +287,8 @@ test('equipo: la pestaña Barista muestra la entrada por SMS (sin mandar nada) y
   await expect(wilson).toContainText('que entre con su celular');
   expect(api.micra.baristas[2].phone).toBe('573109998877');
   // Un número es de un solo barista
-  await page.getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Poner su celular' }).click();
+  await page.getByLabel('Buscar un barista').fill('Jairo');
+  await page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Poner su celular' }).click();
   await page.getByLabel('Celular de Jairo').fill('3109998877');
   await page.getByRole('button', { name: 'Guardar' }).click();
   await expect(page.getByRole('alert')).toContainText('Ese número ya lo tiene Wilson');
@@ -449,5 +452,48 @@ test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y 
   const order = page.getByTestId('coffee-order');
   await order.getByRole('button', { name: '2 kg' }).click();
   await expect(order.getByTestId('coffee-order-send')).toHaveAttribute('href', /wa\.me\/\d+\?text=.*2%20kilos/);
+  expect(errors).toEqual([]);
+});
+
+// ── Activación automática: el resumen del equipo en vez de la lista ─────
+const EQUIPO = JSON.parse(readFileSync(new URL('../data/micra-equipo.json', import.meta.url), 'utf8'));
+
+test('equipo con 60 fichas: resumen, avisos y clientes en cifras; la lista entera no sale', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'team', seed: EQUIPO });
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  const act = page.getByTestId('owner-activation');
+  await expect(act).toContainText('2 activos de 60 fichas');
+  await expect(act.getByRole('button', { name: /Ficha.*60/ })).toBeVisible();
+  await expect(page.getByTestId('owner-alerts')).toContainText('salen en el mapa pero aún no reciben apartados');
+  await expect(page.getByTestId('owner-alerts')).toContainText('1 cliente frenado');
+  await expect(page.getByTestId('owner-clients')).toContainText('23');
+  // Solo quien está en la calle y los casi listos (a uno o dos pasos, 5 como mucho), no las 60
+  await expect(page.getByRole('list', { name: 'En la calle' }).getByRole('listitem')).toHaveCount(1);
+  await expect(page.getByRole('list', { name: 'Casi listos' }).getByRole('listitem')).toHaveCount(4);
+  expect(await page.locator('.mapp-team > li').count()).toBeLessThanOrEqual(6);
+  // Las reglas, a la mano
+  await page.getByText('Reglas de activación').click();
+  await expect(page.locator('.mapp-rules')).toContainText('no aparta por 7 días y vuelve solo');
+
+  // Un paso del embudo filtra; el buscador encuentra sin tildes
+  await act.getByRole('button', { name: /Invitado/ }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'en «Invitado»' })).toContainText('2 baristas');
+  await page.getByRole('button', { name: 'Quitar filtro' }).click();
+  await page.getByLabel('Buscar un barista').fill('kennedy');
+  await expect(page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem')).toHaveCount(8);
+  await page.getByRole('button', { name: /^Ver \d+ más$/ }).click();
+  await expect(page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem')).toHaveCount(EQUIPO.baristas.filter((b) => /kennedy/i.test(`${b.localidad} ${b.referencia}`)).length);
+  await page.getByLabel('Buscar un barista').fill('hernan');
+  await expect(page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem')).toHaveText(/Hernán/);
+  expect(errors).toEqual([]);
+});
+
+test('equipo sin la migración de activación: el resumen sale igual, sin la tarjeta de clientes', async ({ browser }) => {
+  const seed = structuredClone(EQUIPO);
+  delete seed.clients;
+  const { page, errors } = await open(browser, { who: 'team', seed });
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await expect(page.getByTestId('owner-activation')).toContainText('de 60 fichas');
+  await expect(page.getByTestId('owner-clients')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

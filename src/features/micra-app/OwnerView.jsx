@@ -4,23 +4,16 @@ import * as api from './api.js';
 import platform from './platform.js';
 import { Cargando } from './Animado.jsx';
 import { formatCoPhone, normalizeCoPhone } from './phone.js';
+import { teamSummary, findBaristas, missingStep, BARISTA_STEPS, CLIENT_RULES, LEVEL_LABEL } from './activation.js';
 
 const LivePanel = lazy(() => import('./LiveMap.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
-// calle), qué le falta a cada barista para vender por Micra, su celular (con
-// él entra por SMS y queda enlazado solo) o el código para enlazarlo. «Actuar
-// como» abre su modo barista.
-
-const STAGE = { prospecto: 'Prospecto', piloto: 'Piloto', activo: 'Activo', pausa: 'Pausa' };
-
-/** Lo que le falta a un barista para recibir apartados, en orden. */
-function missingStep(b, phone) {
-  if (!b.public) return 'Falta su permiso para salir en público (ficha › publicidad)';
-  if (!b.linked) return phone ? 'Falta enlazar su cuenta: que entre con su celular' : 'Falta enlazar su cuenta: pon su celular o genera un código';
-  if (!b.has_prices) return 'Faltan sus precios';
-  return null;
-}
+// calle) y la activación automática: nadie aprueba a mano (activation.js y
+// 20261031120000_micra_auto_activation.sql). En vez de la lista de todas las
+// fichas, el resumen: cuántos hay en cada paso, lo que pide una mano, los
+// clientes en cifras y un buscador. Cada barista sigue con su celular, su
+// código y «Actuar como».
 
 export default function OwnerView({ onActAs, go }) {
   const [data, setData] = useState(null);
@@ -29,6 +22,9 @@ export default function OwnerView({ onActAs, go }) {
   // { id: '573001234567' }; null mientras carga o si falta la migración del SMS (no se muestra)
   const [phones, setPhones] = useState(null);
   const [editing, setEditing] = useState(null); // { id, value }
+  const [query, setQuery] = useState('');
+  const [level, setLevel] = useState(null); // un paso del embudo
+  const [showAll, setShowAll] = useState(false);
   const load = useCallback(() => {
     api.ownerDay().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.missing ? 'Falta activar las tablas de Micra en la base (migración 20261026210000_micra_app).' : e.message));
     api.baristaPhones().then((p) => setPhones(p ?? {})).catch(() => setPhones(null));
@@ -63,10 +59,18 @@ export default function OwnerView({ onActAs, go }) {
   if (!data) return <Cargando fig="ruana">Cargando el día…</Cargando>;
 
   const list = data.baristas;
+  const sum = teamSummary(list, { phones, clients: data.clients });
   const tot = list.reduce((a, b) => ({ cups: a.cups + b.cups, total: a.total + Number(b.total), waiting: a.waiting + b.waiting, served: a.served + b.served, live: a.live + (b.live_until ? 1 : 0) }), { cups: 0, total: 0, waiting: 0, served: 0, live: 0 });
-  const ready = list.filter((b) => !missingStep(b, phones?.[b.id])).length;
   const bars = weekBars(data.week);
   const week = (data.week ?? []).reduce((a, d) => ({ cups: a.cups + (d.cups || 0), total: a.total + Number(d.total || 0), holds: a.holds + (d.holds || 0) }), { cups: 0, total: 0, holds: 0 });
+  const found = findBaristas(sum.rows, { q: query, level, limit: showAll ? 500 : 8 });
+  const searching = query.trim() !== '' || level != null;
+  const top = sum.funnel[0].n || 1;
+  const c = data.clients;
+  const row = (b) => (
+    <BaristaRow key={b.id} b={b} phone={phones?.[b.id] ?? null} phonesOn={!!phones} code={codes[b.id] ?? b.invite_code}
+      editing={editing} setEditing={setEditing} savePhone={savePhone} makeCode={makeCode} sendCode={sendCode} onActAs={onActAs} go={go} />
+  );
 
   return (
     <div className="mapp-owner">
@@ -90,6 +94,51 @@ export default function OwnerView({ onActAs, go }) {
         <div><dt>En la calle</dt><dd>{tot.live}<small> de {list.length}</small></dd></div>
       </dl>
 
+      {/* Lo que pide una mano: lo demás se activa solo */}
+      {sum.alerts.length > 0 && (
+        <section className="mapp-glass mapp-alerts" aria-label="Para revisar" data-testid="owner-alerts">
+          <p className="mapp-cota is-red">Para revisar</p>
+          <ul>{sum.alerts.map((a) => <li key={a.key} className={`is-${a.tone}`}>{a.text}</li>)}</ul>
+        </section>
+      )}
+
+      <section className="mapp-glass mapp-funnel" aria-label="Activación de baristas" data-testid="owner-activation">
+        <p className="mapp-cota">Baristas · se activan solos</p>
+        <p className="mapp-funnel-big"><b>{sum.active}</b> activos <span>de {sum.total} fichas</span></p>
+        <ol>
+          {sum.funnel.map((f) => (
+            <li key={f.key}>
+              <button type="button" className={level === f.key ? 'on' : ''} aria-pressed={level === f.key}
+                onClick={() => { setLevel(level === f.key ? null : f.key); setShowAll(false); }}>
+                <span>{f.label}</span>
+                {/* Raíz: con 60 fichas y 2 activos la barra de los activos aún se ve */}
+                <i style={{ width: `${Math.max(3, Math.sqrt(f.n / top) * 100)}%` }} />
+                <b>{f.n}</b>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <details className="mapp-rules">
+          <summary>Reglas de activación</summary>
+          <ol>{BARISTA_STEPS.map((st) => <li key={st.key}><b>{st.label}.</b> {st.rule}</li>)}</ol>
+          <p className="mapp-cota">Clientes</p>
+          <ul>{CLIENT_RULES.map((r) => <li key={r}>{r}</li>)}</ul>
+        </details>
+      </section>
+
+      {c && (
+        <section className="mapp-pricecard mapp-post" aria-label="Clientes" data-testid="owner-clients">
+          <p className="mapp-cota">Clientes · 30 días</p>
+          <dl>
+            <div><dd>{c.total}</dd><dt>apartaron</dt></div>
+            <div><dd>{c.new_7d}</dd><dt>nuevos (7 d)</dt></div>
+            <div><dd>{c.active}</dd><dt>activos</dt></div>
+            <div><dd>{c.frequent}</dd><dt>frecuentes</dt></div>
+            <div><dd>{c.paused}</dd><dt>frenados</dt></div>
+          </dl>
+        </section>
+      )}
+
       {/* Lo mismo que ve un barista en la calle: todos los que salieron y dónde quieren café */}
       <Suspense fallback={null}><LivePanel mode="team" night={isNight()} go={go} /></Suspense>
 
@@ -105,46 +154,71 @@ export default function OwnerView({ onActAs, go }) {
         </div>
       </section>
 
-      <section className="mapp-glass">
-        <p className="mapp-cota">Baristas · {ready} de {list.length} listos para vender por Micra</p>
-        <ul className="mapp-team">
-          {list.map((b) => {
-            const phone = phones?.[b.id] ?? null;
-            const step = missingStep(b, phone);
-            const code = codes[b.id] ?? b.invite_code;
-            return (
-              <li key={b.id}>
-                <div className="mapp-team-head">
-                  <b>{b.name}</b>
-                  <span className={`mapp-badge is-${b.live_until ? 'live' : 'off'}`}>{b.live_until ? 'En la calle' : STAGE[b.stage] ?? b.stage}</span>
-                </div>
-                <span className="mapp-muted">{b.referencia || b.localidad || 'Sin lugar'} · {cupsLabel(b.cups)} · {money(b.total)}{b.waiting ? ` · ${b.waiting} esperando` : ''}</span>
-                {step && <span className="mapp-todo">{step}</span>}
-                {phones && (editing?.id === b.id ? (
-                  <form className="mapp-team-phone" onSubmit={savePhone}>
-                    <input type="tel" inputMode="tel" placeholder="300 123 4567" aria-label={`Celular de ${b.name}`} value={editing.value} onChange={(e) => setEditing({ id: b.id, value: formatCoPhone(e.target.value) })} autoFocus />
-                    <button type="submit" className="mapp-btn is-small" disabled={editing.value.trim() !== '' && !normalizeCoPhone(editing.value)}>Guardar</button>
-                    <button type="button" className="mapp-link" onClick={() => setEditing(null)}>Cancelar</button>
-                  </form>
-                ) : (
-                  <span className="mapp-row-btns">
-                    {phone && <span className="mapp-muted">Cel. {formatCoPhone(phone)}</span>}
-                    <button type="button" className="mapp-link" onClick={() => setEditing({ id: b.id, value: phone ? formatCoPhone(phone) : '' })}>{phone ? 'Cambiar celular' : 'Poner su celular'}</button>
-                  </span>
-                ))}
-                <span className="mapp-row-btns">
-                  {!b.linked && (code
-                    ? <><code className="mapp-code-chip">{code}</code><button type="button" className="mapp-link" onClick={() => sendCode(b, code)}>Enviar por WhatsApp</button></>
-                    : <button type="button" className="mapp-link" onClick={() => makeCode(b)}>Generar código</button>)}
-                  <button type="button" className="mapp-link" onClick={() => onActAs(b.id)}>Actuar como</button>
-                  {b.public && <button type="button" className="mapp-link" onClick={() => go(baristaPath(b.id))}>Su página</button>}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+      <section className="mapp-glass" data-testid="owner-find">
+        <label className="mapp-cota" htmlFor="owner-q">Buscar un barista</label>
+        <input id="owner-q" className="mapp-search" type="search" placeholder="Nombre, calle o localidad" value={query}
+          onChange={(e) => { setQuery(e.target.value); setShowAll(false); }} />
+        {searching ? (
+          <>
+            <p className="mapp-muted" role="status">
+              {(() => { const n = found.items.length + found.more; return n === 0 ? 'Nadie con eso.' : `${n} ${n === 1 ? 'barista' : 'baristas'}${level ? ` en «${LEVEL_LABEL[level]}»` : ''}`; })()}
+              {level && <> · <button type="button" className="mapp-link" onClick={() => setLevel(null)}>Quitar filtro</button></>}
+            </p>
+            <ul className="mapp-team" aria-label="Baristas encontrados">{found.items.map(row)}</ul>
+            {found.more > 0 && <button type="button" className="mapp-link" onClick={() => setShowAll(true)}>Ver {found.more} más</button>}
+          </>
+        ) : (
+          <>
+            {sum.live.length > 0 && (
+              <>
+                <p className="mapp-cota">En la calle ahora · {sum.live.length}</p>
+                <ul className="mapp-team" aria-label="En la calle">{sum.live.map(row)}</ul>
+              </>
+            )}
+            {sum.almost.length > 0 && (
+              <>
+                <p className="mapp-cota">Casi listos · {sum.almost.length > 5 ? `5 de ${sum.almost.length}` : sum.almost.length}</p>
+                <ul className="mapp-team" aria-label="Casi listos">{sum.almost.slice(0, 5).map(row)}</ul>
+              </>
+            )}
+            <p className="mapp-muted">Las demás fichas están en el embudo: toca un paso para verlas.</p>
+          </>
+        )}
       </section>
       <a className="mapp-link" href={platform.siteUrl('/admin')}>Abrir el panel completo</a>
     </div>
+  );
+}
+
+function BaristaRow({ b, phone, phonesOn, code, editing, setEditing, savePhone, makeCode, sendCode, onActAs, go }) {
+  const step = missingStep(b, phonesOn ? !!phone : b.has_phone);
+  return (
+    <li>
+      <div className="mapp-team-head">
+        <b>{b.name}</b>
+        <span className={`mapp-badge is-${b.live_until ? 'live' : 'off'}`}>{b.live_until ? 'En la calle' : LEVEL_LABEL[b.level] ?? b.stage}</span>
+      </div>
+      <span className="mapp-muted">{b.referencia || b.localidad || 'Sin lugar'} · {cupsLabel(b.cups)} · {money(b.total)}{b.waiting ? ` · ${b.waiting} esperando` : ''}</span>
+      {step && <span className="mapp-todo">{step}</span>}
+      {phonesOn && (editing?.id === b.id ? (
+        <form className="mapp-team-phone" onSubmit={savePhone}>
+          <input type="tel" inputMode="tel" placeholder="300 123 4567" aria-label={`Celular de ${b.name}`} value={editing.value} onChange={(e) => setEditing({ id: b.id, value: formatCoPhone(e.target.value) })} autoFocus />
+          <button type="submit" className="mapp-btn is-small" disabled={editing.value.trim() !== '' && !normalizeCoPhone(editing.value)}>Guardar</button>
+          <button type="button" className="mapp-link" onClick={() => setEditing(null)}>Cancelar</button>
+        </form>
+      ) : (
+        <span className="mapp-row-btns">
+          {phone && <span className="mapp-muted">Cel. {formatCoPhone(phone)}</span>}
+          <button type="button" className="mapp-link" onClick={() => setEditing({ id: b.id, value: phone ? formatCoPhone(phone) : '' })}>{phone ? 'Cambiar celular' : 'Poner su celular'}</button>
+        </span>
+      ))}
+      <span className="mapp-row-btns">
+        {!b.linked && (code
+          ? <><code className="mapp-code-chip">{code}</code><button type="button" className="mapp-link" onClick={() => sendCode(b, code)}>Enviar por WhatsApp</button></>
+          : <button type="button" className="mapp-link" onClick={() => makeCode(b)}>Generar código</button>)}
+        <button type="button" className="mapp-link" onClick={() => onActAs(b.id)}>Actuar como</button>
+        {b.public && <button type="button" className="mapp-link" onClick={() => go(baristaPath(b.id))}>Su página</button>}
+      </span>
+    </li>
   );
 }
