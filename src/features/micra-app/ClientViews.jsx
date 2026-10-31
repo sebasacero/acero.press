@@ -10,6 +10,8 @@ import Figure from './Elenco.jsx';
 import { IconThermo, IconCheck, IconOut, IconToday } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
+// Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
+import { useAds, AdStoryBubble, AdStoryView } from './Ads.jsx';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
@@ -139,7 +141,7 @@ function BaristaRow({ b, onOpen, i = 0 }) {
  * luego los baristas, los que están en la calle primero, con el aro rojo y
  * «AHORA». Tocar uno abre su página para apartar.
  */
-function Stories({ baristas, go }) {
+function Stories({ baristas, go, ads = [], onAd }) {
   return (
     <ul className="mapp-hists" aria-label="Historias" data-testid="stories">
       <li>
@@ -148,6 +150,8 @@ function Stories({ baristas, go }) {
           <small>Hoy</small>
         </button>
       </li>
+      {/* Lo patrocinado después de Hoy, marcado como tal */}
+      {ads.map((ad) => <AdStoryBubble key={ad.id} ad={ad} onOpen={onAd} />)}
       {baristas.map((b) => {
         const live = b.status === 'live';
         const first = String(b.name ?? '').split(' ')[0];
@@ -168,6 +172,8 @@ function Stories({ baristas, go }) {
 }
 
 export function ClientHome({ go }) {
+  const ads = useAds('client');
+  const [adStory, setAdStory] = useState(null);
   const [{ list, error, missing }, reload] = useBaristas();
   const { me, ask, asking } = useMe();
   const [drink, setDrink] = useState('all');
@@ -194,7 +200,8 @@ export function ClientHome({ go }) {
     <div className="mapp-client">
       <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
       {/* Arriba, como el inicio de una red social: las historias de los baristas */}
-      <Stories baristas={sorted} go={go} />
+      <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} />
+      {adStory && <AdStoryView ad={adStory} onClose={() => setAdStory(null)} />}
       {hold && holdBarista ? (
         <>
           <p className="mapp-kicker is-hello">{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</p>
@@ -270,7 +277,7 @@ export function ClientHome({ go }) {
       </section>
 
       {/* Como Instagram: debajo de todo sigue el muro (los puestos de los baristas, el precio, el café de Colombia, recetas y videos) */}
-      <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} /></Suspense>
+      <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} ads={ads.rows} /></Suspense>
     </div>
   );
 }

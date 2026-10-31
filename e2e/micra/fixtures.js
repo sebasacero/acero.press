@@ -211,6 +211,39 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     // App Micra, en memoria (como las funciones de 20261026210000_micra_app.sql)
+    // Anuncios «Patrocinado» (20261031190000_micra_ads.sql), en memoria: M.ads y M.adStats
+    const afn = p.match(/\/rpc\/(micra_ads_live|micra_ad_event|micra_ads_admin|micra_ad_save|micra_ad_toggle)$/)?.[1];
+    if (afn) {
+      const M = micra;
+      M.ads ??= [];
+      M.adStats ??= {};
+      const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
+      if (M.adsMissing) return fail(404, 'PGRST202', `Could not find the function public.${afn} in the schema cache`);
+      const day = new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+      const onAir = (a) => a.active !== false && a.starts_on <= day && day <= a.ends_on;
+      if (afn === 'micra_ads_live') {
+        return json(200, M.ads.filter((a) => onAir(a) && (a.audience === 'all' || a.audience === data.p_audience)));
+      }
+      if (afn === 'micra_ad_event') {
+        const a = M.ads.find((x) => x.id === data.p_ad_id);
+        if (a && onAir(a)) { const st = (M.adStats[a.id] ??= { views: 0, taps: 0 }); st[data.p_kind === 'tap' ? 'taps' : 'views'] += 1; }
+        return route.fulfill({ status: 204, headers: CORS, body: '' });
+      }
+      if (!M.admin) return fail(403, '42501', 'Solo el equipo ve los anuncios.');
+      if (afn === 'micra_ads_admin') {
+        return json(200, M.ads.map((a) => ({ ...a, views: M.adStats[a.id]?.views ?? 0, taps: M.adStats[a.id]?.taps ?? 0, views_today: M.adStats[a.id]?.views ?? 0, live: onAir(a) })));
+      }
+      if (afn === 'micra_ad_save') {
+        if (data.p_id) { const a = M.ads.find((x) => x.id === data.p_id); Object.assign(a, data.p_ad); return json(200, a); }
+        const a = { id: `ad-${M.ads.length + 1}`, active: true, ...data.p_ad };
+        M.ads.push(a);
+        return json(200, a);
+      }
+      const a = M.ads.find((x) => x.id === data.p_id);
+      a.active = data.p_active;
+      return json(200, { id: a.id, active: a.active });
+    }
+
     // Publicaciones de los baristas en Hoy (20261031160000_micra_barista_posts.sql), en memoria
     const pfn = p.match(/\/rpc\/(micra_post_add|micra_posts_feed|micra_posts_mine|micra_posts_pending|micra_post_review|micra_post_remove)$/)?.[1];
     if (pfn) {
@@ -453,6 +486,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, result);
     }
     if (p.includes('/storage/v1/object/marketing')) return json(200, { Key: 'marketing/x' });
+    // Las imágenes públicas de los anuncios (marketing/micra-ads/…): un píxel
+    if (p.includes('/storage/v1/object/public/marketing/micra-ads/')) return route.fulfill({ status: 200, headers: CORS, contentType: 'image/png', body: PIXEL });
     // Las fotos y videos de las publicaciones: subir, firmar y servir (un píxel)
     if (p.endsWith('/storage/v1/object/sign/micra-posts') && m === 'POST') {
       return json(200, (data?.paths ?? []).map((path) => ({ path, signedURL: `/object/sign/micra-posts/${path}?token=firmado`, error: null })));

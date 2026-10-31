@@ -1347,3 +1347,68 @@
 .mapp-review-copy p { margin: 6px 0 8px; }
 /* Lo de los baristas va vertical, como en Instagram (4:5) */
 .mapp-ig.is-publicaciones .mapp-ig-photo img, .mapp-ig.is-publicaciones .mapp-ig-photo video { aspect-ratio: 4 / 5; }
+
+/* ── Las publicaciones a todo el ancho, como en Instagram (31 oct) ────── */
+/* Sin tarjeta: la foto de borde a borde, las acciones debajo y una línea entre
+   una y otra. Lo que es tarjeta (el precio del café, los sellos, «Tus
+   publicaciones», los baristas) sigue como tarjeta. */
+.mapp-posts { gap: 0; }
+.mapp-posts > .mapp-ig { margin: 0 -16px; border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: 0 0 10px; border-bottom: 1px solid var(--m-line); }
+.mapp-posts > .mapp-ig + .mapp-ig { padding-top: 6px; }
+.mapp-posts > .mapp-ig .mapp-ig-head { padding: 10px 14px; }
+.mapp-posts > .mapp-ig .mapp-ig-foot { padding: 4px 6px 0; }
+.mapp-posts > .mapp-ig .mapp-ig-body { padding: 2px 14px 0; }
+.mapp-posts > .mapp-ig .mapp-ig-body:empty { display: none; }
+.mapp-posts > .mapp-post:not(.mapp-ig) { margin: 0 0 14px; }
+.mapp-posts > .mapp-ig + .mapp-post:not(.mapp-ig) { margin-top: 14px; }
+.mapp-posts > .mapp-ig .mapp-post-av { box-shadow: 0 0 0 1.5px var(--m-line); }
+
+/* ── Anuncios «Patrocinado» (etapa 1) ────────────────────────────────── */
+.mapp-post-av.is-ad { background: var(--m-fg); color: var(--m-bg); font: 800 .78rem 'Archivo', sans-serif; }
+.mapp-ig-tile.is-ad { background: #1F2452; color: #F5EFE4; aspect-ratio: 4 / 5; padding: 24px; }
+.mapp-ig.is-patrocinado .mapp-ig-photo img { aspect-ratio: 4 / 5; }
+.mapp-ig.is-patrocinado .mapp-ig-who small { opacity: .85; }
+/* La barra del botón debajo de la imagen, como la de Instagram */
+.mapp-ad-cta { display: flex; align-items: center; justify-content: space-between; min-height: 46px; padding: 0 14px; background: var(--m-cta); color: #fff; font: 800 .95rem 'Archivo', sans-serif; text-decoration: none; }
+.mapp-ad-cta i { font-style: normal; font-size: 1.3rem; }
+.mapp-posts > .mapp-ig.is-patrocinado .mapp-ig-body { padding-top: 8px; }
+/* En las historias: aro de tinta y «Patrocinado» */
+.mapp-hist.is-ad .mapp-hist-ring { padding: 3px; background: repeating-conic-gradient(var(--m-fg) 0 10deg, transparent 10deg 16deg); }
+.mapp-hist.is-ad .mapp-hist-av { background: #1F2452; color: #F5EFE4; }
+.mapp-hist.is-ad .mapp-hist-av img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-hist.is-ad .mapp-hist-av b { font: 800 1rem 'Archivo', sans-serif; }
+.mapp-hist.is-ad em { margin-top: -6px; font: 600 .58rem 'JetBrains Mono', monospace; font-style: normal; color: var(--m-soft); letter-spacing: .04em; }
+/* La historia a pantalla completa */
+.mapp-adstory { position: fixed; inset: 0; z-index: 85; display: flex; flex-direction: column; justify-content: space-between; color: #fff; background: #16181F; animation: mapp-in .2s both; }
+.mapp-adstory-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mapp-adstory-bg.is-plain { background: radial-gradient(120% 90% at 30% 20%, #2A3170, #1F2452 60%, #121530); }
+.mapp-adstory::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0, 0, 0, .45), transparent 22%, transparent 55%, rgba(0, 0, 0, .7)); pointer-events: none; }
+.mapp-adstory-top { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: max(12px, env(safe-area-inset-top)) 12px 0; }
+.mapp-adstory-bar { grid-column: 1 / -1; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, .9); }
+.mapp-adstory-who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mapp-adstory-who b { font: 800 .95rem 'Archivo', sans-serif; }
+.mapp-adstory-who small { font: 500 .7rem 'JetBrains Mono', monospace; opacity: .85; }
+.mapp-adstory-who .mapp-post-av { width: 34px; height: 34px; background: #F5EFE4; color: #1F2452; }
+.mapp-adstory-x { width: 44px; height: 44px; border: 0; background: none; color: #fff; display: grid; place-items: center; cursor: pointer; }
+.mapp-adstory-copy { position: relative; z-index: 1; padding: 0 20px max(24px, env(safe-area-inset-bottom)); display: grid; gap: 10px; }
+.mapp-adstory-title { margin: 0; font: 800 1.7rem/1.1 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-adstory-body { margin: 0; font-size: 1rem; opacity: .92; }
+.mapp-adstory-cta { display: flex; align-items: center; justify-content: center; min-height: 50px; border-radius: 999px; background: #fff; color: #DE1B1B; font: 800 1.05rem 'Archivo', sans-serif; text-decoration: none; }
+/* El panel del equipo */
+.mapp-adspanel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mapp-adspanel-head .mapp-cota { margin: 0; }
+.mapp-adform { margin: 12px 0; display: grid; gap: 8px; }
+.mapp-adform-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mapp-adform-img { display: flex; align-items: center; gap: 12px; }
+.mapp-adform-img img { width: 64px; height: 80px; object-fit: cover; border-radius: 10px; }
+.mapp-adlist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 14px; }
+.mapp-adlist li { padding-top: 12px; border-top: 1px solid var(--m-line); }
+.mapp-adlist-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mapp-adlist small { color: var(--m-soft); font-size: .8rem; }
+.mapp-adstate { flex: none; padding: 3px 8px; border-radius: 999px; font: 700 .66rem 'JetBrains Mono', monospace; background: var(--m-line); }
+.mapp-adstate.is-live { background: color-mix(in srgb, var(--m-green) 22%, transparent); }
+.mapp-adstate.is-soon { background: color-mix(in srgb, #F5B66B 35%, transparent); }
+.mapp-adstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0; }
+.mapp-adstats div { padding: 6px 8px; border-radius: 12px; background: color-mix(in srgb, var(--m-fg) 5%, transparent); }
+.mapp-adstats dd { margin: 0; font: 700 1rem 'JetBrains Mono', monospace; }
+.mapp-adstats dt { font-size: .66rem; color: var(--m-soft); }
