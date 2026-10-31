@@ -1435,3 +1435,10 @@
 .mapp-pull.is-ready { box-shadow: 0 0 0 2px var(--m-cta), 0 8px 20px -10px rgba(0, 0, 0, .45); }
 .mapp-pull.is-busy .mapp-pull-ico { animation: mapp-pull-spin .8s linear infinite; }
 @keyframes mapp-pull-spin { to { transform: rotate(360deg); } }
+
+/* Avisos por WhatsApp: la invitación en Vender y su fila en Permisos */
+.mapp-wanudge { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 12px; }
+.mapp-wanudge-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--m-green) 18%, transparent); font-size: 1.3rem; }
+.mapp-wanudge b { display: block; }
+.mapp-wanudge .mapp-muted { margin: 2px 0 8px; font-size: .88rem; }
+.mapp-palerts { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--m-line); }

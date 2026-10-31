@@ -278,6 +278,37 @@ function GoalCard({ board, goal, onGoal, week }) {
 }
 
 /** Quién le apartó: entregar, no vino y el tinto gratis por canjear. */
+// La invitación a los avisos por WhatsApp: una vez, hasta que los active o diga «Ahora no»
+const WA_NUDGE_KEY = 'micra_wa_nudge_off_v1';
+
+/** «¿Te avisamos por WhatsApp cuando te aparten?»: solo en su propio celular y si tiene número. */
+function WaNudge() {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [off, setOff] = useState(() => { try { return localStorage.getItem(WA_NUDGE_KEY) === '1'; } catch { return false; } });
+  useEffect(() => { if (!off) api.baristaAlerts(null).then(setState).catch(() => setState(null)); }, [off]);
+  if (off || !state || state.on || !state.has_phone) return null;
+  const later = () => { try { localStorage.setItem(WA_NUDGE_KEY, '1'); } catch { /* sin memoria */ } setOff(true); };
+  const on = async () => {
+    setBusy(true);
+    try { setState(await api.baristaAlerts(true)); } catch { /* sigue la invitación */ }
+    setBusy(false);
+  };
+  return (
+    <section className="mapp-glass mapp-wanudge" aria-label="Avisos por WhatsApp" data-testid="wa-nudge">
+      <span className="mapp-wanudge-ico" aria-hidden="true">💬</span>
+      <div>
+        <b>¿Te avisamos por WhatsApp cuando te aparten?</b>
+        <p className="mapp-muted">Solo si no tienes Micra abierta, y a lo más uno cada 10 minutos.</p>
+        <span className="mapp-row-btns">
+          <button type="button" className="mapp-btn is-small is-cta" onClick={on} disabled={busy}>{busy ? 'Un momento…' : 'Activar'}</button>
+          <button type="button" className="mapp-link" onClick={later}>Ahora no</button>
+        </span>
+      </div>
+    </section>
+  );
+}
+
 function Waiting({ waiting, sum, rewards, busy, onClose, onRedeem, compact = false }) {
   return (
     <section className={`mapp-glass ${compact ? 'is-compact' : ''}`} aria-labelledby="mapp-wait">
@@ -417,13 +448,16 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     }
   }, [asId]);
   useEffect(() => { setDay(null); prevCups.current = null; load(); }, [load]);
-  // Avisos: con la app a la vista se mira cada 20 s (y al volver a ella) si llegó un apartado
+  // Avisos: con la app a la vista se mira cada 20 s (y al volver a ella) si llegó un apartado,
+  // y se le dice a la base que Micra está abierta (así no le manda WhatsApp: basta el globito)
   useEffect(() => {
-    const tick = () => { if (document.visibilityState === 'visible') load(); };
+    const seen = () => { if (!asId) api.baristaSeen().catch(() => {}); };
+    seen();
+    const tick = () => { if (document.visibilityState === 'visible') { load(); seen(); } };
     const id = setInterval(tick, POLL_MS);
     document.addEventListener('visibilitychange', tick);
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
-  }, [load]);
+  }, [load, asId]);
   // «Desliza para recargar» (MicraApp): vuelve a leer el día y lo propio
   useEffect(() => { if (refreshKey) { load(); loadExtras(); } }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
   // El globito: los apartados que esperan y no se han avisado (también los que llegaron con la app cerrada)
@@ -794,6 +828,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <button type="button" className="mapp-coffeebar" onClick={() => setOrdering(true)} data-testid="coffee-bar">
               <span aria-hidden="true">☕</span><span><b>Tu café</b> · ¿se te está acabando?</span><u>Pedir</u>
             </button>
+            {!asId && <WaNudge />}
             <Waiting {...waitingProps} />
           </>
         )}

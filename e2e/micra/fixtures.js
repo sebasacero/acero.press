@@ -287,6 +287,15 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       const card = (b) => ({ ...b, waiting: M.holds.filter((h) => h.tintero_id === b.id && h.status === 'waiting').length });
       const actor = () => (data?.p_tintero_id ? M.baristas.find((b) => b.id === data.p_tintero_id) : M.baristas.find((b) => b.mine));
       const price = (b, prod) => b.prices?.[prod] ?? (b.extras ?? []).find((x) => x.id === prod && !x.removed)?.price ?? null;
+      // Avisos por WhatsApp (20261031210000_micra_whatsapp_alerts.sql): M.alertsMissing sin la migración
+      if (mfn === 'micra_barista_seen' || mfn === 'micra_barista_alerts') {
+        if (M.alertsMissing) return fail(404, 'PGRST202', `Could not find the function public.${mfn} in the schema cache`);
+        const b = actor();
+        if (mfn === 'micra_barista_seen') { M.seenPings = (M.seenPings ?? 0) + 1; return route.fulfill({ status: 204, headers: CORS, body: '' }); }
+        if (data?.p_on != null && data?.p_tintero_id && !b?.mine) return fail(403, '42501', 'El barista activa sus avisos desde su propio celular.');
+        if (data?.p_on != null) { b.wa_alerts = data.p_on; b.wa_alerts_at = new Date().toISOString(); }
+        return json(200, { on: !!b?.wa_alerts, since: b?.wa_alerts_at ?? null, has_phone: /^573\d{9}$/.test(b?.phone ?? '') });
+      }
       if (mfn === 'micra_baristas') return json(200, M.baristas.filter((b) => b.public !== false).map(card));
       if (mfn === 'micra_my_holds') return json(200, M.holds.filter((h) => h.client_ref === data.p_client_ref));
       if (mfn === 'micra_hold') {

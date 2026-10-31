@@ -186,6 +186,16 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
   const [error, setError] = useState(null);
   const [outFailed, setOutFailed] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  // Avisos por WhatsApp cuando le apartan (null: sin la migración, no sale)
+  const [alerts, setAlerts] = useState(null);
+  const [alertsBusy, setAlertsBusy] = useState(false);
+  useEffect(() => { api.baristaAlerts(null, asId).then(setAlerts).catch(() => setAlerts(null)); }, [asId]);
+  const toggleAlerts = async () => {
+    setAlertsBusy(true);
+    setError(null);
+    try { setAlerts(await api.baristaAlerts(!alerts.on)); } catch (e) { setError(e.message); }
+    setAlertsBusy(false);
+  };
   const help = useHelp(`Hola, equipo de Micra. Soy ${day.name.split(' ')[0]}, barista. Necesito ayuda con `);
 
   useEffect(() => {
@@ -292,7 +302,7 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
       <Group title="Mi cuenta">
         <Tile icon={IconUser} label="Mis datos" onClick={() => setSheet('datos')} testid="tile-datos" />
         <Tile icon={IconTarget} label="Mi meta" onClick={() => setSheet('meta')} testid="tile-meta" />
-        <Tile icon={IconShield} label="Permisos" onClick={() => setSheet('permisos')} dot={!isPublic || !consentAt} testid="tile-permisos" />
+        <Tile icon={IconShield} label="Permisos" onClick={() => setSheet('permisos')} dot={!isPublic || !consentAt || (alerts?.has_phone && !alerts.on)} testid="tile-permisos" />
         <Tile icon={IconHelp} label="Ayuda" href={help} external />
         <Tile icon={IconLock} label="Privacidad" href={PRIVACY()} external />
       </Group>
@@ -399,6 +409,23 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
           )}
           {own && consentAt && (
             <button type="button" className="mapp-btn is-small is-stop" onClick={withdraw} disabled={withdrawing} data-testid="consent-withdraw">{withdrawing ? 'Retirando…' : 'Retirar permiso de ubicación'}</button>
+          )}
+          {alerts && (
+            <div className="mapp-palerts" data-testid="profile-wa">
+              <dl className="mapp-plist">
+                <Row label="Avisos por WhatsApp" testid="profile-wa-state">{alerts.on ? `Sí${alerts.since ? `, desde el ${fecha(alerts.since)}` : ''}` : 'No'}</Row>
+              </dl>
+              <p className="mapp-fine">
+                {alerts.has_phone
+                  ? `Te escribimos${phone ? ` al ${phone}` : ''} cuando te aparten y no tengas Micra abierta, a lo más uno cada 10 minutos. Los apagas aquí cuando quieras.`
+                  : 'Para recibirlos, el equipo tiene que registrar tu celular.'}
+              </p>
+              {own && alerts.has_phone && (
+                <button type="button" className={`mapp-btn is-small ${alerts.on ? 'is-ghost' : 'is-cta'}`} onClick={toggleAlerts} disabled={alertsBusy} data-testid="profile-wa-toggle">
+                  {alertsBusy ? 'Un momento…' : alerts.on ? 'Apagar avisos por WhatsApp' : 'Avisarme por WhatsApp'}
+                </button>
+              )}
+            </div>
           )}
         </Sheet>
       )}

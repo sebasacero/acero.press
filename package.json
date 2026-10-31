@@ -8,7 +8,7 @@
     "api": "uvicorn --app-dir api v1:app --reload --port 8000",
     "build": "vite build && npm run micra:web",
     "preview": "vite preview",
-    "test": "node --test \"src/**/*.test.js\"",
+    "test": "node --test \"src/**/*.test.js\" \"supabase/functions/**/*.test.js\"",
     "e2e": "playwright test",
     "shot": "node e2e/shot.mjs",
     "test:sql": "bash supabase/tests/micra_atomic_sale/run.sh",

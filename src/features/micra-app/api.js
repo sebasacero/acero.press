@@ -138,6 +138,10 @@ export async function postUrls(paths) {
   return Object.fromEntries((data ?? []).filter((x) => x.signedUrl && !x.error).map((x) => [x.path, x.signedUrl]));
 }
 
+// Avisos por WhatsApp cuando le apartan (20261031210000_micra_whatsapp_alerts.sql)
+export const baristaAlerts = (on, asId) => call('micra_barista_alerts', { p_on: on ?? null, ...as(asId) });
+export const baristaSeen = () => call('micra_barista_seen');
+
 // Anuncios «Patrocinado», etapa 1 (20261031190000_micra_ads.sql)
 export const adsLive = (audience) => call('micra_ads_live', { p_audience: audience });
 export const adEvent = (id, kind) => call('micra_ad_event', { p_ad_id: id, p_kind: kind });
