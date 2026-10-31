@@ -47,3 +47,49 @@ export const IconUser = () => (
 export const IconBack = () => (
   <svg {...base}><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
 );
+// Los de «Mi perfil»
+export const IconQr = () => (
+  <svg {...base}><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><path d="M14 14h2v2M20 14v2M14 20h2M18 18h2v2" /></svg>
+);
+export const IconShare = () => (
+  <svg {...base}><path d="M12 15V3M7 8l5-5 5 5" /><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" /></svg>
+);
+export const IconEye = () => (
+  <svg {...base}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></svg>
+);
+export const IconTag = () => (
+  <svg {...base}><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8a1.4 1.4 0 0 1 0 2l-7 7a1.4 1.4 0 0 1-2 0z" /><circle cx="8" cy="8" r="1.5" /></svg>
+);
+export const IconCard = () => (
+  <svg {...base}><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19M6.5 15h4" /></svg>
+);
+export const IconTarget = () => (
+  <svg {...base}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" fill="currentColor" /></svg>
+);
+export const IconShield = () => (
+  <svg {...base}><path d="M12 3 19.5 6v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z" /><path d="m9 12 2.2 2.2L15.5 10" /></svg>
+);
+export const IconHelp = () => (
+  <svg {...base}><path d="M4 14v-2a8 8 0 0 1 16 0v2" /><rect x="3" y="13" width="4" height="6.5" rx="1.6" /><rect x="17" y="13" width="4" height="6.5" rx="1.6" /><path d="M19 19.5c0 1.4-2.2 2.2-5 2.2" /></svg>
+);
+export const IconLock = () => (
+  <svg {...base}><rect x="5" y="10.5" width="14" height="10" rx="2.2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2" /></svg>
+);
+export const IconVideo = () => (
+  <svg {...base}><rect x="3" y="6" width="13" height="12" rx="2.5" /><path d="m16 10.5 5-3v9l-5-3z" /></svg>
+);
+export const IconCan = () => (
+  <svg {...base}><path d="M7.5 5.5h9l-.5 15a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z" /><path d="M7.5 5.5 8.5 3h7l1 2.5M8 9.5h8M8.2 16.5h7.6" /></svg>
+);
+export const IconHeart = () => (
+  <svg {...base}><path d="M12 20s-7.5-4.6-7.5-10.3A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z" /></svg>
+);
+export const IconGift = () => (
+  <svg {...base}><rect x="4" y="9" width="16" height="11.5" rx="1.6" /><path d="M3.5 9h17v3.5h-17zM12 9v11.5" /><path d="M12 9C10.5 5.5 6.5 5 6.5 7.2S9.5 9 12 9zM12 9c1.5-3.5 5.5-4 5.5-1.8S14.5 9 12 9z" /></svg>
+);
+export const IconPin = () => (
+  <svg {...base}><path d="M12 21s-6.5-5.8-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15.2 12 21 12 21z" /><circle cx="12" cy="9.8" r="2.4" /></svg>
+);
+export const IconBag = () => (
+  <svg {...base}><path d="M5 8h14l-1.2 12.5H6.2z" /><path d="M9 10V6.5a3 3 0 0 1 6 0V10" /></svg>
+);

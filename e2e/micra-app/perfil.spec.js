@@ -51,27 +51,44 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   await page.getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page).toHaveURL(/\/micra\/barista\/perfil$/);
 
+  // Como en las apps de domicilios: el saludo, su camino y los accesos por secciones
   const prof = page.getByTestId('barista-profile');
-  await expect(prof.getByRole('heading', { name: 'Marlene Rojas' })).toBeVisible();
-  await expect(page.getByTestId('profile-phone')).toHaveText('300 ••• 4567');
-  await expect(prof).not.toContainText('300 123 4567');
-  await expect(page.getByTestId('profile-method')).toHaveText('Con tu celular (SMS)');
-  await expect(page.getByTestId('profile-prices')).toContainText('$1.500');
-  await expect(page.getByTestId('profile-prices')).toContainText('$2.000');
-  // Cómo le pagan: solo los medios, nunca un número
-  await expect(page.getByTestId('profile-pay')).toHaveText('Efectivo, Nequi');
-  await expect(prof).not.toContainText('310 987 6543');
-  await expect(page.getByTestId('profile-public')).toContainText('Sí');
-  await expect(page.getByTestId('profile-location')).toContainText('Permitida desde');
-  await expect(page.getByTestId('profile-link')).toContainText(`/micra/b/${MARLENE}`);
+  await expect(prof.getByRole('heading', { name: 'Marlene Rojas', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('profile-camino')).toContainText('Barista de calle');
+  for (const g of ['Tu negocio', 'Tu plata', 'Mi cuenta', 'Otros']) await expect(prof.getByRole('region', { name: g })).toBeVisible();
   await expect(page.getByTestId('privacy-link')).toHaveAttribute('href', /\/privacidad$/);
 
-  // Cambiar precios con el formulario de siempre
-  await prof.getByRole('button', { name: 'Cambiar precios de tinto, perico y aromática' }).click();
+  // Mis datos: el celular a medias, cómo entra y su enlace, en la hoja de abajo
+  await page.getByTestId('tile-datos').click();
+  await expect(page.getByTestId('profile-phone')).toHaveText('300 ••• 4567');
+  await expect(page.getByTestId('sheet-datos')).not.toContainText('300 123 4567');
+  await expect(page.getByTestId('profile-method')).toHaveText('Con tu celular (SMS)');
+  await expect(page.getByTestId('profile-link')).toContainText(`/micra/b/${MARLENE}`);
+  await page.getByTestId('sheet-datos').getByRole('button', { name: 'Listo' }).click();
+  await expect(page.getByTestId('sheet-datos')).toHaveCount(0);
+
+  // Cómo le pagan: solo los medios, nunca un número
+  await page.getByTestId('tile-pagos').click();
+  await expect(page.getByTestId('profile-pay')).toHaveText('Efectivo, Nequi');
+  await expect(page.getByTestId('sheet-pagos')).not.toContainText('310 987 6543');
+  await page.keyboard.press('Escape');
+
+  // Permisos
+  await page.getByTestId('tile-permisos').click();
+  await expect(page.getByTestId('profile-public')).toContainText('Sí');
+  await expect(page.getByTestId('profile-location')).toContainText('Permitida desde');
+  await page.keyboard.press('Escape');
+
+  // Lo que vende: cambiar precios con el formulario de siempre
+  await page.getByTestId('tile-precios').click();
+  await expect(page.getByTestId('profile-prices')).toContainText('$1.500');
+  await expect(page.getByTestId('profile-prices')).toContainText('$2.000');
+  await page.getByRole('button', { name: 'Cambiar precios de tinto, perico y aromática' }).click();
   await page.getByLabel('Precio del tinto').fill('1800');
   await page.getByRole('button', { name: 'Guardar precios' }).click();
   await expect(page.getByTestId('profile-prices')).toContainText('$1.800');
   expect(api.find('/rpc/micra_barista_prices').data.p_tinto).toBe(1800);
+  await page.keyboard.press('Escape');
 
   // Cerrar sesión: está en la calle, así que primero sale del mapa
   await page.getByTestId('signout').click();
@@ -152,6 +169,7 @@ test('barista: con ventas sin subir no deja cerrar sesión; cuando suben, sí', 
 test('barista: retira el permiso de ubicación desde su perfil', async ({ browser }) => {
   const { page, api, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista/perfil', { waitUntil: 'load' });
+  await page.getByTestId('tile-permisos').click();
   await page.getByTestId('consent-withdraw').click();
   await expect(page.getByTestId('profile-location')).toHaveText('No la compartes');
   expect(api.find('/rpc/tintero_consent').data.p_accept).toBe(false);
@@ -172,23 +190,35 @@ test('cliente: su perfil cambia el nombre, quita un barista y «Borrar mis datos
   await page.getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page).toHaveURL(/\/micra\/perfil$/);
 
+  // El banner de la lata sale una vez al día: se cierra con la X
+  await expect(page.getByTestId('promo-coldbrew')).toBeVisible();
+  await page.getByTestId('promo-close').click();
+  await expect(page.getByTestId('promo-coldbrew')).toHaveCount(0);
+
   const prof = page.getByTestId('client-profile');
-  await expect(prof.getByRole('heading', { name: 'Sebas' })).toBeVisible();
+  await expect(prof.getByRole('heading', { name: 'Sebas', level: 1 })).toBeVisible();
+  await page.getByTestId('tile-nombre').click();
   await page.getByLabel('Tu nombre (así te llama el barista)').fill('Sebas · 302');
   await page.getByRole('button', { name: 'Guardar nombre' }).click();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('micra_name_v1')))).toBe('Sebas · 302');
+  await page.keyboard.press('Escape');
 
+  await expect(page.getByTestId('tile-baristas')).toContainText('2 Mis baristas');
+  await page.getByTestId('tile-baristas').click();
   const favs = page.getByTestId('profile-favs');
   await expect(favs).toContainText('Marlene');
   await expect(favs).toContainText('Jairo');
   await favs.getByRole('button', { name: 'Quitar a Jairo' }).click();
   await expect(favs).not.toContainText('Jairo');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('micra_favs_v1')))).toEqual([MARLENE]);
+  await page.keyboard.press('Escape');
 
   // «Mostrar mi zona» (estaba apagada)
+  await page.getByTestId('tile-zona').click();
   await expect(page.getByTestId('zone-toggle')).not.toBeChecked();
   await page.getByTestId('zone-toggle').check();
   expect(await page.evaluate(() => localStorage.getItem('micra_seek_off_v1'))).toBe('false');
+  await page.keyboard.press('Escape');
   await expect(page.getByTestId('stamps')).toBeVisible();
 
   await page.getByTestId('client-wipe').click();
@@ -214,11 +244,35 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
 
   await expect(page).toHaveURL(/\/micra\/equipo\/perfil$/);
   await expect(page.getByTestId('owner-account')).toHaveText('equipo@aceropress.com');
+  await expect(page.getByTestId('owner-profile').getByRole('region', { name: 'El equipo' })).toBeVisible();
   await page.getByTestId('signout').click();
   await page.getByRole('button', { name: 'Sí, cerrar sesión' }).click();
   await expect(page).toHaveURL(/\/micra$/);
   await expect(page.getByRole('tablist', { name: 'Ver Micra como' })).toHaveCount(0);
   expect(api.find('/auth/v1/logout', 'POST')).toBeTruthy();
   expect(await page.evaluate(() => localStorage.getItem('sb-mock-auth-token'))).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('cliente: el banner de la lata de cold brew sale una vez al día, se pide por WhatsApp y vuelve desde su acceso', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/perfil', { waitUntil: 'load' });
+  const promo = page.getByTestId('promo-coldbrew');
+  await expect(promo).toBeVisible();
+  await expect(promo).toContainText('Cold brew en lata');
+  // Sin precio en el sitio, la lata dice su tamaño (el precio sale de page_sections cold_brew)
+  await expect(page.getByTestId('promo-price')).toHaveText('355 ml');
+  await expect(page.getByTestId('promo-cta')).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*cold%20brew/);
+  await page.keyboard.press('Escape');
+  await expect(promo).toHaveCount(0);
+  // El mismo día no vuelve a salir solo
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByTestId('client-profile')).toBeVisible();
+  await expect(promo).toHaveCount(0);
+  // Desde «Otros › Cold brew» se abre cuando quiera
+  await page.getByTestId('tile-coldbrew').click();
+  await expect(promo).toBeVisible();
+  await page.getByTestId('promo-close').click();
+  await expect(promo).toHaveCount(0);
   expect(errors).toEqual([]);
 });

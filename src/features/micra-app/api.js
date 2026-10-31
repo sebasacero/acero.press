@@ -114,5 +114,12 @@ export const verifySmsCode = (phone, token) => {
 // El WhatsApp del equipo (app_config; el mismo respaldo que WhatsAppButton)
 export const teamWhatsApp = () => fetchAppConfig('whatsapp_number', '573152125327');
 
+/** La lata de cold brew del sitio (page_sections `cold_brew`): de ahí sale su precio para el banner. */
+export async function coldBrewContent() {
+  const { data, error } = await supabase.from('page_sections').select('content').eq('slug', 'cold_brew').maybeSingle();
+  if (error) throw error;
+  return data?.content ?? null;
+}
+
 /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
 export const onePosition = (timeout) => platform.position(timeout);

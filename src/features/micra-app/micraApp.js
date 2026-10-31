@@ -193,6 +193,7 @@ export const baristaPath = (id) => `/micra/b/${id}`;
  *   /micra               inicio según quién entra
  *   /micra/b/<id>        un barista (lo que abre el QR del termo)
  *   /micra/apartados     mis apartados de hoy
+ *   /micra/hoy           el muro del café para el cliente (el mismo Hoy del barista, sin lo suyo)
  *   /micra/barista       el modo barista (entrar y enlazar si falta), pestaña Vender: su inicio
  *   /micra/barista/hoy · /aprende · /cuenta   sus otras pestañas (/vender también abre Vender)
  *   /micra/barista/qr    su QR «Pídeme por Micra» (desde Mi perfil)
@@ -203,6 +204,7 @@ export function parseRoute(pathname) {
   const b = p.match(/^\/micra\/b\/([0-9a-f-]{8,40})$/i);
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
+  if (p === '/micra/hoy') return { view: 'feed' };
   if (p === '/micra/barista') return { view: 'barista' };
   // Las pestañas del barista: el muro de hoy, aprender y su plata (Vender es /micra/barista)
   const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil|qr)$/);
