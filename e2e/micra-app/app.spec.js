@@ -463,6 +463,12 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   await expect(stories.getByRole('button').first()).toHaveAccessibleName('Hoy en el café');
   await expect(stories.getByRole('button', { name: /en la calle ahora/ }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+/);
+  // Debajo de los baristas sigue el muro de Hoy, como el feed de Instagram (un solo h1 en la página)
+  const feed = page.getByTestId('home-feed');
+  await expect(feed.getByRole('heading', { level: 2, name: 'Hoy en el café' })).toBeVisible();
+  await expect(feed.getByTestId('price-card')).toContainText('$1.300');
+  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Sin «Soy barista» ni círculo arriba: el perfil va abajo
   await expect(page.getByRole('banner').getByRole('button', { name: 'Mi perfil' })).toHaveCount(0);
   const nav = page.getByRole('navigation', { name: 'Micra' });

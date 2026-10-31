@@ -315,9 +315,15 @@ function CuratedForm({ current, onSaved, onCancel }) {
   );
 }
 
-export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista' }) {
+/**
+ * `embedded`: dentro del inicio del cliente, debajo de los baristas (como el
+ * muro de Instagram bajo las historias): título h2 y sin su propio «Publicar»,
+ * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
+ */
+export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null }) {
   const client = audience === 'client';
-  const [baristas, setBaristas] = useState([]);
+  const [fetched, setBaristas] = useState([]);
+  const baristas = list ?? fetched;
   const [cfg, setCfg] = useState({});
   const [chip, setChip] = useState('todo');
   const [editing, setEditing] = useState(false);
@@ -327,10 +333,10 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
     .then(({ data }) => setCfg(Object.fromEntries((data ?? []).map((r) => [r.key, r.value])))).catch(() => {});
   useEffect(() => {
     let alive = true;
-    api.listBaristas().then((l) => alive && setBaristas(sortBaristas(l ?? []))).catch(() => {});
+    if (!list) api.listBaristas().then((l) => alive && setBaristas(sortBaristas(l ?? []))).catch(() => {});
     loadPrices();
     return () => { alive = false; };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const prices = readPrices(cfg);
   const extra = readCurated(cfg.micra_muro);
   const dayKey = bogota().day;
@@ -346,13 +352,15 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
-    <div className="mapp-feed">
+    <div className={`mapp-feed ${embedded ? 'is-embedded' : ''}`} data-testid={embedded ? 'home-feed' : undefined}>
       <header className="mapp-feed-head">
         <div>
           <p className="mapp-kicker">{today}</p>
-          <h1 className="mapp-title is-small">{client ? 'Hoy en el café' : 'Hoy en la calle'}</h1>
+          {embedded
+            ? <h2 className="mapp-title is-small">Hoy en el café</h2>
+            : <h1 className="mapp-title is-small">{client ? 'Hoy en el café' : 'Hoy en la calle'}</h1>}
         </div>
-        <button type="button" className="mapp-btn is-small is-dark" onClick={() => setPublishing(true)}>＋ Publicar</button>
+        {!embedded && <button type="button" className="mapp-btn is-small is-dark" onClick={() => setPublishing(true)}>＋ Publicar</button>}
       </header>
       <div className="mapp-chips is-scroll" role="tablist" aria-label="Qué ver">
         {CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (

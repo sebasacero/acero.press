@@ -16,6 +16,8 @@ import { figureFor } from './motivation.js';
 
 // «Busco café» y su aviso llegan aparte: la app ya está al borde del límite del bundle
 const SeekNote = lazy(() => import('./SeekNote.jsx'));
+// El muro de Hoy, debajo de los baristas en el inicio del cliente (cargado aparte)
+const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
 
@@ -266,6 +268,9 @@ export function ClientHome({ go }) {
         </div>
         <button type="button" className="mapp-btn is-ghost" onClick={() => go('/micra/barista')}>Soy barista</button>
       </section>
+
+      {/* Como Instagram: debajo de todo sigue el muro (los puestos de los baristas, el precio, el café de Colombia, recetas y videos) */}
+      <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} /></Suspense>
     </div>
   );
 }

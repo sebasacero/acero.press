@@ -1316,3 +1316,6 @@
 .mapp-drinks-grid button.on { background: var(--m-cta); color: #fff; box-shadow: 0 12px 24px -14px rgba(222, 27, 27, .8); }
 .mapp-drinks-grid button.on small { color: rgba(255, 255, 255, .88); }
 .mapp-drinks-grid button.on .mapp-drink-ico { background: rgba(255, 255, 255, .2); }
+
+/* El muro de Hoy dentro del inicio del cliente: separado de lo de arriba como el feed de Instagram */
+.mapp-feed.is-embedded { margin: 22px -16px 0; padding: 18px 16px 0; border-top: 1px solid var(--m-line); }
