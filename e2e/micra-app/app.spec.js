@@ -337,8 +337,9 @@ test('barista en la calle: la cabecera roja sube hasta la barra, dice hasta cuá
   const app = page.locator('.mapp');
   await expect(app).toHaveClass(/is-redtop/);
   await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(1);
-  const red = await page.getByTestId('topbar').evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(red).toBe(await out.evaluate((el) => getComputedStyle(el).backgroundColor));
+  // La barra cambia de color con una transición: se espera a que termine
+  const headRed = await out.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await expect.poll(() => page.getByTestId('topbar').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(headRed);
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Hoy/ }).click();
   await expect(app).not.toHaveClass(/is-redtop/);
   await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(1);
