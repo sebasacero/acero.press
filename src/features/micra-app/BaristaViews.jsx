@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  PRODUCTS, menuOf, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
+  PRODUCTS, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
   baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota,
 } from './micraApp.js';
 import { streakOf, streakLabel, goalOf, milestone, stepText, lessonPath, figureFor, fillOf, GOAL_CHOICES } from './motivation.js';
@@ -9,13 +9,15 @@ import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconToday, IconCup, IconCap, IconWallet } from './icons.jsx';
+import { IconToday, IconCup, IconCap, IconWallet } from './icons.jsx';
 import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
-import { PaySettings } from './Loyalty.jsx';
 import { km } from '../ruta/track.js';
+import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel } from './flow.js';
+import { ModePicker, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
+import { firstSaleMoment, backHomeMoment, dayTripOf, storyFigure } from './daycard.js';
 
 // Modo barista en cuatro pestañas: Vender, su inicio (la racha, salir, la meta,
 // +1 por taza, fiados y quién te espera), Hoy (el muro del barismo), Aprende
@@ -33,10 +35,13 @@ const Aprende = lazy(() => import('./Aprende.jsx'));
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const Party = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Party })));
 const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.DayStory })));
+const Moment = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Moment })));
 // La entrada por SMS solo la descarga quien va a entrar (no el cliente que busca café)
 const PhoneLogin = lazy(() => import('./PhoneLogin.jsx'));
 // «Mi perfil» y «Cerrar sesión» (Perfil.jsx), solo al abrirlo
 const BaristaProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.BaristaProfile })));
+// El QR «Pídeme por Micra» (con su librería), solo al abrirlo
+const QrPage = lazy(() => import('./QrPage.jsx'));
 const TeamWhatsApp = lazy(() => import('./PhoneLogin.jsx').then((m) => ({ default: m.TeamWhatsApp })));
 
 const QUEUE_KEY = 'micra_sales_queue_v1';
@@ -194,25 +199,6 @@ function Digits({ value, label }) {
   );
 }
 
-/** El permiso de ubicación de «Salí a vender», con lo que se informa (Ley 1581). */
-function LocationConsent({ onAccept, onSkip, busy }) {
-  return (
-    <section className="mapp-glass mapp-consent" role="dialog" aria-label="Permiso de ubicación" data-testid="location-consent">
-      <p className="mapp-cota">Tu ubicación</p>
-      <p>Mientras tengas activo <b>Salí a vender</b>, Micra usa tu ubicación para que tus clientes te encuentren en el mapa y para mejorar la app. Al tocar «Ya volví» deja de usarla.</p>
-      <label className="mapp-check">
-        <input type="checkbox" id="mapp-consent-box" />
-        <span>Permito que Micra use mi ubicación mientras estoy vendiendo, para que mis clientes me encuentren y para mejorar la app.</span>
-      </label>
-      <p className="mapp-fine">Puedes retirar este permiso cuando quieras. <a className="mapp-link" href={platform.siteUrl('/privacidad#ubicacion')} target="_blank" rel="noreferrer">Cómo usamos tu ubicación</a></p>
-      <span className="mapp-row-btns">
-        <button type="button" className="mapp-btn is-cta" disabled={busy} onClick={() => { if (document.getElementById('mapp-consent-box')?.checked) onAccept(); else document.getElementById('mapp-consent-box')?.focus(); }} data-testid="consent-accept">{busy ? 'Guardando…' : 'Aceptar y salir'}</button>
-        <button type="button" className="mapp-link" onClick={onSkip}>Salir sin compartir mi recorrido</button>
-      </span>
-    </section>
-  );
-}
-
 /** La taza de la meta: se llena a medida que vende (pct 0–1). */
 function GoalCup({ pct }) {
   const top = 22 + (1 - pct) * 78; // el nivel del café: de 100 (vacía) a 22 (llena)
@@ -317,29 +303,6 @@ function Waiting({ waiting, sum, rewards, busy, onClose, onRedeem, compact = fal
   );
 }
 
-/** La siguiente lección, para que aprender quede a un toque. */
-function NextLesson({ go }) {
-  const lessons = lessonsFor('es');
-  const path = lessonPath(lessons, readSeen());
-  if (path.ready) {
-    return (
-      <button type="button" className="mapp-glass mapp-nextlesson" onClick={() => go('/micra/barista/aprende')}>
-        <span className="mapp-nextlesson-ico" aria-hidden="true">🏅</span>
-        <span><b>Viste las {path.total} lecciones</b><small>Graba tu video para subir a Barista de calle</small></span>
-        <i aria-hidden="true">›</i>
-      </button>
-    );
-  }
-  const l = lessons[path.nextIdx];
-  return (
-    <button type="button" className="mapp-glass mapp-nextlesson" onClick={() => go('/micra/barista/aprende')} data-testid="next-lesson">
-      <span className="mapp-nextlesson-ico" aria-hidden="true"><IconCap /></span>
-      <span><b>Lección {path.nextIdx + 1} · {l.title}</b><small>{l.mins} min · {path.done} de {path.total} vistas</small></span>
-      <i aria-hidden="true">›</i>
-    </button>
-  );
-}
-
 /** Pedir café por kilos: se escoge cuánto y sale el WhatsApp del equipo (el precio lo da el equipo). */
 function CoffeeOrder({ day, onClose }) {
   const [kilos, setKilos] = useState(1);
@@ -387,12 +350,23 @@ function BaristaTabs({ tab, go, waiting }) {
 }
 
 const GOAL_KEY = 'micra_goal_v1';
+const MODE_KEY = 'micra_out_mode_v1';
+const readMode = () => { try { const m = localStorage.getItem(MODE_KEY); return isMode(m) ? m : null; } catch { return null; } };
+const writeMode = (m) => { try { localStorage.setItem(MODE_KEY, m); } catch { /* sin memoria: vale por hoy */ } };
 const PARTY_KEY = 'micra_party_v1';
 const readGoal = (id) => { try { return JSON.parse(localStorage.getItem(GOAL_KEY))?.[id] ?? null; } catch { return null; } };
 const writeGoal = (id, n) => { try { localStorage.setItem(GOAL_KEY, JSON.stringify({ ...(JSON.parse(localStorage.getItem(GOAL_KEY)) ?? {}), [id]: n })); } catch { /* sin memoria: vale por hoy */ } };
 // La fiesta de la meta sale una vez al día por barista
 const partied = (key) => { try { return localStorage.getItem(PARTY_KEY) === key; } catch { return false; } };
 const markParty = (key) => { try { localStorage.setItem(PARTY_KEY, key); } catch { /* sin memoria */ } };
+// La primera taza del día también se celebra una vez (racha que sigue o hito)
+const FIRST_KEY = 'micra_first_v1';
+const firstDone = (key) => { try { return localStorage.getItem(FIRST_KEY) === key; } catch { return true; } };
+const markFirst = (key) => { try { localStorage.setItem(FIRST_KEY, key); } catch { /* sin memoria */ } };
+// El recorrido de hoy se queda en el celular al tocar «Ya volví», para «Mi día en la calle»
+const TRIP_KEY = 'micra_dia_v1';
+const readDayTrip = () => { try { return JSON.parse(localStorage.getItem(TRIP_KEY)); } catch { return null; } };
+const writeDayTrip = (t) => { try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch { /* sin memoria */ } };
 
 export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender' }) {
   const [day, setDay] = useState(null);
@@ -403,6 +377,14 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [asking, setAsking] = useState(false);
   const [rewards, setRewards] = useState({}); // { holdId: tintos gratis por canjear }
   const [showPay, setShowPay] = useState(false);
+  // Lo de 20261031130000_micra_barista_flow.sql: productos propios, medios de pago, cómo sale y si es público
+  const [extras, setExtras] = useState(null);
+  const [mode, setMode] = useState(readMode);
+  const loadExtras = useCallback(() => api.baristaExtras(asId).then((x) => {
+    setExtras(x ?? {});
+    if (x?.out_mode && isMode(x.out_mode)) { setMode(x.out_mode); writeMode(x.out_mode); }
+  }).catch(() => setExtras({})), [asId]);
+  useEffect(() => { loadExtras(); }, [loadExtras]);
   // Quién de los que esperan tiene un tinto gratis (arriba de los returns: los hooks van siempre en el mismo orden)
   useEffect(() => {
     if (!day) return;
@@ -418,6 +400,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [toast, setToast] = useState(null);
   const [party, setParty] = useState(false);
   const [story, setStory] = useState(false);
+  const [moment, setMoment] = useState(null); // la primera taza o el «Ya volví»
   const [ordering, setOrdering] = useState(false);
   const prevCups = useRef(null);
   const flushing = useRef(false);
@@ -462,7 +445,9 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
 
   // Lo que se cuenta, con lo que aún no sube (arriba de los returns, por los hooks)
   const queued = day ? readQueue().filter((s) => (s.asId ?? null) === asId) : [];
-  const board = day ? scoreboard(day, queued, day.prices ?? {}) : null;
+  const ownProducts = extras?.products ?? [];
+  const allPrices = { ...(day?.prices ?? {}), ...Object.fromEntries(ownProducts.map((x) => [x.id, x.price])) };
+  const board = day ? scoreboard(day, queued, allPrices) : null;
   const goal = day ? goalOf(day.week, goalPick ?? readGoal(day.id)) : 0;
   const partyKey = day ? `${day.id}:${bogota().day}` : '';
   useEffect(() => {
@@ -471,6 +456,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     prevCups.current = board.cups;
     if (prev == null) return;
     const m = milestone(prev, board.cups, goal);
+    if (prev === 0 && board.cups > 0 && !asId && !firstDone(partyKey)) {
+      markFirst(partyKey);
+      setMoment(firstSaleMoment({ streak: streakOf(day.week, board.cups).count, goal, name: day.name.split(' ')[0] }));
+      return;
+    }
     if (m?.kind === 'goal' && !partied(partyKey)) { markParty(partyKey); setParty(true); }
     else if (m?.kind === 'step' || m?.kind === 'goal') setToast(m.kind === 'goal' ? `¡Meta de ${goal} cumplida!` : stepText(m));
   }, [board?.cups, goal, partyKey]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -491,7 +481,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   if (error && !day) return <p className="mapp-error" role="alert">No se pudo leer tu día: {error} <button type="button" className="mapp-link" onClick={load}>Reintentar</button></p>;
   if (!day) return <Cargando fig="aeropress">Cargando tu día…</Cargando>;
 
-  const menu = menuOf(day);
+  const menu = menuWith(day, ownProducts);
+  const isPublic = extras?.public ?? day.public;
   const sum = daySummary(day);
   const counts = { ...sum.byProduct };
   for (const s of queued) counts[s.product] = (counts[s.product] || 0) + s.qty;
@@ -525,26 +516,55 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     } catch (e) { setError(e.message); }
     setBusy(null);
   };
-  const out = async (on, { share = true } = {}) => {
-    // La primera vez, el permiso de ubicación antes de salir
-    if (on && trip.ready && !trip.consented && !asking) { setAsking(true); return; }
+  const pickMode = (m) => {
+    setMode(m);
+    writeMode(m);
+    api.setOutMode(m, asId).catch(() => { /* sin la migración se recuerda en el celular */ });
+  };
+  // Salir siempre se puede: lo que falta (mapa público, ubicación) se pide en la misma hoja
+  const needs = consentNeeds({ isPublic, consented: !trip.ready || trip.consented, own: !asId });
+  const out = async (on, { asked = false } = {}) => {
+    if (on && !mode) { setError('Escoge primero cómo sales hoy: puesto fijo, sombrilla o caminando.'); return; }
+    if (on && needs.ask && !asked) { setAsking(true); return; }
     setAsking(false);
     setBusy('out');
     try {
+      // Pide el permiso del GPS del celular cada vez que sale (con cualquier forma de salir)
       const pos = on ? await api.onePosition() : null;
+      // Antes de cerrar el recorrido se guarda lo de hoy para «Mi día en la calle»
+      const before = !on ? { ...dayTripOf(trip.view, readDayTrip(), bogota().day), day: bogota().day } : null;
+      if (before && before.path.length > 1) writeDayTrip(before);
       await api.goOut(on ? OUT_MINUTES : 0, pos, asId);
-      if (on && share && trip.ready && !trip.recording) await trip.start();
+      if (on && recordsTrip(mode) && trip.ready && trip.consented && !trip.recording) await trip.start();
       if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();
+      if (!on && board.cups > 0 && !asId) {
+        const minutes = prog ? Math.max(0, Math.round((Date.now() - prog.start.getTime()) / 60000)) : 0;
+        setMoment(backHomeMoment({ cups: board.cups, goal, streak: streak.count, mode, distance: before.distance, stops: before.stops, minutes, name: first }));
+      }
     } catch (e) { setError(e.message); }
     setBusy(null);
   };
-  const acceptLocation = async () => {
+  const acceptConsent = async (what) => {
     setBusy('out');
-    try { await trip.consent(true); } catch (e) { setError(e.message); setBusy(null); return; }
+    try {
+      if (what.public) {
+        try { await api.setPublic(true); } catch (e) { if (!e.missing) throw e; }
+      }
+      if (what.location) await trip.consent(true);
+      await loadExtras();
+    } catch (e) { setError(e.message); setBusy(null); setAsking(false); return; }
     setBusy(null);
+    // trip.consented aún no se refresca en este render: se sale con lo aceptado
     setAsking(false);
-    await out(true);
+    setBusy('out');
+    try {
+      const pos = await api.onePosition();
+      await api.goOut(OUT_MINUTES, pos, asId);
+      if (recordsTrip(mode) && trip.ready && !trip.recording) await trip.start();
+      await load();
+    } catch (e) { setError(e.message); }
+    setBusy(null);
   };
   const redeem = async (h) => {
     setBusy(`r-${h.id}`);
@@ -561,42 +581,55 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     try { await api.fiadoPaid(name, asId); await load(); } catch (e) { setError(e.message); }
     setBusy(null);
   };
-  const shareLink = () => {
-    const url = platform.siteUrl(baristaPath(day.id));
-    const text = `Apártame tus tintos en Micra y te los tengo listos cuando pase:`;
-    platform.share({ title: `${first} en Micra`, text, url });
-  };
   const waiting = day.holds.filter((h) => h.status === 'waiting');
   const bars = weekBars(day.week);
   const recent = recentFiados(day);
   const waitingProps = { waiting, sum, rewards, busy, onClose: closeHold, onRedeem: redeem };
-  const consent = asking && <LocationConsent busy={busy === 'out'} onAccept={acceptLocation} onSkip={() => out(true, { share: false })} />;
+  const consent = asking && <GoOutConsent needs={needs} mode={mode} busy={busy === 'out'} onAccept={acceptConsent} onCancel={() => setAsking(false)} />;
   const errorBox = error && <p className="mapp-error" role="alert">{error} <button type="button" className="mapp-link" onClick={() => setError(null)}>Cerrar</button></p>;
-  const storyData = { name: first, cups: board.cups, total: board.total, streak: streak.count, goal, fig, km: trip.view?.distance ?? 0, url: platform.siteUrl(baristaPath(day.id)) };
+  const dayTrip = dayTripOf(trip.view, readDayTrip(), bogota().day);
+  const storyData = { name: first, cups: board.cups, total: board.total, streak: streak.count, goal, fig, mode, km: dayTrip.distance, stops: dayTrip.stops, path: dayTrip.path, url: platform.siteUrl(baristaPath(day.id)) };
 
+  // En la calle: la taza que se llena hacia la meta, arriba de todo
+  const left = Math.max(0, goal - board.cups);
+  const step5 = Math.floor(board.cups / 5) * 5;
   const outCard = live && (
-    <section className="mapp-now is-out" aria-label="Tu salida">
-      <p className="mapp-now-kicker">Saliste a las {time(prog.start)}<span className="mapp-now-live">En la calle</span></p>
-      <h1 className="mapp-now-hello">{greeting()}, {first}.</h1>
-      <p className="mapp-now-title">Hasta las {time(day.live_until)}</p>
-      <div className="mapp-outbar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida">
-        <i style={{ width: `${prog.pct * 100}%` }} /><em style={{ left: `${prog.pct * 100}%` }}><IconThermo /></em>
-      </div>
-      <p className="mapp-now-sub">quedan {prog.leftLabel}</p>
-      <dl className="mapp-now-kpis">
-        <div><dd>{sum.waitingCups}</dd><dt>te esperan</dt></div>
-        <div><dd>{money(board.total)}</dd><dt>hoy llevas</dt></div>
-        <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
-      </dl>
-      {trip.recording && (
-        <p className="mapp-now-sub mapp-trip" role="status" data-testid="trip-recording">
-          📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
+    <>
+      <section className="mapp-sellhead" aria-label="Tu salida" data-testid="sellhead">
+        <p className="mapp-sellhead-top">
+          <span className="mapp-now-live">En la calle{mode ? ` · ${modeOf(mode).label}` : ''}</span>
+          <span>Hasta las {time(day.live_until)}</span>
+        </p>
+        <h1 className="mapp-sellhead-hello">{greeting()}, {first}.</h1>
+        <GoalCup pct={fillOf(board.cups, goal)} />
+        <div className="mapp-sellhead-copy">
+          <p className="mapp-sellhead-n" aria-label={`${board.cups} de ${goal} tazas`}>{board.cups}<small>/{goal}</small></p>
+          <p className="mapp-sellhead-sub">{board.cups === 1 ? 'taza' : 'tazas'} · {money(board.total)} hoy</p>
+          <p className="mapp-sellhead-cota">{left > 0 ? `${left} más y cumples tu meta` : '¡Meta cumplida! Lo demás es ganancia'}</p>
+        </div>
+        <dl className="mapp-sellhead-kpis">
+          <div><dd>{sum.waitingCups}</dd><dt>te esperan</dt></div>
+          <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
+        </dl>
+        <div className="mapp-sellhead-time">
+          <span className="mapp-sellhead-bar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida"><i style={{ width: `${prog.pct * 100}%` }} /></span>
+          <small>quedan {prog.leftLabel}</small>
+        </div>
+        {trip.recording && (
+          <p className="mapp-sellhead-cota mapp-trip" role="status" data-testid="trip-recording">
+            📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
+          </p>
+        )}
+        <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
+      </section>
+      {board.cups > 0 && (
+        <p className="mapp-sellbar" data-testid="sellbar">
+          <span aria-hidden="true">✨</span>
+          <span><b>{step5 >= 5 ? `¡Llevas ${step5}!` : '¡Primera venta!'}</b> {streak.count > 1 ? 'tu racha sigue viva' : 'ganaste +1 día de racha'}</span>
+          <small>🔥 {streak.count}</small>
         </p>
       )}
-      <span className="mapp-now-btns">
-        <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
-      </span>
-    </section>
+    </>
   );
 
   let body;
@@ -607,17 +640,23 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           day={day} asId={asId} trip={trip} live={live} pending={pending} flush={flush} onReload={load} go={go}
           streak={streak} goal={goal} board={board}
           renderPrices={({ onSaved }) => <Prices day={day} asId={asId} onSaved={onSaved} />}
+          extras={extras} menu={menu} onExtras={loadExtras}
         />
       </Suspense>
     );
+  } else if (tab === 'qr') {
+    body = <Suspense fallback={<Cargando fig="caminando" />}><QrPage url={platform.siteUrl(baristaPath(day.id))} name={first} mode={mode} go={go} /></Suspense>;
   } else if (tab === 'aprende') {
     body = <Suspense fallback={<Cargando fig="aeropress" />}><Aprende go={go} night={night} /></Suspense>;
   } else if (tab === 'hoy') {
     body = (
       <>
-        <NextLesson go={go} />
         <Suspense fallback={<Cargando fig="caminando" />}>
-          <HoyFeed go={go} selfId={day.id} admin={admin || !!asId} myDay={{ name: first, cups: board.cups, km: trip.view?.distance ?? 0, streak: streak.count }} onShareDay={() => setStory(true)} />
+          <HoyFeed
+            go={go} selfId={day.id} admin={admin || !!asId} mode={mode} trip={dayTrip}
+            me={{ name: first, streak, goalMet: board.cups >= goal && goal > 0, lessonsDone: lessonPath(lessonsFor('es'), readSeen()).done, lessonsTotal: lessonsFor('es').length }}
+            canShareDay={board.cups > 0} onShareDay={() => setStory(true)}
+          />
         </Suspense>
       </>
     );
@@ -656,22 +695,12 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </ul>
         </section>
 
-        <section className="mapp-glass mapp-share">
-          <p className="mapp-cota">Tu enlace</p>
-          <p>Mándalo a tus clientes fijos o pégalo en tu termo: con él te apartan.</p>
-          <code>{platform.siteUrl(baristaPath(day.id)).replace(/^https?:\/\//, '')}</code>
-          <span className="mapp-row-btns">
-            <button type="button" className="mapp-btn is-small" onClick={shareLink}>Compartir</button>
-            <button type="button" className="mapp-link" onClick={() => go(baristaPath(day.id))}>Ver como cliente</button>
-          </span>
-        </section>
-
         {showPrices
           ? <Prices day={day} asId={asId} onSaved={() => { setShowPrices(false); load(); }} />
           : <button type="button" className="mapp-link" onClick={() => setShowPrices(true)}>Cambiar mis precios</button>}
         {showPay
-          ? <PaySettings day={day} asId={asId} onSaved={() => setShowPay(false)} />
-          : <button type="button" className="mapp-link" onClick={() => setShowPay(true)} data-testid="pay-open">Cómo te pagan (Nequi, Daviplata)</button>}
+          ? <section className="mapp-glass"><p className="mapp-cota">Cómo te pagan</p><PayMethods methods={extras?.payments} asId={asId} onSaved={() => { setShowPay(false); loadExtras(); }} onCancel={() => setShowPay(false)} /></section>
+          : <button type="button" className="mapp-link" onClick={() => setShowPay(true)} data-testid="pay-open">Cómo te pagan{extras?.payments?.length ? ` · ${methodsLabel(extras.payments)}` : ''}</button>}
         <section className="mapp-glass">
           <p className="mapp-cota">Para tus redes</p>
           <p>Un video o una foto con los filtros de Micra: tu café, tu puesto, la app. Lo compartes donde quieras.</p>
@@ -691,34 +720,33 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
               <h1 className="mapp-title is-small">{greeting()}, {first}.</h1>
             </section>
             <StreakRow streak={streak} />
-            <button type="button" className="mapp-btn is-cta is-big is-go" onClick={() => out(true)} disabled={busy === 'out' || !day.public}>
-              {busy === 'out' ? 'Avisando…' : 'Salí a vender'}
+            <ModePicker mode={mode} onPick={(m) => { pickMode(m); setError(null); }} disabled={busy === 'out'} />
+            <button type="button" className="mapp-btn is-cta is-big is-go" onClick={() => out(true)} disabled={busy === 'out'} data-testid="go-out">
+              {busy === 'out' ? 'Avisando…' : mode ? `Salí a vender · ${modeOf(mode).label.toLowerCase()}` : 'Salí a vender'}
             </button>
             {consent}
             {trip.pendingEnd && <p className="mapp-fine">Tu último recorrido no ha subido: se envía solo cuando haya señal.</p>}
-            {!day.public && <p className="mapp-fine">Aún no apareces para los clientes: el equipo te activa cuando aceptes salir en Micra.</p>}
-            {day.public && <p className="mapp-fine is-center">{waiting.length ? <><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron para hoy · meta <b>{goal} tazas</b></> : 'Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.'}</p>}
+            <p className="mapp-fine is-center">{waiting.length ? <><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron para hoy · meta <b>{goal} tazas</b></> : isPublic ? 'Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.' : 'Al salir te pedimos tu ubicación y aparecer en el mapa, para que tus clientes te encuentren.'}</p>
           </>
         )}
-        {/* En la calle: el mapa en vivo, como al ponerse «en línea» */}
-        {live && <Suspense fallback={null}><LivePanel live selfId={day.id} night={night} go={go} /></Suspense>}
         {errorBox}
         {menu.length === 0 ? <Prices day={day} asId={asId} onSaved={load} first /> : (
           <>
-            <GoalCard board={board} goal={goal} onGoal={setGoal} week={day.week} />
+            {!live && <GoalCard board={board} goal={goal} onGoal={setGoal} week={day.week} />}
             <section className="mapp-count" aria-label="Contar ventas">
               {menu.map((m) => (
                 <div key={m.id} className="mapp-tile">
-                  <span className="mapp-tile-name">{m.label} <small>{money(m.price)}</small></span>
-                  <span className="mapp-tile-n"><b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
+                  <span className="mapp-tile-name">{m.label}</span>
+                  <span className="mapp-tile-n">{money(m.price)} · <b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
                   <button type="button" className="mapp-plus" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`}>+1</button>
                   <button type="button" className="mapp-tile-fiado" onClick={() => setFiadoFor(m.id)} aria-label={`Fié un ${m.one}`}>Fiado</button>
                 </div>
               ))}
+              <AddProductTile asId={asId} count={ownProducts.length} onAdded={loadExtras} />
             </section>
             {fiadoFor && (
               <form className="mapp-glass mapp-fiado" onSubmit={(e) => { e.preventDefault(); if (fiadoName.trim()) plusOne(fiadoFor, fiadoName.trim()); }}>
-                <p className="mapp-cota">¿A quién le fiaste el {PRODUCTS.find((x) => x.id === fiadoFor).one}?</p>
+                <p className="mapp-cota">¿A quién le fiaste {menu.find((x) => x.id === fiadoFor)?.one ?? 'eso'}?</p>
                 {recent.length > 0 && (
                   <div className="mapp-chips">
                     {recent.map((n) => <button key={n} type="button" onClick={() => plusOne(fiadoFor, n)}>{n}</button>)}
@@ -741,8 +769,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <Waiting {...waitingProps} />
           </>
         )}
-        {/* Sin salir: la vista previa (estudio y quién está en la calle) con la invitación a salir */}
-        {!live && <Suspense fallback={null}><LivePanel selfId={day.id} night={night} go={go} /></Suspense>}
+        {/* En la calle, el mapa en vivo (como al ponerse «en línea»), debajo de las tazas */}
+        <Suspense fallback={null}><LivePanel live={live} selfId={day.id} night={night} go={go} /></Suspense>
       </>
     );
   }
@@ -760,6 +788,15 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       {party && (
         <Suspense fallback={null}>
           <Party {...storyData} onShare={() => { setParty(false); setStory(true); }} onClose={() => setParty(false)} />
+        </Suspense>
+      )}
+      {moment && (
+        <Suspense fallback={null}>
+          <Moment
+            moment={moment} fig={mode ? storyFigure(mode) : fig}
+            onPrimary={moment.id === 'volvi' ? () => { setMoment(null); setStory(true); } : () => setMoment(null)}
+            onClose={() => setMoment(null)} closeLabel={moment.id === 'volvi' ? 'Listo' : null}
+          />
         </Suspense>
       )}
       {story && (

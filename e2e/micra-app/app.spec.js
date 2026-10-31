@@ -405,7 +405,7 @@ test('barista: la racha de la semana, su meta y la fiesta al cumplirla; luego co
   expect(errors).toEqual([]);
 });
 
-test('barista: aprende en un camino de lecciones; lo visto queda marcado y Hoy ofrece la siguiente', async ({ browser }) => {
+test('barista: aprende en un camino de lecciones; lo visto queda marcado y Hoy lo cuenta como logro', async ({ browser }) => {
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.addInitScript(() => { localStorage.removeItem('acero.escuela.vistas'); });
   await page.goto('/micra/barista/aprende', { waitUntil: 'load' });
@@ -418,7 +418,7 @@ test('barista: aprende en un camino de lecciones; lo visto queda marcado y Hoy o
   await expect(page.getByTestId('level')).toContainText('1 de 6 lecciones');
   await expect(page.getByRole('button', { name: /Lección 1: Conoce tu AeroPress \(vista\)/ })).toBeVisible();
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Hoy/ }).click();
-  await expect(page.getByTestId('next-lesson')).toContainText('Lección 2 · Tu primera taza');
+  await expect(page.getByTestId('feed-logro-escuela')).toContainText('1 de 6 lecciones');
   expect(errors).toEqual([]);
 });
 
@@ -456,6 +456,137 @@ test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y 
   const order = page.getByTestId('coffee-order');
   await order.getByRole('button', { name: '2 kg' }).click();
   await expect(order.getByTestId('coffee-order-send')).toHaveAttribute('href', /wa\.me\/\d+\?text=.*2%20kilos/);
+  expect(errors).toEqual([]);
+});
+
+test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en la misma hoja), agrega un producto con + y escoge cómo le pagan', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  delete seed.baristas[0].live_until;
+  seed.baristas[0].public = false;
+  const { page, api, errors } = await open(browser, { who: 'barista', seed });
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 4.6432, longitude: -74.0641 });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+
+  // «Salí a vender» ya no espera al equipo: siempre se puede tocar
+  const go = page.getByTestId('go-out');
+  await expect(go).toBeEnabled();
+  await go.click();
+  await expect(page.getByRole('alert')).toContainText('Escoge primero cómo sales hoy');
+  await page.getByTestId('mode-caminando').click();
+  await expect(page.getByTestId('mode-caminando')).toHaveAttribute('aria-checked', 'true');
+  expect(api.find('/rpc/micra_barista_mode').data.p_mode).toBe('caminando');
+  await go.click();
+  const sheet = page.getByRole('dialog', { name: 'Permisos para salir' });
+  await expect(sheet).toContainText('Salir en el mapa de Micra');
+  await expect(sheet.getByTestId('consent-accept')).toBeDisabled();
+  await sheet.getByTestId('consent-public').check();
+  await sheet.getByTestId('consent-location').check();
+  await sheet.getByTestId('consent-accept').click();
+  await expect(page.locator('.mapp-now-live')).toHaveText('En la calle · Caminando');
+  expect(api.find('/rpc/micra_barista_public').data.p_on).toBe(true);
+  expect(api.micra.baristas[0].public).toBe(true);
+  expect(api.find('/rpc/micra_barista_out').data.p_lat).toBeCloseTo(4.6432, 3);
+  // Caminando: se graba el recorrido
+  await expect(page.getByTestId('trip-recording')).toBeVisible();
+
+  // El + junto a tinto, perico y aromática
+  await page.getByTestId('product-add').click();
+  const form = page.getByTestId('product-form');
+  await form.getByLabel('¿Qué vendes?').fill('Empanada');
+  await form.getByLabel('Precio').fill('2500');
+  await form.getByRole('button', { name: 'Agregar' }).click();
+  await page.getByRole('button', { name: 'Vendí un empanada' }).click();
+  await expect.poll(() => api.micra.sales.filter((s) => s.product === 'x0000000001').length).toBe(1);
+  expect(api.micra.sales.find((s) => s.product === 'x0000000001').total).toBe(2500);
+
+  // Cómo le pagan: solo el medio, sin número
+  await page.getByRole('button', { name: 'Mi perfil' }).click();
+  await expect(page.getByTestId('product-grid')).toContainText('Empanada');
+  await page.getByRole('button', { name: 'Cambiar cómo me pagan' }).click();
+  const pay = page.getByTestId('pay-settings');
+  await expect(pay.locator('input')).toHaveCount(0);
+  await pay.getByRole('button', { name: /Daviplata/ }).click();
+  await pay.getByTestId('pay-save').click();
+  await expect(page.getByTestId('profile-pay')).toHaveText('Efectivo, Nequi, Daviplata');
+  expect(api.find('/rpc/micra_barista_payments_set').data.p_methods).toEqual(['efectivo', 'nequi', 'daviplata']);
+
+  // En el perfil también se apaga y se prende el mapa
+  await page.getByTestId('profile-public-toggle').click();
+  await expect(page.getByTestId('profile-public')).toContainText('No');
+
+  // Mi plata ya no tiene «Tu enlace»
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi plata/ }).click();
+  await expect(page.getByText('Tu enlace')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('barista: Hoy celebra la racha y sugiere qué publicar; no publica cuántas tazas vendió', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.goto('/micra/barista/hoy', { waitUntil: 'load' });
+  await expect(page.getByTestId('price-card')).toContainText('Precio del día en la FNC');
+  await expect(page.getByTestId('feed-logro-racha')).toContainText('4 días en racha');
+  await expect(page.getByTestId('feed-idea')).toHaveCount(2);
+  await expect(page.getByTestId('feed-myday')).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Café de Colombia' }).click();
+  await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
+  await page.getByRole('tab', { name: 'Para publicar' }).click();
+  await page.getByTestId('feed-idea').first().getByRole('button', { name: /Tomar la foto/ }).click();
+  await expect(page).toHaveURL(/\/micra\/video$/);
+  expect(errors).toEqual([]);
+});
+
+test('barista caminando: la primera taza celebra la racha; «Ya volví» resume el día y «Mi día en la calle» lleva su ruta', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.sales = [];
+  seed.holds = [];
+  seed.baristas[0].live_until = new Date(Date.now() + 120 * 60000).toISOString();
+  const { page, errors } = await open(browser, { who: 'barista', seed });
+  await page.addInitScript(() => {
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
+    localStorage.setItem('micra_out_mode_v1', 'caminando');
+    // El recorrido de hoy, como queda al tocar «Ya volví» (4,2 km, 5 paradas)
+    localStorage.setItem('micra_dia_v1', JSON.stringify({ day, distance: 4230, stops: 5, path: [[-74.064, 4.643], [-74.062, 4.645], [-74.06, 4.648], [-74.057, 4.647], [-74.058, 4.651]] }));
+  });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  await expect(page.getByLabel(/^0 de \d+ tazas$/)).toBeVisible();
+
+  // La primera taza del día: la racha arranca (una vez al día)
+  await page.getByRole('button', { name: 'Vendí un tinto' }).click();
+  const first = page.getByTestId('moment-primera');
+  await expect(first).toContainText('¡Primera del día!');
+  await first.getByRole('button', { name: 'A vender' }).click();
+  await expect(first).toHaveCount(0);
+  await page.getByRole('button', { name: 'Vendí un tinto' }).click();
+  await expect(page.getByLabel(/^2 de \d+ tazas$/)).toBeVisible();
+  await expect(page.getByTestId('moment-primera')).toHaveCount(0);
+
+  // Hoy: «El día de Marlene» con su ruta, sin tazas ni plata
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Hoy/ }).click();
+  const dia = page.getByTestId('feed-dia');
+  await expect(dia).toContainText('El día de Marlene');
+  await expect(dia).toContainText('4,2 km · 5 paradas');
+  await expect(dia).not.toContainText('taza');
+  await expect(dia.locator('.mapp-routebox-line')).toHaveCount(1);
+  await expect(page.getByTestId('feed-idea').first().locator('.mapp-ig-tag')).toHaveText('Idea de foto');
+
+  // «Ya volví»: el resumen del que camina, y de ahí «Mi día en la calle»
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
+  await page.getByRole('region', { name: 'Tu salida' }).getByRole('button', { name: 'Ya volví' }).click();
+  const back = page.getByTestId('moment-volvi');
+  await expect(back).toContainText('2 tazas');
+  await expect(back).toContainText('4,2 km');
+  await expect(back).toContainText('5paradas');
+  await back.getByRole('button', { name: 'Compartir mi día' }).click();
+  const story = page.getByTestId('story');
+  await expect(story).toHaveAttribute('data-variant', 'calle');
+  await expect(story).toContainText('Mi día en la calle');
+  await expect(story).toContainText('N1 Aprendiz');
+  await expect(story.locator('.mapp-routebox-line')).toHaveCount(1);
+  await expect(story.getByTestId('story-wa')).toBeVisible();
+  await expect(story.getByTestId('story-share')).toHaveText('Historias');
+  await story.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(story).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

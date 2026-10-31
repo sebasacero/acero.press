@@ -219,7 +219,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       const today = new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
       const card = (b) => ({ ...b, waiting: M.holds.filter((h) => h.tintero_id === b.id && h.status === 'waiting').length });
       const actor = () => (data?.p_tintero_id ? M.baristas.find((b) => b.id === data.p_tintero_id) : M.baristas.find((b) => b.mine));
-      const price = (b, prod) => b.prices?.[prod] ?? null;
+      const price = (b, prod) => b.prices?.[prod] ?? (b.extras ?? []).find((x) => x.id === prod && !x.removed)?.price ?? null;
       if (mfn === 'micra_baristas') return json(200, M.baristas.filter((b) => b.public !== false).map(card));
       if (mfn === 'micra_my_holds') return json(200, M.holds.filter((h) => h.client_ref === data.p_client_ref));
       if (mfn === 'micra_hold') {
@@ -319,6 +319,22 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       if (mfn === 'micra_barista_profile') {
         if (M.profileMissing) return fail(404, 'PGRST202', 'Could not find the function public.micra_barista_profile in the schema cache');
         return json(200, { id: b.id, name: b.full ?? b.name, referencia: b.referencia, localidad: b.localidad, hora_inicio: b.hora_inicio ?? null, hora_fin: b.hora_fin ?? null, phone: b.phone ?? null, pay_nequi: b.pay_nequi ?? null, pay_daviplata: b.pay_daviplata ?? null, public: b.public !== false, public_at: b.public_at ?? null, consent_at: ruta.me?.consent_at ?? null });
+      }
+      // Flujo del barista (20261031130000_micra_barista_flow.sql); M.flowMissing: sin la migración
+      if (/^micra_barista_(extras|product_add|product_remove|public|payments_set|mode)$/.test(mfn)) {
+        if (M.flowMissing) return fail(404, 'PGRST202', `Could not find the function public.${mfn} in the schema cache`);
+        b.extras ??= [];
+        if (mfn === 'micra_barista_extras') return json(200, { products: b.extras.filter((x) => !x.removed), payments: (b.payments ?? []).filter((x) => x !== 'fiado'), out_mode: b.out_mode ?? null, public: b.public !== false, public_at: b.public_at ?? null });
+        if (mfn === 'micra_barista_product_add') {
+          if (!(data.p_price >= 0 && data.p_price <= 50000)) return fail(400, '22023', 'El precio va de $0 a $50.000.');
+          const x = { id: `x${String(b.extras.length + 1).padStart(10, '0')}`, label: data.p_label.trim(), price: data.p_price };
+          b.extras.push(x);
+          return json(200, x);
+        }
+        if (mfn === 'micra_barista_product_remove') { const x = b.extras.find((e) => e.id === data.p_key && !e.removed); if (x) x.removed = true; return json(200, !!x); }
+        if (mfn === 'micra_barista_public') { b.public = !!data.p_on; b.public_at = data.p_on ? new Date().toISOString() : null; return json(200, { public: b.public, public_at: b.public_at }); }
+        if (mfn === 'micra_barista_payments_set') { b.payments = data.p_methods; return json(200, data.p_methods); }
+        if (mfn === 'micra_barista_mode') { b.out_mode = data.p_mode; return json(200, data.p_mode); }
       }
       if (mfn === 'micra_barista_out') { b.live_until = data.p_minutes > 0 ? new Date(Date.now() + data.p_minutes * 60000).toISOString() : null; return json(200, { live_until: b.live_until }); }
       if (mfn === 'micra_barista_prices') { b.prices = Object.fromEntries([['tinto', data.p_tinto], ['perico', data.p_perico], ['aromatica', data.p_aromatica]].filter(([, v]) => v != null)); return json(200, b.prices); }

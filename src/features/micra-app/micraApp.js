@@ -195,6 +195,7 @@ export const baristaPath = (id) => `/micra/b/${id}`;
  *   /micra/apartados     mis apartados de hoy
  *   /micra/barista       el modo barista (entrar y enlazar si falta), pestaña Vender: su inicio
  *   /micra/barista/hoy · /aprende · /cuenta   sus otras pestañas (/vender también abre Vender)
+ *   /micra/barista/qr    su QR «Pídeme por Micra» (desde Mi perfil)
  *   /micra/equipo        el modo del equipo
  */
 export function parseRoute(pathname) {
@@ -204,7 +205,7 @@ export function parseRoute(pathname) {
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/barista') return { view: 'barista' };
   // Las pestañas del barista: el muro de hoy, aprender y su plata (Vender es /micra/barista)
-  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil)$/);
+  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil|qr)$/);
   if (t) return { view: 'barista', tab: t[1] };
   if (p === '/micra/equipo') return { view: 'owner' };
   // «Mi perfil»: el del cliente (lo que guarda el celular) y el del equipo (su sesión)

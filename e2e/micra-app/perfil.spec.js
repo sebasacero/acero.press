@@ -58,14 +58,16 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   await expect(page.getByTestId('profile-method')).toHaveText('Con tu celular (SMS)');
   await expect(page.getByTestId('profile-prices')).toContainText('$1.500');
   await expect(page.getByTestId('profile-prices')).toContainText('$2.000');
-  await expect(prof).toContainText('310 987 6543');
+  // Cómo le pagan: solo los medios, nunca un número
+  await expect(page.getByTestId('profile-pay')).toHaveText('Efectivo, Nequi');
+  await expect(prof).not.toContainText('310 987 6543');
   await expect(page.getByTestId('profile-public')).toContainText('Sí');
   await expect(page.getByTestId('profile-location')).toContainText('Permitida desde');
   await expect(page.getByTestId('profile-link')).toContainText(`/micra/b/${MARLENE}`);
   await expect(page.getByTestId('privacy-link')).toHaveAttribute('href', /\/privacidad$/);
 
   // Cambiar precios con el formulario de siempre
-  await prof.getByRole('button', { name: 'Cambiar mis precios' }).click();
+  await prof.getByRole('button', { name: 'Cambiar precios de tinto, perico y aromática' }).click();
   await page.getByLabel('Precio del tinto').fill('1800');
   await page.getByRole('button', { name: 'Guardar precios' }).click();
   await expect(page.getByTestId('profile-prices')).toContainText('$1.800');
@@ -82,6 +84,44 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   const left = await page.evaluate(() => ['sb-mock-auth-token', 'micra_mode_v1', 'micra_goal_v1'].map((k) => localStorage.getItem(k)));
   expect(left).toEqual([null, null, null]);
   await expect(page.getByRole('button', { name: 'Mi perfil' })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('barista: «Mi QR» con su dibujo al centro lleva a su página y se descarga', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.goto('/micra/barista/perfil', { waitUntil: 'load' });
+  await page.getByTestId('profile-qr').click();
+  await expect(page).toHaveURL(/\/micra\/barista\/qr$/);
+  await expect(page.getByRole('heading', { name: 'Tu QR' })).toBeVisible();
+  const qr = page.getByTestId('qr-svg');
+  await expect(qr).toHaveAttribute('data-logo', 'termo');
+  await expect(page.getByRole('radio')).toHaveCount(5);
+  await page.getByTestId('qr-logo-sombrilla').click();
+  await expect(qr).toHaveAttribute('data-logo', 'sombrilla');
+  await expect(page.getByTestId('qr-logo-sombrilla')).toHaveAttribute('aria-checked', 'true');
+
+  // El QR que se ve en pantalla se lee y abre la página del barista
+  const px = await qr.evaluate(async (svg) => {
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', '600'); clone.setAttribute('height', '600');
+    clone.querySelector('image')?.remove();
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(clone))}`;
+    await img.decode();
+    const c = Object.assign(document.createElement('canvas'), { width: 600, height: 600 });
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0, 600, 600);
+    return Array.from(g.getImageData(0, 0, 600, 600).data);
+  });
+  const { default: jsQR } = await import('jsqr');
+  expect(jsQR(new Uint8ClampedArray(px), 600, 600)?.data).toMatch(new RegExp(`/micra/b/${MARLENE}$`));
+
+  // Se guarda en PNG con su nombre, y el dibujo escogido se recuerda
+  const [file] = await Promise.all([page.waitForEvent('download'), page.getByTestId('qr-download').click()]);
+  expect(file.suggestedFilename()).toBe('qr-micra-marlene-sombrilla.png');
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByTestId('qr-svg')).toHaveAttribute('data-logo', 'sombrilla');
   expect(errors).toEqual([]);
 });
 

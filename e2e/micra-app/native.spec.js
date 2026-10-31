@@ -38,10 +38,12 @@ test('app instalada: el barista ve su enlace con la dirección del sitio', async
   await page.goto('/micra.html', { waitUntil: 'load' });
 
   await expect(page).toHaveURL(/\/micra\/barista$/);
-  // El enlace y Mi ruta están en «Mi plata»
+  // Mi ruta está en «Mi plata»; el enlace, solo en Mi perfil
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi plata/ }).click();
-  await expect(page.locator('.mapp-share code')).toHaveText(`www.aceropress.com/micra/b/${MARLENE}`);
   await expect(page.getByRole('link', { name: 'Medir mi recorrido (Mi ruta)' })).toHaveAttribute('href', 'https://www.aceropress.com/ruta');
+  await expect(page.locator('.mapp-share')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Mi perfil' }).click();
+  await expect(page.getByTestId('profile-link')).toHaveText(`www.aceropress.com/micra/b/${MARLENE}`);
   expect(errors).toEqual([]);
   await ctx.close();
 });

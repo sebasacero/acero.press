@@ -964,6 +964,177 @@
 .mapp-confirm p { margin: 6px 0; line-height: 1.4; }
 .mapp-confirm .mapp-row-btns { margin-top: 10px; }
 
+/* Cómo sale: puesto fijo, sombrilla o caminando (iconos del logo, ronda 3) */
+.mapp-outmodes { margin: 14px 0 4px; }
+.mapp-outmodes > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.mapp-outmodes button {
+  appearance: none; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 132px; padding: 10px 6px 12px;
+  border: 2px solid transparent; border-radius: 20px; background: var(--m-glass); box-shadow: var(--m-shadow); color: var(--m-fg);
+  font: inherit; text-align: center; cursor: pointer; touch-action: manipulation;
+}
+.mapp-outmodes button img { width: 64px; height: 64px; border-radius: 16px; background: #F5EFE4; }
+.mapp-outmodes button b { font-size: .95rem; margin-top: 4px; }
+.mapp-outmodes button small { color: var(--m-soft); font-size: .72rem; line-height: 1.25; }
+.mapp-outmodes button.on { border-color: var(--m-cta); box-shadow: 0 10px 22px -12px rgba(222, 27, 27, .7); }
+.mapp-outmodes button.on b { color: var(--m-cta); }
+.mapp.is-night .mapp-outmodes button.on b { color: var(--m-fg); }
+
+/* El «+» para agregar productos propios, igual a las tarjetas de tinto, perico y aromática */
+.mapp-addtile { appearance: none; display: flex; align-items: center; gap: 12px; min-height: 120px; border: 2px dashed var(--m-line); background: transparent; box-shadow: none; color: var(--m-fg); font: inherit; text-align: left; cursor: pointer; }
+.mapp-addtile span:last-child { display: flex; flex-direction: column; }
+.mapp-addtile small { color: var(--m-soft); font-size: .8rem; }
+.mapp-addtile-plus { flex: 0 0 auto; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--m-cta); color: var(--m-cta-fg, #fff); font: 800 2rem/1 'JetBrains Mono', monospace; }
+.mapp-addtile.is-compact { min-height: 76px; padding: 10px; }
+.mapp-addtile.is-compact .mapp-addtile-plus { width: 44px; height: 44px; font-size: 1.6rem; }
+.mapp-addprod { display: grid; gap: 10px; grid-column: 1 / -1; }
+.mapp-pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 8px 0; }
+.mapp-tile.is-mini { display: flex; flex-direction: column; gap: 2px; min-height: 76px; padding: 12px; }
+.mapp-tile.is-mini b { font-size: 1rem; }
+.mapp-tile.is-mini span { font: 500 .9rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-tile.is-mini .mapp-link { align-self: flex-start; padding-left: 0; }
+
+/* Cómo te pagan: solo el medio */
+.mapp-paymethods { display: grid; gap: 10px; }
+.mapp-chips.is-wrap { flex-wrap: wrap; overflow: visible; }
+
+/* Logros del muro, como las llamas de Duolingo */
+.mapp-achieve { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: start; }
+.mapp-achieve-ico { position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: color-mix(in srgb, var(--m-cta) 12%, transparent); font-size: 2rem; }
+.mapp-achieve-ico b { position: absolute; right: -4px; bottom: -4px; min-width: 28px; height: 28px; padding: 0 6px; display: grid; place-items: center; border-radius: 14px; background: var(--m-cta); color: #fff; font: 800 .85rem 'JetBrains Mono', monospace; }
+.mapp-achieve.is-racha { background: var(--m-cta); color: #fff; }
+.mapp-achieve.is-racha .mapp-achieve-ico { background: rgba(255, 255, 255, .18); }
+.mapp-achieve.is-racha .mapp-achieve-ico b { background: #fff; color: var(--m-cta); }
+.mapp-achieve.is-racha .mapp-post-text, .mapp-achieve.is-racha .mapp-link { color: #fff; }
+.mapp-achieve.is-racha .mapp-tag { background: rgba(255, 255, 255, .2); color: #fff; }
+.mapp-achieve-bar { display: block; height: 8px; margin: 8px 0 2px; border-radius: 4px; background: var(--m-line); overflow: hidden; }
+.mapp-achieve-bar i { display: block; height: 100%; background: var(--m-cta); border-radius: 4px; }
+.mapp-post-av.is-idea { background: color-mix(in srgb, var(--m-cta) 12%, transparent); font-size: 1.3rem; }
+.mapp-idea { border: 2px dashed var(--m-line); }
+.mapp-post-img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 14px; margin: 8px 0; }
+.mapp-achieve footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.mapp-sheet .mapp-check { margin: 10px 0; }
+/* Lo que se enfoca o se lleva a la vista no queda bajo la barra de arriba ni bajo las pestañas */
+.mapp-barista.has-tabs button, .mapp-barista.has-tabs a, .mapp-barista.has-tabs input { scroll-margin: 96px 0 120px; }
+
+/* Vender en la calle: la taza que se llena (diseño del usuario, 31 oct) */
+.mapp-sellhead { grid-template-columns: 116px 1fr; grid-template-areas: 'top top' 'cup copy' 'kpis kpis' 'trip trip' 'btn btn'; align-items: center; column-gap: 14px; row-gap: 10px; margin: -18px -16px 0; padding: 16px 20px 44px; border-radius: 0 0 32px 32px; }
+.mapp-sellhead-top { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font: 500 .78rem 'JetBrains Mono', monospace; }
+.mapp-sellhead .mapp-now-live { background: rgba(0, 0, 0, .28); font: 600 .7rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; }
+.mapp-sellhead .mapp-goalcup { grid-area: cup; width: 116px; height: 124px; }
+.mapp-sellhead-copy { grid-area: copy; min-width: 0; }
+.mapp-sellhead-n { font: 900 4.6rem/.85 'Archivo', sans-serif; }
+.mapp-sellhead-n small { font-size: 1.7rem; font-weight: 800; opacity: .7; margin-left: 2px; }
+.mapp-sellhead-sub { font-size: 1.05rem; }
+.mapp-sellhead-kpis { grid-area: kpis; display: flex; gap: 8px; margin: 0; }
+.mapp-sellhead-kpis div { flex: 1; min-width: 0; background: rgba(255, 255, 255, .16); border-radius: 14px; padding: 8px 10px; }
+.mapp-sellhead-kpis dd { margin: 0; font: 700 1.05rem 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mapp-sellhead-kpis dt { font-size: .72rem; opacity: .9; }
+.mapp-sellhead .mapp-trip { grid-area: trip; margin: 0; }
+.mapp-sellhead > .mapp-btn { grid-area: btn; margin: 0; }
+/* La barra oscura del logro, montada sobre el borde de la cabecera */
+.mapp-sellbar { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; margin: -26px 4px 14px; padding: 13px 16px; border-radius: 16px; background: #16181F; color: #fff; box-shadow: 0 14px 28px -14px rgba(0, 0, 0, .6); font-size: .95rem; }
+.mapp-sellbar > span:nth-child(2) { flex: 1; min-width: 0; color: rgba(255, 255, 255, .78); }
+.mapp-sellbar b { color: #fff; }
+.mapp-sellbar small { font: 500 .8rem 'JetBrains Mono', monospace; color: rgba(255, 255, 255, .7); white-space: nowrap; }
+.mapp.is-night .mapp-sellbar { background: #fff; color: #16181F; }
+.mapp.is-night .mapp-sellbar > span:nth-child(2), .mapp.is-night .mapp-sellbar small { color: #5D6475; }
+.mapp.is-night .mapp-sellbar b { color: #16181F; }
+.mapp-sellhead + .mapp-live, .mapp-sellhead ~ .mapp-count { margin-top: 14px; }
+
+/* Las tarjetas de +1: nombre, precio · hoy, el +1 a lo ancho y «Fiado» debajo */
+.mapp-tile:not(.is-mini):not(.mapp-addtile) { grid-template-columns: 1fr; grid-template-areas: 'name' 'n' 'plus' 'fiado'; gap: 4px; padding: 16px 16px 6px; border-radius: 24px; }
+.mapp-tile-name { font-size: 1.2rem; font-weight: 800; }
+.mapp-tile-n, .mapp-tile-n b { font: 500 .85rem 'JetBrains Mono', monospace; color: var(--m-soft); margin: 0 0 8px; }
+.mapp-tile .mapp-plus { min-height: 92px; border-radius: 18px; font: 800 2.4rem 'Archivo', sans-serif; }
+.mapp-tile .mapp-tile-fiado { border: 0; min-height: 44px; color: var(--m-soft); font-weight: 700; }
+.mapp-sellhead-top > span { white-space: nowrap; }
+.mapp-sellhead-top > span:last-child { font-size: .72rem; opacity: .95; }
+.mapp-sellhead .mapp-now-live { font-size: .64rem; letter-spacing: .06em; }
+@media (max-width: 360px) { .mapp-sellhead { grid-template-columns: 92px 1fr; } .mapp-sellhead .mapp-goalcup { width: 92px; height: 100px; } .mapp-sellhead-n { font-size: 3.6rem; } }
+.mapp-outmodes button .mapp-anim.is-mode { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; background: #F7F3E8; box-shadow: none; }
+.mapp-sellhead { grid-template-areas: 'top top' 'hello hello' 'cup copy' 'kpis kpis' 'time time' 'trip trip' 'btn btn'; }
+.mapp-sellhead-hello { grid-area: hello; margin: 0; font: 700 1rem 'Archivo', sans-serif; opacity: .92; }
+.mapp-sellhead-time { grid-area: time; display: flex; align-items: center; gap: 10px; }
+.mapp-sellhead-time small { font: 500 .72rem 'JetBrains Mono', monospace; white-space: nowrap; }
+.mapp-sellhead-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .25); overflow: hidden; }
+.mapp-sellhead-bar i { display: block; height: 100%; background: #fff; border-radius: 3px; }
+
+/* «Pídeme por Micra»: el QR propio con el dibujo al centro */
+.mapp-qrpage { display: grid; gap: 14px; padding-bottom: 12px; }
+.mapp-qrpage-head { display: grid; gap: 4px; justify-items: start; }
+.mapp-qrcard { justify-self: center; width: min(100%, 360px); background: #F5EFE4; color: #16181F; border-radius: 24px; padding: 20px 20px 18px; box-shadow: 0 10px 30px rgba(22, 24, 31, .14); text-align: left; }
+.mapp-qrcard-brand { margin: 0; font: 900 1.15rem 'Archivo', sans-serif; letter-spacing: -.03em; }
+.mapp-qrcard-brand i { color: var(--red, #DE1B1B); font-style: normal; }
+.mapp-qrcard-script { margin: 6px 0 12px; font: 400 1.45rem 'Permanent Marker', cursive; color: var(--red, #DE1B1B); transform: rotate(-2deg); transform-origin: left; }
+.mapp-qrcard-plate { background: #fff; border-radius: 18px; padding: 8px; }
+.mapp-qr { display: block; width: 100%; height: auto; }
+.mapp-qrcard-name { margin: 12px 0 2px; font: 900 1.3rem 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-qrcard-url { display: block; font: 500 .68rem 'JetBrains Mono', monospace; color: #626877; word-break: break-all; }
+.mapp-qrlogos div { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.mapp-qrlogos button { display: grid; justify-items: center; gap: 4px; min-height: 84px; padding: 8px 2px; border: 2px solid var(--m-line, rgba(22, 24, 31, .12)); border-radius: 16px; background: var(--m-glass, #fff); color: inherit; font: 700 .7rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-qrlogos button img { width: 44px; height: 44px; object-fit: contain; }
+.mapp-qrlogos button.on { border-color: var(--red, #DE1B1B); box-shadow: 0 0 0 3px rgba(222, 27, 27, .15); }
+.mapp-row-btns.is-qr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mapp-row-btns.is-qr .mapp-btn { width: 100%; }
+
+/* Los momentos del día (primera taza, racha, «Ya volví») y «Mi día en la calle» */
+.mapp-party-flame { position: absolute; right: calc(50% - 130px); top: 40px; z-index: 2; font-size: 2.6rem; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .3)); }
+.mapp-party.is-calle, .mapp-party.is-puesto { background: #16181F; }
+.mapp-routebox { margin: 12px 0 0; background: #fff; border-radius: 16px; overflow: hidden; position: relative; z-index: 1; }
+.mapp-routebox svg { display: block; width: 100%; height: auto; }
+.mapp-routebox-grid line { stroke: rgba(31, 36, 82, .08); stroke-width: 1.5; }
+.mapp-routebox-line { fill: none; stroke: #1F2452; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.mapp-routebox-stop { fill: #fff; stroke: var(--red, #DE1B1B); stroke-width: 2.5; }
+.mapp-routebox-start, .mapp-routebox-end { fill: var(--red, #DE1B1B); }
+.mapp-routebox-end { stroke: #fff; stroke-width: 2.5; }
+.mapp-routebox-empty { font: 500 9px 'JetBrains Mono', monospace; fill: #626877; }
+.mapp-story.is-calle { padding: 18px; }
+.mapp-story.is-calle .mapp-story-n { font-size: 3.6rem; }
+.mapp-story.is-calle .mapp-story-stats { grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-top: 10px; max-width: 62%; }
+.mapp-story.is-calle .mapp-story-stats dd { font-size: 1.1rem; }
+.mapp-story.is-calle .mapp-story-link { bottom: 46px; }
+.mapp-story.is-calle .mapp-fig.is-story { height: 34%; }
+.mapp-levelchip { display: inline-block; padding: 1px 6px; border-radius: 6px; background: var(--red, #DE1B1B); color: #fff; font: 800 .7rem 'JetBrains Mono', monospace; vertical-align: middle; }
+.mapp-btn.is-wa { background: #25D366; color: #0B2E17; }
+.mapp-storywrap > .mapp-link.is-onink { color: #fff; margin-top: 6px; min-height: 44px; }
+
+/* Hoy como Instagram: quién, la foto o el video con su etiqueta, el texto y las acciones */
+.mapp-ig { padding: 0; overflow: hidden; }
+.mapp-ig-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.mapp-ig-who { display: grid; min-width: 0; }
+.mapp-ig-who b { display: flex; align-items: center; gap: 6px; font: 800 .95rem 'Archivo', sans-serif; }
+.mapp-ig-who small { font: 500 .66rem 'JetBrains Mono', monospace; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mapp-ig-media { position: relative; }
+.mapp-ig-tile { position: relative; display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; aspect-ratio: 4 / 3; border: 0; padding: 28px 16px 16px; background: #F5EFE4; color: #16181F; overflow: hidden; font: inherit; }
+.mapp-ig-tile.is-racha { background: var(--red, #DE1B1B); color: #fff; }
+.mapp-ig-tile.is-hito { background: #1F2452; color: #fff; }
+.mapp-ig-tile.is-meta { background: #16181F; color: #fff; }
+.mapp-ig-tile.is-escuela { flex-direction: column; background: #E9F0E4; }
+.mapp-ig-tile.is-receta, .mapp-ig-tile.is-noticia { background: #1F2452; color: #F5EFE4; }
+.mapp-ig-tile.is-idea { flex-direction: column; background: repeating-linear-gradient(45deg, #F5EFE4 0 14px, #EFE6D6 14px 28px); border: 2px dashed rgba(31, 36, 82, .3); cursor: pointer; }
+.mapp-ig-tile.is-dia { padding: 34px 12px 12px; background: #EFE6D6; }
+.mapp-ig-tile.is-dia .mapp-routebox { width: 100%; margin: 0; }
+.mapp-ig-tile.is-puesto { align-items: flex-end; padding: 0; background: linear-gradient(#F5EFE4 70%, #E7DCC8); }
+.mapp-ig-tile.is-puesto .mapp-anden { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; }
+.mapp-fig.is-feedfig { position: relative; z-index: 1; height: 86%; width: auto; margin-bottom: 18px; }
+.mapp-fig.is-feedfig svg { height: 100%; width: auto; }
+.mapp-ig-tag { position: absolute; top: 10px; left: 10px; z-index: 2; padding: 4px 8px; border-radius: 8px; background: rgba(22, 24, 31, .78); color: #fff; font: 700 .6rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.mapp-ig-badge { font-size: 3.6rem; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .2)); }
+.mapp-ig-big { display: grid; font: 900 4rem/.9 'Archivo', sans-serif; letter-spacing: -.04em; }
+.mapp-ig-big small { font: 600 .8rem 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+.mapp-ig-shot { font: 700 .85rem 'Archivo', sans-serif; color: #1F2452; }
+.mapp-ig-mark { font: 900 2.6rem 'Archivo', sans-serif; color: #1F2452; }
+.mapp-ig-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.mapp-ig-chips b { padding: 10px 14px; border-radius: 14px; background: rgba(245, 239, 228, .12); border: 1.5px solid rgba(245, 239, 228, .35); font: 800 1.3rem 'Archivo', sans-serif; }
+.mapp-ig-headline { font: 900 1.35rem/1.15 'Archivo', sans-serif; text-align: left; letter-spacing: -.02em; }
+.mapp-ig-photo { position: relative; background: #16181F; }
+.mapp-ig-photo img, .mapp-ig-photo video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0; border-radius: 0; }
+.mapp-ig-body { padding: 12px 14px 4px; }
+.mapp-ig-foot { display: flex; align-items: center; gap: 4px; padding: 4px 8px 8px; border-top: 0; flex-wrap: wrap; }
+.mapp-ig-act { min-height: 44px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; color: inherit; font: 700 .8rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-ig-act.on { color: var(--red, #DE1B1B); }
+.mapp-ig-cta { margin-left: auto; display: flex; align-items: center; }
+.mapp-routebox.is-feed { border-radius: 12px; }
 /* Equipo: activación automática (resumen en vez de la lista de todas las fichas) */
 .mapp-alerts ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
 .mapp-alerts li { padding: 10px 12px; border-radius: 12px; font-weight: 600; line-height: 1.3; background: color-mix(in srgb, var(--m-fg) 6%, transparent); }

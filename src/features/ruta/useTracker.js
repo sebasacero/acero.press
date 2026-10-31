@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { acceptFix, distanceOf, detectStops, fromPosition, newRef, summarize, TUNING } from './track.js';
+import { acceptFix, distanceOf, detectStops, fromPosition, newRef, simplifyPath, summarize, TUNING } from './track.js';
 
 // El recorrido en el celular: lee el GPS mientras la pantalla está encendida,
 // guarda cada punto en el teléfono primero (la señal en la calle va y viene)
@@ -37,12 +37,12 @@ export function useTracker(me, { watch = null } = {}) {
   const lastFixAt = useRef(0);
   const [status, setStatus] = useState('idle'); // idle · starting · tracking · ending · pending-end
   const [gps, setGps] = useState('waiting'); // waiting · ok · silent · denied · unavailable · unsupported
-  const [view, setView] = useState({ points: 0, pending: 0, distance: 0, stops: 0, accuracy: null, startedAt: null });
+  const [view, setView] = useState({ points: 0, pending: 0, distance: 0, stops: 0, accuracy: null, startedAt: null, path: [] });
   const [error, setError] = useState(null);
 
   const refresh = useCallback((acc) => {
     const s = state.current;
-    if (!s) { setView({ points: 0, pending: 0, distance: 0, stops: 0, accuracy: null, startedAt: null }); return; }
+    if (!s) { setView({ points: 0, pending: 0, distance: 0, stops: 0, accuracy: null, startedAt: null, path: [] }); return; }
     setView((v) => ({
       points: s.points.length,
       pending: s.queue.length,
@@ -50,6 +50,8 @@ export function useTracker(me, { watch = null } = {}) {
       stops: detectStops(s.points).length,
       accuracy: acc ?? v.accuracy,
       startedAt: s.startedAt,
+      // El trazo corto, para dibujar «Mi día en la calle»
+      path: simplifyPath(s.points, 48),
     }));
   }, []);
 
