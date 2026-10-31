@@ -70,7 +70,7 @@ function Confirm({ title, children, confirmLabel, onConfirm, onCancel, busy, blo
 /**
  * Su perfil: quién es, cómo entra, horario, precios, pagos, meta y racha,
  * permisos, su enlace y cerrar sesión. Vive dentro de BaristaHome (pestaña
- * «perfil») porque cerrar sesión necesita lo de ahí: «Ya volví», el recorrido y
+ * «perfil») porque cerrar sesión necesita lo de ahí: salir del mapa, el recorrido y
  * la cola de ventas sin subir.
  */
 export function BaristaProfile({ day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
@@ -129,7 +129,7 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
   const signOut = async ({ force = false } = {}) => {
     setBusy(true);
     setError(null);
-    // «Ya volví»: sin esto seguiría en el mapa hasta 4 horas
+    // Salir del mapa: sin esto seguiría ahí hasta 4 horas
     if (live && !force) {
       try { await api.goOut(0, null); } catch { setOutFailed(true); setBusy(false); return; }
     }
@@ -254,12 +254,12 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
             busy={busy}
             onRetry={retry}
             onCancel={() => { setConfirm(false); setBlock(null); setOutFailed(false); }}
-            confirmLabel={outFailed ? 'Cerrar sesión igual' : live ? 'Ya volví y cerrar sesión' : 'Sí, cerrar sesión'}
+            confirmLabel={outFailed ? 'Cerrar sesión igual' : live ? 'Salir del mapa y cerrar sesión' : 'Sí, cerrar sesión'}
             onConfirm={() => signOut({ force: outFailed })}
           >
             {outFailed
-              ? <p className="mapp-error" role="alert">Sin señal: no pudimos avisar «Ya volví». Si cierras sesión igual, sigues en el mapa hasta las {new Date(day.live_until).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })}.</p>
-              : live && <p data-testid="signout-live">Estás en <b>Salí a vender</b>. Al cerrar sesión marcamos «Ya volví» y Micra deja de usar tu ubicación.</p>}
+              ? <p className="mapp-error" role="alert">Sin señal: no pudimos sacarte del mapa. Si cierras sesión igual, sigues en el mapa hasta las {new Date(day.live_until).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })}.</p>
+              : live && <p data-testid="signout-live">Estás en <b>Salí a vender</b>. Al cerrar sesión te sacamos del mapa y Micra deja de usar tu ubicación.</p>}
             <p className="mapp-muted">Tus ventas, fiados y apartados quedan guardados en tu cuenta. Para volver a entrar, usa tu celular y el código del SMS.</p>
           </Confirm>
         ) : (

@@ -137,8 +137,8 @@ setPlatform({
     if (error) throw error;
     await Browser.open({ url: data.url, presentationStyle: 'popover' });
   },
-  // Letras de la barra del sistema claras de noche y oscuras de día, como el fondo de Micra
-  setNight: (night) => { SystemBars.setStyle({ style: night ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {}); },
+  // Letras de la barra del sistema claras de noche y sobre el rojo de la salida, oscuras de día
+  setNight: (night, red = false) => { SystemBars.setStyle({ style: night || red ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {}); },
 });
 
 async function openUrl(url) {

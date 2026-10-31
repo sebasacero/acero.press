@@ -41,7 +41,7 @@ const zonesOf = (page) => page.evaluate(() => {
   return z ? { demand: z.demand.features.map((f) => f.properties.n), study: z.study.features.map((f) => f.properties.n) } : null;
 });
 
-test('barista: sale a vender y ve a los otros baristas y dónde quieren café; «Ya volví» apaga el mapa en vivo', async ({ browser }) => {
+test('barista: sale a vender y ve a los otros baristas y dónde quieren café; la flecha de volver apaga el mapa en vivo', async ({ browser }) => {
   const seed = structuredClone(SEED);
   delete seed.baristas[0].live_until;
   const { page, errors, liveCalls } = await open(browser, { who: 'barista', seed });
@@ -76,8 +76,8 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; �
   const before = liveCalls();
   await expect.poll(liveCalls).toBeGreaterThanOrEqual(before + 2);
 
-  // «Ya volví»: vuelve la vista previa y deja de refrescar
-  await page.getByRole('button', { name: 'Ya volví' }).click();
+  // La flecha: vuelve la vista previa y deja de refrescar
+  await page.getByRole('region', { name: 'Tu salida' }).getByRole('button', { name: 'Volver' }).click();
   await expect(panel).toHaveAttribute('data-live', 'false');
   await expect(panel.getByTestId('live-nudge')).toBeVisible();
   await expect(panel).toContainText('baristas en la calle');

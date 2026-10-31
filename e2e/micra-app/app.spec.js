@@ -136,9 +136,9 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await luis.getByRole('button', { name: 'Pagó' }).click();
   await expect(luis).toHaveCount(0);
 
-  // Ya volví
+  // La flecha: vuelve a «¿Cómo sales hoy?» y sale del mapa
   await tabs.getByRole('button', { name: /Vender/ }).click();
-  await page.getByRole('button', { name: 'Ya volví' }).click();
+  await page.getByRole('region', { name: 'Tu salida' }).getByRole('button', { name: 'Volver' }).click();
   await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
   expect(api.find('/rpc/micra_barista_out').data.p_minutes).toBe(0);
   // Nunca actúa por otro barista
@@ -320,7 +320,7 @@ test('cliente con apartado: arriba va «Tu apartado» con sus etapas; los pines 
   expect(errors).toEqual([]);
 });
 
-test('barista en la calle: la cabecera roja dice hasta cuándo, cuánto va y lo que lleva', async ({ browser }) => {
+test('barista en la calle: la cabecera roja sube hasta la barra, dice hasta cuándo y lo que lleva; la flecha vuelve sin cerrar el día', async ({ browser }) => {
   const seed = structuredClone(SEED);
   seed.baristas[0].live_until = new Date(Date.now() + 100 * 60000).toISOString();
   const { page, errors } = await open(browser, { who: 'barista', seed });
@@ -331,8 +331,24 @@ test('barista en la calle: la cabecera roja dice hasta cuándo, cuánto va y lo 
   await expect(out.getByRole('progressbar')).toHaveAttribute('aria-valuenow', /^5[789]$/);
   await expect(out).toContainText('$7.000');
   await expect(out).toContainText('$4.000');
-  await out.getByRole('button', { name: 'Ya volví' }).click();
+  // La barra de arriba va en rojo solo en Vender; el círculo de Mi perfil lleva el punto verde
+  const app = page.locator('.mapp');
+  await expect(app).toHaveClass(/is-redtop/);
+  await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(1);
+  const red = await page.getByTestId('topbar').evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(red).toBe(await out.evaluate((el) => getComputedStyle(el).backgroundColor));
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Hoy/ }).click();
+  await expect(app).not.toHaveClass(/is-redtop/);
+  await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(1);
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
+  await expect(app).toHaveClass(/is-redtop/);
+  const cups = await page.getByTestId('micra-count-tinto').textContent();
+  await out.getByRole('button', { name: 'Volver' }).click();
   await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
+  await expect(page.getByTestId('toast')).toContainText('Tus ventas de hoy siguen aquí');
+  await expect(page.getByTestId('micra-count-tinto')).toHaveText(cups);
+  await expect(app).not.toHaveClass(/is-redtop/);
+  await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -536,7 +552,7 @@ test('barista: Hoy celebra la racha y sugiere qué publicar; no publica cuántas
   expect(errors).toEqual([]);
 });
 
-test('barista caminando: la primera taza celebra la racha; «Ya volví» resume el día y «Mi día en la calle» lleva su ruta', async ({ browser }) => {
+test('barista caminando: la primera taza celebra la racha; al volver no se cierra el día y «Mi día en la calle» lleva su ruta', async ({ browser }) => {
   const seed = structuredClone(SEED);
   seed.sales = [];
   seed.holds = [];
@@ -545,7 +561,7 @@ test('barista caminando: la primera taza celebra la racha; «Ya volví» resume 
   await page.addInitScript(() => {
     const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
     localStorage.setItem('micra_out_mode_v1', 'caminando');
-    // El recorrido de hoy, como queda al tocar «Ya volví» (4,2 km, 5 paradas)
+    // El recorrido de hoy, como queda al volver de la calle (4,2 km, 5 paradas)
     localStorage.setItem('micra_dia_v1', JSON.stringify({ day, distance: 4230, stops: 5, path: [[-74.064, 4.643], [-74.062, 4.645], [-74.06, 4.648], [-74.057, 4.647], [-74.058, 4.651]] }));
   });
   await page.goto('/micra/barista', { waitUntil: 'load' });
@@ -570,14 +586,15 @@ test('barista caminando: la primera taza celebra la racha; «Ya volví» resume 
   await expect(dia.locator('.mapp-routebox-line')).toHaveCount(1);
   await expect(page.getByTestId('feed-idea').first().locator('.mapp-ig-tag')).toHaveText('Idea de foto');
 
-  // «Ya volví»: el resumen del que camina, y de ahí «Mi día en la calle»
-  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
-  await page.getByRole('region', { name: 'Tu salida' }).getByRole('button', { name: 'Ya volví' }).click();
-  const back = page.getByTestId('moment-volvi');
-  await expect(back).toContainText('2 tazas');
-  await expect(back).toContainText('4,2 km');
-  await expect(back).toContainText('5paradas');
-  await back.getByRole('button', { name: 'Compartir mi día' }).click();
+  // La flecha: sale del mapa sin resumen de cierre (las ventas siguen) y «Mi día en la calle» está en Mi plata
+  const nav = page.getByRole('navigation', { name: 'Barista' });
+  await nav.getByRole('button', { name: /Vender/ }).click();
+  await page.getByRole('region', { name: 'Tu salida' }).getByRole('button', { name: 'Volver' }).click();
+  await expect(page.getByTestId('toast')).toContainText('Tus ventas de hoy siguen aquí');
+  await expect(page.locator('.mapp-party')).toHaveCount(0);
+  await expect(page.getByTestId('micra-count-tinto')).toHaveText('2');
+  await nav.getByRole('button', { name: /Mi plata/ }).click();
+  await page.getByTestId('story-open').click();
   const story = page.getByTestId('story');
   await expect(story).toHaveAttribute('data-variant', 'calle');
   await expect(story).toContainText('Mi día en la calle');

@@ -2,7 +2,7 @@ import { STREAK_BADGES } from './motivation.js';
 
 // Lo puro de «Mi día en la calle» (la tarjeta del que sale caminando), del
 // trazo de su recorrido y de los momentos que celebran el día (la primera
-// taza, la racha, la meta y el «Ya volví»). Sin React, con tests.
+// taza, la racha y la meta). Sin React, con tests.
 
 /** Qué tarjeta del día le toca: la de la calle (camina) o la del puesto. */
 export const storyVariant = (mode) => (mode === 'caminando' ? 'calle' : 'puesto');
@@ -38,8 +38,6 @@ export function dayTripOf(view, saved, dayKey) {
   return { distance: 0, stops: 0, path: [] };
 }
 
-const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-
 /** El hito de racha que se alcanza justo hoy (3, 7, 14, 30 días), si hay. */
 export function streakBadgeToday(count) {
   const b = STREAK_BADGES.find(([d]) => d === count);
@@ -64,25 +62,6 @@ export function firstSaleMoment({ streak = 1, goal = 0, name = '' }) {
       [goal > 1 ? String(goal - 1) : '✓', 'te faltan'],
     ],
     primary: 'A vender',
-  };
-}
-
-/** «Ya volví» con ventas: el resumen del día, distinto si caminó. */
-export function backHomeMoment({ cups = 0, goal = 0, streak = 0, mode = null, distance = 0, stops = 0, minutes = 0, name = '' }) {
-  const walking = mode === 'caminando';
-  const kmLabel = `${(Math.round((distance || 0) / 100) / 10).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
-  const hours = minutes >= 60 ? `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}` : `${minutes} min`;
-  const stats = walking
-    ? [[kmLabel, 'caminados'], [String(stops), stops === 1 ? 'parada' : 'paradas'], [String(streak), streak === 1 ? 'día seguido' : 'días seguidos']]
-    : [[hours, 'en la calle'], [goal > 0 && cups >= goal ? '✓' : `${cups}/${goal}`, 'meta'], [String(streak), streak === 1 ? 'día seguido' : 'días seguidos']];
-  return {
-    id: 'volvi',
-    tone: walking ? 'calle' : 'puesto',
-    script: name ? `¡Buen día, ${name}!` : '¡Buen día!',
-    big: plural(cups, 'taza', 'tazas'),
-    sub: walking ? 'Tu recorrido de hoy quedó guardado. Compártelo para que tus clientes sepan por dónde pasas.' : 'Tu día quedó guardado. Compártelo para que tus clientes te encuentren mañana.',
-    stats,
-    primary: 'Compartir mi día',
   };
 }
 

@@ -9,7 +9,7 @@ import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconToday, IconCup, IconCap, IconWallet } from './icons.jsx';
+import { IconToday, IconCup, IconCap, IconWallet, IconBack } from './icons.jsx';
 import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
@@ -17,7 +17,7 @@ import { km } from '../ruta/track.js';
 import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel } from './flow.js';
 import { ModePicker, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
-import { firstSaleMoment, backHomeMoment, dayTripOf, storyFigure } from './daycard.js';
+import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
 
 // Modo barista en cuatro pestañas: Vender, su inicio (la racha, salir, la meta,
 // +1 por taza, fiados y quién te espera), Hoy (el muro del barismo), Aprende
@@ -363,12 +363,12 @@ const markParty = (key) => { try { localStorage.setItem(PARTY_KEY, key); } catch
 const FIRST_KEY = 'micra_first_v1';
 const firstDone = (key) => { try { return localStorage.getItem(FIRST_KEY) === key; } catch { return true; } };
 const markFirst = (key) => { try { localStorage.setItem(FIRST_KEY, key); } catch { /* sin memoria */ } };
-// El recorrido de hoy se queda en el celular al tocar «Ya volví», para «Mi día en la calle»
+// El recorrido de hoy se queda en el celular al volver de la calle (la flecha), para «Mi día en la calle»
 const TRIP_KEY = 'micra_dia_v1';
 const readDayTrip = () => { try { return JSON.parse(localStorage.getItem(TRIP_KEY)); } catch { return null; } };
 const writeDayTrip = (t) => { try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch { /* sin memoria */ } };
 
-export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender' }) {
+export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender', onLive }) {
   const [day, setDay] = useState(null);
   const [error, setError] = useState(null);
   const [missing, setMissing] = useState(false);
@@ -400,7 +400,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [toast, setToast] = useState(null);
   const [party, setParty] = useState(false);
   const [story, setStory] = useState(false);
-  const [moment, setMoment] = useState(null); // la primera taza o el «Ya volví»
+  const [moment, setMoment] = useState(null); // la primera taza del día o un hito de racha
   const [ordering, setOrdering] = useState(false);
   const prevCups = useRef(null);
   const flushing = useRef(false);
@@ -415,6 +415,10 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     }
   }, [asId]);
   useEffect(() => { setDay(null); prevCups.current = null; load(); }, [load]);
+  // La barra de arriba (MicraApp) se pinta de rojo mientras está en la calle
+  const liveNow = !!day && !!outProgress(day.live_until, new Date(), OUT_MINUTES);
+  useEffect(() => { onLive?.(liveNow); }, [liveNow, onLive]);
+  useEffect(() => () => onLive?.(false), [onLive]);
 
   // Sube los +1 que quedaron en el celular (sin señal); el mismo ref no se duplica
   const flush = useCallback(async () => {
@@ -538,10 +542,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       if (on && recordsTrip(mode) && trip.ready && trip.consented && !trip.recording) await trip.start();
       if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();
-      if (!on && board.cups > 0 && !asId) {
-        const minutes = prog ? Math.max(0, Math.round((Date.now() - prog.start.getTime()) / 60000)) : 0;
-        setMoment(backHomeMoment({ cups: board.cups, goal, streak: streak.count, mode, distance: before.distance, stops: before.stops, minutes, name: first }));
-      }
+      // Volver no cierra nada: las ventas son del día, salga como salga
+      if (!on) setToast(board.cups > 0 ? 'Saliste del mapa. Tus ventas de hoy siguen aquí.' : 'Saliste del mapa.');
     } catch (e) { setError(e.message); }
     setBusy(null);
   };
@@ -596,10 +598,12 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const outCard = live && (
     <>
       <section className="mapp-sellhead" aria-label="Tu salida" data-testid="sellhead">
-        <p className="mapp-sellhead-top">
+        <div className="mapp-sellhead-top">
+          {/* La flecha vuelve a «¿Cómo sales hoy?» y lo saca del mapa; no cierra las ventas del día */}
+          <button type="button" className="mapp-sellhead-back" onClick={() => out(false)} disabled={busy === 'out'} aria-label="Volver" title="Volver a «¿Cómo sales hoy?»" data-testid="sell-back"><IconBack /></button>
           <span className="mapp-now-live">En la calle{mode ? ` · ${modeOf(mode).label}` : ''}</span>
-          <span>Hasta las {time(day.live_until)}</span>
-        </p>
+          <span className="mapp-sellhead-until">Hasta las {time(day.live_until)}</span>
+        </div>
         <h1 className="mapp-sellhead-hello">{greeting()}, {first}.</h1>
         <GoalCup pct={fillOf(board.cups, goal)} />
         <div className="mapp-sellhead-copy">
@@ -620,7 +624,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
           </p>
         )}
-        <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
       </section>
       {board.cups > 0 && (
         <p className="mapp-sellbar" data-testid="sellbar">
@@ -794,8 +797,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         <Suspense fallback={null}>
           <Moment
             moment={moment} fig={mode ? storyFigure(mode) : fig}
-            onPrimary={moment.id === 'volvi' ? () => { setMoment(null); setStory(true); } : () => setMoment(null)}
-            onClose={() => setMoment(null)} closeLabel={moment.id === 'volvi' ? 'Listo' : null}
+            onPrimary={() => setMoment(null)} onClose={() => setMoment(null)} closeLabel={null}
           />
         </Suspense>
       )}

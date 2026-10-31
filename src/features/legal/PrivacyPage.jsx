@@ -24,7 +24,7 @@ export default function PrivacyPage() {
       </ul>
 
       <h2 id="ubicacion">Ubicación</h2>
-      <p>Micra usa la ubicación de tu celular <b>solo mientras tienes activo «Salí a vender»</b>. Al tocar «Ya volví» deja de usarla. En la app instalada sigue funcionando con la pantalla apagada; en Android lo verás en una notificación mientras esté activa.</p>
+      <p>Micra usa la ubicación de tu celular <b>solo mientras tienes activo «Salí a vender»</b>. Al volver con la flecha (←) de tu salida deja de usarla. En la app instalada sigue funcionando con la pantalla apagada; en Android lo verás en una notificación mientras esté activa.</p>
       <p>La usamos para:</p>
       <ul>
         <li>mostrarte a los clientes cercanos en el mapa, para que te encuentren y te aparten;</li>

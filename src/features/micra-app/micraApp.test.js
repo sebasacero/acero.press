@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
   meters, distanceLabel, sortBaristas, filterBaristas, pickBaristas, daySummary, weekBars, weekdayLetter, fiadoMessage,
-  parseRoute, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
+  parseRoute, redTop, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
 // 26 oct 2026, 7:30 a. m. en Bogotá (UTC−5)
@@ -203,4 +203,14 @@ test('scoreboard: hoy con lo que no ha subido, contra ayer, meta y récord', asy
   assert.equal(fresh.goal, 30);
   assert.equal(fresh.vsYesterday, null);
   assert.equal(scoreboard({ ...day, sales: [{ product: 'tinto', qty: 41, total: 61500 }] }).record, true);
+});
+
+test('la barra de arriba va en rojo solo en Vender y en la calle', () => {
+  assert.equal(redTop({ view: 'barista' }, true), true);
+  assert.equal(redTop({ view: 'barista', tab: 'vender' }, true), true);
+  assert.equal(redTop({ view: 'barista' }, false), false);
+  assert.equal(redTop({ view: 'barista', tab: 'hoy' }, true), false);
+  assert.equal(redTop({ view: 'barista', tab: 'perfil' }, true), false);
+  assert.equal(redTop({ view: 'home' }, true), false);
+  assert.equal(redTop(null, true), false);
 });

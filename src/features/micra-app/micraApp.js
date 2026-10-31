@@ -264,6 +264,14 @@ export function outProgress(liveUntil, now = new Date(), minutes = 240) {
 }
 
 /**
+ * La barra de arriba va en rojo, como el encabezado de la salida, solo en
+ * Vender del barista mientras está en la calle; en lo demás, la del tema.
+ */
+export function redTop(route, live) {
+  return !!live && route?.view === 'barista' && (!route.tab || route.tab === 'vender');
+}
+
+/**
  * A dónde va quien acaba de entrar con Google: el equipo a su panel, el barista
  * enlazado a su día y quien aún no tiene cuenta enlazada a poner su código.
  * La sesión vuelve siempre a /micra/barista; aquí se decide con quién entró.
