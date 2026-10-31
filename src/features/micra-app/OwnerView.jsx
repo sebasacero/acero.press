@@ -7,6 +7,8 @@ import { formatCoPhone, normalizeCoPhone } from './phone.js';
 import { teamSummary, findBaristas, missingStep, BARISTA_STEPS, CLIENT_RULES, LEVEL_LABEL } from './activation.js';
 
 const LivePanel = lazy(() => import('./LiveMap.jsx'));
+// Lo que los baristas mandaron para Hoy y espera revisión
+const PostReview = lazy(() => import('./PostReview.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle) y la activación automática: nadie aprueba a mano (activation.js y
@@ -92,6 +94,8 @@ export default function OwnerView({ onActAs, go }) {
         <div><dt>Apartados</dt><dd>{tot.waiting + tot.served}<small> · {tot.served} entregados</small></dd></div>
         <div><dt>En la calle</dt><dd>{tot.live}<small> de {list.length}</small></dd></div>
       </dl>
+
+      <Suspense fallback={null}><PostReview /></Suspense>
 
       {/* Lo que pide una mano: lo demás se activa solo */}
       {sum.alerts.length > 0 && (

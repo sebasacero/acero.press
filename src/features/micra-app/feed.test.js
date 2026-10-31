@@ -101,3 +101,15 @@ test('el pedido de café por WhatsApp dice quién, cuánto y dónde', () => {
   assert.equal(coffeeOrderText({ name: 'Marlene Rojas', kilos: 2, where: 'Chapinero' }), 'Hola, soy Marlene de Micra. Quiero pedir 2 kilos de café para la AeroPress, para recoger o recibir en Chapinero. ¿Cuánto es y cuándo me llega?');
   assert.match(coffeeOrderText({ name: '', kilos: 1 }), /^Hola, soy barista de Micra\. Quiero pedir 1 kilo de café para la AeroPress\. /);
 });
+
+test('lo que publican los baristas va después del precio (y de los logros), antes de los puestos', () => {
+  const post = { id: 'post-1', kind: 'publicaciones', by: 'Marlene' };
+  const c = buildFeed({ baristas: B, posts: [post] });
+  assert.equal(c[0].kind, 'precios');
+  assert.equal(c[1].id, 'post-1');
+  assert.ok(c.findIndex((i) => i.kind === 'puestos') > 1);
+  const b = buildFeed({ baristas: B, posts: [post], me: { name: 'Jairo', streak: { count: 2 } }, dayKey: '2026-10-31' });
+  assert.ok(b.findIndex((i) => i.id === 'post-1') > b.findLastIndex((i) => i.kind === 'logros'));
+  assert.equal(chipCounts(c).publicaciones, 1);
+  assert.deepEqual(filterFeed(c, 'publicaciones').map((i) => i.id), ['post-1']);
+});

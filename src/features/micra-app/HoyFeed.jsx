@@ -8,6 +8,8 @@ import platform from './platform.js';
 import Figure from './Elenco.jsx';
 import { RouteBox } from './Celebrate.jsx';
 import { km } from '../ruta/track.js';
+import { postsToFeed, STATUS_LABEL } from './posts.js';
+import PostComposer from './PostComposer.jsx';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -194,6 +196,25 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false })
       />
     );
   }
+  if (item.kind === 'publicaciones') {
+    const url = platform.siteUrl(baristaPath(item.baristaId));
+    const media = (
+      <div className="mapp-ig-photo">
+        {item.media.kind === 'video'
+          ? <video className="mapp-post-video" src={item.media.url} controls playsInline preload="metadata" />
+          : <img src={item.media.url} alt={item.text ? `Foto de ${item.by}: ${item.text}` : `Foto de ${item.by}`} loading="lazy" />}
+        <span className="mapp-ig-tag">{item.media.kind === 'video' ? 'Video' : 'Foto'}</span>
+      </div>
+    );
+    return (
+      <Shell
+        item={item} testid="feed-post" av={<Figure name={figureFor(item.baristaId)} className="is-avatar" />} who={item.by} level="N1"
+        where={[item.where, ago(item.date)].filter(Boolean).join(' · ')} media={media} text={item.text}
+        share={shareLink(`${item.by} en Micra`, url)}
+        cta={item.baristaId === selfId ? null : <button type="button" className="mapp-link" onClick={() => go(baristaPath(item.baristaId))}>{client ? `Apartarle a ${item.by} ›` : `Ver a ${item.by} ›`}</button>}
+      />
+    );
+  }
   if (item.kind === 'videos') {
     const media = (
       <div className="mapp-ig-photo">
@@ -232,7 +253,7 @@ const CLIENT_POSTS = [
   ['📍', 'Un barista de tu cuadra', 'Hola, equipo de Micra. Cerca de mí vende café un barista de la calle: en ___, de ___ a ___.'],
 ];
 
-function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false }) {
+function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false, onCompose }) {
   const [number, setNumber] = useState(null);
   useEffect(() => { api.teamWhatsApp().then(setNumber).catch(() => setNumber('573152125327')); }, []);
   const wa = (text) => (number ? `https://wa.me/${number}?text=${encodeURIComponent(text)}` : undefined);
@@ -263,12 +284,13 @@ function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false }) 
         <p className="mapp-cota">Publicar</p>
         <h2 className="mapp-title is-small">¿Qué quieres mostrar hoy?</h2>
         <div className="mapp-publish">
+          {onCompose && <button type="button" onClick={() => { onClose(); onCompose(); }} data-testid="publish-micra"><span aria-hidden="true">📸</span>En Micra</button>}
           <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">🎥</span>Video con filtro</button>
           <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">📍</span>Foto del puesto</button>
           <button type="button" onClick={() => { onClose(); onShareDay(); }} disabled={!canShareDay}><span aria-hidden="true">🗺️</span>Mi día de hoy</button>
           <a href={wa(recipe)} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span>Una receta</a>
         </div>
-        <p className="mapp-fine">El video y tu día se comparten en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
+        <p className="mapp-fine">«En Micra» sale aquí en Hoy cuando el equipo la revisa. El video y tu día se comparten en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
       </section>
     </div>
   );
@@ -320,7 +342,7 @@ function CuratedForm({ current, onSaved, onCancel }) {
  * muro de Instagram bajo las historias): título h2 y sin su propio «Publicar»,
  * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
  */
-export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null }) {
+export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null }) {
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
   const baristas = list ?? fetched;
@@ -329,18 +351,34 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
   const [editing, setEditing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [curating, setCurating] = useState(false);
+  // Lo que publicaron los baristas (aprobado) y, para el barista, las suyas con su estado
+  const [posts, setPosts] = useState([]);
+  const [mine, setMine] = useState([]);
+  const [composing, setComposing] = useState(false);
+  const canPost = !client && !!selfId;
+  const loadPosts = () => api.postsFeed()
+    .then(async (rows) => setPosts(postsToFeed(rows, await api.postUrls((rows ?? []).map((r) => r.media_path)))))
+    .catch(() => setPosts([]));
+  const loadMine = () => (canPost ? api.postsMine(asId).then((r) => setMine(r ?? [])).catch(() => setMine([])) : null);
+  const removeMine = async (id) => {
+    try { await api.postRemove(id); } catch { /* sigue en la lista */ }
+    loadMine();
+    loadPosts();
+  };
   const loadPrices = () => supabase.from('app_config').select('key, value').in('key', PRICE_KEYS)
     .then(({ data }) => setCfg(Object.fromEntries((data ?? []).map((r) => [r.key, r.value])))).catch(() => {});
   useEffect(() => {
     let alive = true;
     if (!list) api.listBaristas().then((l) => alive && setBaristas(sortBaristas(l ?? []))).catch(() => {});
     loadPrices();
+    loadPosts();
+    loadMine();
     return () => { alive = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const prices = readPrices(cfg);
   const extra = readCurated(cfg.micra_muro);
   const dayKey = bogota().day;
-  const items = useMemo(() => buildFeed({ baristas, selfId, me, prices, curated: [...extra, ...CURATED], dayKey, mode }), [baristas, selfId, me?.streak?.count, me?.streak?.todayDone, me?.goalMet, me?.lessonsDone, mode, cfg, dayKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const items = useMemo(() => buildFeed({ baristas, selfId, me, prices, curated: [...extra, ...CURATED], dayKey, mode, posts }), [baristas, selfId, me?.streak?.count, me?.streak?.todayDone, me?.goalMet, me?.lessonsDone, mode, cfg, dayKey, posts]); // eslint-disable-line react-hooks/exhaustive-deps
   // «El día de …»: el recorrido de hoy, solo para quien lo grabó (sin tazas ni plata)
   const withDay = useMemo(() => {
     if (!me || !trip || (trip.path?.length ?? 0) < 2) return items;
@@ -370,12 +408,28 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
       {admin && !curating && chip === 'cafe' && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
       {editing && <PriceForm prices={prices} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
+      {canPost && mine.length > 0 && (
+        <section className="mapp-glass mapp-mine" aria-label="Tus publicaciones" data-testid="my-posts">
+          <p className="mapp-cota">Tus publicaciones</p>
+          <ul>
+            {mine.slice(0, 4).map((m) => (
+              <li key={m.id}>
+                <span className={`mapp-mine-tag is-${m.status}`}>{STATUS_LABEL[m.status] ?? m.status}</span>
+                <span className="mapp-mine-text">{m.kind === 'video' ? '🎥' : '📸'} {m.caption || (m.kind === 'video' ? 'Video' : 'Foto')}</span>
+                <button type="button" className="mapp-link" onClick={() => removeMine(m.id)} aria-label={`Quitar: ${m.caption || m.kind}`}>Quitar</button>
+              </li>
+            ))}
+          </ul>
+          {mine.some((m) => m.status === 'pending') && <p className="mapp-fine">El equipo revisa lo que envías antes de que salga en Hoy.</p>}
+        </section>
+      )}
       <div className="mapp-posts" data-testid="feed">
         {shown.map((item) => (item.kind === 'precios'
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
           : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} />))}
       </div>
-      {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} />}
+      {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} onCompose={canPost ? () => setComposing(true) : null} />}
+      {composing && <PostComposer selfId={selfId} asId={asId} onClose={() => setComposing(false)} onSent={loadMine} />}
     </div>
   );
 }

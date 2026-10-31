@@ -211,6 +211,40 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     // App Micra, en memoria (como las funciones de 20261026210000_micra_app.sql)
+    // Publicaciones de los baristas en Hoy (20261031160000_micra_barista_posts.sql), en memoria
+    const pfn = p.match(/\/rpc\/(micra_post_add|micra_posts_feed|micra_posts_mine|micra_posts_pending|micra_post_review|micra_post_remove)$/)?.[1];
+    if (pfn) {
+      const M = micra;
+      M.posts ??= [];
+      const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
+      if (M.postsMissing) return fail(404, 'PGRST202', `Could not find the function public.${pfn} in the schema cache`);
+      const me = data?.p_tintero_id ? M.baristas.find((b) => b.id === data.p_tintero_id) : M.baristas.find((b) => b.mine);
+      const named = (r) => { const b = M.baristas.find((x) => x.id === r.tintero_id); return { ...r, name: b?.name ?? '', referencia: b?.referencia ?? b?.zone ?? null, public: b?.public !== false }; };
+      if (pfn === 'micra_post_add') {
+        if (!me) return fail(403, '42501', 'Enlaza tu cuenta de barista primero.');
+        if (!String(data.p_path).startsWith(`${me.id}/`)) return fail(403, '42501', 'Ese archivo no es tuyo.');
+        const r = { id: `post-${M.posts.length + 1}`, tintero_id: me.id, kind: data.p_kind, media_path: data.p_path, caption: data.p_caption, status: 'pending', created_at: new Date().toISOString() };
+        M.posts.push(r);
+        return json(200, r);
+      }
+      if (pfn === 'micra_posts_feed') {
+        return json(200, M.posts.filter((r) => r.status === 'approved').map(named).filter((r) => r.public)
+          .map(({ public: _p, ...r }) => ({ ...r, name: String(r.name).split(' ')[0] })));
+      }
+      if (pfn === 'micra_posts_mine') return json(200, me ? M.posts.filter((r) => r.tintero_id === me.id && r.status !== 'removed').slice().reverse() : []);
+      if (!M.admin && (pfn === 'micra_posts_pending' || pfn === 'micra_post_review')) return fail(403, '42501', 'Solo el equipo revisa las publicaciones.');
+      if (pfn === 'micra_posts_pending') return json(200, M.posts.filter((r) => r.status === 'pending').map(named));
+      const r = M.posts.find((x) => x.id === data.p_id);
+      if (pfn === 'micra_post_review') {
+        if (r?.status !== 'pending') return fail(404, 'P0002', 'Esa publicación ya se revisó o no existe.');
+        r.status = data.p_approve ? 'approved' : 'rejected';
+        return json(200, { id: r.id, status: r.status });
+      }
+      if (!r || (!M.admin && r.tintero_id !== M.baristas.find((b) => b.mine)?.id)) return fail(403, '42501', 'No puedes quitar esa publicación.');
+      r.status = 'removed';
+      return json(200, { id: r.id, status: r.status, media_path: r.media_path });
+    }
+
     const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps|seek|live_map))$/)?.[1];
     if (mfn) {
       const M = micra;
@@ -419,6 +453,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, result);
     }
     if (p.includes('/storage/v1/object/marketing')) return json(200, { Key: 'marketing/x' });
+    // Las fotos y videos de las publicaciones: subir, firmar y servir (un píxel)
+    if (p.endsWith('/storage/v1/object/sign/micra-posts') && m === 'POST') {
+      return json(200, (data?.paths ?? []).map((path) => ({ path, signedURL: `/object/sign/micra-posts/${path}?token=firmado`, error: null })));
+    }
+    if (p.includes('/storage/v1/object/sign/micra-posts/')) return route.fulfill({ status: 200, headers: CORS, contentType: 'image/png', body: PIXEL });
+    if (p.includes('/storage/v1/object/micra-posts/') && m === 'POST') return json(200, { Key: p.split('/object/')[1] });
     if (p.includes('/storage/v1/object/estudio/')) return json(200, { Key: p.split('/object/')[1] });
     // URL firmada del bucket privado (la pide la página del piloto con la sesión)
     if (p.includes('/storage/v1/object/sign/estudio/')) return json(200, { signedURL: `/object/sign/${p.split('/object/sign/')[1]}?token=firmado` });
