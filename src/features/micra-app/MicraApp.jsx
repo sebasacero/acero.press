@@ -1,13 +1,13 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { isNight, landingAfterLogin, parseRoute } from './micraApp.js';
+import { isNight, landingAfterLogin, parseRoute, initials } from './micraApp.js';
 import * as api from './api.js';
 import platform, { takeLogin } from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
 import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
-import { IconNear, IconCup, IconOut, IconToday, IconClipboard, IconCamera } from './icons.jsx';
+import { IconNear, IconCup, IconOut, IconToday, IconClipboard, IconCamera, IconUser } from './icons.jsx';
 import './micra-app.css';
 import { Cargando } from './Animado.jsx';
 
@@ -17,6 +17,9 @@ const StudyView = lazy(() => import('./StudyView.jsx'));
 const MicraStudio = lazy(() => import('../admin/micra/MicraStudio.jsx'));
 // La ficha rápida del estudio (mapear primero), también aparte
 const FichaFlow = lazy(() => import('./FichaFlow.jsx'));
+// «Mi perfil» y «Cerrar sesión» del cliente y del equipo (el del barista vive en BaristaHome)
+const ClientProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.ClientProfile })));
+const OwnerProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.OwnerProfile })));
 
 // Micra (/micra): la app que abre el botón «Micra» del sitio. Es la misma para
 // todos y cambia según quién entra:
@@ -166,6 +169,7 @@ export default function MicraApp() {
   let body;
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
+  else if (route.view === 'me') body = who.loading ? <Cargando /> : <Suspense fallback={<Cargando />}><ClientProfile go={go} who={who} /></Suspense>;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
     // «Cambiar de barista» vuelve a Equipo, donde está «Actuar como»
@@ -183,9 +187,17 @@ export default function MicraApp() {
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
     else if (route.view === 'ficha') body = <Suspense fallback={<Cargando fig="caminando" />}><FichaFlow go={go} /></Suspense>;
     else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} /></Suspense>;
+    else if (route.tab === 'perfil') body = <Suspense fallback={<Cargando />}><OwnerProfile go={go} onSignedOut={() => setActAs(null)} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
   } else body = <ClientHome go={go} night={night} />;
   const teamTabs = teamView && who.admin;
+  // «Mi perfil», arriba a la derecha: las iniciales del barista, o la silueta (cliente, equipo, actuando como)
+  const acting = who.admin && actAs;
+  const meTo = viewMode === 'client' ? '/micra/perfil'
+    : viewMode === 'barista' && !who.loading && (who.barista || acting) ? '/micra/barista/perfil'
+      : viewMode === 'owner' && who.admin ? '/micra/equipo/perfil' : null;
+  const meOn = route.view === 'me' || route.tab === 'perfil';
+  const meInitials = viewMode === 'barista' && who.barista && !acting ? initials(who.barista.name) : null;
 
   return (
     <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}`}>
@@ -199,6 +211,11 @@ export default function MicraApp() {
         )}
         {modes.length < 2 && viewMode !== 'client' && (
           <button type="button" className="mapp-toplink" onClick={() => go('/micra')}>Busco café</button>
+        )}
+        {meTo && (
+          <button type="button" className={`mapp-mebtn ${meOn ? 'on' : ''}`} onClick={() => go(meTo)} aria-label="Mi perfil" aria-current={meOn ? 'page' : undefined} data-testid="me-button">
+            {meInitials ? <span>{meInitials}</span> : <IconUser />}
+          </button>
         )}
       </header>
       <main className="mapp-main">{body}</main>
@@ -215,7 +232,7 @@ export default function MicraApp() {
       )}
       {teamTabs && (
         <nav className="mapp-tabs" aria-label="Equipo">
-          <button type="button" className={route.view === 'owner' ? 'on' : ''} onClick={() => go('/micra/equipo')}>
+          <button type="button" className={route.view === 'owner' && !route.tab ? 'on' : ''} onClick={() => go('/micra/equipo')}>
             <IconToday />Hoy
           </button>
           <button type="button" className={route.view === 'study' ? 'on' : ''} onClick={() => go('/micra/estudio')}>

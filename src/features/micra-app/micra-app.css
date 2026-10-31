@@ -107,6 +107,29 @@
   cursor: pointer;
 }
 
+/* «Mi perfil»: las iniciales (o la silueta) a la derecha de la barra */
+.mapp-mebtn {
+  flex: none;
+  appearance: none;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--m-line);
+  background: var(--m-glass);
+  color: var(--m-fg);
+  display: inline-grid; place-items: center;
+  font: 700 .85rem 'JetBrains Mono', monospace;
+  cursor: pointer;
+  padding: 0;
+}
+.mapp-modes + .mapp-mebtn, .mapp-toplink + .mapp-mebtn { margin-left: 0; }
+.mapp-brand + .mapp-mebtn { margin-left: auto; }
+.mapp-mebtn.on { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
+/* Con las tres pestañas y el perfil, en un celular angosto se aprietan un poco */
+@media (max-width: 400px) {
+  .mapp-top { gap: 8px; }
+  .mapp-modes button { padding: 0 9px; }
+}
+
 .mapp-main {
   width: 100%;
   max-width: 560px;
@@ -924,3 +947,19 @@
 }
 .mapp-seek-note { margin: 0 0 10px; font-size: .8rem; }
 .mapp-seek-note .mapp-link { font-size: inherit; }
+
+/* ── Mi perfil y cerrar sesión (Perfil.jsx) ─────────────────────────── */
+.mapp-phead { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; }
+.mapp-phead .mapp-title { margin: 0 0 2px; overflow-wrap: anywhere; }
+.mapp-phead .mapp-muted { margin: 0; }
+.mapp-plist { margin: 0; }
+.mapp-prow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--m-line); }
+.mapp-prow:last-child { border-bottom: 0; }
+.mapp-prow dt { color: var(--m-soft); font-size: .92rem; }
+.mapp-prow dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.mapp-profile .mapp-glass { margin-bottom: 12px; }
+.mapp-profile .mapp-glass .mapp-btn.is-stop { margin-top: 10px; }
+.mapp-signout { margin-top: 18px; color: var(--m-cta); border-color: color-mix(in srgb, var(--m-cta) 45%, transparent); }
+.mapp-confirm { margin-top: 18px; border: 1.5px solid var(--m-cta); }
+.mapp-confirm p { margin: 6px 0; line-height: 1.4; }
+.mapp-confirm .mapp-row-btns { margin-top: 10px; }

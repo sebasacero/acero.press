@@ -32,6 +32,7 @@ export function useSaliTracking({ enabled }) {
   return {
     ready: enabled && !!me,
     consented: !!me?.consent_at,
+    consentAt: me?.consent_at ?? null,
     recording: tracker.status === 'tracking' || tracker.status === 'starting',
     pendingEnd: tracker.status === 'pending-end',
     gps: tracker.gps,
