@@ -17,6 +17,7 @@ import { km } from '../ruta/track.js';
 import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel } from './flow.js';
 import { ModePicker, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
+import { firstSaleMoment, backHomeMoment, dayTripOf, storyFigure } from './daycard.js';
 
 // Modo barista en cuatro pestañas: Vender, su inicio (la racha, salir, la meta,
 // +1 por taza, fiados y quién te espera), Hoy (el muro del barismo), Aprende
@@ -34,6 +35,7 @@ const Aprende = lazy(() => import('./Aprende.jsx'));
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const Party = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Party })));
 const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.DayStory })));
+const Moment = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Moment })));
 // La entrada por SMS solo la descarga quien va a entrar (no el cliente que busca café)
 const PhoneLogin = lazy(() => import('./PhoneLogin.jsx'));
 // «Mi perfil» y «Cerrar sesión» (Perfil.jsx), solo al abrirlo
@@ -357,6 +359,14 @@ const writeGoal = (id, n) => { try { localStorage.setItem(GOAL_KEY, JSON.stringi
 // La fiesta de la meta sale una vez al día por barista
 const partied = (key) => { try { return localStorage.getItem(PARTY_KEY) === key; } catch { return false; } };
 const markParty = (key) => { try { localStorage.setItem(PARTY_KEY, key); } catch { /* sin memoria */ } };
+// La primera taza del día también se celebra una vez (racha que sigue o hito)
+const FIRST_KEY = 'micra_first_v1';
+const firstDone = (key) => { try { return localStorage.getItem(FIRST_KEY) === key; } catch { return true; } };
+const markFirst = (key) => { try { localStorage.setItem(FIRST_KEY, key); } catch { /* sin memoria */ } };
+// El recorrido de hoy se queda en el celular al tocar «Ya volví», para «Mi día en la calle»
+const TRIP_KEY = 'micra_dia_v1';
+const readDayTrip = () => { try { return JSON.parse(localStorage.getItem(TRIP_KEY)); } catch { return null; } };
+const writeDayTrip = (t) => { try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch { /* sin memoria */ } };
 
 export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender' }) {
   const [day, setDay] = useState(null);
@@ -390,6 +400,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [toast, setToast] = useState(null);
   const [party, setParty] = useState(false);
   const [story, setStory] = useState(false);
+  const [moment, setMoment] = useState(null); // la primera taza o el «Ya volví»
   const [ordering, setOrdering] = useState(false);
   const prevCups = useRef(null);
   const flushing = useRef(false);
@@ -445,6 +456,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     prevCups.current = board.cups;
     if (prev == null) return;
     const m = milestone(prev, board.cups, goal);
+    if (prev === 0 && board.cups > 0 && !asId && !firstDone(partyKey)) {
+      markFirst(partyKey);
+      setMoment(firstSaleMoment({ streak: streakOf(day.week, board.cups).count, goal, name: day.name.split(' ')[0] }));
+      return;
+    }
     if (m?.kind === 'goal' && !partied(partyKey)) { markParty(partyKey); setParty(true); }
     else if (m?.kind === 'step' || m?.kind === 'goal') setToast(m.kind === 'goal' ? `¡Meta de ${goal} cumplida!` : stepText(m));
   }, [board?.cups, goal, partyKey]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -515,10 +531,17 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     try {
       // Pide el permiso del GPS del celular cada vez que sale (con cualquier forma de salir)
       const pos = on ? await api.onePosition() : null;
+      // Antes de cerrar el recorrido se guarda lo de hoy para «Mi día en la calle»
+      const before = !on ? { ...dayTripOf(trip.view, readDayTrip(), bogota().day), day: bogota().day } : null;
+      if (before && before.path.length > 1) writeDayTrip(before);
       await api.goOut(on ? OUT_MINUTES : 0, pos, asId);
       if (on && recordsTrip(mode) && trip.ready && trip.consented && !trip.recording) await trip.start();
       if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();
+      if (!on && board.cups > 0 && !asId) {
+        const minutes = prog ? Math.max(0, Math.round((Date.now() - prog.start.getTime()) / 60000)) : 0;
+        setMoment(backHomeMoment({ cups: board.cups, goal, streak: streak.count, mode, distance: before.distance, stops: before.stops, minutes, name: first }));
+      }
     } catch (e) { setError(e.message); }
     setBusy(null);
   };
@@ -564,7 +587,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const waitingProps = { waiting, sum, rewards, busy, onClose: closeHold, onRedeem: redeem };
   const consent = asking && <GoOutConsent needs={needs} mode={mode} busy={busy === 'out'} onAccept={acceptConsent} onCancel={() => setAsking(false)} />;
   const errorBox = error && <p className="mapp-error" role="alert">{error} <button type="button" className="mapp-link" onClick={() => setError(null)}>Cerrar</button></p>;
-  const storyData = { name: first, cups: board.cups, total: board.total, streak: streak.count, goal, fig, km: trip.view?.distance ?? 0, url: platform.siteUrl(baristaPath(day.id)) };
+  const dayTrip = dayTripOf(trip.view, readDayTrip(), bogota().day);
+  const storyData = { name: first, cups: board.cups, total: board.total, streak: streak.count, goal, fig, mode, km: dayTrip.distance, stops: dayTrip.stops, path: dayTrip.path, url: platform.siteUrl(baristaPath(day.id)) };
 
   // En la calle: la taza que se llena hacia la meta, arriba de todo
   const left = Math.max(0, goal - board.cups);
@@ -629,7 +653,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       <>
         <Suspense fallback={<Cargando fig="caminando" />}>
           <HoyFeed
-            go={go} selfId={day.id} admin={admin || !!asId} mode={mode}
+            go={go} selfId={day.id} admin={admin || !!asId} mode={mode} trip={dayTrip}
             me={{ name: first, streak, goalMet: board.cups >= goal && goal > 0, lessonsDone: lessonPath(lessonsFor('es'), readSeen()).done, lessonsTotal: lessonsFor('es').length }}
             canShareDay={board.cups > 0} onShareDay={() => setStory(true)}
           />
@@ -764,6 +788,15 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       {party && (
         <Suspense fallback={null}>
           <Party {...storyData} onShare={() => { setParty(false); setStory(true); }} onClose={() => setParty(false)} />
+        </Suspense>
+      )}
+      {moment && (
+        <Suspense fallback={null}>
+          <Moment
+            moment={moment} fig={mode ? storyFigure(mode) : fig}
+            onPrimary={moment.id === 'volvi' ? () => { setMoment(null); setStory(true); } : () => setMoment(null)}
+            onClose={() => setMoment(null)} closeLabel={moment.id === 'volvi' ? 'Listo' : null}
+          />
         </Suspense>
       )}
       {story && (

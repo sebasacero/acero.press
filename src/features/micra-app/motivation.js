@@ -99,3 +99,11 @@ export function dayStory({ cups, streak = 0 }) {
 
 /** Qué tan llena va la taza de la meta (0–1). */
 export const fillOf = (cups, goal) => (goal > 0 ? Math.min(1, Math.max(0, cups / goal)) : 0);
+
+// Hitos de racha, como las llamas de Duolingo
+export const STREAK_BADGES = [
+  [3, 'Tres días seguidos', 'Ya es costumbre: tus clientes empiezan a contar contigo.'],
+  [7, 'Una semana entera', 'Siete días saliendo. Así se hace una ruta.'],
+  [14, 'Dos semanas', 'Quien pasa todos los días, se vuelve el café de la cuadra.'],
+  [30, 'Un mes en la calle', 'Treinta días. Eres de los que no fallan.'],
+];

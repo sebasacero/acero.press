@@ -1076,3 +1076,62 @@
 .mapp-qrlogos button.on { border-color: var(--red, #DE1B1B); box-shadow: 0 0 0 3px rgba(222, 27, 27, .15); }
 .mapp-row-btns.is-qr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mapp-row-btns.is-qr .mapp-btn { width: 100%; }
+
+/* Los momentos del día (primera taza, racha, «Ya volví») y «Mi día en la calle» */
+.mapp-party-flame { position: absolute; right: calc(50% - 130px); top: 40px; z-index: 2; font-size: 2.6rem; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .3)); }
+.mapp-party.is-calle, .mapp-party.is-puesto { background: #16181F; }
+.mapp-routebox { margin: 12px 0 0; background: #fff; border-radius: 16px; overflow: hidden; position: relative; z-index: 1; }
+.mapp-routebox svg { display: block; width: 100%; height: auto; }
+.mapp-routebox-grid line { stroke: rgba(31, 36, 82, .08); stroke-width: 1.5; }
+.mapp-routebox-line { fill: none; stroke: #1F2452; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.mapp-routebox-stop { fill: #fff; stroke: var(--red, #DE1B1B); stroke-width: 2.5; }
+.mapp-routebox-start, .mapp-routebox-end { fill: var(--red, #DE1B1B); }
+.mapp-routebox-end { stroke: #fff; stroke-width: 2.5; }
+.mapp-routebox-empty { font: 500 9px 'JetBrains Mono', monospace; fill: #626877; }
+.mapp-story.is-calle { padding: 18px; }
+.mapp-story.is-calle .mapp-story-n { font-size: 3.6rem; }
+.mapp-story.is-calle .mapp-story-stats { grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-top: 10px; max-width: 62%; }
+.mapp-story.is-calle .mapp-story-stats dd { font-size: 1.1rem; }
+.mapp-story.is-calle .mapp-story-link { bottom: 46px; }
+.mapp-story.is-calle .mapp-fig.is-story { height: 34%; }
+.mapp-levelchip { display: inline-block; padding: 1px 6px; border-radius: 6px; background: var(--red, #DE1B1B); color: #fff; font: 800 .7rem 'JetBrains Mono', monospace; vertical-align: middle; }
+.mapp-btn.is-wa { background: #25D366; color: #0B2E17; }
+.mapp-storywrap > .mapp-link.is-onink { color: #fff; margin-top: 6px; min-height: 44px; }
+
+/* Hoy como Instagram: quién, la foto o el video con su etiqueta, el texto y las acciones */
+.mapp-ig { padding: 0; overflow: hidden; }
+.mapp-ig-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.mapp-ig-who { display: grid; min-width: 0; }
+.mapp-ig-who b { display: flex; align-items: center; gap: 6px; font: 800 .95rem 'Archivo', sans-serif; }
+.mapp-ig-who small { font: 500 .66rem 'JetBrains Mono', monospace; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mapp-ig-media { position: relative; }
+.mapp-ig-tile { position: relative; display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; aspect-ratio: 4 / 3; border: 0; padding: 28px 16px 16px; background: #F5EFE4; color: #16181F; overflow: hidden; font: inherit; }
+.mapp-ig-tile.is-racha { background: var(--red, #DE1B1B); color: #fff; }
+.mapp-ig-tile.is-hito { background: #1F2452; color: #fff; }
+.mapp-ig-tile.is-meta { background: #16181F; color: #fff; }
+.mapp-ig-tile.is-escuela { flex-direction: column; background: #E9F0E4; }
+.mapp-ig-tile.is-receta, .mapp-ig-tile.is-noticia { background: #1F2452; color: #F5EFE4; }
+.mapp-ig-tile.is-idea { flex-direction: column; background: repeating-linear-gradient(45deg, #F5EFE4 0 14px, #EFE6D6 14px 28px); border: 2px dashed rgba(31, 36, 82, .3); cursor: pointer; }
+.mapp-ig-tile.is-dia { padding: 34px 12px 12px; background: #EFE6D6; }
+.mapp-ig-tile.is-dia .mapp-routebox { width: 100%; margin: 0; }
+.mapp-ig-tile.is-puesto { align-items: flex-end; padding: 0; background: linear-gradient(#F5EFE4 70%, #E7DCC8); }
+.mapp-ig-tile.is-puesto .mapp-anden { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; }
+.mapp-fig.is-feedfig { position: relative; z-index: 1; height: 86%; width: auto; margin-bottom: 18px; }
+.mapp-fig.is-feedfig svg { height: 100%; width: auto; }
+.mapp-ig-tag { position: absolute; top: 10px; left: 10px; z-index: 2; padding: 4px 8px; border-radius: 8px; background: rgba(22, 24, 31, .78); color: #fff; font: 700 .6rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.mapp-ig-badge { font-size: 3.6rem; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .2)); }
+.mapp-ig-big { display: grid; font: 900 4rem/.9 'Archivo', sans-serif; letter-spacing: -.04em; }
+.mapp-ig-big small { font: 600 .8rem 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+.mapp-ig-shot { font: 700 .85rem 'Archivo', sans-serif; color: #1F2452; }
+.mapp-ig-mark { font: 900 2.6rem 'Archivo', sans-serif; color: #1F2452; }
+.mapp-ig-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.mapp-ig-chips b { padding: 10px 14px; border-radius: 14px; background: rgba(245, 239, 228, .12); border: 1.5px solid rgba(245, 239, 228, .35); font: 800 1.3rem 'Archivo', sans-serif; }
+.mapp-ig-headline { font: 900 1.35rem/1.15 'Archivo', sans-serif; text-align: left; letter-spacing: -.02em; }
+.mapp-ig-photo { position: relative; background: #16181F; }
+.mapp-ig-photo img, .mapp-ig-photo video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; margin: 0; border-radius: 0; }
+.mapp-ig-body { padding: 12px 14px 4px; }
+.mapp-ig-foot { display: flex; align-items: center; gap: 4px; padding: 4px 8px 8px; border-top: 0; flex-wrap: wrap; }
+.mapp-ig-act { min-height: 44px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; color: inherit; font: 700 .8rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-ig-act.on { color: var(--red, #DE1B1B); }
+.mapp-ig-cta { margin-left: auto; display: flex; align-items: center; }
+.mapp-routebox.is-feed { border-radius: 12px; }

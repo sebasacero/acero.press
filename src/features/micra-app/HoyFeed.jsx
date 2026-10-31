@@ -6,6 +6,8 @@ import { figureFor } from './motivation.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
+import { RouteBox } from './Celebrate.jsx';
+import { km } from '../ruta/track.js';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -58,89 +60,161 @@ function PriceForm({ prices, onSaved, onCancel }) {
 }
 
 const BADGE_ICON = { racha: '🔥', hito: '🏅', meta: '🎯', escuela: '🎓' };
+const LIKES_KEY = 'micra_muro_likes_v1';
+const readLikes = () => { try { return new Set(JSON.parse(localStorage.getItem(LIKES_KEY)) ?? []); } catch { return new Set(); } };
+const writeLikes = (set) => { try { localStorage.setItem(LIKES_KEY, JSON.stringify([...set].slice(-200))); } catch { /* sin memoria */ } };
+const ago = (iso) => {
+  if (!iso) return null;
+  const days = Math.round((Date.now() - Date.parse(`${iso}T12:00:00Z`)) / 86400000);
+  return days <= 0 ? 'hoy' : days === 1 ? 'ayer' : days < 30 ? `hace ${days} días` : dayLabel(iso);
+};
 
-function Post({ item, go, onShareDay, canShareDay }) {
+/**
+ * Una publicación como en Instagram: quién (con su nivel), dónde y cuándo, el
+ * espacio de la foto o el video con su etiqueta, el texto y abajo «Me gusta»
+ * (solo en este celular), compartir y lo que se puede hacer con ella.
+ */
+function Shell({ item, av, who, level = null, where, media, title, text, cta, testid, share }) {
+  const [liked, setLiked] = useState(() => readLikes().has(item.id));
+  const like = () => {
+    const set = readLikes();
+    if (set.has(item.id)) set.delete(item.id); else set.add(item.id);
+    writeLikes(set);
+    setLiked(set.has(item.id));
+  };
+  return (
+    <article className={`mapp-post mapp-ig is-${item.kind}`} data-testid={testid}>
+      <header className="mapp-ig-head">
+        <span className="mapp-post-av">{av}</span>
+        <span className="mapp-ig-who"><b>{who}{level && <span className="mapp-levelchip">{level}</span>}</b><small>{where}</small></span>
+      </header>
+      {media && <div className="mapp-ig-media">{media}</div>}
+      <div className="mapp-ig-body">
+        {title && <p className="mapp-post-title">{title}</p>}
+        {text && <p className="mapp-post-text">{text}</p>}
+      </div>
+      <footer className="mapp-ig-foot">
+        <button type="button" className={`mapp-ig-act ${liked ? 'on' : ''}`} aria-pressed={liked} onClick={like} aria-label="Me gusta">☕ <span>{liked ? 'Te gusta' : 'Me gusta'}</span></button>
+        {share && <button type="button" className="mapp-ig-act" onClick={share} aria-label="Compartir">↗ <span>Compartir</span></button>}
+        {cta && <span className="mapp-ig-cta">{cta}</span>}
+      </footer>
+    </article>
+  );
+}
+
+/** El espacio de la foto cuando aún no hay foto: un fondo con su dibujo y su etiqueta. */
+function Tile({ tone, tag, children }) {
+  return (
+    <div className={`mapp-ig-tile is-${tone}`}>
+      {tag && <span className="mapp-ig-tag">{tag}</span>}
+      {children}
+    </div>
+  );
+}
+
+function Post({ item, go, onShareDay, canShareDay, me, selfId }) {
+  const shareLink = (title, url) => () => platform.share({ title, text: title, url });
+  const meAv = <Figure name={figureFor(selfId)} className="is-avatar" />;
   if (item.kind === 'logros') {
     const cta = item.cta === 'learn'
-      ? <button type="button" className="mapp-link" onClick={() => go('/micra/barista/aprende')}>Ir a Aprende ›</button>
+      ? <button type="button" className="mapp-link" onClick={() => go('/micra/barista/aprende')}>Aprender esto ›</button>
       : item.cta === 'out'
         ? <button type="button" className="mapp-link" onClick={() => go('/micra/barista')}>Salir a vender ›</button>
-        : canShareDay ? <button type="button" className="mapp-link" onClick={onShareDay}>Compartir ›</button> : null;
+        : canShareDay ? <button type="button" className="mapp-link" onClick={onShareDay}>Compartir mi día ›</button> : null;
+    const media = (
+      <Tile tone={item.badge} tag="Logro">
+        <span className="mapp-ig-badge" aria-hidden="true">{BADGE_ICON[item.badge]}</span>
+        {item.badge === 'racha' && <b className="mapp-ig-big">{item.count}<small>{item.count === 1 ? 'día' : 'días'}</small></b>}
+        {item.badge === 'hito' && <b className="mapp-ig-big">{item.count}<small>días</small></b>}
+        {item.badge === 'escuela' && item.total > 0 && item.done != null && (
+          <span className="mapp-achieve-bar" role="progressbar" aria-valuemin={0} aria-valuemax={item.total} aria-valuenow={item.done}><i style={{ width: `${(item.done / item.total) * 100}%` }} /></span>
+        )}
+      </Tile>
+    );
+    return <Shell item={item} testid={`feed-logro-${item.id}`} av={meAv} who={item.by || 'Tú'} level="N1" where="Tus logros · hoy" media={media} title={item.title} text={item.text} cta={cta} />;
+  }
+  if (item.kind === 'dia') {
+    const media = (
+      <Tile tone="dia" tag="Mi día">
+        <RouteBox path={item.path} className="is-feed" />
+      </Tile>
+    );
     return (
-      <article className={`mapp-post mapp-achieve is-${item.badge}`} data-testid={`feed-logro-${item.id}`}>
-        <span className="mapp-achieve-ico" aria-hidden="true">{BADGE_ICON[item.badge]}{item.badge === 'racha' && <b>{item.count}</b>}</span>
-        <div>
-          <p className="mapp-post-title">{item.title}</p>
-          <p className="mapp-post-text">{item.text}</p>
-          {item.badge === 'escuela' && item.total > 0 && item.done != null && (
-            <span className="mapp-achieve-bar" role="progressbar" aria-valuemin={0} aria-valuemax={item.total} aria-valuenow={item.done}><i style={{ width: `${(item.done / item.total) * 100}%` }} /></span>
-          )}
-          {cta && <footer><span className="mapp-tag">Logro</span>{cta}</footer>}
-        </div>
-      </article>
+      <Shell
+        item={item} testid="feed-dia" av={meAv} who={item.by} level="N1" where={`${item.mode === 'caminando' ? 'Caminando' : 'En la calle'} · hoy`}
+        media={media} title={`El día de ${item.by}`}
+        text={[item.km, `${item.stops} ${item.stops === 1 ? 'parada' : 'paradas'}`, `${item.streak} ${item.streak === 1 ? 'día' : 'días'} en racha`].join(' · ')}
+        cta={canShareDay ? <button type="button" className="mapp-link" onClick={onShareDay}>Compartir mi día ›</button> : null}
+      />
     );
   }
   if (item.kind === 'publicar') {
-    return (
-      <article className="mapp-post mapp-idea" data-testid="feed-idea">
-        <header className="mapp-post-who"><span className="mapp-post-av is-idea" aria-hidden="true">{item.icon}</span><span><b>Idea para hoy</b><small>Sugerido para ti</small></span></header>
-        <p className="mapp-post-title">{item.title}</p>
-        <p className="mapp-post-text">{item.text}</p>
-        <footer><span className="mapp-tag">Para publicar</span><button type="button" className="mapp-btn is-small" onClick={() => go('/micra/video')}>📷 Tomar la foto</button></footer>
-      </article>
+    const media = (
+      <button type="button" className="mapp-ig-tile is-idea" onClick={() => go('/micra/video')} aria-label={`Tomar: ${item.title}`}>
+        <span className="mapp-ig-tag">Idea de foto</span>
+        <span className="mapp-ig-badge" aria-hidden="true">{item.icon}</span>
+        <span className="mapp-ig-shot">📷 Toca para tomarla</span>
+      </button>
     );
+    return <Shell item={item} testid="feed-idea" av={<span className="mapp-post-av is-idea" aria-hidden="true">✨</span>} who="Idea para hoy" where="Sugerido para ti" media={media} title={item.title} text={item.text} cta={<button type="button" className="mapp-btn is-small" onClick={() => go('/micra/video')}>📷 Tomar la foto</button>} />;
   }
   if (item.kind === 'cafe') {
+    const mark = item.org === 'Finca' ? '🌱' : item.org === 'Marca' ? '🏷️' : 'FNC';
+    const media = item.image
+      ? <div className="mapp-ig-photo"><img src={item.image} alt="" loading="lazy" /><span className="mapp-ig-tag">Café de Colombia</span></div>
+      : <Tile tone="cafe" tag="Café de Colombia"><span className="mapp-ig-mark">{mark}</span></Tile>;
     return (
-      <article className="mapp-post" data-testid="feed-cafe">
-        <header className="mapp-post-who"><span className="mapp-post-av is-house" aria-hidden="true">{item.org === 'Finca' ? '🌱' : item.org === 'Marca' ? '🏷️' : 'FNC'}</span><span><b>{item.by}</b><small>{[item.org === 'FNC' ? 'Café de Colombia' : item.org, item.date && dayLabel(item.date)].filter(Boolean).join(' · ')}</small></span></header>
-        {item.image && <img className="mapp-post-img" src={item.image} alt="" loading="lazy" />}
-        <p className="mapp-post-title">{item.title}</p>
-        {item.text && <p className="mapp-post-text">{item.text}</p>}
-        {item.source && <footer><span className="mapp-tag">Café de Colombia</span><a className="mapp-link" href={item.source} target="_blank" rel="noopener noreferrer">Leer más ›</a></footer>}
-      </article>
+      <Shell
+        item={item} testid="feed-cafe" av={<span className="mapp-post-av is-house" aria-hidden="true">{mark}</span>} who={item.by}
+        where={[item.org === 'FNC' ? 'Café de Colombia' : item.org, ago(item.date)].filter(Boolean).join(' · ')}
+        media={media} title={item.title} text={item.text}
+        share={item.source ? shareLink(item.title, item.source) : null}
+        cta={item.source ? <a className="mapp-link" href={item.source} target="_blank" rel="noopener noreferrer">Leer más ›</a> : null}
+      />
     );
   }
   if (item.kind === 'puestos') {
+    const url = platform.siteUrl(baristaPath(item.baristaId));
+    const media = (
+      <Tile tone="puesto" tag={item.live ? 'En la calle ahora' : 'Puesto'}>
+        <Figure name={figureFor(item.baristaId)} className="is-feedfig" />
+        <i className="mapp-anden" aria-hidden="true" />
+      </Tile>
+    );
     return (
-      <article className="mapp-post">
-        <header className="mapp-post-who">
-          <span className="mapp-post-av"><Figure name={figureFor(item.baristaId)} className="is-avatar" /></span>
-          <span><b>{item.by}</b><small>{item.live ? 'En la calle ahora' : 'Puesto'}</small></span>
-        </header>
-        <p className="mapp-post-title">{item.title}</p>
-        {item.text && <p className="mapp-post-text">{item.text}{item.price ? ` · tinto ${money(item.price)}` : ''}</p>}
-        <footer><span className="mapp-tag">Puesto</span><button type="button" className="mapp-link" onClick={() => go(baristaPath(item.baristaId))}>Ver en el mapa ›</button></footer>
-      </article>
+      <Shell
+        item={item} av={<Figure name={figureFor(item.baristaId)} className="is-avatar" />} who={item.by} level="N1"
+        where={[item.title, item.live ? 'ahora' : null].filter(Boolean).join(' · ')}
+        media={media} title={item.title} text={item.text ? `${item.text}${item.price ? ` · tinto ${money(item.price)}` : ''}` : null}
+        share={shareLink(`El café de ${item.by} en Micra`, url)}
+        cta={<button type="button" className="mapp-link" onClick={() => go(baristaPath(item.baristaId))}>Ver en el mapa ›</button>}
+      />
     );
   }
   if (item.kind === 'videos') {
-    return (
-      <article className="mapp-post">
-        <header className="mapp-post-who"><span className="mapp-post-av is-house">AP</span><span><b>{item.by}</b><small>Video</small></span></header>
-        <p className="mapp-post-text">{item.title}. {item.text}</p>
+    const media = (
+      <div className="mapp-ig-photo">
         <video className="mapp-post-video" src={platform.siteUrl(item.video)} poster={platform.siteUrl(item.poster)} controls playsInline preload="none" />
-      </article>
+        <span className="mapp-ig-tag">Video</span>
+      </div>
     );
+    return <Shell item={item} av={<span className="mapp-post-av is-house">AP</span>} who={item.by} where={`Video · ${ago(item.date)}`} media={media} title={item.title} text={item.text} cta={<button type="button" className="mapp-link" onClick={() => go('/micra/barista/aprende')}>Aprender esto ›</button>} />;
   }
   if (item.kind === 'recetas') {
-    return (
-      <article className="mapp-post">
-        <header className="mapp-post-who"><span className="mapp-post-av is-house" aria-hidden="true">☕</span><span><b>{item.by}</b><small>Receta</small></span></header>
-        <p className="mapp-post-title">{item.title}</p>
-        <p className="mapp-post-text">{item.text}</p>
-        {item.chips && <p className="mapp-post-chips">{item.chips.map((c) => <span key={c}>{c}</span>)}</p>}
-        <footer><span className="mapp-tag">Receta</span><a className="mapp-link" href={platform.siteUrl(item.link)}>Prepararla ›</a></footer>
-      </article>
+    const media = (
+      <Tile tone="receta" tag="Receta">
+        {item.chips && <span className="mapp-ig-chips">{item.chips.map((c) => <b key={c}>{c}</b>)}</span>}
+      </Tile>
     );
+    return <Shell item={item} av={<span className="mapp-post-av is-house" aria-hidden="true">☕</span>} who={item.by} where={`Receta · ${ago(item.date)}`} media={media} title={item.title} text={item.text} share={shareLink(item.title, platform.siteUrl(item.link))} cta={<a className="mapp-link" href={platform.siteUrl(item.link)}>Prepararla ›</a>} />;
   }
   return (
-    <article className="mapp-post">
-      <header className="mapp-post-who"><span className="mapp-post-av is-house">AP</span><span><b>{item.by}</b><small>Noticia · {dayLabel(item.date)}</small></span></header>
-      <p className="mapp-post-title">{item.title}</p>
-      <p className="mapp-post-text">{item.text}</p>
-      {item.source && <footer><span className="mapp-tag">Noticia</span><a className="mapp-link" href={item.source} target="_blank" rel="noopener noreferrer">Leer la fuente ›</a></footer>}
-    </article>
+    <Shell
+      item={item} av={<span className="mapp-post-av is-house">AP</span>} who={item.by} where={`Noticia · ${ago(item.date)}`}
+      media={<Tile tone="noticia" tag="Noticia"><span className="mapp-ig-headline">{item.title}</span></Tile>}
+      text={item.text} share={item.source ? shareLink(item.title, item.source) : null}
+      cta={item.source ? <a className="mapp-link" href={item.source} target="_blank" rel="noopener noreferrer">Leer la fuente ›</a> : null}
+    />
   );
 }
 
@@ -203,7 +277,7 @@ function CuratedForm({ current, onSaved, onCancel }) {
   );
 }
 
-export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, canShareDay = false, onShareDay }) {
+export default function HoyFeed({ go, selfId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay }) {
   const [baristas, setBaristas] = useState([]);
   const [cfg, setCfg] = useState({});
   const [chip, setChip] = useState('todo');
@@ -222,8 +296,14 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
   const extra = readCurated(cfg.micra_muro);
   const dayKey = bogota().day;
   const items = useMemo(() => buildFeed({ baristas, selfId, me, prices, curated: [...extra, ...CURATED], dayKey, mode }), [baristas, selfId, me?.streak?.count, me?.streak?.todayDone, me?.goalMet, me?.lessonsDone, mode, cfg, dayKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const counts = chipCounts(items);
-  const shown = filterFeed(items, chip);
+  // «El día de …»: el recorrido de hoy, solo para quien lo grabó (sin tazas ni plata)
+  const withDay = useMemo(() => {
+    if (!me || !trip || (trip.path?.length ?? 0) < 2) return items;
+    const post = { id: `dia-${dayKey}`, kind: 'dia', by: me.name, mode, path: trip.path, km: km(trip.distance), stops: trip.stops, streak: me.streak?.count ?? 0 };
+    return [items[0], post, ...items.slice(1)];
+  }, [items, me, trip, mode, dayKey]);
+  const counts = chipCounts(withDay);
+  const shown = filterFeed(withDay, chip);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
@@ -246,7 +326,7 @@ export default function HoyFeed({ go, selfId = null, admin = false, me = null, m
       <div className="mapp-posts" data-testid="feed">
         {shown.map((item) => (item.kind === 'precios'
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
-          : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} />))}
+          : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} />))}
       </div>
       {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} />}
     </div>

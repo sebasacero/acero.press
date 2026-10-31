@@ -1,3 +1,4 @@
+import { STREAK_BADGES } from './motivation.js';
 // El muro de Hoy: el mundo del barismo en una sola lista (precios, logros,
 // ideas para publicar, el café de Colombia, puestos, recetas y videos). Lógica
 // pura, sin React ni Supabase. Todo lo que sale aquí es real: lo de la casa y
@@ -110,13 +111,8 @@ export function readPrices(cfg = {}) {
 /** «$2,85 M» para la carga de 125 kg. */
 export const millions = (n) => `$${(Math.round(n / 10000) / 100).toLocaleString('es-CO', { minimumFractionDigits: 2 })} M`;
 
-// Hitos de racha, como las llamas de Duolingo
-export const STREAK_BADGES = [
-  [3, 'Tres días seguidos', 'Ya es costumbre: tus clientes empiezan a contar contigo.'],
-  [7, 'Una semana entera', 'Siete días saliendo. Así se hace una ruta.'],
-  [14, 'Dos semanas', 'Quien pasa todos los días, se vuelve el café de la cuadra.'],
-  [30, 'Un mes en la calle', 'Treinta días. Eres de los que no fallan.'],
-];
+// Hitos de racha (viven en motivation.js: también los usa la pantalla de la primera taza)
+export { STREAK_BADGES };
 
 /**
  * Los logros del barista para el muro: la racha (siempre), el hito más alto que
