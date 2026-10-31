@@ -1,26 +1,23 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
-  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, PRODUCTS,
+  money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconCheck, IconOut } from './icons.jsx';
+import { IconThermo, IconCheck, IconOut, IconToday } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
 
-const MicraMap = lazy(() => import('./MicraMap.jsx'));
 // «Busco café» y su aviso llegan aparte: la app ya está al borde del límite del bundle
 const SeekNote = lazy(() => import('./SeekNote.jsx'));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
-// Lo que el cliente busca, encima del mapa: todo o una bebida
-const DRINKS = [['all', 'Todo'], ...PRODUCTS.map((p) => [p.id, p.label])];
 
 function useBaristas() {
   const [state, setState] = useState({ list: null, error: null, missing: false });
@@ -107,7 +104,7 @@ function inviteText() {
   return `¿Vendes café en la calle? Con Micra tus clientes te apartan los tintos antes de que llegues. Escríbele al equipo: ${url}`;
 }
 
-/** Cada barista en su tarjeta: su personaje, si está en la calle, dónde y su tinto. El número es el de su pin. */
+/** Cada barista en su tarjeta: su personaje, si está en la calle, dónde y su tinto. */
 function BaristaRow({ b, onOpen, i = 0 }) {
   const menu = menuOf(b);
   return (
@@ -135,7 +132,40 @@ function BaristaRow({ b, onOpen, i = 0 }) {
   );
 }
 
-export function ClientHome({ go, night }) {
+/**
+ * Las historias de arriba, como en Instagram: primero Hoy (el muro del café) y
+ * luego los baristas, los que están en la calle primero, con el aro rojo y
+ * «AHORA». Tocar uno abre su página para apartar.
+ */
+function Stories({ baristas, go }) {
+  return (
+    <ul className="mapp-hists" aria-label="Historias" data-testid="stories">
+      <li>
+        <button type="button" className="mapp-hist is-hoy" onClick={() => go('/micra/hoy')} aria-label="Hoy en el café">
+          <span className="mapp-hist-ring"><span className="mapp-hist-av"><IconToday /></span></span>
+          <small>Hoy</small>
+        </button>
+      </li>
+      {baristas.map((b) => {
+        const live = b.status === 'live';
+        const first = String(b.name ?? '').split(' ')[0];
+        return (
+          <li key={b.id}>
+            <button type="button" className={`mapp-hist ${live ? 'is-live' : ''}`} onClick={() => go(baristaPath(b.id))} aria-label={`${first}${live ? ', en la calle ahora' : ''}`}>
+              <span className="mapp-hist-ring">
+                <span className="mapp-hist-av"><Figure name={figureFor(b.id)} className="is-avatar" /></span>
+                {live && <i className="mapp-hist-tag" aria-hidden="true">AHORA</i>}
+              </span>
+              <small>{first}</small>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+export function ClientHome({ go }) {
   const [{ list, error, missing }, reload] = useBaristas();
   const { me, ask, asking } = useMe();
   const [drink, setDrink] = useState('all');
@@ -145,8 +175,8 @@ export function ClientHome({ go, night }) {
   // le dicen a los baristas dónde quieren café; una vez cada 15 min (api.seekCoffee)
   const askNear = async () => { const p = await ask(); if (p) seek(p, drink); };
   const pickDrink = (id) => { setDrink(id); if (me) seek(me, id); };
-  // Cada barista lleva el número de su fila, el mismo que su pin en el mapa
-  const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }).map((b, i) => ({ ...b, n: i + 1 })), [list, me, favs]);
+  const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }), [list, me, favs]);
+  const counts = drinkCounts(sorted);
   const shown = pickBaristas(sorted, { drink, now: nowOnly });
   const live = sorted.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
@@ -160,36 +190,34 @@ export function ClientHome({ go, night }) {
 
   return (
     <div className="mapp-client">
+      <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
+      {/* Arriba, como el inicio de una red social: las historias de los baristas */}
+      <Stories baristas={sorted} go={go} />
       {hold && holdBarista ? (
         <>
           <p className="mapp-kicker is-hello">{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</p>
-          <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
           <HoldCard hold={hold} barista={holdBarista} go={go} />
         </>
       ) : (
-        <section className="mapp-hero">
-          <div>
-            <p className="mapp-kicker">{live > 0 ? `${live === 1 ? '1 barista' : `${live} baristas`} en la calle ahora` : 'Café de la calle · Bogotá'}</p>
-            <h1 className="mapp-title is-home">¿Quién pasa con café <span className="mapp-script">cerca?</span></h1>
-            <p className="mapp-lede">Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.</p>
-          </div>
-          <Figure name="caminando" className="is-hero" />
-        </section>
+        <p className="mapp-feedline" data-testid="home-line">
+          <b>{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</b>{' '}
+          {live > 0 ? `${live === 1 ? '1 barista está' : `${live} baristas están`} en la calle ahora: apártale y recoge cuando pase.` : 'Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.'}
+        </p>
       )}
 
-      {/* El mapa grande y, encima, qué quiere tomar: los pines muestran solo a quien lo vende */}
-      <div className="mapp-mapwrap">
-        <div className="mapp-chips is-drinks" role="group" aria-label="¿Qué quieres tomar?">
-          {DRINKS.map(([id, label]) => (
-            <button key={id} type="button" className={drink === id ? 'on' : ''} aria-pressed={drink === id} onClick={() => pickDrink(id)}>{label}</button>
+      {/* Sin mapa: qué quiere tomar, en botones grandes; la lista de abajo muestra solo a quien lo vende */}
+      <section className="mapp-drinks" aria-labelledby="mapp-drinks-q">
+        <h2 className="mapp-drinks-q" id="mapp-drinks-q">¿Qué te gustaría tomar <span className="mapp-script">hoy?</span></h2>
+        <div className="mapp-drinks-grid" role="group" aria-label="¿Qué te gustaría tomar hoy?">
+          {DRINK_CHOICES.map((d) => (
+            <button key={d.id} type="button" className={drink === d.id ? 'on' : ''} aria-pressed={drink === d.id} onClick={() => pickDrink(d.id)} data-testid={`drink-${d.id}`}>
+              <span className="mapp-drink-ico" aria-hidden="true">{d.icon}</span>
+              <b>{d.label}</b>
+              {list && <small>{counts[d.id] === 1 ? '1 barista' : `${counts[d.id]} baristas`}</small>}
+            </button>
           ))}
         </div>
-        {sorted.length > 0 ? (
-          <Suspense fallback={<div className="mapp-map is-big is-loading" />}>
-            <MicraMap baristas={shown} me={me} theme={night ? 'noche' : 'plano'} onPick={open} big />
-          </Suspense>
-        ) : <div className={`mapp-map is-big ${list === null ? 'is-loading' : ''}`} />}
-      </div>
+      </section>
 
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">

@@ -124,15 +124,15 @@ test('cliente: «Cerca de mí» manda una sola señal con la celda, sin su punto
   expect(sent.p_ref).toMatch(/^busco-/);
 
   // Con la ubicación ya dada, escoger una bebida dentro de los 15 min no manda otra
-  const drinks = page.getByRole('group', { name: '¿Qué quieres tomar?' });
-  await drinks.getByRole('button', { name: 'Perico' }).click();
-  await expect(drinks.getByRole('button', { name: 'Perico' })).toHaveAttribute('aria-pressed', 'true');
+  const drinks = page.getByRole('group', { name: '¿Qué te gustaría tomar hoy?' });
+  await drinks.getByRole('button', { name: /Perico/ }).click();
+  await expect(drinks.getByRole('button', { name: /Perico/ })).toHaveAttribute('aria-pressed', 'true');
   await page.evaluate(() => new Promise((r) => { setTimeout(r, 500); }));
   expect(seeks()).toHaveLength(1);
 
   // Pasaron 16 minutos: la siguiente bebida sí cuenta, con su bebida
   await page.evaluate(() => localStorage.setItem('micra_seek_at_v1', JSON.stringify(Date.now() - 16 * 60000)));
-  await drinks.getByRole('button', { name: 'Tinto' }).click();
+  await drinks.getByRole('button', { name: /Tinto/ }).click();
   await expect.poll(() => seeks().length).toBe(2);
   expect(seeks()[1].data).toMatchObject({ p_cell_lat: 4.646, p_cell_lng: -74.062, p_drink: 'tinto', p_ref: sent.p_ref });
 

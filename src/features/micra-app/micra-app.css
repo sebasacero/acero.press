@@ -282,12 +282,8 @@
   cursor: pointer;
 }
 .mapp-chips button.on { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
-/* El mapa del cliente: grande, con las bebidas encima */
-.mapp-mapwrap { position: relative; margin: 4px 0 8px; }
+/* El mapa grande (el mapa en vivo del barista) */
 .mapp-map.is-big { height: clamp(320px, 56vh, 520px); margin: 0; }
-.mapp-chips.is-drinks { position: absolute; z-index: 2; top: 10px; left: 10px; right: 10px; padding: 2px; }
-.mapp-chips.is-drinks button { background: var(--m-bg); box-shadow: 0 2px 10px rgba(0, 0, 0, .14); }
-.mapp-chips.is-drinks button.on { background: var(--m-fg); color: var(--m-bg); }
 .mapp-near { color: var(--m-cold); }
 .mapp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .mapp-row {
@@ -1269,3 +1265,54 @@
 .mapp-promo-x { position: relative; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .9); background: rgba(0, 0, 0, .25); color: #fff; display: grid; place-items: center; cursor: pointer; }
 @media (max-height: 640px) { .mapp-promo-h { font-size: 1.9rem; } .mapp-promo-big { font-size: 1.7rem; } }
 @media (prefers-reduced-motion: reduce) { .mapp-promo-card, .mapp-promo-can { animation: none; } }
+
+/* ── El cliente como Instagram (31 oct) ───────────────────────────────── */
+/* Arriba: la marca a mano y el avión de los mensajes; las historias de los
+   baristas; abajo la barra plana de cinco íconos sin texto */
+.mapp.is-client .mapp-top { border-bottom-color: transparent; }
+.mapp.is-client .mapp-brand-word { font: 400 1.65rem/1 'Permanent Marker', cursive; letter-spacing: 0; }
+.mapp-topicon { flex: none; margin-left: auto; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--m-fg); text-decoration: none; }
+.mapp-modes + .mapp-topicon { margin-left: 0; }
+.mapp-topicon svg { width: 27px; height: 27px; stroke-width: 1.9; }
+.mapp-topicon:active { background: color-mix(in srgb, var(--m-fg) 7%, transparent); }
+
+.mapp-hists { display: flex; gap: 12px; overflow-x: auto; margin: -10px -16px 12px; padding: 4px 16px 12px; list-style: none; scrollbar-width: none; border-bottom: 1px solid var(--m-line); }
+.mapp-hists::-webkit-scrollbar { display: none; }
+.mapp-hists li { flex: none; }
+.mapp-hist { appearance: none; border: 0; background: none; padding: 0; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--m-fg); font: 600 .74rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-hist-ring { position: relative; display: block; width: 70px; height: 70px; padding: 2.5px; border-radius: 50%; background: var(--m-line); }
+.mapp-hist.is-live .mapp-hist-ring { padding: 3px; background: var(--m-cta); }
+.mapp-hist.is-hoy .mapp-hist-ring { padding: 3px; background: var(--m-fg); }
+.mapp-hist-av { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #F5EFE4; border: 3px solid var(--m-bg); color: #1F2452; }
+.mapp-hist-av svg { width: 28px; height: 28px; }
+.mapp-hist-av { position: relative; }
+.mapp-hist-av .mapp-fig.is-avatar { position: absolute; left: 50%; top: 6px; height: 140px; margin: 0; transform: translateX(-50%); }
+.mapp-hist-av .mapp-fig.is-avatar svg { width: auto; height: 100%; }
+.mapp-hist-tag { position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%); padding: 1px 5px; border-radius: 5px; border: 2px solid var(--m-bg); background: var(--m-cta); color: #fff; font: 800 .55rem/1.3 'JetBrains Mono', monospace; font-style: normal; letter-spacing: .06em; }
+.mapp-hist small { max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mapp-feedline { margin: 0 0 12px; color: var(--m-soft); font-size: .98rem; line-height: 1.4; }
+.mapp-feedline b { color: var(--m-fg); }
+
+.mapp-tabs.is-ig { left: 0; right: 0; bottom: 0; transform: none; width: 100%; grid-template-columns: repeat(5, 1fr); padding: 2px 6px calc(2px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); border-radius: 0; border: 0; border-top: 1px solid var(--m-line); background: color-mix(in srgb, var(--m-bg) 92%, transparent); box-shadow: none; }
+.mapp-tabs.is-ig button { min-height: 52px; border-radius: 14px; color: var(--m-fg); }
+.mapp-tabs.is-ig svg { width: 27px; height: 27px; stroke-width: 1.8; }
+.mapp-tabs.is-ig .on { background: none; color: var(--m-fg); }
+.mapp-tabs.is-ig .on svg { stroke-width: 2.8; }
+.mapp-tabs.is-ig button:active { background: color-mix(in srgb, var(--m-fg) 6%, transparent); }
+.mapp-tab-av { width: 29px; height: 29px; border-radius: 50%; display: grid; place-items: center; background: var(--m-fg); color: var(--m-bg); font: 800 .62rem 'Archivo', sans-serif; }
+.mapp-tab-av svg { width: 17px !important; height: 17px !important; stroke-width: 2.2 !important; }
+.mapp-tabs.is-ig .is-me.on .mapp-tab-av { box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 3.5px var(--m-fg); }
+.mapp.is-client .mapp-main { padding-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+
+/* «¿Qué te gustaría tomar hoy?»: las bebidas en botones grandes, sin mapa (31 oct) */
+.mapp-drinks { margin: 0 0 12px; }
+.mapp-drinks-q { margin: 0 0 12px; font: 800 1.5rem/1.1 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-drinks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mapp-drinks-grid button { appearance: none; border: 0; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; min-height: 78px; padding: 12px 14px; border-radius: 20px; background: var(--m-glass); box-shadow: var(--m-shadow); color: var(--m-fg); text-align: left; cursor: pointer; transition: background-color .2s ease, color .2s ease, transform .15s ease; }
+.mapp-drinks-grid button:active { transform: scale(.97); }
+.mapp-drinks-grid b { grid-column: 2; align-self: end; font: 800 1.1rem/1.15 'Archivo', sans-serif; }
+.mapp-drinks-grid small { grid-column: 2; align-self: start; font: 500 .74rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-drink-ico { grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; background: #F5EFE4; font-size: 1.55rem; line-height: 1; }
+.mapp-drinks-grid button.on { background: var(--m-cta); color: #fff; box-shadow: 0 12px 24px -14px rgba(222, 27, 27, .8); }
+.mapp-drinks-grid button.on small { color: rgba(255, 255, 255, .88); }
+.mapp-drinks-grid button.on .mapp-drink-ico { background: rgba(255, 255, 255, .2); }

@@ -93,3 +93,13 @@ export const IconPin = () => (
 export const IconBag = () => (
   <svg {...base}><path d="M5 8h14l-1.2 12.5H6.2z" /><path d="M9 10V6.5a3 3 0 0 1 6 0V10" /></svg>
 );
+// La barra del cliente, como Instagram
+export const IconCompass = () => (
+  <svg {...base}><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2 5-5 2 2-5z" /></svg>
+);
+export const IconPlus = () => (
+  <svg {...base}><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><path d="M12 8v8M8 12h8" /></svg>
+);
+export const IconSend = () => (
+  <svg {...base}><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-7.5L3 9.5z" /></svg>
+);
