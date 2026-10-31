@@ -12,6 +12,8 @@ import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
 import { useAds, AdStoryBubble, AdStoryView } from './Ads.jsx';
+import { stageAlert, POLL_MS } from './alerts.js';
+import Globito, { ping } from './Globito.jsx';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
@@ -190,16 +192,35 @@ export function ClientHome({ go }) {
   const open = (id) => go(baristaPath(id));
   // Si ya apartó hoy, arriba va cómo va eso, no la bienvenida
   const [hold, setHold] = useState(null);
+  const loadHold = useCallback(() => api.myHolds().then((h) => setHold((h ?? []).find((x) => x.status === 'waiting' || x.status === 'served') ?? null)).catch(() => {}), []);
+  useEffect(() => { loadHold(); }, [loadHold]);
+  // Con un apartado en curso, se mira cada 20 s (y al volver a la app) si el barista salió, llegó o entregó
+  const waitingHold = hold?.status === 'waiting';
   useEffect(() => {
-    api.myHolds().then((h) => setHold((h ?? []).find((x) => x.status === 'waiting' || x.status === 'served') ?? null)).catch(() => {});
-  }, []);
+    if (!waitingHold) return undefined;
+    const tick = () => { if (document.visibilityState === 'visible') { loadHold(); reload(); } };
+    const id = setInterval(tick, POLL_MS);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
+  }, [waitingHold, loadHold, reload]);
   const holdBarista = hold ? sorted.find((b) => b.id === hold.tintero_id) : null;
   const name = api.savedName();
+  // El globito cuando el apartado avanza (también lo que pasó con la app cerrada)
+  const stage = holdStage(hold, holdBarista);
+  const [notice, setNotice] = useState(null);
+  useEffect(() => {
+    if (!hold || !holdBarista) return;
+    let store = null;
+    try { store = window.localStorage; } catch { /* sin memoria */ }
+    const n = stageAlert(store, hold.id, stage, holdBarista.name);
+    if (n) { setNotice(n); ping(); }
+  }, [hold?.id, stage, holdBarista?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mapp-client">
       <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
       {/* Arriba, como el inicio de una red social: las historias de los baristas */}
+      {notice && <Globito {...notice} onClose={() => setNotice(null)} onOpen={() => { setNotice(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
       <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} />
       {adStory && <AdStoryView ad={adStory} onClose={() => setAdStory(null)} />}
       {hold && holdBarista ? (
