@@ -296,8 +296,10 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         const of = (x) => M.sales.filter((s) => s.tintero_id === x.id && !s.voided);
         return json(200, {
           day: today,
-          baristas: M.baristas.map((x) => ({ id: x.id, name: x.full ?? x.name, stage: x.stage ?? 'piloto', localidad: x.localidad, referencia: x.referencia, public: x.public !== false, linked: !!x.takes_holds, invite_code: null, live_until: x.live_until ?? null, has_prices: x.prices?.tinto != null, cups: of(x).reduce((a, s) => a + s.qty, 0), total: of(x).reduce((a, s) => a + s.total, 0), fiado: 0, waiting: M.holds.filter((h) => h.tintero_id === x.id && h.status === 'waiting').length, served: M.holds.filter((h) => h.tintero_id === x.id && h.status === 'served').length })),
+          baristas: M.baristas.map((x) => ({ id: x.id, name: x.full ?? x.name, stage: x.stage ?? 'piloto', localidad: x.localidad, referencia: x.referencia, public: x.public !== false, linked: !!x.takes_holds, invite_code: x.invite_code ?? null, live_until: x.live_until ?? null, has_prices: x.prices?.tinto != null, has_phone: !!x.phone, last_active_at: x.last_active_at ?? null, created_at: x.created_at ?? null, cups: of(x).reduce((a, s) => a + s.qty, 0), total: of(x).reduce((a, s) => a + s.total, 0), fiado: 0, waiting: M.holds.filter((h) => h.tintero_id === x.id && h.status === 'waiting').length, served: M.holds.filter((h) => h.tintero_id === x.id && h.status === 'served').length })),
           week: Array.from({ length: 7 }, (_, i) => ({ day: new Date(Date.now() - (6 - i) * 864e5).toISOString().slice(0, 10), cups: i === 6 ? M.sales.filter((s) => !s.voided).reduce((a, s) => a + s.qty, 0) : [12, 18, 9, 22, 15, 0][i], total: 0, holds: 0 })),
+          // Clientes en cifras (20261031120000_micra_auto_activation.sql); sin la migración no viene
+          ...(M.clients ? { clients: M.clients } : {}),
         });
       }
       if (!b) return fail(403, '42501', 'Enlaza tu cuenta de barista primero.');

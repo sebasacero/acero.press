@@ -204,7 +204,8 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
   const { page, api, errors } = await open(browser, { who: 'team' });
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   // «Actuar como» funciona y el perfil del barista manda a cerrar la sesión en Equipo
-  await page.getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
+  await page.getByLabel('Buscar un barista').fill('Jairo');
+  await page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
   await expect(page.getByText('Actuando como')).toContainText('Jairo');
   await page.getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page.getByTestId('barista-profile')).toContainText('Perfil del barista');
