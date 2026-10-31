@@ -23,6 +23,7 @@ export function deviceRef() {
 export const savedName = () => read(NAME_KEY, '');
 export const saveName = (n) => write(NAME_KEY, n);
 export const favorites = () => read(FAV_KEY, []);
+export const setFavorites = (ids) => write(FAV_KEY, ids);
 export function toggleFavorite(id) {
   const now = favorites();
   const next = now.includes(id) ? now.filter((x) => x !== id) : [...now, id];
@@ -65,6 +66,8 @@ export const claim = (code) => call('tintero_claim', { p_code: code });
 // Con la sesión del SMS: la base busca la ficha con ese número (20261030120000_micra_phone_login.sql)
 export const claimPhone = () => call('tintero_claim_phone');
 export const me = () => call('tintero_me');
+// «Mi perfil»: horario, celular, pagos y permisos (20261031090000_micra_barista_profile.sql)
+export const baristaProfile = (asId) => call('micra_barista_profile', as(asId));
 
 // Equipo
 export const ownerDay = () => call('micra_owner_day');
@@ -81,7 +84,10 @@ export async function isAdmin(userId) {
 
 // En el celular instalado se entra por el navegador del sistema y se vuelve por enlace (native/)
 export const signIn = (next) => platform.signIn(next);
-export const signOut = () => supabase.auth.signOut();
+// Solo este celular (scope local): cerrar aquí no saca al barista de otro teléfono.
+// Sin señal igual borra la sesión del celular (supabase-js la quita aunque falle la red).
+export const signOut = () => supabase.auth.signOut({ scope: 'local' });
+export const currentUser = () => supabase.auth.getSession().then(({ data }) => data.session?.user ?? null);
 
 // Entrar con el celular: Supabase manda el SMS y revisa el código. No hay ida y
 // vuelta por el navegador, así que es igual en la web y en la app instalada.

@@ -204,9 +204,12 @@ export function parseRoute(pathname) {
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/barista') return { view: 'barista' };
   // Las pestañas del barista: el muro de hoy, aprender y su plata (Vender es /micra/barista)
-  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta)$/);
+  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil)$/);
   if (t) return { view: 'barista', tab: t[1] };
   if (p === '/micra/equipo') return { view: 'owner' };
+  // «Mi perfil»: el del cliente (lo que guarda el celular) y el del equipo (su sesión)
+  if (p === '/micra/perfil') return { view: 'me' };
+  if (p === '/micra/equipo/perfil') return { view: 'owner', tab: 'perfil' };
   // Herramientas del equipo en la calle: el estudio y la cámara de Micra (con la ficha abierta)
   if (p === '/micra/estudio') return { view: 'study' };
   if (p === '/micra/camara') return { view: 'camera' };

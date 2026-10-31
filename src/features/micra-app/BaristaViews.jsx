@@ -19,7 +19,8 @@ import { formatCoPhone } from './phone.js';
 
 // Modo barista en cuatro pestañas: Vender, su inicio (la racha, salir, la meta,
 // +1 por taza, fiados y quién te espera), Hoy (el muro del barismo), Aprende
-// (las lecciones) y Mi plata.
+// (las lecciones) y Mi plata. «Mi perfil» (/micra/barista/perfil) se abre con
+// el botón de sus iniciales arriba, no con una quinta pestaña.
 // Pensado para una mano, al sol y con mala señal: los +1 se guardan en el
 // celular y suben cuando hay red (el mismo client_ref no cuenta dos veces).
 
@@ -34,6 +35,8 @@ const Party = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Par
 const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.DayStory })));
 // La entrada por SMS solo la descarga quien va a entrar (no el cliente que busca café)
 const PhoneLogin = lazy(() => import('./PhoneLogin.jsx'));
+// «Mi perfil» y «Cerrar sesión» (Perfil.jsx), solo al abrirlo
+const BaristaProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.BaristaProfile })));
 const TeamWhatsApp = lazy(() => import('./PhoneLogin.jsx').then((m) => ({ default: m.TeamWhatsApp })));
 
 const QUEUE_KEY = 'micra_sales_queue_v1';
@@ -597,7 +600,17 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   );
 
   let body;
-  if (tab === 'aprende') {
+  if (tab === 'perfil') {
+    body = (
+      <Suspense fallback={<Cargando fig="caminando" />}>
+        <BaristaProfile
+          day={day} asId={asId} trip={trip} live={live} pending={pending} flush={flush} onReload={load} go={go}
+          streak={streak} goal={goal} board={board}
+          renderPrices={({ onSaved }) => <Prices day={day} asId={asId} onSaved={onSaved} />}
+        />
+      </Suspense>
+    );
+  } else if (tab === 'aprende') {
     body = <Suspense fallback={<Cargando fig="aeropress" />}><Aprende go={go} night={night} /></Suspense>;
   } else if (tab === 'hoy') {
     body = (

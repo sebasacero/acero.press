@@ -41,3 +41,6 @@ export const IconCap = () => (
 export const IconWallet = () => (
   <svg {...base}><rect x="3.5" y="6" width="17" height="13" rx="2.5" /><path d="M3.5 9.5h17M15.5 14h2" /></svg>
 );
+export const IconUser = () => (
+  <svg {...base}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></svg>
+);

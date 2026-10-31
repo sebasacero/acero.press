@@ -193,6 +193,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
 
     // Supabase Auth por SMS: signInWithOtp (POST /auth/v1/otp) y verifyOtp (POST /auth/v1/verify)
     const authFail = (status, code, msg) => json(status, { code: status, error_code: code, msg });
+    // Cerrar sesión (supabase.auth.signOut): la sesión del celular se borra igual
+    if (p.endsWith('/auth/v1/logout') && m === 'POST') return route.fulfill({ status: 204, headers: CORS, body: '' });
     if (p.endsWith('/auth/v1/otp') && m === 'POST') {
       if (sms.down) return authFail(400, 'phone_provider_disabled', 'Unsupported phone provider');
       sms.sent.push(data.phone);
@@ -310,6 +312,11 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
           fiados,
           week: Array.from({ length: 7 }, (_, i) => ({ day: new Date(Date.now() - (6 - i) * 864e5).toISOString().slice(0, 10), cups: i === 6 ? mine().reduce((a, s) => a + s.qty, 0) : [14, 22, 0, 19, 25, 17][i], total: 0 })),
         });
+      }
+      // «Mi perfil» (20261031090000_micra_barista_profile.sql); M.profileMissing: sin la migración
+      if (mfn === 'micra_barista_profile') {
+        if (M.profileMissing) return fail(404, 'PGRST202', 'Could not find the function public.micra_barista_profile in the schema cache');
+        return json(200, { id: b.id, name: b.full ?? b.name, referencia: b.referencia, localidad: b.localidad, hora_inicio: b.hora_inicio ?? null, hora_fin: b.hora_fin ?? null, phone: b.phone ?? null, pay_nequi: b.pay_nequi ?? null, pay_daviplata: b.pay_daviplata ?? null, public: b.public !== false, public_at: b.public_at ?? null, consent_at: ruta.me?.consent_at ?? null });
       }
       if (mfn === 'micra_barista_out') { b.live_until = data.p_minutes > 0 ? new Date(Date.now() + data.p_minutes * 60000).toISOString() : null; return json(200, { live_until: b.live_until }); }
       if (mfn === 'micra_barista_prices') { b.prices = Object.fromEntries([['tinto', data.p_tinto], ['perico', data.p_perico], ['aromatica', data.p_aromatica]].filter(([, v]) => v != null)); return json(200, b.prices); }
