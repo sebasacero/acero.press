@@ -93,7 +93,7 @@ function Post({ item, go, onShareDay, canShareDay }) {
   if (item.kind === 'cafe') {
     return (
       <article className="mapp-post" data-testid="feed-cafe">
-        <header className="mapp-post-who"><span className="mapp-post-av is-house" aria-hidden="true">{item.org === 'Finca' ? '🌱' : item.org === 'Marca' ? '🏷️' : 'FNC'}</span><span><b>{item.by}</b><small>{item.org === 'FNC' ? 'Federación Nacional de Cafeteros' : item.org}{item.date ? ` · ${dayLabel(item.date)}` : ''}</small></span></header>
+        <header className="mapp-post-who"><span className="mapp-post-av is-house" aria-hidden="true">{item.org === 'Finca' ? '🌱' : item.org === 'Marca' ? '🏷️' : 'FNC'}</span><span><b>{item.by}</b><small>{[item.org === 'FNC' ? 'Café de Colombia' : item.org, item.date && dayLabel(item.date)].filter(Boolean).join(' · ')}</small></span></header>
         {item.image && <img className="mapp-post-img" src={item.image} alt="" loading="lazy" />}
         <p className="mapp-post-title">{item.title}</p>
         {item.text && <p className="mapp-post-text">{item.text}</p>}
