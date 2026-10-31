@@ -244,9 +244,10 @@ export default function MicraApp() {
         </nav>
       )}
       {((route.view === 'camera' && who.admin) || (videoView && (who.barista || who.admin))) && (
-        // A pantalla completa sobre el estudio (equipo) o sobre el inicio del barista; `lite`: sin venta, ficha ni publicar
+        // A pantalla completa sobre el estudio (equipo) o sobre el inicio del barista; `lite`: sin venta, ficha ni publicar.
+        // En modo barista es `lite` para todos, también para el dueño: la encuesta y la ficha viven solo en Equipo
         <Suspense fallback={null}>
-          <MicraStudio key={route.view} lite={videoView && !who.admin} onExit={() => go(videoView ? '/micra/barista' : '/micra/estudio')} />
+          <MicraStudio key={route.view} lite={videoView} onExit={() => go(videoView ? '/micra/barista' : '/micra/estudio')} />
         </Suspense>
       )}
       {platform.native && <Splash />}
