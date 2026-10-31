@@ -10,6 +10,8 @@ import { RouteBox } from './Celebrate.jsx';
 import { km } from '../ruta/track.js';
 import { postsToFeed, STATUS_LABEL } from './posts.js';
 import PostComposer from './PostComposer.jsx';
+import { useAds, AdPost } from './Ads.jsx';
+import { withAds } from './ads.js';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -94,15 +96,15 @@ function Shell({ item, av, who, level = null, where, media, title, text, cta, te
         <span className="mapp-ig-who"><b>{who}{level && <span className="mapp-levelchip">{level}</span>}</b><small>{where}</small></span>
       </header>
       {media && <div className="mapp-ig-media">{media}</div>}
-      <div className="mapp-ig-body">
-        {title && <p className="mapp-post-title">{title}</p>}
-        {text && <p className="mapp-post-text">{text}</p>}
-      </div>
       <footer className="mapp-ig-foot">
         <button type="button" className={`mapp-ig-act ${liked ? 'on' : ''}`} aria-pressed={liked} onClick={like} aria-label="Me gusta">☕ <span>{liked ? 'Te gusta' : 'Me gusta'}</span></button>
         {share && <button type="button" className="mapp-ig-act" onClick={share} aria-label="Compartir">↗ <span>Compartir</span></button>}
         {cta && <span className="mapp-ig-cta">{cta}</span>}
       </footer>
+      <div className="mapp-ig-body">
+        {title && <p className="mapp-post-title">{title}</p>}
+        {text && <p className="mapp-post-text">{text}</p>}
+      </div>
     </article>
   );
 }
@@ -342,7 +344,7 @@ function CuratedForm({ current, onSaved, onCancel }) {
  * muro de Instagram bajo las historias): título h2 y sin su propio «Publicar»,
  * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
  */
-export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null }) {
+export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null }) {
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
   const baristas = list ?? fetched;
@@ -385,8 +387,10 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
     const post = { id: `dia-${dayKey}`, kind: 'dia', by: me.name, mode, path: trip.path, km: km(trip.distance), stops: trip.stops, streak: me.streak?.count ?? 0 };
     return [items[0], post, ...items.slice(1)];
   }, [items, me, trip, mode, dayKey]);
+  // Los anuncios «Patrocinado» van entre las publicaciones, solo en «Todo»
+  const { feed: adFeed } = useAds(client ? 'client' : 'barista', ads);
   const counts = chipCounts(withDay);
-  const shown = filterFeed(withDay, chip);
+  const shown = chip === 'todo' ? withAds(withDay, adFeed) : filterFeed(withDay, chip);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
@@ -426,7 +430,9 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
       <div className="mapp-posts" data-testid="feed">
         {shown.map((item) => (item.kind === 'precios'
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
-          : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} />))}
+          : item.kind === 'patrocinado'
+            ? <AdPost key={item.id} ad={item} />
+            : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} />))}
       </div>
       {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} onCompose={canPost ? () => setComposing(true) : null} />}
       {composing && <PostComposer selfId={selfId} asId={asId} onClose={() => setComposing(false)} onSent={loadMine} />}

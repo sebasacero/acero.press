@@ -7,8 +7,8 @@ import { postKind, mediaError, postPath, cleanCaption, MAX_CAPTION } from './pos
 // celular (1600 px, JPEG) para que suba rápido con mala señal; el video va tal
 // cual hasta 25 MB. Sale en Hoy cuando el equipo la aprueba.
 
-/** La foto a lo más de 1600 px de lado, en JPEG. */
-async function shrinkPhoto(file, max = 1600) {
+/** La foto a lo más de 1600 px de lado, en JPEG (también para la imagen de un anuncio). */
+export async function shrinkPhoto(file, max = 1600) {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();

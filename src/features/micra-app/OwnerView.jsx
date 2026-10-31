@@ -9,6 +9,8 @@ import { teamSummary, findBaristas, missingStep, BARISTA_STEPS, CLIENT_RULES, LE
 const LivePanel = lazy(() => import('./LiveMap.jsx'));
 // Lo que los baristas mandaron para Hoy y espera revisión
 const PostReview = lazy(() => import('./PostReview.jsx'));
+// Los anuncios «Patrocinado»: cargarlos, pausarlos y sus cifras
+const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle) y la activación automática: nadie aprueba a mano (activation.js y
@@ -96,6 +98,7 @@ export default function OwnerView({ onActAs, go }) {
       </dl>
 
       <Suspense fallback={null}><PostReview /></Suspense>
+      <Suspense fallback={null}><AdsPanel /></Suspense>
 
       {/* Lo que pide una mano: lo demás se activa solo */}
       {sum.alerts.length > 0 && (

@@ -8,6 +8,7 @@ import { BaristaHome, BaristaJoin } from './BaristaViews.jsx';
 import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
+import PullRefresh from './PullRefresh.jsx';
 import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconHome, IconCompass, IconPlus, IconSend } from './icons.jsx';
 import './micra-app.css';
 import { Cargando } from './Animado.jsx';
@@ -145,6 +146,9 @@ export default function MicraApp() {
   // Si el barista está en la calle (lo avisa BaristaHome): la barra va en rojo en Vender y su círculo lleva el punto verde
   const [live, setLive] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  // «Desliza para recargar»: el cliente y el equipo vuelven a montar la pantalla; el barista
+  // relee su día sin desmontarse (lleva el GPS de la salida y la cola de ventas)
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
@@ -190,8 +194,8 @@ export default function MicraApp() {
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
     // «Cambiar de barista» vuelve a Equipo, donde está «Actuar como»
-    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} onLive={setLive} />;
-    else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} onLive={setLive} />;
+    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} onLive={setLive} refreshKey={refreshKey} />;
+    else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} onLive={setLive} refreshKey={refreshKey} />;
     // El equipo sin ficha propia ve la entrada de los baristas (sin mandar SMS)
     else if (who.admin) body = <BaristaJoin session={who.session} preview night={night} go={go} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
@@ -238,7 +242,8 @@ export default function MicraApp() {
           </button>
         )}
       </header>
-      <main className="mapp-main">{body}</main>
+      <PullRefresh onRefresh={() => setRefreshKey((k) => k + 1)} disabled={videoView || route.view === 'camera' || route.view === 'ficha' || route.view === 'study'} />
+      <main className="mapp-main" key={route.view === 'barista' ? 'barista' : refreshKey}>{body}</main>
       {viewMode === 'client' && (
         // Como Instagram: inicio, explorar (Hoy), crear, lo tuyo (apartados) y tu perfil; solo íconos
         <nav className="mapp-tabs is-ig" aria-label="Micra">

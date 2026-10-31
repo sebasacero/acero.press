@@ -18,6 +18,8 @@ import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel } fro
 import { ModePicker, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
+import { seenHolds, rememberHolds, hasHoldMemory, newHolds, holdAlert, POLL_MS } from './alerts.js';
+import Globito, { ping } from './Globito.jsx';
 
 // Modo barista en cuatro pestañas: Vender, su inicio (la racha, salir, la meta,
 // +1 por taza, fiados y quién te espera), Hoy (el muro del barismo), Aprende
@@ -368,7 +370,7 @@ const TRIP_KEY = 'micra_dia_v1';
 const readDayTrip = () => { try { return JSON.parse(localStorage.getItem(TRIP_KEY)); } catch { return null; } };
 const writeDayTrip = (t) => { try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch { /* sin memoria */ } };
 
-export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender', onLive }) {
+export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender', onLive, refreshKey = 0 }) {
   const [day, setDay] = useState(null);
   const [error, setError] = useState(null);
   const [missing, setMissing] = useState(false);
@@ -415,6 +417,28 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     }
   }, [asId]);
   useEffect(() => { setDay(null); prevCups.current = null; load(); }, [load]);
+  // Avisos: con la app a la vista se mira cada 20 s (y al volver a ella) si llegó un apartado
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible') load(); };
+    const id = setInterval(tick, POLL_MS);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
+  }, [load]);
+  // «Desliza para recargar» (MicraApp): vuelve a leer el día y lo propio
+  useEffect(() => { if (refreshKey) { load(); loadExtras(); } }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // El globito: los apartados que esperan y no se han avisado (también los que llegaron con la app cerrada)
+  const [notice, setNotice] = useState(null);
+  useEffect(() => {
+    if (!day) return;
+    let store = null;
+    try { store = window.localStorage; } catch { /* sin memoria */ }
+    const scope = `${day.id}:${bogota().day}`;
+    const known = hasHoldMemory(store);
+    const seen = seenHolds(store, scope);
+    const fresh = newHolds(day.holds, seen);
+    rememberHolds(store, scope, [...seen, ...day.holds.filter((h) => h.status === 'waiting').map((h) => h.id)]);
+    if (fresh.length && known) { setNotice(holdAlert(fresh)); ping(); }
+  }, [day]);
   // La barra de arriba (MicraApp) se pinta de rojo mientras está en la calle
   const liveNow = !!day && !!outProgress(day.live_until, new Date(), OUT_MINUTES);
   useEffect(() => { onLive?.(liveNow); }, [liveNow, onLive]);
@@ -656,6 +680,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       <>
         <Suspense fallback={<Cargando fig="caminando" />}>
           <HoyFeed
+            key={refreshKey}
             go={go} selfId={day.id} asId={asId} admin={admin || !!asId} mode={mode} trip={dayTrip}
             me={{ name: first, streak, goalMet: board.cups >= goal && goal > 0, lessonsDone: lessonPath(lessonsFor('es'), readSeen()).done, lessonsTotal: lessonsFor('es').length }}
             canShareDay={board.cups > 0} onShareDay={() => setStory(true)}
@@ -787,6 +812,13 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         </p>
       )}
       {body}
+      {notice && (
+        <Globito
+          {...notice} onClose={() => setNotice(null)}
+          // Tocarlo lleva a Vender, a la lista de quién te espera
+          onOpen={() => { setNotice(null); go('/micra/barista'); setTimeout(() => document.getElementById('mapp-wait')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250); }}
+        />
+      )}
       {toast && <p className="mapp-toast" role="status" data-testid="toast"><span aria-hidden="true">✨</span>{toast}</p>}
       {party && (
         <Suspense fallback={null}>

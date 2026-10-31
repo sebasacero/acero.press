@@ -138,6 +138,21 @@ export async function postUrls(paths) {
   return Object.fromEntries((data ?? []).filter((x) => x.signedUrl && !x.error).map((x) => [x.path, x.signedUrl]));
 }
 
+// Anuncios «Patrocinado», etapa 1 (20261031190000_micra_ads.sql)
+export const adsLive = (audience) => call('micra_ads_live', { p_audience: audience });
+export const adEvent = (id, kind) => call('micra_ad_event', { p_ad_id: id, p_kind: kind });
+export const adsAdmin = () => call('micra_ads_admin');
+export const adSave = (id, ad) => call('micra_ad_save', { p_id: id ?? null, p_ad: ad });
+export const adToggle = (id, active) => call('micra_ad_toggle', { p_id: id, p_active: active });
+
+/** La imagen del anuncio, al bucket público del equipo (marketing/micra-ads/…): su URL. */
+export async function uploadAdImage(blob) {
+  const path = `micra-ads/${Date.now().toString(36)}-${Math.floor(Math.random() * 36 ** 6).toString(36)}.jpg`;
+  const { error } = await supabase.storage.from('marketing').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+  if (error) throw new Error(`No se pudo subir la imagen: ${error.message}`);
+  return supabase.storage.from('marketing').getPublicUrl(path).data.publicUrl;
+}
+
 /** La lata de cold brew del sitio (page_sections `cold_brew`): de ahí sale su precio para el banner. */
 export async function coldBrewContent() {
   const { data, error } = await supabase.from('page_sections').select('content').eq('slug', 'cold_brew').maybeSingle();
