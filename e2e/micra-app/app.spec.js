@@ -181,7 +181,10 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   await expect(page.getByRole('tablist', { name: 'Ver Micra como' }).getByRole('tab')).toHaveText(['Cliente', 'Barista', 'Equipo']);
   await expect(page.getByTestId('owner-cups')).toHaveText('4');
-  const wilson = page.getByRole('listitem').filter({ hasText: 'Wilson' });
+  // Sin lista de nombres: se busca
+  await expect(page.getByRole('list', { name: 'Baristas encontrados' })).toHaveCount(0);
+  await page.getByLabel('Buscar un barista').fill('wilson');
+  const wilson = page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Wilson' });
   await expect(wilson).toContainText('Falta enlazar su cuenta');
   await wilson.getByRole('button', { name: 'Generar código' }).click();
   await expect(wilson.locator('code')).toHaveText('K7M2QX');
@@ -198,7 +201,7 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
   // Cambiar de barista vuelve a Equipo, donde está «Actuar como»
   await page.getByRole('button', { name: 'Cambiar de barista' }).click();
   await expect(page).toHaveURL(/\/micra\/equipo$/);
-  await expect(page.getByRole('button', { name: 'Actuar como' }).first()).toBeVisible();
+  await expect(page.getByLabel('Buscar un barista')).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -278,7 +281,8 @@ test('equipo: la pestaña Barista muestra la entrada por SMS (sin mandar nada) y
 
   await page.getByRole('button', { name: 'Actuar como › Equipo' }).click();
   await expect(page).toHaveURL(/\/micra\/equipo$/);
-  const wilson = page.getByRole('listitem').filter({ hasText: 'Wilson' });
+  await page.getByLabel('Buscar un barista').fill('Wilson');
+  const wilson = page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Wilson' });
   await expect(wilson).toContainText('pon su celular o genera un código');
   await wilson.getByRole('button', { name: 'Poner su celular' }).click();
   await wilson.getByLabel('Celular de Wilson').fill('310 999 8877');
@@ -463,22 +467,22 @@ test('equipo con 60 fichas: resumen, avisos y clientes en cifras; la lista enter
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   const act = page.getByTestId('owner-activation');
   await expect(act).toContainText('2 activos de 60 fichas');
-  await expect(act.getByRole('button', { name: /Ficha.*60/ })).toBeVisible();
+  await expect(act.getByRole('listitem').first()).toContainText('60');
   await expect(page.getByTestId('owner-alerts')).toContainText('salen en el mapa pero aún no reciben apartados');
   await expect(page.getByTestId('owner-alerts')).toContainText('1 cliente frenado');
   await expect(page.getByTestId('owner-clients')).toContainText('23');
-  // Solo quien está en la calle y los casi listos (a uno o dos pasos, 5 como mucho), no las 60
-  await expect(page.getByRole('list', { name: 'En la calle' }).getByRole('listitem')).toHaveCount(1);
-  await expect(page.getByRole('list', { name: 'Casi listos' }).getByRole('listitem')).toHaveCount(4);
-  expect(await page.locator('.mapp-team > li').count()).toBeLessThanOrEqual(6);
+  // Ningún nombre a la vista: solo el buscador
+  await expect(page.locator('.mapp-team > li')).toHaveCount(0);
+  await expect(page.getByLabel('Buscar un barista')).toBeVisible();
   // Las reglas, a la mano
   await page.getByText('Reglas de activación').click();
   await expect(page.locator('.mapp-rules')).toContainText('no aparta por 7 días y vuelve solo');
 
-  // Un paso del embudo filtra; el buscador encuentra sin tildes
-  await act.getByRole('button', { name: /Invitado/ }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'en «Invitado»' })).toContainText('2 baristas');
-  await page.getByRole('button', { name: 'Quitar filtro' }).click();
+  // El buscador encuentra por paso, por lugar y sin tildes
+  await page.getByLabel('Buscar un barista').fill('invitado');
+  await expect(page.getByRole('status').filter({ hasText: 'baristas' })).toHaveText('2 baristas');
+  await page.getByLabel('Buscar un barista').fill('en la calle');
+  await expect(page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem')).toHaveText([/Marlene/]);
   await page.getByLabel('Buscar un barista').fill('kennedy');
   await expect(page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem')).toHaveCount(8);
   await page.getByRole('button', { name: /^Ver \d+ más$/ }).click();

@@ -66,4 +66,7 @@ test('buscar: por nombre o lugar sin tildes, por paso, con tope', () => {
   assert.equal(k.items.length, 8);
   assert.equal(k.more, 5);
   assert.equal(findBaristas(rows, { level: 'ficha', limit: 100 }).items.length, 14);
+  // Por paso, escrito en el buscador
+  assert.equal(findBaristas(rows, { q: 'ficha', limit: 100 }).items.length, 14);
+  assert.equal(findBaristas(rows, { q: 'en la calle' }).items.length, 0);
 });

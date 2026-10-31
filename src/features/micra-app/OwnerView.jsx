@@ -23,7 +23,6 @@ export default function OwnerView({ onActAs, go }) {
   const [phones, setPhones] = useState(null);
   const [editing, setEditing] = useState(null); // { id, value }
   const [query, setQuery] = useState('');
-  const [level, setLevel] = useState(null); // un paso del embudo
   const [showAll, setShowAll] = useState(false);
   const load = useCallback(() => {
     api.ownerDay().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.missing ? 'Falta activar las tablas de Micra en la base (migración 20261026210000_micra_app).' : e.message));
@@ -63,8 +62,8 @@ export default function OwnerView({ onActAs, go }) {
   const tot = list.reduce((a, b) => ({ cups: a.cups + b.cups, total: a.total + Number(b.total), waiting: a.waiting + b.waiting, served: a.served + b.served, live: a.live + (b.live_until ? 1 : 0) }), { cups: 0, total: 0, waiting: 0, served: 0, live: 0 });
   const bars = weekBars(data.week);
   const week = (data.week ?? []).reduce((a, d) => ({ cups: a.cups + (d.cups || 0), total: a.total + Number(d.total || 0), holds: a.holds + (d.holds || 0) }), { cups: 0, total: 0, holds: 0 });
-  const found = findBaristas(sum.rows, { q: query, level, limit: showAll ? 500 : 8 });
-  const searching = query.trim() !== '' || level != null;
+  const found = findBaristas(sum.rows, { q: query, limit: showAll ? 500 : 8 });
+  const searching = query.trim() !== '';
   const top = sum.funnel[0].n || 1;
   const c = data.clients;
   const row = (b) => (
@@ -108,13 +107,10 @@ export default function OwnerView({ onActAs, go }) {
         <ol>
           {sum.funnel.map((f) => (
             <li key={f.key}>
-              <button type="button" className={level === f.key ? 'on' : ''} aria-pressed={level === f.key}
-                onClick={() => { setLevel(level === f.key ? null : f.key); setShowAll(false); }}>
-                <span>{f.label}</span>
-                {/* Raíz: con 60 fichas y 2 activos la barra de los activos aún se ve */}
-                <i style={{ width: `${Math.max(3, Math.sqrt(f.n / top) * 100)}%` }} />
-                <b>{f.n}</b>
-              </button>
+              <span>{f.label}</span>
+              {/* Raíz: con 60 fichas y 2 activos la barra de los activos aún se ve */}
+              <i style={{ width: `${Math.max(3, Math.sqrt(f.n / top) * 100)}%` }} />
+              <b>{f.n}</b>
             </li>
           ))}
         </ol>
@@ -156,32 +152,16 @@ export default function OwnerView({ onActAs, go }) {
 
       <section className="mapp-glass" data-testid="owner-find">
         <label className="mapp-cota" htmlFor="owner-q">Buscar un barista</label>
-        <input id="owner-q" className="mapp-search" type="search" placeholder="Nombre, calle o localidad" value={query}
+        <input id="owner-q" className="mapp-search" type="search" placeholder="Nombre, lugar o paso (activo…)" value={query}
           onChange={(e) => { setQuery(e.target.value); setShowAll(false); }} />
-        {searching ? (
+        {/* Sin lista por defecto: lo que se necesite se busca aquí (nombre, lugar o paso) */}
+        {searching && (
           <>
             <p className="mapp-muted" role="status">
-              {(() => { const n = found.items.length + found.more; return n === 0 ? 'Nadie con eso.' : `${n} ${n === 1 ? 'barista' : 'baristas'}${level ? ` en «${LEVEL_LABEL[level]}»` : ''}`; })()}
-              {level && <> · <button type="button" className="mapp-link" onClick={() => setLevel(null)}>Quitar filtro</button></>}
+              {(() => { const n = found.items.length + found.more; return n === 0 ? 'Nadie con eso.' : `${n} ${n === 1 ? 'barista' : 'baristas'}`; })()}
             </p>
             <ul className="mapp-team" aria-label="Baristas encontrados">{found.items.map(row)}</ul>
             {found.more > 0 && <button type="button" className="mapp-link" onClick={() => setShowAll(true)}>Ver {found.more} más</button>}
-          </>
-        ) : (
-          <>
-            {sum.live.length > 0 && (
-              <>
-                <p className="mapp-cota">En la calle ahora · {sum.live.length}</p>
-                <ul className="mapp-team" aria-label="En la calle">{sum.live.map(row)}</ul>
-              </>
-            )}
-            {sum.almost.length > 0 && (
-              <>
-                <p className="mapp-cota">Casi listos · {sum.almost.length > 5 ? `5 de ${sum.almost.length}` : sum.almost.length}</p>
-                <ul className="mapp-team" aria-label="Casi listos">{sum.almost.slice(0, 5).map(row)}</ul>
-              </>
-            )}
-            <p className="mapp-muted">Las demás fichas están en el embudo: toca un paso para verlas.</p>
           </>
         )}
       </section>

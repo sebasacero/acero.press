@@ -100,12 +100,12 @@ export const LEVEL_LABEL = {
   ficha: 'Ficha', invitado: 'Invitado', enlazado: 'Entró', activo: 'Activo', vendiendo: 'Vendiendo', dormido: 'Dormido',
 };
 
-/** Filtra la lista del equipo por texto (nombre, lugar) y por paso. Sin texto ni paso, nada. */
+/** Busca en el equipo por nombre, lugar, paso («invitado», «activo»…) o «en la calle». Sin texto ni paso, nada. */
 export function findBaristas(rows, { q = '', level = null, limit = 8 } = {}) {
   const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const text = norm(q).trim();
   if (!text && !level) return { items: [], more: 0 };
   const hits = rows.filter((r) => (!level || r.level === level)
-    && (!text || norm(`${r.name} ${r.referencia ?? ''} ${r.localidad ?? ''}`).includes(text)));
+    && (!text || norm(`${r.name} ${r.referencia ?? ''} ${r.localidad ?? ''} ${LEVEL_LABEL[r.level] ?? ''}${r.live_until ? ' en la calle' : ''}`).includes(text)));
   return { items: hits.slice(0, limit), more: Math.max(0, hits.length - limit) };
 }
