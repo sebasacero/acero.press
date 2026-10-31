@@ -1015,3 +1015,64 @@
 .mapp-sheet .mapp-check { margin: 10px 0; }
 /* Lo que se enfoca o se lleva a la vista no queda bajo la barra de arriba ni bajo las pestañas */
 .mapp-barista.has-tabs button, .mapp-barista.has-tabs a, .mapp-barista.has-tabs input { scroll-margin: 96px 0 120px; }
+
+/* Vender en la calle: la taza que se llena (diseño del usuario, 31 oct) */
+.mapp-sellhead { grid-template-columns: 116px 1fr; grid-template-areas: 'top top' 'cup copy' 'kpis kpis' 'trip trip' 'btn btn'; align-items: center; column-gap: 14px; row-gap: 10px; margin: -18px -16px 0; padding: 16px 20px 44px; border-radius: 0 0 32px 32px; }
+.mapp-sellhead-top { grid-area: top; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font: 500 .78rem 'JetBrains Mono', monospace; }
+.mapp-sellhead .mapp-now-live { background: rgba(0, 0, 0, .28); font: 600 .7rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; }
+.mapp-sellhead .mapp-goalcup { grid-area: cup; width: 116px; height: 124px; }
+.mapp-sellhead-copy { grid-area: copy; min-width: 0; }
+.mapp-sellhead-n { font: 900 4.6rem/.85 'Archivo', sans-serif; }
+.mapp-sellhead-n small { font-size: 1.7rem; font-weight: 800; opacity: .7; margin-left: 2px; }
+.mapp-sellhead-sub { font-size: 1.05rem; }
+.mapp-sellhead-kpis { grid-area: kpis; display: flex; gap: 8px; margin: 0; }
+.mapp-sellhead-kpis div { flex: 1; min-width: 0; background: rgba(255, 255, 255, .16); border-radius: 14px; padding: 8px 10px; }
+.mapp-sellhead-kpis dd { margin: 0; font: 700 1.05rem 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mapp-sellhead-kpis dt { font-size: .72rem; opacity: .9; }
+.mapp-sellhead .mapp-trip { grid-area: trip; margin: 0; }
+.mapp-sellhead > .mapp-btn { grid-area: btn; margin: 0; }
+/* La barra oscura del logro, montada sobre el borde de la cabecera */
+.mapp-sellbar { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; margin: -26px 4px 14px; padding: 13px 16px; border-radius: 16px; background: #16181F; color: #fff; box-shadow: 0 14px 28px -14px rgba(0, 0, 0, .6); font-size: .95rem; }
+.mapp-sellbar > span:nth-child(2) { flex: 1; min-width: 0; color: rgba(255, 255, 255, .78); }
+.mapp-sellbar b { color: #fff; }
+.mapp-sellbar small { font: 500 .8rem 'JetBrains Mono', monospace; color: rgba(255, 255, 255, .7); white-space: nowrap; }
+.mapp.is-night .mapp-sellbar { background: #fff; color: #16181F; }
+.mapp.is-night .mapp-sellbar > span:nth-child(2), .mapp.is-night .mapp-sellbar small { color: #5D6475; }
+.mapp.is-night .mapp-sellbar b { color: #16181F; }
+.mapp-sellhead + .mapp-live, .mapp-sellhead ~ .mapp-count { margin-top: 14px; }
+
+/* Las tarjetas de +1: nombre, precio · hoy, el +1 a lo ancho y «Fiado» debajo */
+.mapp-tile:not(.is-mini):not(.mapp-addtile) { grid-template-columns: 1fr; grid-template-areas: 'name' 'n' 'plus' 'fiado'; gap: 4px; padding: 16px 16px 6px; border-radius: 24px; }
+.mapp-tile-name { font-size: 1.2rem; font-weight: 800; }
+.mapp-tile-n, .mapp-tile-n b { font: 500 .85rem 'JetBrains Mono', monospace; color: var(--m-soft); margin: 0 0 8px; }
+.mapp-tile .mapp-plus { min-height: 92px; border-radius: 18px; font: 800 2.4rem 'Archivo', sans-serif; }
+.mapp-tile .mapp-tile-fiado { border: 0; min-height: 44px; color: var(--m-soft); font-weight: 700; }
+.mapp-sellhead-top > span { white-space: nowrap; }
+.mapp-sellhead-top > span:last-child { font-size: .72rem; opacity: .95; }
+.mapp-sellhead .mapp-now-live { font-size: .64rem; letter-spacing: .06em; }
+@media (max-width: 360px) { .mapp-sellhead { grid-template-columns: 92px 1fr; } .mapp-sellhead .mapp-goalcup { width: 92px; height: 100px; } .mapp-sellhead-n { font-size: 3.6rem; } }
+.mapp-outmodes button .mapp-anim.is-mode { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; background: #F7F3E8; box-shadow: none; }
+.mapp-sellhead { grid-template-areas: 'top top' 'hello hello' 'cup copy' 'kpis kpis' 'time time' 'trip trip' 'btn btn'; }
+.mapp-sellhead-hello { grid-area: hello; margin: 0; font: 700 1rem 'Archivo', sans-serif; opacity: .92; }
+.mapp-sellhead-time { grid-area: time; display: flex; align-items: center; gap: 10px; }
+.mapp-sellhead-time small { font: 500 .72rem 'JetBrains Mono', monospace; white-space: nowrap; }
+.mapp-sellhead-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .25); overflow: hidden; }
+.mapp-sellhead-bar i { display: block; height: 100%; background: #fff; border-radius: 3px; }
+
+/* «Pídeme por Micra»: el QR propio con el dibujo al centro */
+.mapp-qrpage { display: grid; gap: 14px; padding-bottom: 12px; }
+.mapp-qrpage-head { display: grid; gap: 4px; justify-items: start; }
+.mapp-qrcard { justify-self: center; width: min(100%, 360px); background: #F5EFE4; color: #16181F; border-radius: 24px; padding: 20px 20px 18px; box-shadow: 0 10px 30px rgba(22, 24, 31, .14); text-align: left; }
+.mapp-qrcard-brand { margin: 0; font: 900 1.15rem 'Archivo', sans-serif; letter-spacing: -.03em; }
+.mapp-qrcard-brand i { color: var(--red, #DE1B1B); font-style: normal; }
+.mapp-qrcard-script { margin: 6px 0 12px; font: 400 1.45rem 'Permanent Marker', cursive; color: var(--red, #DE1B1B); transform: rotate(-2deg); transform-origin: left; }
+.mapp-qrcard-plate { background: #fff; border-radius: 18px; padding: 8px; }
+.mapp-qr { display: block; width: 100%; height: auto; }
+.mapp-qrcard-name { margin: 12px 0 2px; font: 900 1.3rem 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-qrcard-url { display: block; font: 500 .68rem 'JetBrains Mono', monospace; color: #626877; word-break: break-all; }
+.mapp-qrlogos div { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.mapp-qrlogos button { display: grid; justify-items: center; gap: 4px; min-height: 84px; padding: 8px 2px; border: 2px solid var(--m-line, rgba(22, 24, 31, .12)); border-radius: 16px; background: var(--m-glass, #fff); color: inherit; font: 700 .7rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-qrlogos button img { width: 44px; height: 44px; object-fit: contain; }
+.mapp-qrlogos button.on { border-color: var(--red, #DE1B1B); box-shadow: 0 0 0 3px rgba(222, 27, 27, .15); }
+.mapp-row-btns.is-qr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mapp-row-btns.is-qr .mapp-btn { width: 100%; }

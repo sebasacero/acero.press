@@ -2,6 +2,7 @@ import { useState } from 'react';
 import * as api from './api.js';
 import platform from './platform.js';
 import { money } from './micraApp.js';
+import Animado from './Animado.jsx';
 import { OUT_MODES, PAY_METHODS, cleanMethods, toggleMethod, newProduct, MAX_EXTRAS } from './flow.js';
 
 // Piezas del flujo del barista: cómo sale, el permiso para salir (mapa y
@@ -16,7 +17,7 @@ export function ModePicker({ mode, onPick, disabled = false }) {
       <div role="radiogroup" aria-label="Cómo sales">
         {OUT_MODES.map((m) => (
           <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={mode === m.id ? 'on' : ''} onClick={() => onPick(m.id)} disabled={disabled} data-testid={`mode-${m.id}`}>
-            <img src={platform.siteUrl(m.icon)} alt="" width="64" height="64" />
+            {m.anim ? <Animado name={m.anim} className="is-mode" /> : <img src={platform.siteUrl(m.icon)} alt="" width="64" height="64" />}
             <b>{m.label}</b>
             <small>{m.hint}</small>
           </button>

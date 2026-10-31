@@ -3,11 +3,12 @@
 // sus productos propios junto a tinto, perico y aromática. Lógica pura.
 import { menuOf } from './micraApp.js';
 
-// Los iconos son los del logo de Micra (ronda 3): carrito, sombrilla y vasito que camina
+// Puesto fijo: el carrito del logo (ronda 3); sombrilla: solo la sombrilla;
+// caminando: el chico animado que camina su ruta (animado/caminando.mp4)
 export const OUT_MODES = [
   { id: 'fijo', label: 'Puesto fijo', hint: 'Siempre en el mismo punto', icon: '/image/micra-modo/fijo.svg' },
   { id: 'sombrilla', label: 'Sombrilla', hint: 'Armo mi puesto donde hay gente', icon: '/image/micra-modo/sombrilla.svg' },
-  { id: 'caminando', label: 'Caminando', hint: 'Recorro mi ruta con el termo', icon: '/image/micra-modo/caminando.svg' },
+  { id: 'caminando', label: 'Caminando', hint: 'Recorro mi ruta con el termo', anim: 'caminando' },
 ];
 export const isMode = (m) => OUT_MODES.some((x) => x.id === m);
 export const modeOf = (id) => OUT_MODES.find((x) => x.id === id) ?? null;

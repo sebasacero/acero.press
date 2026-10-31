@@ -233,11 +233,12 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
       </section>
 
       <section className="mapp-glass mapp-share" aria-label="Tu enlace">
-        <p className="mapp-cota">Tu página</p>
-        <p>Con este enlace tus clientes te encuentran y te apartan.</p>
+        <p className="mapp-cota">Pídeme por Micra</p>
+        <p>Tu QR con tu dibujo (termo, vasito, carrito, sombrilla o caminando) y tu enlace: así tus clientes te encuentran y te apartan.</p>
         <code data-testid="profile-link">{url.replace(/^https?:\/\//, '')}</code>
         <span className="mapp-row-btns">
-          <button type="button" className="mapp-btn is-small" onClick={share}>Compartir</button>
+          <button type="button" className="mapp-btn is-small is-cta" onClick={() => go('/micra/barista/qr')} data-testid="profile-qr">Mi QR</button>
+          <button type="button" className="mapp-btn is-small" onClick={share}>Compartir enlace</button>
           <button type="button" className="mapp-link" onClick={() => go(baristaPath(day.id))}>Ver como cliente</button>
         </span>
       </section>

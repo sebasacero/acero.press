@@ -87,6 +87,44 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   expect(errors).toEqual([]);
 });
 
+test('barista: «Mi QR» con su dibujo al centro lleva a su página y se descarga', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.goto('/micra/barista/perfil', { waitUntil: 'load' });
+  await page.getByTestId('profile-qr').click();
+  await expect(page).toHaveURL(/\/micra\/barista\/qr$/);
+  await expect(page.getByRole('heading', { name: 'Tu QR' })).toBeVisible();
+  const qr = page.getByTestId('qr-svg');
+  await expect(qr).toHaveAttribute('data-logo', 'termo');
+  await expect(page.getByRole('radio')).toHaveCount(5);
+  await page.getByTestId('qr-logo-sombrilla').click();
+  await expect(qr).toHaveAttribute('data-logo', 'sombrilla');
+  await expect(page.getByTestId('qr-logo-sombrilla')).toHaveAttribute('aria-checked', 'true');
+
+  // El QR que se ve en pantalla se lee y abre la página del barista
+  const px = await qr.evaluate(async (svg) => {
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', '600'); clone.setAttribute('height', '600');
+    clone.querySelector('image')?.remove();
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(clone))}`;
+    await img.decode();
+    const c = Object.assign(document.createElement('canvas'), { width: 600, height: 600 });
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0, 600, 600);
+    return Array.from(g.getImageData(0, 0, 600, 600).data);
+  });
+  const { default: jsQR } = await import('jsqr');
+  expect(jsQR(new Uint8ClampedArray(px), 600, 600)?.data).toMatch(new RegExp(`/micra/b/${MARLENE}$`));
+
+  // Se guarda en PNG con su nombre, y el dibujo escogido se recuerda
+  const [file] = await Promise.all([page.waitForEvent('download'), page.getByTestId('qr-download').click()]);
+  expect(file.suggestedFilename()).toBe('qr-micra-marlene-sombrilla.png');
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByTestId('qr-svg')).toHaveAttribute('data-logo', 'sombrilla');
+  expect(errors).toEqual([]);
+});
+
 test('barista: con ventas sin subir no deja cerrar sesión; cuando suben, sí', async ({ browser }) => {
   const { page, api, errors } = await open(browser, { who: 'barista' });
   api.micra.baristas[0].live_until = null;

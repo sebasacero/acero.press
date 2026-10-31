@@ -9,7 +9,7 @@ import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconToday, IconCup, IconCap, IconWallet } from './icons.jsx';
+import { IconToday, IconCup, IconCap, IconWallet } from './icons.jsx';
 import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
@@ -38,6 +38,8 @@ const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.
 const PhoneLogin = lazy(() => import('./PhoneLogin.jsx'));
 // «Mi perfil» y «Cerrar sesión» (Perfil.jsx), solo al abrirlo
 const BaristaProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.BaristaProfile })));
+// El QR «Pídeme por Micra» (con su librería), solo al abrirlo
+const QrPage = lazy(() => import('./QrPage.jsx'));
 const TeamWhatsApp = lazy(() => import('./PhoneLogin.jsx').then((m) => ({ default: m.TeamWhatsApp })));
 
 const QUEUE_KEY = 'micra_sales_queue_v1';
@@ -564,29 +566,46 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const errorBox = error && <p className="mapp-error" role="alert">{error} <button type="button" className="mapp-link" onClick={() => setError(null)}>Cerrar</button></p>;
   const storyData = { name: first, cups: board.cups, total: board.total, streak: streak.count, goal, fig, km: trip.view?.distance ?? 0, url: platform.siteUrl(baristaPath(day.id)) };
 
+  // En la calle: la taza que se llena hacia la meta, arriba de todo
+  const left = Math.max(0, goal - board.cups);
+  const step5 = Math.floor(board.cups / 5) * 5;
   const outCard = live && (
-    <section className="mapp-now is-out" aria-label="Tu salida">
-      <p className="mapp-now-kicker">Saliste a las {time(prog.start)}<span className="mapp-now-live">En la calle{mode ? ` · ${modeOf(mode).label}` : ''}</span></p>
-      <h1 className="mapp-now-hello">{greeting()}, {first}.</h1>
-      <p className="mapp-now-title">Hasta las {time(day.live_until)}</p>
-      <div className="mapp-outbar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida">
-        <i style={{ width: `${prog.pct * 100}%` }} /><em style={{ left: `${prog.pct * 100}%` }}><IconThermo /></em>
-      </div>
-      <p className="mapp-now-sub">quedan {prog.leftLabel}</p>
-      <dl className="mapp-now-kpis">
-        <div><dd>{sum.waitingCups}</dd><dt>te esperan</dt></div>
-        <div><dd>{money(board.total)}</dd><dt>hoy llevas</dt></div>
-        <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
-      </dl>
-      {trip.recording && (
-        <p className="mapp-now-sub mapp-trip" role="status" data-testid="trip-recording">
-          📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
+    <>
+      <section className="mapp-sellhead" aria-label="Tu salida" data-testid="sellhead">
+        <p className="mapp-sellhead-top">
+          <span className="mapp-now-live">En la calle{mode ? ` · ${modeOf(mode).label}` : ''}</span>
+          <span>Hasta las {time(day.live_until)}</span>
+        </p>
+        <h1 className="mapp-sellhead-hello">{greeting()}, {first}.</h1>
+        <GoalCup pct={fillOf(board.cups, goal)} />
+        <div className="mapp-sellhead-copy">
+          <p className="mapp-sellhead-n" aria-label={`${board.cups} de ${goal} tazas`}>{board.cups}<small>/{goal}</small></p>
+          <p className="mapp-sellhead-sub">{board.cups === 1 ? 'taza' : 'tazas'} · {money(board.total)} hoy</p>
+          <p className="mapp-sellhead-cota">{left > 0 ? `${left} más y cumples tu meta` : '¡Meta cumplida! Lo demás es ganancia'}</p>
+        </div>
+        <dl className="mapp-sellhead-kpis">
+          <div><dd>{sum.waitingCups}</dd><dt>te esperan</dt></div>
+          <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
+        </dl>
+        <div className="mapp-sellhead-time">
+          <span className="mapp-sellhead-bar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida"><i style={{ width: `${prog.pct * 100}%` }} /></span>
+          <small>quedan {prog.leftLabel}</small>
+        </div>
+        {trip.recording && (
+          <p className="mapp-sellhead-cota mapp-trip" role="status" data-testid="trip-recording">
+            📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
+          </p>
+        )}
+        <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
+      </section>
+      {board.cups > 0 && (
+        <p className="mapp-sellbar" data-testid="sellbar">
+          <span aria-hidden="true">✨</span>
+          <span><b>{step5 >= 5 ? `¡Llevas ${step5}!` : '¡Primera venta!'}</b> {streak.count > 1 ? 'tu racha sigue viva' : 'ganaste +1 día de racha'}</span>
+          <small>🔥 {streak.count}</small>
         </p>
       )}
-      <span className="mapp-now-btns">
-        <button type="button" className="mapp-btn is-onred" onClick={() => out(false)} disabled={busy === 'out'}>Ya volví</button>
-      </span>
-    </section>
+    </>
   );
 
   let body;
@@ -601,6 +620,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         />
       </Suspense>
     );
+  } else if (tab === 'qr') {
+    body = <Suspense fallback={<Cargando fig="caminando" />}><QrPage url={platform.siteUrl(baristaPath(day.id))} name={first} mode={mode} go={go} /></Suspense>;
   } else if (tab === 'aprende') {
     body = <Suspense fallback={<Cargando fig="aeropress" />}><Aprende go={go} night={night} /></Suspense>;
   } else if (tab === 'hoy') {
@@ -684,17 +705,15 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <p className="mapp-fine is-center">{waiting.length ? <><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron para hoy · meta <b>{goal} tazas</b></> : isPublic ? 'Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.' : 'Al salir te pedimos tu ubicación y aparecer en el mapa, para que tus clientes te encuentren.'}</p>
           </>
         )}
-        {/* En la calle: el mapa en vivo, como al ponerse «en línea» */}
-        {live && <Suspense fallback={null}><LivePanel live selfId={day.id} night={night} go={go} /></Suspense>}
         {errorBox}
         {menu.length === 0 ? <Prices day={day} asId={asId} onSaved={load} first /> : (
           <>
-            <GoalCard board={board} goal={goal} onGoal={setGoal} week={day.week} />
+            {!live && <GoalCard board={board} goal={goal} onGoal={setGoal} week={day.week} />}
             <section className="mapp-count" aria-label="Contar ventas">
               {menu.map((m) => (
                 <div key={m.id} className="mapp-tile">
-                  <span className="mapp-tile-name">{m.label} <small>{money(m.price)}</small></span>
-                  <span className="mapp-tile-n"><b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
+                  <span className="mapp-tile-name">{m.label}</span>
+                  <span className="mapp-tile-n">{money(m.price)} · <b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
                   <button type="button" className="mapp-plus" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`}>+1</button>
                   <button type="button" className="mapp-tile-fiado" onClick={() => setFiadoFor(m.id)} aria-label={`Fié un ${m.one}`}>Fiado</button>
                 </div>
@@ -726,8 +745,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <Waiting {...waitingProps} />
           </>
         )}
-        {/* Sin salir: la vista previa (estudio y quién está en la calle) con la invitación a salir */}
-        {!live && <Suspense fallback={null}><LivePanel selfId={day.id} night={night} go={go} /></Suspense>}
+        {/* En la calle, el mapa en vivo (como al ponerse «en línea»), debajo de las tazas */}
+        <Suspense fallback={null}><LivePanel live={live} selfId={day.id} night={night} go={go} /></Suspense>
       </>
     );
   }

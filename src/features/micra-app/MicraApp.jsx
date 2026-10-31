@@ -196,7 +196,7 @@ export default function MicraApp() {
   const meTo = viewMode === 'client' ? '/micra/perfil'
     : viewMode === 'barista' && !who.loading && (who.barista || acting) ? '/micra/barista/perfil'
       : viewMode === 'owner' && who.admin ? '/micra/equipo/perfil' : null;
-  const meOn = route.view === 'me' || route.tab === 'perfil';
+  const meOn = route.view === 'me' || route.tab === 'perfil' || route.tab === 'qr';
   const meInitials = viewMode === 'barista' && who.barista && !acting ? initials(who.barista.name) : null;
 
   return (
