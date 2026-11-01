@@ -2,14 +2,16 @@
    cálido es lo que se toca para comprar o vender (var(--red)); etiquetas y
    cifras en fríos. Tarjetas de vidrio, letra grande, todo de un pulgar. */
 .mapp {
-  /* De día, el crema de la calle del sitio (Aprende, /escuela) con tarjetas blancas */
-  --m-bg: #F5EFE4;
+  /* De día, blanca como una red social; el crema de la calle del sitio queda en
+     lo dibujado (personas, termo, bebidas, historias, imágenes de Hoy). Las
+     tarjetas blancas llevan un borde suave para no perderse en el blanco */
+  --m-bg: #FFFFFF;
   --m-fg: #14161B;
   --m-soft: #5D6475;
   --m-line: rgba(20, 22, 27, .12);
-  --m-glass: rgba(255, 255, 255, .94);
-  --m-glass-edge: rgba(255, 255, 255, .9);
-  --m-shadow: 0 1px 0 rgba(31, 36, 82, .05), 0 12px 26px -16px rgba(31, 36, 82, .4);
+  --m-glass: #FFFFFF;
+  --m-glass-edge: rgba(20, 22, 27, .08);
+  --m-shadow: 0 0 0 1px rgba(20, 22, 27, .08), 0 10px 24px -18px rgba(31, 36, 82, .35);
   --m-cold: #2457C5;
   --m-green: #1F8A5B;
   --m-cta: var(--red);
