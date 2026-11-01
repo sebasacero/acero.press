@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
   meters, distanceLabel, sortBaristas, filterBaristas, pickBaristas, drinkCounts, DRINK_CHOICES, daySummary, weekBars, weekdayLetter, fiadoMessage,
-  parseRoute, redTop, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
+  parseRoute, redTop, searchBaristas, drinkFromQuery, nearZone, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
 // 26 oct 2026, 7:30 a. m. en Bogotá (UTC−5)
@@ -216,9 +216,27 @@ test('la barra de arriba va en rojo solo en Vender y en la calle', () => {
   assert.equal(redTop(null, true), false);
 });
 
-test('«¿Qué te gustaría tomar hoy?»: cuántos baristas tienen cada bebida', () => {
+test('«¿Qué te gustaría probar hoy?»: cuántos baristas tienen cada bebida', () => {
   const list = [{ prices: { tinto: 1500, perico: 2000 } }, { prices: { tinto: 1300 } }, { prices: {} }];
   assert.deepEqual(drinkCounts(list), { tinto: 2, perico: 1, aromatica: 0, all: 3 });
   assert.deepEqual(drinkCounts(null), { tinto: 0, perico: 0, aromatica: 0, all: 0 });
   assert.equal(DRINK_CHOICES.at(-1).id, 'all');
+});
+
+test('el buscador del cliente: nombre, punto o localidad, sin tildes; las bebidas son filtro', () => {
+  const list = [
+    { id: 'a', name: 'Marlene Rojas', referencia: 'Cl. 85 con Cra. 15', localidad: 'Chapinero', lat: 4.67, lng: -74.05 },
+    { id: 'b', name: 'Jairo', referencia: 'Portal Américas', localidad: 'Kennedy', lat: 4.63, lng: -74.17 },
+  ];
+  assert.deepEqual(searchBaristas(list, 'marlene').map((b) => b.id), ['a']);
+  assert.deepEqual(searchBaristas(list, 'americas').map((b) => b.id), ['b']);
+  assert.deepEqual(searchBaristas(list, 'cra 15').map((b) => b.id), ['a']);
+  assert.deepEqual(searchBaristas(list, '  ').map((b) => b.id), ['a', 'b']);
+  assert.deepEqual(searchBaristas(list, 'bosa'), []);
+  assert.equal(drinkFromQuery('Un tinto'), 'tinto');
+  assert.equal(drinkFromQuery('aromática'), 'aromatica');
+  assert.equal(drinkFromQuery('pericos'), 'perico');
+  assert.equal(drinkFromQuery('Marlene'), null);
+  assert.equal(nearZone(list, { lat: 4.632, lng: -74.168 }), 'Kennedy');
+  assert.equal(nearZone(list, null), null);
 });

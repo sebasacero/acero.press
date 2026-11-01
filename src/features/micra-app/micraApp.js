@@ -119,6 +119,39 @@ export function meters(a, b) {
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
 
+const plain = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/** El buscador del cliente: por nombre, punto o localidad del barista, sin tildes ni mayúsculas. */
+export function searchBaristas(list, q) {
+  const words = plain(q).split(/\s+/).filter(Boolean);
+  if (!words.length) return list ?? [];
+  return (list ?? []).filter((b) => {
+    const hay = plain([b.name, b.referencia, b.localidad, b.zone].filter(Boolean).join(' '));
+    return words.every((w) => hay.includes(w));
+  });
+}
+
+/** Si lo que busca es una bebida («tinto», «una aromatica»), es el filtro de bebida y no un nombre. */
+export function drinkFromQuery(q) {
+  const t = plain(q);
+  if (/\btintos?\b/.test(t)) return 'tinto';
+  if (/\bpericos?\b/.test(t)) return 'perico';
+  if (/\baromaticas?\b/.test(t)) return 'aromatica';
+  return null;
+}
+
+/** La zona del encabezado: con la ubicación, la localidad del barista más cercano. */
+export function nearZone(list, me) {
+  if (!me) return null;
+  let best = null;
+  for (const b of list ?? []) {
+    const d = meters(me, b);
+    const name = b.localidad || b.zone;
+    if (d != null && name && (!best || d < best.d)) best = { d, name };
+  }
+  return best?.name ?? null;
+}
+
 /** «a 3 cuadras» (una cuadra ≈ 100 m en Bogotá), «a 2,4 km» */
 export function distanceLabel(m) {
   if (m == null) return null;
@@ -147,7 +180,7 @@ export function filterBaristas(list, filter) {
   return list.filter((b) => b.prices?.[filter] != null);
 }
 
-// «¿Qué te gustaría tomar hoy?»: los botones del inicio del cliente, con «Lo que haya» (todas)
+// «¿Qué te gustaría probar hoy?»: los botones del inicio del cliente, con «Lo que haya» (todas)
 export const DRINK_CHOICES = [
   { id: 'tinto', label: 'Tinto', icon: '☕' },
   { id: 'perico', label: 'Perico', icon: '🥛' },

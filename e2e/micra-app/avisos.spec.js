@@ -83,7 +83,8 @@ test('cliente: su apartado avanza y el globito le dice que el barista salió', a
   // Marlene sale a vender
   api.micra.baristas[0].live_until = new Date(Date.now() + 120 * 60000).toISOString();
   await comeBack(page);
-  await expect(page.getByTestId('globito')).toContainText('Marlene salió');
+  // «Salió», o «está en tu cuadra» si ya es su franja (6 a 11 a. m.)
+  await expect(page.getByTestId('globito')).toContainText(/Marlene (salió|está en tu cuadra)/);
   expect(errors).toEqual([]);
 });
 

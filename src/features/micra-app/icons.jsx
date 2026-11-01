@@ -103,3 +103,13 @@ export const IconPlus = () => (
 export const IconSend = () => (
   <svg {...base}><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-7.5L3 9.5z" /></svg>
 );
+// La cabecera del cliente (como las apps de domicilios)
+export const IconSearch = () => (
+  <svg {...base}><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+);
+export const IconBell = () => (
+  <svg {...base}><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></svg>
+);
+export const IconChevron = () => (
+  <svg {...base}><path d="m6 9 6 6 6-6" /></svg>
+);

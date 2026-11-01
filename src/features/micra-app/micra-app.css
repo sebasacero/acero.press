@@ -1306,7 +1306,7 @@
 .mapp-tabs.is-ig .is-me.on .mapp-tab-av { box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 3.5px var(--m-fg); }
 .mapp.is-client .mapp-main { padding-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
 
-/* «¿Qué te gustaría tomar hoy?»: las bebidas en botones grandes, sin mapa (31 oct) */
+/* «¿Qué te gustaría probar hoy?»: las bebidas en botones grandes, sin mapa (31 oct) */
 .mapp-drinks { margin: 0 0 12px; }
 .mapp-drinks-q { margin: 0 0 12px; font: 800 1.5rem/1.1 'Archivo', sans-serif; letter-spacing: -.02em; }
 .mapp-drinks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -1444,3 +1444,42 @@
 .mapp-wanudge b { display: block; }
 .mapp-wanudge .mapp-muted { margin: 2px 0 8px; font-size: .88rem; }
 .mapp-palerts { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--m-line); }
+
+/* ── La cabecera del cliente: domicilios + red social (1 nov) ──────────
+   Arriba dónde estás («Café de la calle en Bogotá» o «Estás cerca de
+   Chapinero») y el buscador, como Rappi o DiDi; debajo las historias, como
+   Instagram. En la barra, la campana (sus apartados) y el avión (mensajes). */
+.mapp-chead { display: grid; gap: 10px; margin: -6px 0 14px; }
+.mapp-chead-loc { appearance: none; border: 0; background: none; padding: 0; display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--m-fg); text-align: left; cursor: pointer; }
+.mapp-chead-loc:disabled { cursor: default; }
+.mapp-chead-pin { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--m-cta) 12%, transparent); color: var(--m-cta); }
+.mapp-chead-pin svg { width: 21px; height: 21px; }
+.mapp-chead-txt { flex: 1; min-width: 0; display: grid; }
+.mapp-chead-txt small { font: 500 .7rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-chead-txt b { display: inline-flex; align-items: center; gap: 4px; font: 800 1.2rem/1.15 'Archivo', sans-serif; }
+.mapp-chead-txt b svg { width: 18px; height: 18px; stroke-width: 2.4; }
+.mapp-chead-near { flex: none; padding: 8px 12px; border-radius: 999px; background: var(--m-fg); color: var(--m-bg); font: 700 .78rem 'Archivo', sans-serif; }
+.mapp-search { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 6px 0 14px; border-radius: 16px; background: color-mix(in srgb, var(--m-fg) 6%, transparent); color: var(--m-soft); cursor: text; }
+.mapp-search svg { flex: none; width: 22px; height: 22px; }
+.mapp-search input { flex: 1; min-width: 0; height: 48px; border: 0; background: none; outline: none; color: var(--m-fg); font: 600 1rem 'Archivo', sans-serif; -webkit-appearance: none; appearance: none; }
+.mapp-search input::placeholder { color: var(--m-soft); font-weight: 500; }
+.mapp-search input::-webkit-search-cancel-button { display: none; }
+.mapp-search:focus-within { box-shadow: 0 0 0 2px var(--m-fg); }
+.mapp-search-x { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--m-soft); font-size: 1.4rem; cursor: pointer; }
+.mapp-topicon.is-bell { position: relative; appearance: none; border: 0; background: none; padding: 0; cursor: pointer; }
+.mapp-topicon.is-bell + .mapp-topicon { margin-left: 0; }
+.mapp-topicon-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--m-cta); box-shadow: 0 0 0 2px var(--m-bg); }
+
+/* En el inicio del cliente (la versión que escogió el dueño, 1 nov): la barra y la cabecera en rojo, el buscador blanco */
+.mapp.is-clientred .mapp-top { background: var(--m-cta); border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.mapp.is-clientred .mapp-brand, .mapp.is-clientred .mapp-topicon { color: #fff; }
+.mapp.is-clientred .mapp-brand-word i { color: #F5EFE4; }
+.mapp.is-clientred .mapp-topicon-dot { background: #fff; box-shadow: 0 0 0 2px var(--m-cta); }
+.mapp.is-clientred .mapp-chead { margin: -18px -16px 14px; padding: 4px 16px 18px; background: var(--m-cta); border-radius: 0 0 26px 26px; box-shadow: 0 14px 26px -18px rgba(222, 27, 27, .8); }
+.mapp.is-clientred .mapp-chead-loc { color: #fff; }
+.mapp.is-clientred .mapp-chead-pin { background: rgba(255, 255, 255, .2); color: #fff; }
+.mapp.is-clientred .mapp-chead-txt small { color: rgba(255, 255, 255, .85); }
+.mapp.is-clientred .mapp-chead-near { background: #fff; color: var(--m-cta); }
+.mapp.is-clientred .mapp-search { background: #fff; color: #5D6475; box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .45); }
+.mapp.is-clientred .mapp-search input { color: #14161B; }
+.mapp.is-clientred .mapp-search:focus-within { box-shadow: 0 0 0 2px #14161B; }

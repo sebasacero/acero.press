@@ -79,10 +79,10 @@ test('cliente: un barista sin cuenta en Micra no ofrece apartar; el filtro y el 
   await page.getByRole('button', { name: '‹ Baristas' }).click();
   // El favorito sube al primer lugar
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem').first()).toContainText('Wilson');
-  // Sin mapa: «¿Qué te gustaría tomar hoy?» en botones grandes, con cuántos baristas la tienen
-  await expect(page.getByRole('heading', { name: '¿Qué te gustaría tomar hoy?' })).toBeVisible();
+  // Sin mapa: «¿Qué te gustaría probar hoy?» en botones grandes, con cuántos baristas la tienen
+  await expect(page.getByRole('heading', { name: '¿Qué te gustaría probar hoy?' })).toBeVisible();
   await expect(page.locator('.mapp-map')).toHaveCount(0);
-  const drinks = page.getByRole('group', { name: '¿Qué te gustaría tomar hoy?' });
+  const drinks = page.getByRole('group', { name: '¿Qué te gustaría probar hoy?' });
   await expect(drinks.getByRole('button')).toHaveCount(4);
   await expect(drinks.getByRole('button', { name: 'Lo que haya' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('drink-perico')).toContainText('2 baristas');
@@ -470,6 +470,19 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   await expect(feed.getByTestId('price-card')).toContainText('$1.300');
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana
+  await expect(page.locator('.mapp')).toHaveClass(/is-clientred/);
+  await expect(page.getByTestId('home-loc')).toContainText('Bogotá');
+  await expect(page.getByTestId('top-bell')).toBeVisible();
+  // Buscar una bebida la filtra; buscar un nombre muestra solo a ese barista
+  await page.getByTestId('home-search').fill('perico');
+  await expect(page.getByTestId('search-count')).toContainText('2 baristas para «perico»');
+  await expect(page.getByTestId('stories')).toHaveCount(0);
+  await page.getByTestId('home-search').fill('marlene');
+  await expect(page.getByTestId('search-count')).toContainText('1 barista para «marlene»');
+  await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Borrar búsqueda' }).click();
+  await expect(page.getByTestId('stories')).toBeVisible();
   // Sin «Soy barista» ni círculo arriba: el perfil va abajo
   await expect(page.getByRole('banner').getByRole('button', { name: 'Mi perfil' })).toHaveCount(0);
   const nav = page.getByRole('navigation', { name: 'Micra' });

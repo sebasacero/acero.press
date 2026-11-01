@@ -2,12 +2,13 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react
 import {
   sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
+  searchBaristas, drinkFromQuery, nearZone,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconCheck, IconOut, IconToday } from './icons.jsx';
+import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
@@ -187,7 +188,12 @@ export function ClientHome({ go }) {
   const pickDrink = (id) => { setDrink(id); if (me) seek(me, id); };
   const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }), [list, me, favs]);
   const counts = drinkCounts(sorted);
-  const shown = pickBaristas(sorted, { drink, now: nowOnly });
+  // El buscador de arriba: una bebida escrita es su filtro; lo demás busca nombre, punto o localidad
+  const [q, setQ] = useState('');
+  const searching = q.trim().length > 0;
+  const qDrink = drinkFromQuery(q);
+  const shown = searchBaristas(pickBaristas(sorted, { drink: qDrink ?? drink, now: nowOnly }), qDrink ? '' : q);
+  const zone = nearZone(sorted, me);
   const live = sorted.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
   // Si ya apartó hoy, arriba va cómo va eso, no la bienvenida
@@ -219,11 +225,28 @@ export function ClientHome({ go }) {
   return (
     <div className="mapp-client">
       <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
-      {/* Arriba, como el inicio de una red social: las historias de los baristas */}
       {notice && <Globito {...notice} onClose={() => setNotice(null)} onOpen={() => { setNotice(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
-      <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} />
+      {/* Arriba, como las apps de domicilios: dónde estás y el buscador */}
+      <section className="mapp-chead" aria-label="Buscar café" data-testid="home-head">
+        <button type="button" className="mapp-chead-loc" onClick={me ? undefined : askNear} disabled={asking} aria-label={me ? `Estás cerca de ${zone ?? 'tu cuadra'}` : '◎ Cerca de mí'} data-testid="home-loc">
+          <span className="mapp-chead-pin" aria-hidden="true"><IconPin /></span>
+          <span className="mapp-chead-txt">
+            <small>{asking ? 'Buscando…' : me ? 'Estás cerca de' : 'Café de la calle en'}</small>
+            <b>{me ? (zone ?? 'tu cuadra') : 'Bogotá'} {!me && <IconChevron />}</b>
+          </span>
+          {!me && <span className="mapp-chead-near">Cerca de mí</span>}
+        </button>
+        <label className="mapp-search">
+          <IconSearch />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value.slice(0, 40))} placeholder="Busca tinto, perico o tu barista" aria-label="Buscar baristas o bebidas" enterKeyHint="search" data-testid="home-search" />
+          {searching && <button type="button" className="mapp-search-x" onClick={() => setQ('')} aria-label="Borrar búsqueda">×</button>}
+        </label>
+      </section>
+      {/* Y como una red social: las historias de los baristas (al buscar, solo los resultados) */}
+      {!searching && <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} />}
       {adStory && <AdStoryView ad={adStory} onClose={() => setAdStory(null)} />}
-      {hold && holdBarista ? (
+      {searching && <p className="mapp-feedline" role="status" data-testid="search-count"><b>{shown.length === 1 ? '1 barista' : `${shown.length} baristas`}</b> para «{q.trim()}»</p>}
+      {searching ? null : hold && holdBarista ? (
         <>
           <p className="mapp-kicker is-hello">{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</p>
           <HoldCard hold={hold} barista={holdBarista} go={go} />
@@ -236,9 +259,9 @@ export function ClientHome({ go }) {
       )}
 
       {/* Sin mapa: qué quiere tomar, en botones grandes; la lista de abajo muestra solo a quien lo vende */}
-      <section className="mapp-drinks" aria-labelledby="mapp-drinks-q">
-        <h2 className="mapp-drinks-q" id="mapp-drinks-q">¿Qué te gustaría tomar <span className="mapp-script">hoy?</span></h2>
-        <div className="mapp-drinks-grid" role="group" aria-label="¿Qué te gustaría tomar hoy?">
+      {!searching && <section className="mapp-drinks" aria-labelledby="mapp-drinks-q">
+        <h2 className="mapp-drinks-q" id="mapp-drinks-q">¿Qué te gustaría probar <span className="mapp-script">hoy?</span></h2>
+        <div className="mapp-drinks-grid" role="group" aria-label="¿Qué te gustaría probar hoy?">
           {DRINK_CHOICES.map((d) => (
             <button key={d.id} type="button" className={drink === d.id ? 'on' : ''} aria-pressed={drink === d.id} onClick={() => pickDrink(d.id)} data-testid={`drink-${d.id}`}>
               <span className="mapp-drink-ico" aria-hidden="true">{d.icon}</span>
@@ -247,13 +270,10 @@ export function ClientHome({ go }) {
             </button>
           ))}
         </div>
-      </section>
+      </section>}
 
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">
-          {!me && (
-            <button type="button" className="mapp-near" onClick={askNear} disabled={asking}>{asking ? 'Buscando…' : '◎ Cerca de mí'}</button>
-          )}
           <button type="button" className={nowOnly ? 'on' : ''} aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)}>
             Ahora{live > 0 ? ` · ${live}` : ''}
           </button>
@@ -287,18 +307,18 @@ export function ClientHome({ go }) {
         </a>
       )}
 
-      <StampsCard />
+      {!searching && <StampsCard />}
 
-      <section className="mapp-join">
+      {!searching && <section className="mapp-join">
         <div>
           <b>¿Vendes café en la calle?</b>
           <p>Que tus clientes te aparten antes de que llegues, lleva tu cuenta y tus fiados en el celular.</p>
         </div>
         <button type="button" className="mapp-btn is-ghost" onClick={() => go('/micra/barista')}>Soy barista</button>
-      </section>
+      </section>}
 
       {/* Como Instagram: debajo de todo sigue el muro (los puestos de los baristas, el precio, el café de Colombia, recetas y videos) */}
-      <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} ads={ads.rows} /></Suspense>
+      {!searching && <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} ads={ads.rows} /></Suspense>}
     </div>
   );
 }
