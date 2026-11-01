@@ -1272,7 +1272,7 @@
 /* Arriba: la marca a mano y el avión de los mensajes; las historias de los
    baristas; abajo la barra plana de cinco íconos sin texto */
 .mapp.is-client .mapp-top { border-bottom-color: transparent; }
-.mapp.is-client .mapp-brand-word { font: 400 1.65rem/1 'Permanent Marker', cursive; letter-spacing: 0; }
+.mapp.is-client .mapp-brand-word, .mapp.is-barista .mapp-brand-word { font: 400 1.65rem/1 'Permanent Marker', cursive; letter-spacing: 0; }
 .mapp-topicon { flex: none; margin-left: auto; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--m-fg); text-decoration: none; }
 .mapp-modes + .mapp-topicon { margin-left: 0; }
 .mapp-topicon svg { width: 27px; height: 27px; stroke-width: 1.9; }
@@ -1470,16 +1470,24 @@
 .mapp-topicon.is-bell + .mapp-topicon { margin-left: 0; }
 .mapp-topicon-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--m-cta); box-shadow: 0 0 0 2px var(--m-bg); }
 
-/* En el inicio del cliente (la versión que escogió el dueño, 1 nov): la barra y la cabecera en rojo, el buscador blanco */
-.mapp.is-clientred .mapp-top { background: var(--m-cta); border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
-.mapp.is-clientred .mapp-brand, .mapp.is-clientred .mapp-topicon { color: #fff; }
-.mapp.is-clientred .mapp-brand-word i { color: #F5EFE4; }
-.mapp.is-clientred .mapp-topicon-dot { background: #fff; box-shadow: 0 0 0 2px var(--m-cta); }
-.mapp.is-clientred .mapp-chead { margin: -18px -16px 14px; padding: 4px 16px 18px; background: var(--m-cta); border-radius: 0 0 26px 26px; box-shadow: 0 14px 26px -18px rgba(222, 27, 27, .8); }
-.mapp.is-clientred .mapp-chead-loc { color: #fff; }
-.mapp.is-clientred .mapp-chead-pin { background: rgba(255, 255, 255, .2); color: #fff; }
-.mapp.is-clientred .mapp-chead-txt small { color: rgba(255, 255, 255, .85); }
-.mapp.is-clientred .mapp-chead-near { background: #fff; color: var(--m-cta); }
-.mapp.is-clientred .mapp-search { background: #fff; color: #5D6475; box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .45); }
-.mapp.is-clientred .mapp-search input { color: #14161B; }
-.mapp.is-clientred .mapp-search:focus-within { box-shadow: 0 0 0 2px #14161B; }
+/* En el inicio del cliente y en Vender del barista (la versión que escogió el dueño, 1 nov): la barra y la cabecera en rojo, el buscador blanco */
+.mapp.is-redtop .mapp-top { background: var(--m-cta); border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.mapp.is-redtop .mapp-brand, .mapp.is-redtop .mapp-topicon { color: #fff; }
+.mapp.is-redtop .mapp-brand-word i { color: #F5EFE4; }
+.mapp.is-redtop .mapp-topicon-dot { background: #fff; box-shadow: 0 0 0 2px var(--m-cta); }
+.mapp.is-redtop .mapp-chead { margin: -18px -16px 14px; padding: 4px 16px 18px; background: var(--m-cta); border-radius: 0 0 26px 26px; box-shadow: 0 14px 26px -18px rgba(222, 27, 27, .8); }
+.mapp.is-redtop .mapp-chead-loc { color: #fff; }
+.mapp.is-redtop .mapp-chead-pin { background: rgba(255, 255, 255, .2); color: #fff; }
+.mapp.is-redtop .mapp-chead-txt small { color: rgba(255, 255, 255, .85); }
+.mapp.is-redtop .mapp-chead-near { background: #fff; color: var(--m-cta); }
+.mapp.is-redtop .mapp-search { background: #fff; color: #5D6475; box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .45); }
+.mapp.is-redtop .mapp-search input { color: #14161B; }
+.mapp.is-redtop .mapp-search:focus-within { box-shadow: 0 0 0 2px #14161B; }
+
+/* La cabecera del barista: su punto y «Mi QR» en una fila; en la calle sigue sin corte en la taza roja */
+.mapp-chead-row { display: flex; align-items: center; gap: 10px; }
+.mapp-chead-loc.is-static { flex: 1; min-width: 0; cursor: default; }
+.mapp-chead-loc.is-static .mapp-chead-txt b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mapp.is-redtop .mapp-chead.is-joined { margin-bottom: 0; padding-bottom: 6px; border-radius: 0; box-shadow: none; }
+.mapp-chead.is-joined + .mapp-sellhead { margin-top: 0; padding-top: 8px; }
+.mapp-dsearch-h { margin: 14px 0 4px; font: 700 .72rem 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--m-soft); }

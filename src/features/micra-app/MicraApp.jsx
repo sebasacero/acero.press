@@ -157,9 +157,8 @@ export default function MicraApp() {
   // /micra/video: la cámara con filtros para un barista de la app (o el equipo); vive en el modo barista
   const videoView = route.view === 'video';
   const viewMode = teamView ? 'owner' : route.view === 'barista' || videoView ? 'barista' : 'client';
-  const red = redTop(route, live);
-  // El inicio del cliente lleva la cabecera roja, como las apps de domicilios (dónde estás y el buscador)
-  const clientRed = viewMode === 'client' && route.view === 'home';
+  // La cabecera roja de domicilios: el inicio del cliente y Vender del barista
+  const red = redTop(route);
 
   // Al entrar a /micra, el barista y el equipo caen en su modo de siempre
   useEffect(() => {
@@ -192,8 +191,8 @@ export default function MicraApp() {
   };
 
   useEffect(() => {
-    platform.setNight(night, red || clientRed);
-  }, [night, red, clientRed]);
+    platform.setNight(night, red);
+  }, [night, red]);
 
   let body;
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
@@ -232,7 +231,7 @@ export default function MicraApp() {
   const clientName = viewMode === 'client' ? api.savedName() : '';
 
   return (
-    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}${clientRed ? ' is-clientred' : ''}`}>
+    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
       <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
         {/* El termo del icono en su baldosa crema (se ve igual sobre blanco, noche o rojo) y la palabra */}
         <button type="button" className="mapp-brand" onClick={() => go(viewMode === 'client' ? '/micra' : viewMode === 'owner' ? '/micra/equipo' : '/micra/barista')} aria-label="Micra, inicio">

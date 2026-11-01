@@ -131,6 +131,20 @@ export function searchBaristas(list, q) {
   });
 }
 
+/**
+ * El buscador del barista en Vender: quién lo espera, quién le debe y sus
+ * productos, por nombre y sin tildes. Para entregar, cobrar o sumar +1 de una.
+ */
+export function searchDay(day, menu, q) {
+  const words = plain(q).split(/\s+/).filter(Boolean);
+  const hit = (s) => words.length > 0 && words.every((w) => plain(s).includes(w));
+  return {
+    holds: (day?.holds ?? []).filter((h) => h.status === 'waiting' && hit(h.name)),
+    fiados: (day?.fiados ?? []).filter((f) => hit(f.name)),
+    products: (menu ?? []).filter((m) => hit(m.label)),
+  };
+}
+
 /** Si lo que busca es una bebida («tinto», «una aromatica»), es el filtro de bebida y no un nombre. */
 export function drinkFromQuery(q) {
   const t = plain(q);
@@ -312,11 +326,13 @@ export function outProgress(liveUntil, now = new Date(), minutes = 240) {
 }
 
 /**
- * La barra de arriba va en rojo, como el encabezado de la salida, solo en
- * Vender del barista mientras está en la calle; en lo demás, la del tema.
+ * La barra de arriba va en rojo con la cabecera de domicilios (dónde estás y
+ * el buscador): en el inicio del cliente y en Vender del barista (ahí sigue sin
+ * corte en la taza roja cuando está en la calle). En lo demás, la del tema.
  */
-export function redTop(route, live) {
-  return !!live && route?.view === 'barista' && (!route.tab || route.tab === 'vender');
+export function redTop(route) {
+  if (route?.view === 'home') return true;
+  return route?.view === 'barista' && (!route.tab || route.tab === 'vender');
 }
 
 /**

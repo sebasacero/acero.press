@@ -322,6 +322,34 @@ test('cliente con apartado: arriba va «Tu apartado» con sus etapas; las tarjet
   expect(errors).toEqual([]);
 });
 
+test('barista: la cabecera roja de Vender busca un cliente, un fiado o un producto y resuelve ahí mismo', async ({ browser }) => {
+  const { page, api, errors } = await open(browser, { who: 'barista' });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  const head = page.getByTestId('barista-head');
+  await expect(head).toBeVisible();
+  await expect(page.locator('.mapp')).toHaveClass(/is-redtop/);
+  await head.getByTestId('head-qr').click();
+  await expect(page).toHaveURL(/\/micra\/barista\/qr$/);
+  await page.goBack();
+  // Un producto: +1 desde el resultado
+  const search = page.getByTestId('barista-search');
+  await search.fill('perico');
+  const found = page.getByTestId('day-search');
+  await expect(found).toContainText('Tus productos');
+  const before = api.all('/rpc/micra_barista_sale').length;
+  await found.getByRole('button', { name: 'Vendí un perico' }).click();
+  await expect.poll(() => api.all('/rpc/micra_barista_sale').length).toBe(before + 1);
+  expect(api.all('/rpc/micra_barista_sale').at(-1).data.p_product).toBe('perico');
+  // Nada: lo dice
+  await search.fill('zzz');
+  await expect(found).toContainText('0 resultados');
+  // Borrar vuelve a Vender
+  await page.getByRole('button', { name: 'Borrar búsqueda' }).click();
+  await expect(found).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Vendí un tinto/ }).first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('barista en la calle: la cabecera roja sube hasta la barra, dice hasta cuándo y lo que lleva; la flecha vuelve sin cerrar el día', async ({ browser }) => {
   const seed = structuredClone(SEED);
   seed.baristas[0].live_until = new Date(Date.now() + 100 * 60000).toISOString();
@@ -333,7 +361,7 @@ test('barista en la calle: la cabecera roja sube hasta la barra, dice hasta cuá
   await expect(out.getByRole('progressbar')).toHaveAttribute('aria-valuenow', /^5[789]$/);
   await expect(out).toContainText('$7.000');
   await expect(out).toContainText('$4.000');
-  // La barra de arriba va en rojo solo en Vender; el círculo de Mi perfil lleva el punto verde
+  // Vender lleva la barra y la cabecera rojas (su punto, «Mi QR», el buscador) que siguen en la taza; el círculo lleva el punto verde
   const app = page.locator('.mapp');
   await expect(app).toHaveClass(/is-redtop/);
   await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(1);
@@ -350,7 +378,9 @@ test('barista en la calle: la cabecera roja sube hasta la barra, dice hasta cuá
   await expect(page.getByRole('button', { name: 'Salí a vender' })).toBeVisible();
   await expect(page.getByTestId('toast')).toContainText('Tus ventas de hoy siguen aquí');
   await expect(page.getByTestId('micra-count-tinto')).toHaveText(cups);
-  await expect(app).not.toHaveClass(/is-redtop/);
+  // Sin salir, Vender sigue con su cabecera roja; ya sin el punto verde
+  await expect(app).toHaveClass(/is-redtop/);
+  await expect(page.getByTestId('barista-head')).toContainText('Tu punto');
   await expect(page.getByTestId('me-button').locator('.mapp-mebtn-live')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -471,7 +501,7 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana
-  await expect(page.locator('.mapp')).toHaveClass(/is-clientred/);
+  await expect(page.locator('.mapp')).toHaveClass(/is-redtop/);
   await expect(page.getByTestId('home-loc')).toContainText('Bogotá');
   await expect(page.getByTestId('top-bell')).toBeVisible();
   // Buscar una bebida la filtra; buscar un nombre muestra solo a ese barista
