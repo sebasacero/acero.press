@@ -52,7 +52,7 @@ export default function PostReview() {
             </div>
             <div className="mapp-review-copy">
               <b>{p.name}</b>
-              <small>{hace(p.created_at)}{p.public ? '' : ' · no sale en el mapa: no se verá aunque la apruebes'}</small>
+              <small>{hace(p.created_at)}{p.challenge ? ` · 🏆 Reto: ${p.challenge}` : ''}{p.public ? '' : ' · no sale en el mapa: no se verá aunque la apruebes'}</small>
               {p.caption && <p>{p.caption}</p>}
               <span className="mapp-row-btns">
                 <button type="button" className="mapp-btn is-small is-cta" onClick={() => review(p.id, true)} disabled={busy === p.id}>Aprobar</button>

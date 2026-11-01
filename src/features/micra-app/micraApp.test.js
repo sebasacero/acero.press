@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   bogota, isNight, money, hourLabel, windowLabel, status, menuOf, cartTotal, bump, cartItems, itemsLabel,
   meters, distanceLabel, sortBaristas, filterBaristas, pickBaristas, drinkCounts, DRINK_CHOICES, daySummary, weekBars, weekdayLetter, fiadoMessage,
-  parseRoute, redTop, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
+  parseRoute, redTop, searchBaristas, searchDay, drinkFromQuery, nearZone, landingAfterLogin, newRef, initials, paymentsOf, extrasOf, recentFiados, MAX_CUPS, holdStage, outProgress,
 } from './micraApp.js';
 
 // 26 oct 2026, 7:30 a. m. en Bogotá (UTC−5)
@@ -138,6 +138,8 @@ test('rutas internas de /micra', () => {
   assert.deepEqual(parseRoute('/micra/equipo'), { view: 'owner' });
   assert.deepEqual(parseRoute('/micra/apartados'), { view: 'holds' });
   assert.deepEqual(parseRoute('/micra/hoy'), { view: 'feed' });
+  assert.deepEqual(parseRoute('/micra/reto'), { view: 'reto' });
+  assert.deepEqual(parseRoute('/micra/barista/reto'), { view: 'barista', tab: 'reto' });
   assert.deepEqual(parseRoute('/micra/estudio'), { view: 'study' });
   assert.deepEqual(parseRoute('/micra/camara'), { view: 'camera' });
   assert.deepEqual(parseRoute('/micra/ficha'), { view: 'ficha' });
@@ -206,19 +208,51 @@ test('scoreboard: hoy con lo que no ha subido, contra ayer, meta y récord', asy
   assert.equal(scoreboard({ ...day, sales: [{ product: 'tinto', qty: 41, total: 61500 }] }).record, true);
 });
 
-test('la barra de arriba va en rojo solo en Vender y en la calle', () => {
-  assert.equal(redTop({ view: 'barista' }, true), true);
-  assert.equal(redTop({ view: 'barista', tab: 'vender' }, true), true);
-  assert.equal(redTop({ view: 'barista' }, false), false);
-  assert.equal(redTop({ view: 'barista', tab: 'hoy' }, true), false);
-  assert.equal(redTop({ view: 'barista', tab: 'perfil' }, true), false);
-  assert.equal(redTop({ view: 'home' }, true), false);
-  assert.equal(redTop(null, true), false);
+test('la barra de arriba va en rojo en el inicio del cliente y en Vender del barista', () => {
+  assert.equal(redTop({ view: 'barista' }), true);
+  assert.equal(redTop({ view: 'barista', tab: 'vender' }), true);
+  assert.equal(redTop({ view: 'home' }), true);
+  assert.equal(redTop({ view: 'barista', tab: 'hoy' }), false);
+  assert.equal(redTop({ view: 'barista', tab: 'perfil' }), false);
+  assert.equal(redTop({ view: 'feed' }), false);
+  assert.equal(redTop({ view: 'owner' }), false);
+  assert.equal(redTop(null), false);
 });
 
-test('«¿Qué te gustaría tomar hoy?»: cuántos baristas tienen cada bebida', () => {
+test('«¿Qué te gustaría probar hoy?»: cuántos baristas tienen cada bebida', () => {
   const list = [{ prices: { tinto: 1500, perico: 2000 } }, { prices: { tinto: 1300 } }, { prices: {} }];
   assert.deepEqual(drinkCounts(list), { tinto: 2, perico: 1, aromatica: 0, all: 3 });
   assert.deepEqual(drinkCounts(null), { tinto: 0, perico: 0, aromatica: 0, all: 0 });
   assert.equal(DRINK_CHOICES.at(-1).id, 'all');
+});
+
+test('el buscador del cliente: nombre, punto o localidad, sin tildes; las bebidas son filtro', () => {
+  const list = [
+    { id: 'a', name: 'Marlene Rojas', referencia: 'Cl. 85 con Cra. 15', localidad: 'Chapinero', lat: 4.67, lng: -74.05 },
+    { id: 'b', name: 'Jairo', referencia: 'Portal Américas', localidad: 'Kennedy', lat: 4.63, lng: -74.17 },
+  ];
+  assert.deepEqual(searchBaristas(list, 'marlene').map((b) => b.id), ['a']);
+  assert.deepEqual(searchBaristas(list, 'americas').map((b) => b.id), ['b']);
+  assert.deepEqual(searchBaristas(list, 'cra 15').map((b) => b.id), ['a']);
+  assert.deepEqual(searchBaristas(list, '  ').map((b) => b.id), ['a', 'b']);
+  assert.deepEqual(searchBaristas(list, 'bosa'), []);
+  assert.equal(drinkFromQuery('Un tinto'), 'tinto');
+  assert.equal(drinkFromQuery('aromática'), 'aromatica');
+  assert.equal(drinkFromQuery('pericos'), 'perico');
+  assert.equal(drinkFromQuery('Marlene'), null);
+  assert.equal(nearZone(list, { lat: 4.632, lng: -74.168 }), 'Kennedy');
+  assert.equal(nearZone(list, null), null);
+});
+
+test('el buscador del barista: quién lo espera, quién le debe y sus productos', () => {
+  const day = {
+    holds: [{ id: 'h1', name: 'Portería Ed. Alcalá', status: 'waiting' }, { id: 'h2', name: 'Ana', status: 'served' }],
+    fiados: [{ name: 'Portería Ed. Alcalá', total: 3000 }, { name: 'Don Luis', total: 1500 }],
+  };
+  const menu = [{ id: 'tinto', label: 'Tinto' }, { id: 'x1', label: 'Empanada' }, { id: 'aromatica', label: 'Aromática' }];
+  const r = searchDay(day, menu, 'porteria');
+  assert.deepEqual([r.holds.map((h) => h.id), r.fiados.map((f) => f.name), r.products], [['h1'], ['Portería Ed. Alcalá'], []]);
+  assert.deepEqual(searchDay(day, menu, 'aromatica').products.map((m) => m.id), ['aromatica']);
+  assert.deepEqual(searchDay(day, menu, 'ana').holds, []); // ya entregado: no sale
+  assert.deepEqual(searchDay(day, menu, '  '), { holds: [], fiados: [], products: [] });
 });

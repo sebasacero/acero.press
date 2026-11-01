@@ -9,7 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
-import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconHome, IconCompass, IconPlus, IconSend } from './icons.jsx';
+import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
 import './micra-app.css';
 import { Cargando } from './Animado.jsx';
 
@@ -25,6 +25,8 @@ const OwnerProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m
 // Hoy del cliente: el mismo muro del barista (cargado aparte), sin logros ni ideas de foto
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const ClientPublish = lazy(() => import('./HoyFeed.jsx').then((m) => ({ default: m.ClientPublish })));
+// Competencia: el reto de la semana (el cliente califica; el barista lo tiene en su modo)
+const Competencia = lazy(() => import('./Competencia.jsx'));
 
 /** El avión de papel de arriba (como los mensajes de Instagram): el WhatsApp del equipo. */
 function TeamChat() {
@@ -149,13 +151,16 @@ export default function MicraApp() {
   // «Desliza para recargar»: el cliente y el equipo vuelven a montar la pantalla; el barista
   // relee su día sin desmontarse (lleva el GPS de la salida y la cola de ventas)
   const [refreshKey, setRefreshKey] = useState(0);
+  // La campana del cliente (como en las apps de domicilios): punto rojo si tiene un apartado en curso
+  const [holdOn, setHoldOn] = useState(false);
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
   // /micra/video: la cámara con filtros para un barista de la app (o el equipo); vive en el modo barista
   const videoView = route.view === 'video';
   const viewMode = teamView ? 'owner' : route.view === 'barista' || videoView ? 'barista' : 'client';
-  const red = redTop(route, live);
+  // La cabecera roja de domicilios: el inicio del cliente y Vender del barista
+  const red = redTop(route);
 
   // Al entrar a /micra, el barista y el equipo caen en su modo de siempre
   useEffect(() => {
@@ -177,6 +182,11 @@ export default function MicraApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [who.loading, who.session]);
 
+  useEffect(() => {
+    if (viewMode !== 'client') return;
+    api.myHolds().then((h) => setHoldOn((h ?? []).some((x) => x.status === 'waiting'))).catch(() => setHoldOn(false));
+  }, [viewMode, route.view, refreshKey]);
+
   const switchMode = (m) => {
     try { localStorage.setItem(MODE_KEY, m); } catch { /* sin memoria */ }
     go(m === 'owner' ? '/micra/equipo' : m === 'barista' ? '/micra/barista' : '/micra');
@@ -190,6 +200,7 @@ export default function MicraApp() {
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" /></Suspense>;
+  else if (route.view === 'reto') body = <Suspense fallback={<Cargando />}><Competencia go={go} audience="client" /></Suspense>;
   else if (route.view === 'me') body = who.loading ? <Cargando /> : <Suspense fallback={<Cargando />}><ClientProfile go={go} who={who} /></Suspense>;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
@@ -231,6 +242,11 @@ export default function MicraApp() {
           <span className="mapp-brand-word">micra<i>.</i></span>
         </button>
         <ModeSwitch modes={modes} mode={viewMode} onChange={switchMode} />
+        {viewMode === 'client' && (
+          <button type="button" className="mapp-topicon is-bell" onClick={() => go('/micra/apartados')} aria-label={holdOn ? 'Mis apartados: tienes uno en curso' : 'Mis apartados'} title="Mis apartados" data-testid="top-bell">
+            <IconBell />{holdOn && <i className="mapp-topicon-dot" aria-hidden="true" />}
+          </button>
+        )}
         {viewMode === 'client' && <TeamChat />}
         {modes.length < 2 && viewMode !== 'client' && (
           <button type="button" className="mapp-toplink" onClick={() => go('/micra')}>Busco café</button>

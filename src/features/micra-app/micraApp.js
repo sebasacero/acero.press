@@ -119,6 +119,53 @@ export function meters(a, b) {
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
 
+const plain = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/** El buscador del cliente: por nombre, punto o localidad del barista, sin tildes ni mayúsculas. */
+export function searchBaristas(list, q) {
+  const words = plain(q).split(/\s+/).filter(Boolean);
+  if (!words.length) return list ?? [];
+  return (list ?? []).filter((b) => {
+    const hay = plain([b.name, b.referencia, b.localidad, b.zone].filter(Boolean).join(' '));
+    return words.every((w) => hay.includes(w));
+  });
+}
+
+/**
+ * El buscador del barista en Vender: quién lo espera, quién le debe y sus
+ * productos, por nombre y sin tildes. Para entregar, cobrar o sumar +1 de una.
+ */
+export function searchDay(day, menu, q) {
+  const words = plain(q).split(/\s+/).filter(Boolean);
+  const hit = (s) => words.length > 0 && words.every((w) => plain(s).includes(w));
+  return {
+    holds: (day?.holds ?? []).filter((h) => h.status === 'waiting' && hit(h.name)),
+    fiados: (day?.fiados ?? []).filter((f) => hit(f.name)),
+    products: (menu ?? []).filter((m) => hit(m.label)),
+  };
+}
+
+/** Si lo que busca es una bebida («tinto», «una aromatica»), es el filtro de bebida y no un nombre. */
+export function drinkFromQuery(q) {
+  const t = plain(q);
+  if (/\btintos?\b/.test(t)) return 'tinto';
+  if (/\bpericos?\b/.test(t)) return 'perico';
+  if (/\baromaticas?\b/.test(t)) return 'aromatica';
+  return null;
+}
+
+/** La zona del encabezado: con la ubicación, la localidad del barista más cercano. */
+export function nearZone(list, me) {
+  if (!me) return null;
+  let best = null;
+  for (const b of list ?? []) {
+    const d = meters(me, b);
+    const name = b.localidad || b.zone;
+    if (d != null && name && (!best || d < best.d)) best = { d, name };
+  }
+  return best?.name ?? null;
+}
+
 /** «a 3 cuadras» (una cuadra ≈ 100 m en Bogotá), «a 2,4 km» */
 export function distanceLabel(m) {
   if (m == null) return null;
@@ -147,7 +194,7 @@ export function filterBaristas(list, filter) {
   return list.filter((b) => b.prices?.[filter] != null);
 }
 
-// «¿Qué te gustaría tomar hoy?»: los botones del inicio del cliente, con «Lo que haya» (todas)
+// «¿Qué te gustaría probar hoy?»: los botones del inicio del cliente, con «Lo que haya» (todas)
 export const DRINK_CHOICES = [
   { id: 'tinto', label: 'Tinto', icon: '☕' },
   { id: 'perico', label: 'Perico', icon: '🥛' },
@@ -207,6 +254,7 @@ export const baristaPath = (id) => `/micra/b/${id}`;
  *   /micra/b/<id>        un barista (lo que abre el QR del termo)
  *   /micra/apartados     mis apartados de hoy
  *   /micra/hoy           el muro del café para el cliente (el mismo Hoy del barista, sin lo suyo)
+ *   /micra/reto          Competencia: el reto de la semana (el barista: /micra/barista/reto)
  *   /micra/barista       el modo barista (entrar y enlazar si falta), pestaña Vender: su inicio
  *   /micra/barista/hoy · /aprende · /cuenta   sus otras pestañas (/vender también abre Vender)
  *   /micra/barista/qr    su QR «Pídeme por Micra» (desde Mi perfil)
@@ -218,9 +266,11 @@ export function parseRoute(pathname) {
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/hoy') return { view: 'feed' };
+  // Competencia: el reto de la semana, para el cliente (el barista lo tiene en /micra/barista/reto)
+  if (p === '/micra/reto') return { view: 'reto' };
   if (p === '/micra/barista') return { view: 'barista' };
   // Las pestañas del barista: el muro de hoy, aprender y su plata (Vender es /micra/barista)
-  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil|qr)$/);
+  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil|qr|reto)$/);
   if (t) return { view: 'barista', tab: t[1] };
   if (p === '/micra/equipo') return { view: 'owner' };
   // «Mi perfil»: el del cliente (lo que guarda el celular) y el del equipo (su sesión)
@@ -279,11 +329,13 @@ export function outProgress(liveUntil, now = new Date(), minutes = 240) {
 }
 
 /**
- * La barra de arriba va en rojo, como el encabezado de la salida, solo en
- * Vender del barista mientras está en la calle; en lo demás, la del tema.
+ * La barra de arriba va en rojo con la cabecera de domicilios (dónde estás y
+ * el buscador): en el inicio del cliente y en Vender del barista (ahí sigue sin
+ * corte en la taza roja cuando está en la calle). En lo demás, la del tema.
  */
-export function redTop(route, live) {
-  return !!live && route?.view === 'barista' && (!route.tab || route.tab === 'vender');
+export function redTop(route) {
+  if (route?.view === 'home') return true;
+  return route?.view === 'barista' && (!route.tab || route.tab === 'vender');
 }
 
 /**

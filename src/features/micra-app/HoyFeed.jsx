@@ -12,6 +12,8 @@ import { postsToFeed, STATUS_LABEL } from './posts.js';
 import PostComposer from './PostComposer.jsx';
 import { useAds, AdPost } from './Ads.jsx';
 import { withAds } from './ads.js';
+import { daysLeftLabel } from './competencia.js';
+import { IconTrophy } from './icons.jsx';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -205,7 +207,7 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false })
         {item.media.kind === 'video'
           ? <video className="mapp-post-video" src={item.media.url} controls playsInline preload="metadata" />
           : <img src={item.media.url} alt={item.text ? `Foto de ${item.by}: ${item.text}` : `Foto de ${item.by}`} loading="lazy" />}
-        <span className="mapp-ig-tag">{item.media.kind === 'video' ? 'Video' : 'Foto'}</span>
+        <span className="mapp-ig-tag">{item.reto ? '🏆 Reto' : item.media.kind === 'video' ? 'Video' : 'Foto'}</span>
       </div>
     );
     return (
@@ -214,6 +216,23 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false })
         where={[item.where, ago(item.date)].filter(Boolean).join(' · ')} media={media} text={item.text}
         share={shareLink(`${item.by} en Micra`, url)}
         cta={item.baristaId === selfId ? null : <button type="button" className="mapp-link" onClick={() => go(baristaPath(item.baristaId))}>{client ? `Apartarle a ${item.by} ›` : `Ver a ${item.by} ›`}</button>}
+      />
+    );
+  }
+  if (item.kind === 'reto') {
+    const to = client ? '/micra/reto' : '/micra/barista/reto';
+    const media = (
+      <Tile tone="reto" tag="Competencia">
+        <IconTrophy />
+        <span className="mapp-ig-headline">{item.title}</span>
+        <span className="mapp-reto-days">{daysLeftLabel(item.daysLeft)}</span>
+      </Tile>
+    );
+    return (
+      <Shell
+        item={item} testid="feed-reto" av={<span className="mapp-post-av is-house" aria-hidden="true">🏆</span>} who="Reto de la semana"
+        where={`${item.entries === 1 ? '1 entrada' : `${item.entries} entradas`} · califica de 1 a 5 granos`} media={media} text={item.text}
+        cta={<button type="button" className="mapp-btn is-small" onClick={() => go(to)}>{client ? 'Ver y calificar' : 'Participar'}</button>}
       />
     );
   }
@@ -344,7 +363,7 @@ function CuratedForm({ current, onSaved, onCancel }) {
  * muro de Instagram bajo las historias): título h2 y sin su propio «Publicar»,
  * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
  */
-export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null }) {
+export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null, challenge }) {
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
   const baristas = list ?? fetched;
@@ -380,7 +399,16 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   const prices = readPrices(cfg);
   const extra = readCurated(cfg.micra_muro);
   const dayKey = bogota().day;
-  const items = useMemo(() => buildFeed({ baristas, selfId, me, prices, curated: [...extra, ...CURATED], dayKey, mode, posts }), [baristas, selfId, me?.streak?.count, me?.streak?.todayDone, me?.goalMet, me?.lessonsDone, mode, cfg, dayKey, posts]); // eslint-disable-line react-hooks/exhaustive-deps
+  // El reto de la semana: lo trae el inicio del cliente (`challenge`) o se pide aquí
+  const [retoFetched, setReto] = useState(null);
+  useEffect(() => {
+    if (challenge !== undefined) return undefined;
+    let alive = true;
+    api.challenge().then((d) => alive && setReto(d?.challenge ? { ...d.challenge, entries: (d.entries ?? []).length } : null)).catch(() => {});
+    return () => { alive = false; };
+  }, [challenge]);
+  const reto = challenge !== undefined ? challenge : retoFetched;
+  const items = useMemo(() => buildFeed({ baristas, selfId, me, prices, curated: [...extra, ...CURATED], dayKey, mode, posts, challenge: reto }), [baristas, selfId, me?.streak?.count, me?.streak?.todayDone, me?.goalMet, me?.lessonsDone, mode, cfg, dayKey, posts, reto]); // eslint-disable-line react-hooks/exhaustive-deps
   // «El día de …»: el recorrido de hoy, solo para quien lo grabó (sin tazas ni plata)
   const withDay = useMemo(() => {
     if (!me || !trip || (trip.path?.length ?? 0) < 2) return items;

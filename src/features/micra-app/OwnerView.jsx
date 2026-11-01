@@ -11,6 +11,8 @@ const LivePanel = lazy(() => import('./LiveMap.jsx'));
 const PostReview = lazy(() => import('./PostReview.jsx'));
 // Los anuncios «Patrocinado»: cargarlos, pausarlos y sus cifras
 const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
+// Competencia: abrir el reto de la semana y ver cómo va
+const ChallengePanel = lazy(() => import('./ChallengePanel.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle) y la activación automática: nadie aprueba a mano (activation.js y
@@ -98,6 +100,7 @@ export default function OwnerView({ onActAs, go }) {
       </dl>
 
       <Suspense fallback={null}><PostReview /></Suspense>
+      <Suspense fallback={null}><ChallengePanel /></Suspense>
       <Suspense fallback={null}><AdsPanel /></Suspense>
 
       {/* Lo que pide una mano: lo demás se activa solo */}

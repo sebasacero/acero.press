@@ -124,7 +124,7 @@ test('cliente: «Cerca de mí» manda una sola señal con la celda, sin su punto
   expect(sent.p_ref).toMatch(/^busco-/);
 
   // Con la ubicación ya dada, escoger una bebida dentro de los 15 min no manda otra
-  const drinks = page.getByRole('group', { name: '¿Qué te gustaría tomar hoy?' });
+  const drinks = page.getByRole('group', { name: '¿Qué te gustaría probar hoy?' });
   await drinks.getByRole('button', { name: /Perico/ }).click();
   await expect(drinks.getByRole('button', { name: /Perico/ })).toHaveAttribute('aria-pressed', 'true');
   await page.evaluate(() => new Promise((r) => { setTimeout(r, 500); }));

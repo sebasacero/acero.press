@@ -1272,7 +1272,7 @@
 /* Arriba: la marca a mano y el avión de los mensajes; las historias de los
    baristas; abajo la barra plana de cinco íconos sin texto */
 .mapp.is-client .mapp-top { border-bottom-color: transparent; }
-.mapp.is-client .mapp-brand-word { font: 400 1.65rem/1 'Permanent Marker', cursive; letter-spacing: 0; }
+.mapp.is-client .mapp-brand-word, .mapp.is-barista .mapp-brand-word { font: 400 1.65rem/1 'Permanent Marker', cursive; letter-spacing: 0; }
 .mapp-topicon { flex: none; margin-left: auto; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--m-fg); text-decoration: none; }
 .mapp-modes + .mapp-topicon { margin-left: 0; }
 .mapp-topicon svg { width: 27px; height: 27px; stroke-width: 1.9; }
@@ -1306,7 +1306,7 @@
 .mapp-tabs.is-ig .is-me.on .mapp-tab-av { box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 3.5px var(--m-fg); }
 .mapp.is-client .mapp-main { padding-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
 
-/* «¿Qué te gustaría tomar hoy?»: las bebidas en botones grandes, sin mapa (31 oct) */
+/* «¿Qué te gustaría probar hoy?»: las bebidas en botones grandes, sin mapa (31 oct) */
 .mapp-drinks { margin: 0 0 12px; }
 .mapp-drinks-q { margin: 0 0 12px; font: 800 1.5rem/1.1 'Archivo', sans-serif; letter-spacing: -.02em; }
 .mapp-drinks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -1444,3 +1444,114 @@
 .mapp-wanudge b { display: block; }
 .mapp-wanudge .mapp-muted { margin: 2px 0 8px; font-size: .88rem; }
 .mapp-palerts { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--m-line); }
+
+/* ── La cabecera del cliente: domicilios + red social (1 nov) ──────────
+   Arriba dónde estás («Café de la calle en Bogotá» o «Estás cerca de
+   Chapinero») y el buscador, como Rappi o DiDi; debajo las historias, como
+   Instagram. En la barra, la campana (sus apartados) y el avión (mensajes). */
+.mapp-chead { display: grid; gap: 10px; margin: -6px 0 14px; }
+.mapp-chead-loc { appearance: none; border: 0; background: none; padding: 0; display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--m-fg); text-align: left; cursor: pointer; }
+.mapp-chead-loc:disabled { cursor: default; }
+.mapp-chead-pin { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--m-cta) 12%, transparent); color: var(--m-cta); }
+.mapp-chead-pin svg { width: 21px; height: 21px; }
+.mapp-chead-txt { flex: 1; min-width: 0; display: grid; }
+.mapp-chead-txt small { font: 500 .7rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-chead-txt b { display: inline-flex; align-items: center; gap: 4px; font: 800 1.2rem/1.15 'Archivo', sans-serif; }
+.mapp-chead-txt b svg { width: 18px; height: 18px; stroke-width: 2.4; }
+.mapp-chead-near { flex: none; padding: 8px 12px; border-radius: 999px; background: var(--m-fg); color: var(--m-bg); font: 700 .78rem 'Archivo', sans-serif; }
+.mapp-search { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 6px 0 14px; border-radius: 16px; background: color-mix(in srgb, var(--m-fg) 6%, transparent); color: var(--m-soft); cursor: text; }
+.mapp-search svg { flex: none; width: 22px; height: 22px; }
+.mapp-search input { flex: 1; min-width: 0; height: 48px; border: 0; background: none; outline: none; color: var(--m-fg); font: 600 1rem 'Archivo', sans-serif; -webkit-appearance: none; appearance: none; }
+.mapp-search input::placeholder { color: var(--m-soft); font-weight: 500; }
+.mapp-search input::-webkit-search-cancel-button { display: none; }
+.mapp-search:focus-within { box-shadow: 0 0 0 2px var(--m-fg); }
+.mapp-search-x { flex: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--m-soft); font-size: 1.4rem; cursor: pointer; }
+.mapp-topicon.is-bell { position: relative; appearance: none; border: 0; background: none; padding: 0; cursor: pointer; }
+.mapp-topicon.is-bell + .mapp-topicon { margin-left: 0; }
+.mapp-topicon-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--m-cta); box-shadow: 0 0 0 2px var(--m-bg); }
+
+/* En el inicio del cliente y en Vender del barista (la versión que escogió el dueño, 1 nov): la barra y la cabecera en rojo, el buscador blanco */
+.mapp.is-redtop .mapp-top { background: var(--m-cta); border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.mapp.is-redtop .mapp-brand, .mapp.is-redtop .mapp-topicon { color: #fff; }
+.mapp.is-redtop .mapp-brand-word i { color: #F5EFE4; }
+.mapp.is-redtop .mapp-topicon-dot { background: #fff; box-shadow: 0 0 0 2px var(--m-cta); }
+.mapp.is-redtop .mapp-chead { margin: -18px -16px 14px; padding: 4px 16px 18px; background: var(--m-cta); border-radius: 0 0 26px 26px; box-shadow: 0 14px 26px -18px rgba(222, 27, 27, .8); }
+.mapp.is-redtop .mapp-chead-loc { color: #fff; }
+.mapp.is-redtop .mapp-chead-pin { background: rgba(255, 255, 255, .2); color: #fff; }
+.mapp.is-redtop .mapp-chead-txt small { color: rgba(255, 255, 255, .85); }
+.mapp.is-redtop .mapp-chead-near { background: #fff; color: var(--m-cta); }
+.mapp.is-redtop .mapp-search { background: #fff; color: #5D6475; box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .45); }
+.mapp.is-redtop .mapp-search input { color: #14161B; }
+.mapp.is-redtop .mapp-search:focus-within { box-shadow: 0 0 0 2px #14161B; }
+
+/* La cabecera del barista: su punto y «Mi QR» en una fila; en la calle sigue sin corte en la taza roja */
+.mapp-chead-row { display: flex; align-items: center; gap: 10px; }
+.mapp-chead-loc.is-static { flex: 1; min-width: 0; cursor: default; }
+.mapp-chead-loc.is-static .mapp-chead-txt b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mapp.is-redtop .mapp-chead.is-joined { margin-bottom: 0; padding-bottom: 6px; border-radius: 0; box-shadow: none; }
+.mapp-chead.is-joined + .mapp-sellhead { margin-top: 0; padding-top: 8px; }
+.mapp-dsearch-h { margin: 14px 0 4px; font: 700 .72rem 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--m-soft); }
+
+/* ── Competencia: el reto de la semana (1 nov) ───────────────────────── */
+.mapp-reto { display: grid; gap: 12px; }
+.mapp-reto-head { display: flex; align-items: center; gap: 12px; }
+.mapp-reto-head .mapp-title { margin: 2px 0 0; }
+.mapp-reto-cup { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: #1F2452; color: #F5EFE4; }
+.mapp-reto-cup svg { width: 30px; height: 30px; }
+.mapp-reto-card p { margin: 0 0 8px; }
+.mapp-reto-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font: 500 .74rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-reto-days { padding: 4px 9px; border-radius: 999px; background: #1F2452; color: #F5EFE4; font-weight: 700; }
+.mapp-reto-days.is-hot { background: var(--m-cta); color: #fff; }
+.mapp-reto-prize { font-weight: 600; }
+.mapp-reto-mine { display: grid; gap: 2px; margin: 10px 0 0; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--m-green) 14%, transparent); }
+.mapp-reto-mine small { color: var(--m-soft); }
+.mapp-reto-card .mapp-btn.is-cta { margin-top: 8px; }
+.mapp-reto-empty p { margin: 0 0 6px; }
+/* El podio: el 1.º al centro y más grande */
+.mapp-podium { display: grid; grid-template-columns: 1fr 1.25fr 1fr; align-items: end; gap: 8px; }
+.mapp-podium-item { appearance: none; border: 0; background: var(--m-glass); box-shadow: var(--m-shadow); border-radius: 18px; padding: 10px 8px 12px; display: grid; justify-items: center; gap: 4px; color: var(--m-fg); cursor: pointer; }
+.mapp-podium-item.is-1 { order: 2; padding-top: 14px; }
+.mapp-podium-item.is-2 { order: 1; }
+.mapp-podium-item.is-3 { order: 3; }
+.mapp-podium-rank { font-size: 1.4rem; line-height: 1; }
+.mapp-podium-photo { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #F5EFE4; color: #1F2452; box-shadow: 0 0 0 3px var(--m-bg), 0 0 0 5px #1F2452; }
+.mapp-podium-item.is-1 .mapp-podium-photo { width: 84px; height: 84px; box-shadow: 0 0 0 3px var(--m-bg), 0 0 0 5px var(--m-cta); }
+.mapp-podium-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-podium-item b { font: 800 .9rem 'Archivo', sans-serif; margin-top: 4px; }
+.mapp-podium-item small { font: 500 .66rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+/* Las entradas, de a dos como en Instagram */
+.mapp-reto-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mapp-reto-grid button { appearance: none; border: 0; background: var(--m-glass); box-shadow: var(--m-shadow); border-radius: 18px; padding: 0; width: 100%; overflow: hidden; display: grid; color: var(--m-fg); text-align: left; cursor: pointer; }
+.mapp-reto-photo { position: relative; aspect-ratio: 1; display: grid; place-items: center; background: #F5EFE4; color: #1F2452; font: 800 1.4rem 'Archivo', sans-serif; }
+.mapp-reto-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-reto-rank { position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 999px; background: #1F2452; color: #F5EFE4; font: 800 .7rem 'JetBrains Mono', monospace; font-style: normal; }
+.mapp-reto-tag { position: absolute; right: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px; background: rgba(22, 24, 31, .78); color: #fff; font: 700 .62rem 'JetBrains Mono', monospace; font-style: normal; }
+.mapp-reto-tag.is-voted { background: var(--m-cta); }
+.mapp-reto-who { display: grid; padding: 8px 10px 10px; }
+.mapp-reto-who b { font: 800 .9rem 'Archivo', sans-serif; }
+.mapp-reto-who small { font: 500 .68rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-reto-wins { display: flex; align-items: center; gap: 12px; }
+.mapp-reto-wins span { font-size: 1.8rem; }
+.mapp-reto-wins p { margin: 0; display: grid; }
+.mapp-reto-wins small { color: var(--m-soft); }
+.mapp-levelchip.is-rank { background: #1F2452; }
+/* La entrada abierta y los granos */
+.mapp-entry .mapp-ig-head { padding: 6px 0 10px; }
+.mapp-entry .mapp-ig-head .mapp-link { margin-left: auto; }
+.mapp-entry-photo { border-radius: 18px; overflow: hidden; background: #F5EFE4; display: grid; place-items: center; aspect-ratio: 4 / 5; max-height: 52vh; font-size: 2.4rem; }
+.mapp-entry-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-entry .mapp-post-text { margin: 10px 0 0; }
+.mapp-entry-vote { margin-top: 12px; display: grid; gap: 6px; justify-items: start; }
+.mapp-beans { display: inline-flex; gap: 4px; }
+.mapp-beans button, .mapp-beans i { appearance: none; border: 0; background: none; padding: 0; color: var(--m-line); display: grid; place-items: center; }
+.mapp-beans button { width: 44px; height: 44px; border-radius: 12px; cursor: pointer; }
+.mapp-beans.is-big svg { width: 34px; height: 34px; }
+.mapp-beans.is-small svg { width: 16px; height: 16px; }
+.mapp-beans .on { color: var(--m-cta); }
+.mapp-beans button:active { background: color-mix(in srgb, var(--m-cta) 12%, transparent); }
+/* La burbuja del reto en las historias y la tarjeta en Hoy */
+.mapp-hist.is-reto .mapp-hist-ring { padding: 3px; background: #1F2452; }
+.mapp-hist.is-reto .mapp-hist-av { background: #1F2452; color: #F5EFE4; }
+.mapp-ig-tile.is-reto { flex-direction: column; gap: 6px; background: radial-gradient(90% 80% at 50% 0%, #2A3170, #1F2452 70%); color: #F5EFE4; aspect-ratio: 16 / 9; padding: 20px; text-align: center; }
+.mapp-ig-tile.is-reto .mapp-ig-headline { text-align: center; }
+.mapp-ig-tile.is-reto .mapp-reto-days { background: #F5EFE4; color: #1F2452; }

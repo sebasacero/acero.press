@@ -113,3 +113,11 @@ test('lo que publican los baristas va después del precio (y de los logros), ant
   assert.equal(chipCounts(c).publicaciones, 1);
   assert.deepEqual(filterFeed(c, 'publicaciones').map((i) => i.id), ['post-1']);
 });
+
+test('el reto de la semana va justo después del precio', () => {
+  const f = buildFeed({ baristas: B, challenge: { id: 'c1', title: 'Arte latte: corazón', brief: 'El más limpio', days_left: 4, entries: 2 } });
+  assert.equal(f[1].kind, 'reto');
+  assert.equal(f[1].title, 'Arte latte: corazón');
+  assert.equal(f[1].daysLeft, 4);
+  assert.equal(buildFeed({ baristas: B, challenge: null }).some((i) => i.kind === 'reto'), false);
+});

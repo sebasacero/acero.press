@@ -123,11 +123,17 @@ export const postReview = (id, approve) => call('micra_post_review', { p_id: id,
 export const postRemove = (id) => call('micra_post_remove', { p_id: id });
 
 /** Sube el archivo a la carpeta del barista y lo deja en revisión. */
-export async function publishPost({ path, blob, type, kind, caption, asId }) {
+export async function publishPost({ path, blob, type, kind, caption, asId, challengeId = null }) {
   const { error } = await supabase.storage.from(POSTS_BUCKET).upload(path, blob, { contentType: type, upsert: false });
   if (error) throw Object.assign(new Error(`No se pudo subir: ${error.message}`), { code: error.statusCode });
-  return call('micra_post_add', { p_kind: kind, p_path: path, p_caption: caption || null, ...as(asId) });
+  return call('micra_post_add', { p_kind: kind, p_path: path, p_caption: caption || null, ...as(asId), ...(challengeId ? { p_challenge_id: challengeId } : {}) });
 }
+
+// Competencia: el reto de la semana (20261101120000_micra_competencia.sql)
+export const challenge = (ref = null) => call('micra_challenge', { p_ref: ref });
+export const vote = (postId, ref, score) => call('micra_vote', { p_post_id: postId, p_ref: ref, p_score: score });
+export const challengesAdmin = () => call('micra_challenges_admin');
+export const challengeSave = (id, ch) => call('micra_challenge_save', { p_id: id ?? null, p_ch: ch });
 
 /** URLs firmadas (1 hora) de los archivos: ruta → URL. El bucket es privado. */
 export async function postUrls(paths) {
