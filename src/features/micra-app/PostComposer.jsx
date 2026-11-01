@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as api from './api.js';
 import { postKind, mediaError, postPath, cleanCaption, MAX_CAPTION } from './posts.js';
+import Juez from './Juez.jsx';
 
 // «Publicar en Micra»: el barista escoge una foto o un video (galería o cámara
 // del celular), le pone su texto y lo manda a revisión. La foto se achica en el
@@ -33,6 +34,9 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [sent, setSent] = useState(false);
+  // El juez de arte latte: su puntaje va con la entrada (solo en los retos de arte latte)
+  const [judge, setJudge] = useState(null);
+  const judging = challenge?.kind === 'arte_latte';
   const input = useRef(null);
   const kind = postKind(file);
 
@@ -61,7 +65,7 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
       const type = kind === 'foto' ? (blob.type || 'image/jpeg') : file.type;
       const path = postPath(selfId, type);
       if (!path) throw new Error('Ese tipo de archivo no se puede subir.');
-      await api.publishPost({ path, blob, type, kind, caption: cleanCaption(caption), asId, challengeId: challenge?.id ?? null });
+      await api.publishPost({ path, blob, type, kind, caption: cleanCaption(caption), asId, challengeId: challenge?.id ?? null, judge: judging ? judge : null });
       setSent(true);
       onSent?.();
     } catch (e) {
@@ -96,6 +100,10 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
                 <button type="button" className="mapp-link" onClick={() => input.current?.click()} disabled={busy}>Cambiar</button>
               </div>
             ) : (
+              null
+            )}
+            {preview && judging && kind === 'foto' && <Juez file={file} onResult={setJudge} />}
+            {!preview && (
               <button type="button" className="mapp-compose-pick" onClick={() => input.current?.click()}>
                 <span aria-hidden="true">📸</span>
                 <b>{challenge ? 'Escoger la foto' : 'Escoger foto o video'}</b>

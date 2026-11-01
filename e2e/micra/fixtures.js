@@ -245,7 +245,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     // Competencia (20261101120000_micra_competencia.sql), en memoria: M.challenges y M.votes[postId] = { hash: score }
-    const cfn = p.match(/\/rpc\/(micra_challenge|micra_vote|micra_challenges_admin|micra_challenge_save)$/)?.[1];
+    const cfn = p.match(/\/rpc\/(micra_challenge|micra_vote|micra_challenges_admin|micra_challenge_save|micra_judge_set)$/)?.[1];
     if (cfn) {
       const M = micra;
       M.challenges ??= [];
@@ -265,13 +265,14 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         const h = now && data?.p_ref ? hashOf(data.p_ref, now) : null;
         const entries = now ? M.posts.filter((x) => x.challenge_id === now.id && x.status === 'approved' && M.baristas.find((b) => b.id === x.tintero_id)?.public !== false).map((x) => {
           const s = stats(x.id);
-          return { id: x.id, tintero_id: x.tintero_id, name: nameOf(x.tintero_id), media_path: x.media_path, caption: x.caption, created_at: x.created_at, votes: s.n, avg: s.avg, my_score: h ? M.votes[x.id]?.[h] ?? null : null, mine: !!me && me.id === x.tintero_id };
+          const js = M.judgeScores?.[x.id];
+          return { id: x.id, tintero_id: x.tintero_id, name: nameOf(x.tintero_id), media_path: x.media_path, caption: x.caption, created_at: x.created_at, votes: s.n, avg: s.avg, my_score: h ? M.votes[x.id]?.[h] ?? null : null, mine: !!me && me.id === x.tintero_id, judge: x.judge ?? null, team: js?.total ?? null, team_n: js ? 1 : 0 };
         }) : [];
         const mineEntry = now && me ? M.posts.find((x) => x.challenge_id === now.id && x.tintero_id === me.id && ['pending', 'approved'].includes(x.status)) : null;
         const past = M.challenges.filter((c) => c.ends_on < day).sort((a, b) => b.ends_on.localeCompare(a.ends_on)).slice(0, 6).map((c) => { const w = winner(c); return { id: c.id, title: c.title, ends_on: c.ends_on, winner: w ? { post_id: w.x.id, tintero_id: w.x.tintero_id, name: nameOf(w.x.tintero_id), media_path: w.x.media_path, avg: w.s.avg, votes: w.s.n } : null }; });
         return json(200, {
           challenge: now ? { ...now, days_left: daysLeft(now) } : null, entries,
-          my_entry: mineEntry ? { id: mineEntry.id, status: mineEntry.status, media_path: mineEntry.media_path } : null,
+          my_entry: mineEntry ? { id: mineEntry.id, status: mineEntry.status, media_path: mineEntry.media_path, judge: mineEntry.judge ?? null } : null,
           past, my_wins: me ? past.filter((c) => c.winner?.tintero_id === me.id).length : 0,
         });
       }
@@ -285,6 +286,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         return json(200, { post_id: x.id, my_score: data.p_score, votes: s.n, avg: s.avg });
       }
       if (!M.admin) return fail(403, '42501', 'Solo el equipo maneja los retos.');
+      if (cfn === 'micra_judge_set') {
+        const W = { contraste: 20, definicion: 20, simetria: 20, centrado: 15, tamano: 15, limpieza: 10 };
+        const total = Math.round(Object.entries(W).reduce((a, [k, w]) => a + Number(data.p_scores[k]) * w, 0)) / 10;
+        (M.judgeScores ??= {})[data.p_post_id] = { scores: data.p_scores, total };
+        return json(200, { post_id: data.p_post_id, total, team: total, team_n: 1 });
+      }
       if (cfn === 'micra_challenges_admin') {
         return json(200, M.challenges.map((c) => ({ ...c, entries: M.posts.filter((x) => x.challenge_id === c.id && x.status === 'approved').length, pending: M.posts.filter((x) => x.challenge_id === c.id && x.status === 'pending').length, votes: M.posts.filter((x) => x.challenge_id === c.id).reduce((a, x) => a + stats(x.id).n, 0), state: day < c.starts_on ? 'soon' : day > c.ends_on ? 'done' : 'open' })));
       }
@@ -307,7 +314,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         if (!me) return fail(403, '42501', 'Enlaza tu cuenta de barista primero.');
         if (!String(data.p_path).startsWith(`${me.id}/`)) return fail(403, '42501', 'Ese archivo no es tuyo.');
         if (data.p_challenge_id && M.posts.some((x) => x.tintero_id === me.id && x.challenge_id === data.p_challenge_id && ['pending', 'approved'].includes(x.status))) return fail(409, '23505', 'Ya tienes una entrada en este reto.');
-        const r = { id: `post-${M.posts.length + 1}`, tintero_id: me.id, kind: data.p_kind, media_path: data.p_path, caption: data.p_caption, status: 'pending', created_at: new Date().toISOString(), challenge_id: data.p_challenge_id ?? null };
+        const r = { id: `post-${M.posts.length + 1}`, tintero_id: me.id, kind: data.p_kind, media_path: data.p_path, caption: data.p_caption, status: 'pending', created_at: new Date().toISOString(), challenge_id: data.p_challenge_id ?? null, judge: data.p_judge ?? null };
         M.posts.push(r);
         return json(200, r);
       }
@@ -317,7 +324,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       }
       if (pfn === 'micra_posts_mine') return json(200, me ? M.posts.filter((r) => r.tintero_id === me.id && r.status !== 'removed').slice().reverse() : []);
       if (!M.admin && (pfn === 'micra_posts_pending' || pfn === 'micra_post_review')) return fail(403, '42501', 'Solo el equipo revisa las publicaciones.');
-      if (pfn === 'micra_posts_pending') return json(200, M.posts.filter((r) => r.status === 'pending').map(named).map((r) => ({ ...r, challenge: (M.challenges ?? []).find((c) => c.id === r.challenge_id)?.title ?? null })));
+      if (pfn === 'micra_posts_pending') return json(200, M.posts.filter((r) => r.status === 'pending').map(named).map((r) => ({ ...r, challenge: (M.challenges ?? []).find((c) => c.id === r.challenge_id)?.title ?? null, my_judge: M.judgeScores?.[r.id]?.scores ?? null })));
       const r = M.posts.find((x) => x.id === data.p_id);
       if (pfn === 'micra_post_review') {
         if (r?.status !== 'pending') return fail(404, 'P0002', 'Esa publicación ya se revisó o no existe.');

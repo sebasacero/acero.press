@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './api.js';
+import { CRITERIA } from './arteLatte.js';
+import { JudgeBadge } from './Juez.jsx';
 
 // Equipo › Hoy: lo que los baristas mandaron para el muro de Hoy y espera
 // revisión (20261031160000_micra_barista_posts.sql). Solo sale lo aprobado; si
@@ -9,6 +11,34 @@ const hace = (iso) => {
   const min = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
   return min < 60 ? `hace ${min} min` : min < 1440 ? `hace ${Math.round(min / 60)} h` : `hace ${Math.round(min / 1440)} días`;
 };
+
+/** El modo jurado del equipo: los seis criterios de 0 a 10, como en las competencias. */
+function Jurado({ post, onSaved }) {
+  const [v, setV] = useState(() => Object.fromEntries(CRITERIA.map((c) => [c.id, Number(post.my_judge?.[c.id] ?? post.judge?.scores?.[c.id] ?? 5)])));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const total = Math.round(CRITERIA.reduce((a, c) => a + v[c.id] * c.weight, 0)) / 10;
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try { await api.judgeSet(post.id, v); onSaved?.(); } catch (e) { setError(e.missing ? 'El modo jurado abre muy pronto.' : e.message); }
+    setBusy(false);
+  };
+  return (
+    <div className="mapp-jurado" data-testid="jurado">
+      <p className="mapp-cota">Como jurado · {total.toLocaleString('es-CO', { maximumFractionDigits: 1 })}</p>
+      {CRITERIA.map((c) => (
+        <label key={c.id}>
+          <span>{c.label}</span>
+          <input type="range" min="0" max="10" step="0.5" value={v[c.id]} onChange={(e) => setV((o) => ({ ...o, [c.id]: Number(e.target.value) }))} aria-label={c.label} />
+          <output>{v[c.id].toLocaleString('es-CO', { maximumFractionDigits: 1 })}</output>
+        </label>
+      ))}
+      {error && <p className="mapp-error" role="alert">{error}</p>}
+      <button type="button" className="mapp-btn is-small" onClick={save} disabled={busy} data-testid="jurado-save">{busy ? 'Guardando…' : post.my_judge ? 'Cambiar mi calificación' : 'Guardar calificación'}</button>
+    </div>
+  );
+}
 
 export default function PostReview() {
   const [list, setList] = useState(null);
@@ -53,11 +83,13 @@ export default function PostReview() {
             <div className="mapp-review-copy">
               <b>{p.name}</b>
               <small>{hace(p.created_at)}{p.challenge ? ` · 🏆 Reto: ${p.challenge}` : ''}{p.public ? '' : ' · no sale en el mapa: no se verá aunque la apruebes'}</small>
+              {p.judge?.score != null && <p className="mapp-fine">Juez Micra: <JudgeBadge score={p.judge.score} small /></p>}
               {p.caption && <p>{p.caption}</p>}
               <span className="mapp-row-btns">
                 <button type="button" className="mapp-btn is-small is-cta" onClick={() => review(p.id, true)} disabled={busy === p.id}>Aprobar</button>
                 <button type="button" className="mapp-btn is-small is-ghost" onClick={() => review(p.id, false)} disabled={busy === p.id}>No publicar</button>
               </span>
+              {p.challenge && <Jurado post={p} onSaved={load} />}
             </div>
           </li>
         ))}
