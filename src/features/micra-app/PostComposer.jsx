@@ -24,7 +24,8 @@ export async function shrinkPhoto(file, max = 1600) {
   }
 }
 
-export default function PostComposer({ selfId, asId = null, onClose, onSent }) {
+/** `challenge`: la entrada al reto de la semana (solo foto; una por barista). */
+export default function PostComposer({ selfId, asId = null, onClose, onSent, challenge = null }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [caption, setCaption] = useState('');
@@ -46,7 +47,7 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent }) {
     const f = e.target.files?.[0] ?? null;
     e.target.value = '';
     if (!f) return;
-    const err = mediaError(f);
+    const err = mediaError(f) ?? (challenge && postKind(f) === 'video' ? 'Al reto se entra con una foto.' : null);
     setError(err);
     if (err) return;
     setFile(f);
@@ -60,7 +61,7 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent }) {
       const type = kind === 'foto' ? (blob.type || 'image/jpeg') : file.type;
       const path = postPath(selfId, type);
       if (!path) throw new Error('Ese tipo de archivo no se puede subir.');
-      await api.publishPost({ path, blob, type, kind, caption: cleanCaption(caption), asId });
+      await api.publishPost({ path, blob, type, kind, caption: cleanCaption(caption), asId, challengeId: challenge?.id ?? null });
       setSent(true);
       onSent?.();
     } catch (e) {
@@ -70,22 +71,23 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent }) {
   };
 
   return (
-    <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Publicar en Micra" data-testid="post-composer">
+    <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label={challenge ? 'Tu entrada al reto' : 'Publicar en Micra'} data-testid="post-composer">
       <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" tabIndex={-1} onClick={() => !busy && onClose()} />
       <section className="mapp-sheet is-scroll">
         <i className="mapp-sheet-handle" aria-hidden="true" />
         <header className="mapp-sheet-head">
-          <h2 className="mapp-title is-small">Publicar en Micra</h2>
+          <h2 className="mapp-title is-small">{challenge ? 'Tu entrada al reto' : 'Publicar en Micra'}</h2>
           <button type="button" className="mapp-link" onClick={onClose} disabled={busy}>{sent ? 'Listo' : 'Cancelar'}</button>
         </header>
         {sent ? (
           <div className="mapp-compose-done" role="status" data-testid="post-sent">
             <span aria-hidden="true">✨</span>
-            <p><b>¡Enviada!</b> El equipo la revisa y sale en Hoy, donde la ven tus clientes y los otros baristas.</p>
+            <p><b>¡Enviada!</b> {challenge ? 'El equipo la revisa y entra al reto, donde todos la califican.' : 'El equipo la revisa y sale en Hoy, donde la ven tus clientes y los otros baristas.'}</p>
           </div>
         ) : (
           <>
-            <input ref={input} type="file" accept="image/*,video/*" onChange={pick} hidden data-testid="post-file" />
+            {challenge && <p className="mapp-cota">🏆 {challenge.title}</p>}
+            <input ref={input} type="file" accept={challenge ? 'image/*' : 'image/*,video/*'} onChange={pick} hidden data-testid="post-file" />
             {preview ? (
               <div className="mapp-compose-media">
                 {kind === 'video'
@@ -96,8 +98,8 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent }) {
             ) : (
               <button type="button" className="mapp-compose-pick" onClick={() => input.current?.click()}>
                 <span aria-hidden="true">📸</span>
-                <b>Escoger foto o video</b>
-                <small>De tu galería o con la cámara · video hasta 25 MB</small>
+                <b>{challenge ? 'Escoger la foto' : 'Escoger foto o video'}</b>
+                <small>{challenge ? 'De tu galería o con la cámara · solo una entrada' : 'De tu galería o con la cámara · video hasta 25 MB'}</small>
               </button>
             )}
             <label className="mapp-field">

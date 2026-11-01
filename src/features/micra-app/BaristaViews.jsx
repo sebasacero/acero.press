@@ -35,6 +35,7 @@ const LivePanel = lazy(() => import('./LiveMap.jsx'));
 const Aprende = lazy(() => import('./Aprende.jsx'));
 // El muro de Hoy (precios, videos, puestos, recetas, noticias)
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
+const Competencia = lazy(() => import('./Competencia.jsx'));
 const Party = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Party })));
 const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.DayStory })));
 const Moment = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Moment })));
@@ -707,6 +708,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         />
       </Suspense>
     );
+  } else if (tab === 'reto') {
+    body = <Suspense fallback={<Cargando fig="aeropress" />}><Competencia go={go} audience="barista" selfId={day.id} asId={asId} /></Suspense>;
   } else if (tab === 'qr') {
     body = <Suspense fallback={<Cargando fig="caminando" />}><QrPage url={platform.siteUrl(baristaPath(day.id))} name={first} mode={mode} go={go} /></Suspense>;
   } else if (tab === 'aprende') {

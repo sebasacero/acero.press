@@ -1491,3 +1491,67 @@
 .mapp.is-redtop .mapp-chead.is-joined { margin-bottom: 0; padding-bottom: 6px; border-radius: 0; box-shadow: none; }
 .mapp-chead.is-joined + .mapp-sellhead { margin-top: 0; padding-top: 8px; }
 .mapp-dsearch-h { margin: 14px 0 4px; font: 700 .72rem 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--m-soft); }
+
+/* ── Competencia: el reto de la semana (1 nov) ───────────────────────── */
+.mapp-reto { display: grid; gap: 12px; }
+.mapp-reto-head { display: flex; align-items: center; gap: 12px; }
+.mapp-reto-head .mapp-title { margin: 2px 0 0; }
+.mapp-reto-cup { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: #1F2452; color: #F5EFE4; }
+.mapp-reto-cup svg { width: 30px; height: 30px; }
+.mapp-reto-card p { margin: 0 0 8px; }
+.mapp-reto-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font: 500 .74rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-reto-days { padding: 4px 9px; border-radius: 999px; background: #1F2452; color: #F5EFE4; font-weight: 700; }
+.mapp-reto-days.is-hot { background: var(--m-cta); color: #fff; }
+.mapp-reto-prize { font-weight: 600; }
+.mapp-reto-mine { display: grid; gap: 2px; margin: 10px 0 0; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--m-green) 14%, transparent); }
+.mapp-reto-mine small { color: var(--m-soft); }
+.mapp-reto-card .mapp-btn.is-cta { margin-top: 8px; }
+.mapp-reto-empty p { margin: 0 0 6px; }
+/* El podio: el 1.º al centro y más grande */
+.mapp-podium { display: grid; grid-template-columns: 1fr 1.25fr 1fr; align-items: end; gap: 8px; }
+.mapp-podium-item { appearance: none; border: 0; background: var(--m-glass); box-shadow: var(--m-shadow); border-radius: 18px; padding: 10px 8px 12px; display: grid; justify-items: center; gap: 4px; color: var(--m-fg); cursor: pointer; }
+.mapp-podium-item.is-1 { order: 2; padding-top: 14px; }
+.mapp-podium-item.is-2 { order: 1; }
+.mapp-podium-item.is-3 { order: 3; }
+.mapp-podium-rank { font-size: 1.4rem; line-height: 1; }
+.mapp-podium-photo { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #F5EFE4; color: #1F2452; box-shadow: 0 0 0 3px var(--m-bg), 0 0 0 5px #1F2452; }
+.mapp-podium-item.is-1 .mapp-podium-photo { width: 84px; height: 84px; box-shadow: 0 0 0 3px var(--m-bg), 0 0 0 5px var(--m-cta); }
+.mapp-podium-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-podium-item b { font: 800 .9rem 'Archivo', sans-serif; margin-top: 4px; }
+.mapp-podium-item small { font: 500 .66rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+/* Las entradas, de a dos como en Instagram */
+.mapp-reto-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mapp-reto-grid button { appearance: none; border: 0; background: var(--m-glass); box-shadow: var(--m-shadow); border-radius: 18px; padding: 0; width: 100%; overflow: hidden; display: grid; color: var(--m-fg); text-align: left; cursor: pointer; }
+.mapp-reto-photo { position: relative; aspect-ratio: 1; display: grid; place-items: center; background: #F5EFE4; color: #1F2452; font: 800 1.4rem 'Archivo', sans-serif; }
+.mapp-reto-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-reto-rank { position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 999px; background: #1F2452; color: #F5EFE4; font: 800 .7rem 'JetBrains Mono', monospace; font-style: normal; }
+.mapp-reto-tag { position: absolute; right: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px; background: rgba(22, 24, 31, .78); color: #fff; font: 700 .62rem 'JetBrains Mono', monospace; font-style: normal; }
+.mapp-reto-tag.is-voted { background: var(--m-cta); }
+.mapp-reto-who { display: grid; padding: 8px 10px 10px; }
+.mapp-reto-who b { font: 800 .9rem 'Archivo', sans-serif; }
+.mapp-reto-who small { font: 500 .68rem 'JetBrains Mono', monospace; color: var(--m-soft); }
+.mapp-reto-wins { display: flex; align-items: center; gap: 12px; }
+.mapp-reto-wins span { font-size: 1.8rem; }
+.mapp-reto-wins p { margin: 0; display: grid; }
+.mapp-reto-wins small { color: var(--m-soft); }
+.mapp-levelchip.is-rank { background: #1F2452; }
+/* La entrada abierta y los granos */
+.mapp-entry .mapp-ig-head { padding: 6px 0 10px; }
+.mapp-entry .mapp-ig-head .mapp-link { margin-left: auto; }
+.mapp-entry-photo { border-radius: 18px; overflow: hidden; background: #F5EFE4; display: grid; place-items: center; aspect-ratio: 4 / 5; max-height: 52vh; font-size: 2.4rem; }
+.mapp-entry-photo img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-entry .mapp-post-text { margin: 10px 0 0; }
+.mapp-entry-vote { margin-top: 12px; display: grid; gap: 6px; justify-items: start; }
+.mapp-beans { display: inline-flex; gap: 4px; }
+.mapp-beans button, .mapp-beans i { appearance: none; border: 0; background: none; padding: 0; color: var(--m-line); display: grid; place-items: center; }
+.mapp-beans button { width: 44px; height: 44px; border-radius: 12px; cursor: pointer; }
+.mapp-beans.is-big svg { width: 34px; height: 34px; }
+.mapp-beans.is-small svg { width: 16px; height: 16px; }
+.mapp-beans .on { color: var(--m-cta); }
+.mapp-beans button:active { background: color-mix(in srgb, var(--m-cta) 12%, transparent); }
+/* La burbuja del reto en las historias y la tarjeta en Hoy */
+.mapp-hist.is-reto .mapp-hist-ring { padding: 3px; background: #1F2452; }
+.mapp-hist.is-reto .mapp-hist-av { background: #1F2452; color: #F5EFE4; }
+.mapp-ig-tile.is-reto { flex-direction: column; gap: 6px; background: radial-gradient(90% 80% at 50% 0%, #2A3170, #1F2452 70%); color: #F5EFE4; aspect-ratio: 16 / 9; padding: 20px; text-align: center; }
+.mapp-ig-tile.is-reto .mapp-ig-headline { text-align: center; }
+.mapp-ig-tile.is-reto .mapp-reto-days { background: #F5EFE4; color: #1F2452; }

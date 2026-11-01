@@ -254,6 +254,7 @@ export const baristaPath = (id) => `/micra/b/${id}`;
  *   /micra/b/<id>        un barista (lo que abre el QR del termo)
  *   /micra/apartados     mis apartados de hoy
  *   /micra/hoy           el muro del café para el cliente (el mismo Hoy del barista, sin lo suyo)
+ *   /micra/reto          Competencia: el reto de la semana (el barista: /micra/barista/reto)
  *   /micra/barista       el modo barista (entrar y enlazar si falta), pestaña Vender: su inicio
  *   /micra/barista/hoy · /aprende · /cuenta   sus otras pestañas (/vender también abre Vender)
  *   /micra/barista/qr    su QR «Pídeme por Micra» (desde Mi perfil)
@@ -265,9 +266,11 @@ export function parseRoute(pathname) {
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/hoy') return { view: 'feed' };
+  // Competencia: el reto de la semana, para el cliente (el barista lo tiene en /micra/barista/reto)
+  if (p === '/micra/reto') return { view: 'reto' };
   if (p === '/micra/barista') return { view: 'barista' };
   // Las pestañas del barista: el muro de hoy, aprender y su plata (Vender es /micra/barista)
-  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil|qr)$/);
+  const t = p.match(/^\/micra\/barista\/(vender|hoy|aprende|cuenta|perfil|qr|reto)$/);
   if (t) return { view: 'barista', tab: t[1] };
   if (p === '/micra/equipo') return { view: 'owner' };
   // «Mi perfil»: el del cliente (lo que guarda el celular) y el del equipo (su sesión)

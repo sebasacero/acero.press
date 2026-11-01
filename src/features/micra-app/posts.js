@@ -56,7 +56,7 @@ export function postsToFeed(rows, urls = {}) {
     .map((r) => ({
       id: `post-${r.id}`, kind: 'publicaciones', postId: r.id, baristaId: r.tintero_id,
       by: String(r.name ?? '').trim() || 'Barista', where: r.referencia || null,
-      media: { kind: r.kind, url: urls[r.media_path] }, text: cleanCaption(r.caption) || null,
+      media: { kind: r.kind, url: urls[r.media_path] }, text: cleanCaption(r.caption) || null, reto: !!r.challenge_id,
       date: bogotaDay(r.created_at),
     }));
 }

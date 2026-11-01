@@ -172,8 +172,10 @@ export function photoIdeas(dayKey = '', mode = null) {
  * revisado por el equipo, lo más nuevo primero; posts.js), los puestos con su
  * horario y lo de la casa y lo curado, lo más nuevo primero.
  */
-export function buildFeed({ baristas = [], selfId = null, me = null, prices = {}, house = HOUSE, curated = CURATED, dayKey = '', mode = null, posts = [] } = {}) {
+export function buildFeed({ baristas = [], selfId = null, me = null, prices = {}, house = HOUSE, curated = CURATED, dayKey = '', mode = null, posts = [], challenge = null } = {}) {
   const items = [{ id: 'precio', kind: 'precios', prices, study: STUDY_TINTO }];
+  // El reto de la semana (Competencia), justo después del precio
+  if (challenge?.id && challenge.title) items.push({ id: `reto-${challenge.id}`, kind: 'reto', title: challenge.title, text: challenge.brief ?? null, daysLeft: challenge.days_left, entries: challenge.entries ?? 0 });
   items.push(...achievements(me));
   if (me) items.push(...photoIdeas(dayKey, mode));
   items.push(...posts);

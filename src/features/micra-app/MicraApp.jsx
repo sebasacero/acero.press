@@ -25,6 +25,8 @@ const OwnerProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m
 // Hoy del cliente: el mismo muro del barista (cargado aparte), sin logros ni ideas de foto
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const ClientPublish = lazy(() => import('./HoyFeed.jsx').then((m) => ({ default: m.ClientPublish })));
+// Competencia: el reto de la semana (el cliente califica; el barista lo tiene en su modo)
+const Competencia = lazy(() => import('./Competencia.jsx'));
 
 /** El avión de papel de arriba (como los mensajes de Instagram): el WhatsApp del equipo. */
 function TeamChat() {
@@ -198,6 +200,7 @@ export default function MicraApp() {
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" /></Suspense>;
+  else if (route.view === 'reto') body = <Suspense fallback={<Cargando />}><Competencia go={go} audience="client" /></Suspense>;
   else if (route.view === 'me') body = who.loading ? <Cargando /> : <Suspense fallback={<Cargando />}><ClientProfile go={go} who={who} /></Suspense>;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;

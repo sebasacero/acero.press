@@ -8,7 +8,7 @@ import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron } from './icons.jsx';
+import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron, IconTrophy } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
@@ -144,7 +144,7 @@ function BaristaRow({ b, onOpen, i = 0 }) {
  * luego los baristas, los que están en la calle primero, con el aro rojo y
  * «AHORA». Tocar uno abre su página para apartar.
  */
-function Stories({ baristas, go, ads = [], onAd }) {
+function Stories({ baristas, go, ads = [], onAd, reto = null }) {
   return (
     <ul className="mapp-hists" aria-label="Historias" data-testid="stories">
       <li>
@@ -154,6 +154,14 @@ function Stories({ baristas, go, ads = [], onAd }) {
         </button>
       </li>
       {/* Lo patrocinado después de Hoy, marcado como tal */}
+      {reto && (
+        <li>
+          <button type="button" className="mapp-hist is-reto" onClick={() => go('/micra/reto')} aria-label={`Reto de la semana: ${reto.title}`} data-testid="story-reto">
+            <span className="mapp-hist-ring"><span className="mapp-hist-av"><IconTrophy /></span></span>
+            <small>Reto</small>
+          </button>
+        </li>
+      )}
       {ads.map((ad) => <AdStoryBubble key={ad.id} ad={ad} onOpen={onAd} />)}
       {baristas.map((b) => {
         const live = b.status === 'live';
@@ -176,6 +184,13 @@ function Stories({ baristas, go, ads = [], onAd }) {
 
 export function ClientHome({ go }) {
   const ads = useAds('client');
+  // El reto de la semana (Competencia): la burbuja en las historias y la tarjeta en el muro
+  const [reto, setReto] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    api.challenge().then((d) => alive && setReto(d?.challenge ? { ...d.challenge, entries: (d.entries ?? []).length } : null)).catch(() => {});
+    return () => { alive = false; };
+  }, []);
   const [adStory, setAdStory] = useState(null);
   const [{ list, error, missing }, reload] = useBaristas();
   const { me, ask, asking } = useMe();
@@ -243,7 +258,7 @@ export function ClientHome({ go }) {
         </label>
       </section>
       {/* Y como una red social: las historias de los baristas (al buscar, solo los resultados) */}
-      {!searching && <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} />}
+      {!searching && <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} reto={reto} />}
       {adStory && <AdStoryView ad={adStory} onClose={() => setAdStory(null)} />}
       {searching && <p className="mapp-feedline" role="status" data-testid="search-count"><b>{shown.length === 1 ? '1 barista' : `${shown.length} baristas`}</b> para «{q.trim()}»</p>}
       {searching ? null : hold && holdBarista ? (
@@ -318,7 +333,7 @@ export function ClientHome({ go }) {
       </section>}
 
       {/* Como Instagram: debajo de todo sigue el muro (los puestos de los baristas, el precio, el café de Colombia, recetas y videos) */}
-      {!searching && <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} ads={ads.rows} /></Suspense>}
+      {!searching && <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} ads={ads.rows} challenge={reto} /></Suspense>}
     </div>
   );
 }

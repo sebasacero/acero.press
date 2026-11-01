@@ -38,7 +38,7 @@ test('en el muro: con su URL firmada, el nombre de pila y el día en Bogotá', (
   assert.equal(f.length, 1); // sin URL (p2) o raro (p3), no sale
   assert.deepEqual(f[0], {
     id: 'post-p1', kind: 'publicaciones', postId: 'p1', baristaId: ID, by: 'Marlene', where: 'Cl. 85 con Cra. 15',
-    media: { kind: 'foto', url: 'https://x/a' }, text: 'Primer tinto', date: '2026-10-30',
+    media: { kind: 'foto', url: 'https://x/a' }, text: 'Primer tinto', reto: false, date: '2026-10-30',
   });
   assert.deepEqual(postsToFeed('roto'), []);
   assert.equal(STATUS_LABEL.pending, 'En revisión');

@@ -16,7 +16,7 @@ import ColdBrewPromo from './ColdBrew.jsx';
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
   IconVideo, IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
-  IconCamera, IconOut,
+  IconCamera, IconOut, IconTrophy,
 } from './icons.jsx';
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
@@ -311,6 +311,7 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
         <Tile icon={IconVideo} label="Video con filtro" onClick={() => go('/micra/video')} />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
         <Tile icon={IconCan} label="Cold brew" onClick={() => setPromo(true)} testid="tile-coldbrew" />
+        <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/barista/reto')} testid="tile-reto" />
       </Group>
 
       {error && <p className="mapp-error" role="alert">{error}</p>}
@@ -504,6 +505,7 @@ export function ClientProfile({ go, who }) {
         <Tile icon={IconCup} label="Mis apartados" onClick={() => go('/micra/apartados')} />
         <Tile icon={IconHeart} label="Mis baristas" count={favs.length || null} onClick={() => setSheet('baristas')} testid="tile-baristas" />
         <Tile icon={IconToday} label="Hoy en el café" onClick={() => go('/micra/hoy')} />
+        <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/reto')} testid="tile-reto" />
         <Tile icon={IconGift} label="Invita amigos" onClick={invite} />
       </Group>
 
