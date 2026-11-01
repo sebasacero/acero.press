@@ -367,3 +367,61 @@ Las señales viejas (más de 60 min) se borran solas dentro de esas mismas
 funciones; no hace falta pg_cron. Si un día pasan horas sin que nadie use la
 app, quedan unas filas vencidas hasta la siguiente llamada (ninguna sale en el
 mapa: la lectura filtra por la ventana). No hay variables de entorno nuevas.
+
+### 10.7 Avisos por WhatsApp cuando le apartan a un barista
+
+Cuando un cliente aparta, la base llama a la Edge Function `micra-notify`, que
+le escribe al barista por la API de WhatsApp de Meta (Cloud API). Solo si el
+barista lo activó (Mi perfil › Permisos, o la invitación en Vender), si tiene
+celular registrado, si no tiene Micra abierta en el último minuto (ahí ya ve el
+globito) y a lo más uno cada 10 minutos. Cuesta lo de un mensaje de
+«utilidad» de Meta en Colombia (del orden de USD 0,0008 cada uno, según la
+tabla de Meta; revísala antes de crecer).
+
+Pasos, una sola vez (los secretos nunca van al chat ni al repo):
+
+1. **Meta Business**: en [business.facebook.com](https://business.facebook.com)
+   el negocio de ACERO.press, con la verificación del negocio (pide NIT o RUT y
+   un documento; tarda unos días).
+2. **App de Meta con WhatsApp**: en [developers.facebook.com](https://developers.facebook.com)
+   › Crear app › tipo «Negocios» › agregar el producto **WhatsApp**.
+3. **El número**: en WhatsApp › Configuración de la API, agrega un número que
+   **no** esté usándose en la app normal de WhatsApp (puede ser una SIM nueva).
+   Anota el **Phone number ID** (un número largo, no el celular).
+4. **Token permanente**: en Configuración del negocio › Usuarios del sistema,
+   crea uno (administrador), dale la app y el permiso `whatsapp_business_messaging`
+   y genera un token sin vencimiento.
+5. **La plantilla** (WhatsApp Manager › Plantillas › Crear): nombre
+   `micra_nuevo_apartado`, categoría **Utilidad**, idioma **Español (es)**,
+   cuerpo:
+
+   > Hola, tienes un apartado nuevo en Micra: {{1}} te apartó {{2}}. Abre la app para tenerlo listo cuando pases.
+
+   Ejemplos para la revisión: {{1}} = `Sebas`, {{2}} = `2 tintos y 1 perico`.
+   Espera a que diga «Aprobada».
+6. **Secrets** en Supabase › Edge Functions › Secrets:
+
+   | Secret | Valor |
+   |---|---|
+   | `WHATSAPP_TOKEN` | el token permanente del paso 4 |
+   | `WHATSAPP_PHONE_ID` | el Phone number ID del paso 3 |
+   | `WHATSAPP_TEMPLATE` | opcional; por defecto `micra_nuevo_apartado` |
+   | `WHATSAPP_LANG` | opcional; por defecto `es` |
+
+7. **Migración y función** (con la aprobación del dueño): aplicar
+   `supabase/migrations/20261031210000_micra_whatsapp_alerts.sql` (activa
+   `pg_net` y agrega el trigger) y desplegar `supabase/functions/micra-notify`
+   **sin verificar JWT** (la llama la base; la función no confía en lo que le
+   llega: relee el apartado y solo avisa uno nuevo, una vez).
+
+Mientras falten los secrets, nada falla: cada apartado queda anotado en
+`micra_notify_log` como `skipped_unconfigured`. Para ver qué pasó con los avisos:
+
+```sql
+select status, count(*) from micra_notify_log
+where created_at > now() - interval '7 days' group by status;
+```
+
+`sent` (enviado), `skipped_app_open` (tenía Micra abierta), `skipped_throttled`
+(ya tuvo uno hace menos de 10 min), `skipped_no_optin` (no los activó),
+`skipped_no_phone`, `failed` (el detalle trae el error de Meta).
