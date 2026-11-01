@@ -6,6 +6,7 @@ import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS,
 import { IconTrophy, IconBean } from './icons.jsx';
 import Figure from './Elenco.jsx';
 import { Cargando } from './Animado.jsx';
+import { JudgeBadge, JudgeBars } from './Juez.jsx';
 
 const PostComposer = lazy(() => import('./PostComposer.jsx'));
 
@@ -49,6 +50,16 @@ function EntryView({ entry, url, challenge, onVote, onClose, voting, error }) {
         </header>
         <div className="mapp-entry-photo">{url ? <img src={url} alt={entry.caption ? `Entrada de ${entry.name}: ${entry.caption}` : `Entrada de ${entry.name}`} /> : <span aria-hidden="true">📸</span>}</div>
         {entry.caption && <p className="mapp-post-text">{entry.caption}</p>}
+        {entry.judge?.score != null && (
+          <div className="mapp-entry-judge" data-testid="entry-judge">
+            <div className="mapp-entry-judge-head">
+              <p className="mapp-cota">Juez Micra</p>
+              <JudgeBadge score={entry.judge.score} small />
+              {entry.team != null && <span className="mapp-entry-judge-team">Jurado: {Number(entry.team).toLocaleString('es-CO', { maximumFractionDigits: 1 })} · {entry.team_n}</span>}
+            </div>
+            <JudgeBars scores={entry.judge.scores} compact />
+          </div>
+        )}
         {entry.mine ? (
           <p className="mapp-fine" data-testid="entry-mine">Esta es tu entrada: la califican los demás.</p>
         ) : open ? (
@@ -143,6 +154,7 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
                   <b>Tu entrada · {ENTRY_STATUS[mine.status] ?? mine.status}</b>
                   {mine.status === 'pending' && <small>El equipo la revisa y entra al reto.</small>}
                   {mine.status === 'approved' && <small>Ya la están calificando. Comparte el reto para sumar votos.</small>}
+                  {mine.judge?.score != null && <small>Juez Micra: {mine.judge.score} de 100.</small>}
                 </p>
               ) : canEnter ? (
                 <button type="button" className="mapp-btn is-cta" onClick={() => setComposing(true)} data-testid="reto-enter">Participar con mi foto</button>
@@ -176,6 +188,7 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
                     <span className="mapp-reto-photo">
                       {urls[e.media_path] ? <img src={urls[e.media_path]} alt="" loading="lazy" /> : <b>{initials(e.name)}</b>}
                       {e.rank && <i className="mapp-reto-rank">#{e.rank}</i>}
+                      {e.judge?.score != null && <span className="mapp-reto-judge"><JudgeBadge score={e.judge.score} small /></span>}
                       {e.mine && <i className="mapp-reto-tag">Tuya</i>}
                       {e.my_score && !e.mine && <i className="mapp-reto-tag is-voted">Tu nota: {e.my_score}</i>}
                     </span>

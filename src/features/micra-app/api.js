@@ -123,11 +123,13 @@ export const postReview = (id, approve) => call('micra_post_review', { p_id: id,
 export const postRemove = (id) => call('micra_post_remove', { p_id: id });
 
 /** Sube el archivo a la carpeta del barista y lo deja en revisión. */
-export async function publishPost({ path, blob, type, kind, caption, asId, challengeId = null }) {
+export async function publishPost({ path, blob, type, kind, caption, asId, challengeId = null, judge = null }) {
   const { error } = await supabase.storage.from(POSTS_BUCKET).upload(path, blob, { contentType: type, upsert: false });
   if (error) throw Object.assign(new Error(`No se pudo subir: ${error.message}`), { code: error.statusCode });
-  return call('micra_post_add', { p_kind: kind, p_path: path, p_caption: caption || null, ...as(asId), ...(challengeId ? { p_challenge_id: challengeId } : {}) });
+  return call('micra_post_add', { p_kind: kind, p_path: path, p_caption: caption || null, ...as(asId), ...(challengeId ? { p_challenge_id: challengeId } : {}), ...(judge ? { p_judge: judge } : {}) });
 }
+// El equipo califica una entrada como jurado (20261101150000_micra_juez.sql)
+export const judgeSet = (postId, scores, note) => call('micra_judge_set', { p_post_id: postId, p_scores: scores, p_note: note || null });
 
 // Competencia: el reto de la semana (20261101120000_micra_competencia.sql)
 export const challenge = (ref = null) => call('micra_challenge', { p_ref: ref });
