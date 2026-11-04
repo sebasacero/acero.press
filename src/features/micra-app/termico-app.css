@@ -1,0 +1,105 @@
+/* Piel térmica de la app. Cabeceras, aros, botones y personas en los dos modos;
+   lo que pinta de blanco (fondo, tarjetas) solo de día: de noche siguen oscuras. */
+@import '../../shared/styles/termico.css';
+/* ---------- lecturas y textos del visor ---------- */
+.mapp.is-day .mapp-drinks-q em, .mapp.is-day .mapp-title em{
+  background:linear-gradient(90deg,var(--t-3),var(--t-4) 35%,var(--t-5) 65%,var(--t-6)) !important;
+  -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important;
+}
+.mapp.is-day .mapp-cota, .mapp.is-day .mapp-kicker{letter-spacing:.06em}
+.mapp.is-day .mapp-cota::before{
+  content:""; display:inline-block; width:9px; height:9px; margin-right:7px; vertical-align:-1px;
+  border:1.6px solid currentColor; border-radius:50%;
+  background:radial-gradient(circle,currentColor 0 1.5px,transparent 2px);
+}
+
+
+/* =================== APP MICRA =================== */
+.mapp.is-day{ --m-bg:var(--t-paper); --m-fg:var(--t-ink); --m-cold:var(--t-1); --m-ink:var(--t-1); --m-line:var(--t-line); background:var(--t-paper) !important; }
+.mapp.is-day .mapp-main{background:var(--t-paper)}
+/* cabecera: imagen térmica (frío arriba, una mancha de calor donde está la acción) */
+.mapp .mapp-top, .mapp.is-redtop .mapp-chead, .mapp .mapp-sellhead{
+  background-color:var(--t-0) !important;
+  background-image:
+    radial-gradient(60% 90% at 88% 70%, rgba(255,243,176,.95), rgba(255,194,60,.9) 14%, rgba(242,84,45,.85) 30%, rgba(222,27,27,.75) 44%, rgba(176,18,122,.6) 60%, rgba(90,30,158,.45) 76%, transparent 92%),
+    radial-gradient(45% 70% at 8% 10%, rgba(90,30,158,.8), transparent 80%),
+    linear-gradient(180deg,var(--t-0),var(--t-1)) !important;
+}
+.mapp .mapp-top{background-image:linear-gradient(180deg,var(--t-0),var(--t-1)) !important;border-bottom:0 !important}
+.mapp.is-redtop .mapp-chead, .mapp .mapp-sellhead{position:relative; box-shadow:var(--t-glow-cold) !important}
+/* la barra de temperatura al pie de la cabecera */
+.mapp.is-redtop .mapp-chead::after, .mapp .mapp-sellhead::after{
+  content:""; position:absolute; left:16px; right:16px; bottom:8px; height:4px; border-radius:4px; background:var(--t-ramp); opacity:.95;
+}
+.mapp .mapp-chead-txt small{color:var(--t-6) !important}
+.mapp .mapp-top .mapp-brand-word{color:#fff !important}
+.mapp .mapp-top .mapp-topicon, .mapp .mapp-top .mapp-topicon svg{color:#fff !important;stroke:#fff}
+.mapp.is-day .mapp-search{background:rgba(255,255,255,.96) !important;box-shadow:0 0 0 1.5px rgba(255,194,60,.55),0 8px 24px -10px rgba(13,8,32,.6) !important}
+.mapp .mapp-chead-near{background:var(--t-ramp) !important;background-size:200% 100% !important;background-position:70% 0 !important;color:var(--t-ink) !important;font-weight:700 !important;border:0 !important}
+.mapp .mapp-chead-pin{background:var(--t-blob) !important;box-shadow:0 0 18px rgba(255,194,60,.6)}
+/* historias: aro de calor para quien está en la calle; frío para los demás */
+.mapp .mapp-hist-ring{background:linear-gradient(135deg,var(--t-1),var(--t-2)) !important;opacity:.85}
+.mapp .mapp-hist.is-live .mapp-hist-ring{background:conic-gradient(from 200deg,var(--t-3),var(--t-4),var(--t-5),var(--t-6),var(--t-7),var(--t-6),var(--t-5),var(--t-4),var(--t-3)) !important;opacity:1;box-shadow:0 0 16px rgba(242,84,45,.55)}
+.mapp .mapp-hist.is-hoy .mapp-hist-ring{background:var(--t-ink) !important}
+.mapp .mapp-hist-tag{background:var(--t-ramp) !important;color:var(--t-ink) !important;font-weight:800 !important}
+/* bebidas: frías hasta que las eliges; la elegida se calienta */
+.mapp.is-day .mapp-drinks-grid button{background:#fff !important;border:1px solid var(--t-line) !important;box-shadow:var(--t-glow-cold) !important}
+.mapp .mapp-drinks-grid button.on{background-color:var(--t-0) !important;background-image:radial-gradient(90% 120% at 15% 50%, rgba(255,194,60,.95), rgba(242,84,45,.9) 25%, rgba(222,27,27,.85) 42%, rgba(176,18,122,.8) 62%, rgba(34,18,90,.95) 90%) !important;border-color:transparent !important;box-shadow:var(--t-glow) !important}
+.mapp .mapp-drinks-grid button.on *{color:#fff !important}
+.mapp.is-day .mapp-drink-ico{background:linear-gradient(160deg,#EEE7F7,#FFF3E2) !important}
+/* tarjetas: blancas con un filo de calor arriba */
+.mapp.is-day .mapp-bcard, .mapp.is-day .mapp-glass, .mapp.is-day .mapp-tile, .mapp.is-day .mapp-join, .mapp.is-day .mapp-holds li{
+  background:#fff !important; border:1px solid var(--t-line) !important; box-shadow:var(--t-glow-cold) !important; position:relative; overflow:hidden;
+}
+.mapp.is-day .mapp-bcard::before, .mapp.is-day .mapp-join::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--t-ramp);z-index:2}
+/* la foto de la persona: frío de fondo, la persona caliente (filtro térmico) */
+.mapp .mapp-bcard-top{background:radial-gradient(70% 80% at 50% 55%, #2A1466, var(--t-0)) !important}
+.mapp .mapp-bcard-top .mapp-fig svg, .mapp .mapp-fig svg{filter:url(#t-thermal)}
+.mapp .mapp-bcard-top *{color:#fff}
+.mapp .mapp-bcard-top span{background:rgba(13,8,32,.6) !important;color:var(--t-6) !important}
+.mapp .mapp-hist-av{background:var(--t-0) !important}
+.mapp .mapp-hist-av .mapp-fig svg{filter:url(#t-thermal)}
+/* lo destacado (sellos, precio del café): la lectura de la cámara */
+.mapp .mapp-stamps, .mapp .mapp-pricecard{
+  background-color:var(--t-0) !important;
+  background-image:radial-gradient(55% 80% at 92% 18%, rgba(255,194,60,.85), rgba(242,84,45,.75) 22%, rgba(176,18,122,.55) 48%, transparent 75%), linear-gradient(160deg,var(--t-1),var(--t-0)) !important;
+  color:#fff !important; border:0 !important; box-shadow:var(--t-glow) !important; position:relative;
+}
+.mapp .mapp-stamps *, .mapp .mapp-pricecard *{color:#fff}
+.mapp .mapp-pricecard a{color:var(--t-6) !important}
+.mapp .mapp-stamps::after, .mapp .mapp-pricecard::after{content:"";position:absolute;left:18px;right:18px;bottom:10px;height:3px;border-radius:3px;background:var(--t-ramp)}
+/* botones: el rojo es el punto más caliente; brillo naranja alrededor */
+.mapp .mapp-btn, .mapp .mapp-bcard-cta, .mapp .mapp-plus, .mapp .mapp-publish{
+  background:linear-gradient(180deg,var(--t-5),var(--t-4) 55%,#C0162C) !important; color:#fff !important; border:0 !important;
+  box-shadow:0 8px 22px -8px rgba(242,84,45,.8), inset 0 1px 0 rgba(255,243,176,.55) !important;
+}
+.mapp.is-day .mapp-btn.is-ghost, .mapp.is-day .mapp-bcard-cta.is-ghost, .mapp.is-day .mapp-tile-fiado{background:#fff !important;color:var(--t-ink) !important;box-shadow:inset 0 0 0 1.5px var(--t-2) !important}
+.mapp.is-day .mapp-publish{background:var(--t-ink) !important;box-shadow:0 0 0 2px transparent, 0 6px 18px -8px rgba(13,8,32,.6) !important}
+.mapp.is-day .mapp-chips .on{background:var(--t-ink) !important;color:#fff !important;box-shadow:inset 0 -3px 0 var(--t-5)}
+/* Vender: la cuenta del día como lectura de temperatura */
+.mapp .mapp-sellhead *{color:#fff}
+.mapp .mapp-sellhead-n{background:linear-gradient(180deg,var(--t-7),var(--t-6) 45%,var(--t-5)) !important;-webkit-background-clip:text !important;background-clip:text !important;color:transparent !important}
+.mapp .mapp-sellhead-kpis > div{background:rgba(13,8,32,.45) !important;border:1px solid rgba(255,194,60,.35) !important;backdrop-filter:blur(4px)}
+.mapp .mapp-sellhead-bar{background:var(--t-ramp) !important}
+.mapp .mapp-sellbar{background:var(--t-ink) !important}
+/* barra de abajo: fría, el ícono activo con su mancha de calor */
+.mapp .mapp-tabs{background:var(--t-0) !important;border-top:0 !important;box-shadow:0 -8px 24px -12px rgba(13,8,32,.6)}
+.mapp .mapp-tabs *{color:#CFC4EA !important}
+.mapp .mapp-tabs .on, .mapp .mapp-tabs [aria-current=page]{background:radial-gradient(closest-side,rgba(242,84,45,.55),rgba(176,18,122,.25) 70%,transparent) !important}
+.mapp .mapp-tabs .on *, .mapp .mapp-tabs [aria-current=page] *{color:var(--t-6) !important}
+/* muro */
+.mapp .mapp-ig-media{position:relative}
+.mapp .mapp-ig-tag{background:var(--t-ramp) !important;color:var(--t-ink) !important;font-weight:800 !important}
+.mapp.is-day .mapp-feed-head .mapp-kicker{color:var(--t-2) !important}
+
+/* la persona de la tarjeta y la del muro sobre fondo frío; la taza de la meta caliente */
+.mapp .mapp-bcard .mapp-fig.is-card{background:radial-gradient(60% 70% at 50% 55%, #2A1466, var(--t-0));width:100%;justify-self:stretch;display:flex;justify-content:center;border-radius:12px}
+.mapp .mapp-ig-media > *{background:radial-gradient(60% 65% at 50% 50%, #2A1466, var(--t-0)) !important}
+.mapp .mapp-ig-media *{border-color:rgba(255,194,60,.25) !important}
+.mapp .mapp-goalcup .is-coffee{fill:url(#t-heat) !important}
+.mapp .mapp-goalcup .is-empty{fill:rgba(13,8,32,.55) !important}
+.mapp .mapp-goalcup .is-line{stroke:#fff !important}
+.mapp .mapp-goalcup .is-steam{stroke:var(--t-6) !important}
+/* de noche la barra del momento también va oscura: su letra vuelve a clara */
+.mapp.is-night .mapp-sellbar b{color:#fff !important}
+.mapp.is-night .mapp-sellbar > span:nth-child(2), .mapp.is-night .mapp-sellbar small{color:rgba(255,255,255,.78) !important}

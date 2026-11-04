@@ -1,0 +1,26 @@
+/* ===== Piel «Térmica»: el café visto con cámara térmica =====
+   Idea: el calor es lo que pasa AHORA. Lo frío (índigo) es el fondo y lo
+   inactivo; lo caliente (rojo → naranja → amarillo) es quien está en la calle,
+   lo que se puede tocar y la taza recién servida.
+   Colores: escala «ironbow» de las cámaras térmicas. El rojo de la marca
+   (#DE1B1B) es un tramo de la escala, no un color aparte.
+   Formas: manchas de calor (degradés radiales), aros de calor, la barra de
+   temperatura como franja de datos, lecturas tipo visor («62°», cruz de mira).
+   Distribución: lo mismo de hoy; solo cambia la piel. */
+:root{
+  --t-0:#0D0820;  /* frío profundo */
+  --t-1:#22125A;  /* índigo */
+  --t-2:#5A1E9E;  /* violeta */
+  --t-3:#B0127A;  /* magenta */
+  --t-4:#DE1B1B;  /* rojo de la marca */
+  --t-5:#F2542D;  /* naranja */
+  --t-6:#FFC23C;  /* amarillo */
+  --t-7:#FFF3B0;  /* blanco caliente */
+  --t-paper:#FBF7F2; --t-ink:#160C2E; --t-line:#E7DFF0;
+  --t-ramp:linear-gradient(90deg,var(--t-1),var(--t-2) 18%,var(--t-3) 36%,var(--t-4) 52%,var(--t-5) 68%,var(--t-6) 86%,var(--t-7));
+  --t-ramp-v:linear-gradient(0deg,var(--t-1),var(--t-2) 18%,var(--t-3) 36%,var(--t-4) 52%,var(--t-5) 68%,var(--t-6) 86%,var(--t-7));
+  /* una mancha de calor: núcleo amarillo, borde violeta, fondo frío */
+  --t-blob:radial-gradient(closest-side,var(--t-7),var(--t-6) 18%,var(--t-5) 34%,var(--t-4) 48%,var(--t-3) 64%,var(--t-2) 82%,transparent);
+  --t-glow:0 10px 30px -10px rgba(242,84,45,.55),0 0 0 1px rgba(176,18,122,.12);
+  --t-glow-cold:0 10px 30px -14px rgba(34,18,90,.45);
+}

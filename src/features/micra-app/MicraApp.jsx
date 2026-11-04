@@ -11,6 +11,8 @@ import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
 import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
 import './micra-app.css';
+import './termico-app.css';
+import ThermalDefs from '../../shared/layout/ThermalDefs.jsx';
 import { Cargando } from './Animado.jsx';
 
 // Lo del equipo en la calle se descarga solo al abrirlo: quien busca café no lo paga
@@ -235,6 +237,7 @@ export default function MicraApp() {
 
   return (
     <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
+      <ThermalDefs />
       <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
         {/* El termo del icono en su baldosa crema (se ve igual sobre blanco, noche o rojo) y la palabra */}
         <button type="button" className="mapp-brand" onClick={() => go(viewMode === 'client' ? '/micra' : viewMode === 'owner' ? '/micra/equipo' : '/micra/barista')} aria-label="Micra, inicio">
