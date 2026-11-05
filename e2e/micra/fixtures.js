@@ -112,6 +112,17 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     const name = new URL(route.request().url()).pathname.split('/').pop();
     return route.fulfill({ status: 200, path: `public/image/${name}` });
   });
+  // Asistente de crecimiento (Vercel): «Escribir con IA» de Redes devuelve una pieza fija
+  await page.route('**/api/growth-agent', (route) => {
+    const body = route.request().postDataJSON() ?? {};
+    calls.push({ m: 'POST', p: '/api/growth-agent', q: '', data: body });
+    if (body.action !== 'social') return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'not-configured' }) });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      hook: 'La molienda lo cambia todo', script: ['0–2 s: la taza amarga', '2–20 s: la molienda más gruesa', '20–30 s: la taza dulce'],
+      caption: 'Si tu AeroPress sale amarga, muele más grueso. Mándaselo a quien siempre te pide café.', hashtags: ['#AeroPress', '#Bogotá'],
+      why: 'Los Reels de receta son los que más se comparten en tu cuenta.', sources: [{ url: 'https://example.com/fuente', title: 'Fuente de prueba' }],
+    }) });
+  });
   await page.route('https://tile.openstreetmap.org/**', (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'image/png', body: PIXEL }));
   // API de BI: el piloto (lo que la prueba ponga en opts.piloto; vacío por defecto)
   await page.route('**/api/v1/bi/piloto**', (route) => {
@@ -593,6 +604,9 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       if (!o || (guard && o.status !== 'completed')) body = [];
       else { o.status = data.status; body = [{ id: o.id }]; }
     } else if (p.endsWith('/publications') && m === 'POST') body = [{ id: 'pub-1' }];
+    // Redes: métricas de Instagram ya sincronizadas (opts.igMedia, opts.igDaily; vacías por defecto)
+    else if (p.endsWith('/ig_media')) body = opts.igMedia ?? [];
+    else if (p.endsWith('/ig_account_daily')) body = opts.igDaily ?? [];
     if (single) body = Array.isArray(body) ? body[0] ?? null : body;
     return json(body === null ? 406 : 200, body ?? {});
   });

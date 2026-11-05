@@ -1425,6 +1425,7 @@
 .mh-icon--inventory{ background:linear-gradient(160deg, #c08a5e, #7a4a2a); }
 .mh-icon--catalog{ background:linear-gradient(160deg, #36c9b9, #14806f); }
 .mh-icon--publications{ background:linear-gradient(160deg, #5fb2ff, #1b6fe0); }
+.mh-icon--social{ background:linear-gradient(160deg, #2A3550, #141b30); }
 .mh-icon--instagram{ background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 62%, #285aeb 92%); }
 .mh-icon--recipes{ background:linear-gradient(160deg, #fbf7ee, #e6dcc4); color:#e0201e; }
 .mh-icon--sections{

@@ -11,6 +11,11 @@ import OrdersPage from './pages/OrdersPage.jsx';
 import TablesPage from './pages/TablesPage.jsx';
 import RecipesPage from './pages/RecipesPage.jsx';
 import PilotoPage from './pages/PilotoPage.jsx';
+import { createElement, lazy, Suspense } from 'react';
+
+// Redes se carga aparte: no suma al bundle del sitio público (ver deuda 5 de CLAUDE.md).
+const SocialLazy = lazy(() => import('./social/SocialPage.jsx'));
+const SocialPage = (props) => createElement(Suspense, { fallback: createElement('p', { className: 'admin-loading' }, 'Cargando Redes…') }, createElement(SocialLazy, props));
 
 // Grupos por flujo de trabajo: primero lo que se usa en el día a día.
 export const ADMIN_GROUPS = [
@@ -33,6 +38,7 @@ export const ADMIN_TOOLS = [
   { id: 'piloto', label: 'Estudio', group: 'biz', desc: 'Estudio de calle (MVP): tinteros con ficha, encuesta y GPS en el mapa', Component: PilotoPage },
   { id: 'inventory', label: 'Inventario', group: 'biz', desc: 'Stock y movimientos', signal: 'lowStock', Component: InventoryPage },
   { id: 'catalog', label: 'Catálogo', group: 'biz', desc: 'Productos, marcas y precios', Component: CatalogPage },
+  { id: 'social', label: 'Redes', group: 'brand', desc: 'Analizar lo publicado y crear la semana de contenido', Component: SocialPage },
   { id: 'publications', label: 'Publicaciones', group: 'brand', desc: 'Contenido listo para redes', Component: PublicationsPage },
   { id: 'instagram', label: 'Instagram', group: 'brand', desc: 'Conexión, token y métricas', Component: InstagramPage },
   { id: 'recipes', label: 'Recetas', group: 'brand', desc: 'Café y kit de cada receta campeona', Component: RecipesPage },

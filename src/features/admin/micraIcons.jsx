@@ -60,6 +60,14 @@ const GLYPHS = {
       <path d="M10.5 9.2l4.5 2.8-4.5 2.8z" fill="currentColor" />
     </g>
   ),
+  // Redes: barras que suben y un lápiz (analizar y crear)
+  social: () => (
+    <g {...S}>
+      <path d="M4 20h16" />
+      <path d="M6.5 20v-5M10.5 20v-8M14.5 20v-4" />
+      <path d="M15 11.5l4.5-4.5 1.5 1.5-4.5 4.5-2 .5z" />
+    </g>
+  ),
   // Instagram (la conexión): cámara
   instagram: () => (
     <g {...S}>
