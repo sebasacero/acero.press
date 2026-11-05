@@ -1,5 +1,5 @@
-/* Piel térmica de la app. Cabeceras, aros, botones y personas en los dos modos;
-   lo que pinta de blanco (fondo, tarjetas) solo de día: de noche siguen oscuras. */
+/* Piel térmica de la app (la app va siempre en blanco: sin modo de noche).
+   Las reglas `.is-night` quedan por si vuelve. */
 @import '../../shared/styles/termico.css';
 /* ---------- lecturas y textos del visor ---------- */
 .mapp.is-day .mapp-drinks-q em, .mapp.is-day .mapp-title em{
@@ -70,11 +70,9 @@
 .mapp .mapp-stamps::after, .mapp .mapp-pricecard::after{content:"";position:absolute;left:18px;right:18px;bottom:10px;height:3px;border-radius:3px;background:var(--t-ramp)}
 /* botones: el rojo es el punto más caliente; brillo naranja alrededor */
 .mapp .mapp-btn, .mapp .mapp-bcard-cta, .mapp .mapp-plus, .mapp .mapp-publish{
-  background:linear-gradient(180deg,var(--t-5),var(--t-4) 55%,#C0162C) !important; color:#fff !important; border:0 !important;
-  box-shadow:0 8px 22px -8px rgba(242,84,45,.8), inset 0 1px 0 rgba(255,243,176,.55) !important;
+  background:var(--t-cta) !important; color:#fff !important; border:0 !important; box-shadow:var(--t-cta-glow) !important;
 }
 .mapp.is-day .mapp-btn.is-ghost, .mapp.is-day .mapp-bcard-cta.is-ghost, .mapp.is-day .mapp-tile-fiado{background:#fff !important;color:var(--t-ink) !important;box-shadow:inset 0 0 0 1.5px var(--t-2) !important}
-.mapp.is-day .mapp-publish{background:var(--t-ink) !important;box-shadow:0 0 0 2px transparent, 0 6px 18px -8px rgba(13,8,32,.6) !important}
 .mapp.is-day .mapp-chips .on{background:var(--t-ink) !important;color:#fff !important;box-shadow:inset 0 -3px 0 var(--t-5)}
 /* Vender: la cuenta del día como lectura de temperatura */
 .mapp .mapp-sellhead *{color:#fff}

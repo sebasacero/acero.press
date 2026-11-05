@@ -1,15 +1,22 @@
 // Los dibujos de la hoja de instrucciones de AeroPress Go, a trazo (como la hoja impresa): uno por
 // paso, en un lienzo de 160 × 120. Piezas: cámara, émbolo, tapa del filtro, taza. Sin texto adentro.
 
+import { createContext, useContext, useId } from 'react';
+import HeatGradient from '../../../shared/layout/HeatGradient.jsx';
+
 const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
 const W = '#fff';
+// Las piezas de la AeroPress van con el gradiente térmico (cada dibujo lleva el suyo en <defs>).
+const HeatId = createContext('');
+const useHeat = () => `url(#${useContext(HeatId)})`;
 
 /** Cámara de la Go con sus marcas 1–3 (la ③ resaltada si se llena). */
 function Chamber({ x = 60, y = 34, w = 40, h = 56, level = 0, mark = false }) {
   const lv = level > 0 ? y + h - (h - 6) * level : null;
+  const heat = useHeat();
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} rx="3" fill={W} {...S} />
+      <rect x={x} y={y} width={w} height={h} rx="3" {...S} fill={heat} />
       {lv && <rect x={x + 2} y={lv} width={w - 4} height={y + h - lv - 1} fill="currentColor" opacity=".18" />}
       <path d={`M${x - 3} ${y}h${w + 6}`} {...S} />
       {[0.25, 0.5, 0.75].map((f, i) => (
@@ -25,9 +32,10 @@ function Chamber({ x = 60, y = 34, w = 40, h = 56, level = 0, mark = false }) {
 
 /** Tapa del filtro con sus huecos, vista de lado. */
 function Cap({ x = 56, y = 90, w = 48 }) {
+  const heat = useHeat();
   return (
     <g>
-      <path d={`M${x} ${y}h${w}l-3 8h${-(w - 6)}z`} fill={W} {...S} />
+      <path d={`M${x} ${y}h${w}l-3 8h${-(w - 6)}z`} {...S} fill={heat} />
       {Array.from({ length: 6 }, (_, i) => <path key={i} d={`M${x + 8 + i * 6.5} ${y + 3}v2.5`} {...S} strokeWidth="1.4" />)}
     </g>
   );
@@ -35,10 +43,11 @@ function Cap({ x = 56, y = 90, w = 48 }) {
 
 /** Émbolo: vástago, borde de arriba y sello de caucho abajo. */
 function Plunger({ x = 64, y = 6, w = 32, h = 50 }) {
+  const heat = useHeat();
   return (
     <g>
-      <rect x={x - 5} y={y} width={w + 10} height="6" rx="2" fill={W} {...S} />
-      <rect x={x} y={y + 6} width={w} height={h - 12} fill={W} {...S} />
+      <rect x={x - 5} y={y} width={w + 10} height="6" rx="2" {...S} fill={heat} />
+      <rect x={x} y={y + 6} width={w} height={h - 12} {...S} fill={heat} />
       <rect x={x - 1} y={y + h - 6} width={w + 2} height="6" rx="1.5" fill="currentColor" stroke="currentColor" strokeWidth="1" />
     </g>
   );
@@ -170,11 +179,13 @@ const DRAWINGS = [
 ];
 
 export default function BrewDrawing({ index }) {
+  const id = `brew-heat-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const Draw = DRAWINGS[index];
   if (!Draw) return null;
   return (
     <svg className="brew-draw" viewBox="0 0 160 120" aria-hidden="true">
-      <Draw />
+      <defs><HeatGradient id={id} from={1} /></defs>
+      <HeatId.Provider value={id}><Draw /></HeatId.Provider>
     </svg>
   );
 }

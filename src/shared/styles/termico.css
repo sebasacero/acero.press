@@ -22,5 +22,8 @@
   /* una mancha de calor: núcleo amarillo, borde violeta, fondo frío */
   --t-blob:radial-gradient(closest-side,var(--t-7),var(--t-6) 18%,var(--t-5) 34%,var(--t-4) 48%,var(--t-3) 64%,var(--t-2) 82%,transparent);
   --t-glow:0 10px 30px -10px rgba(242,84,45,.55),0 0 0 1px rgba(176,18,122,.12);
+  /* llamados a la acción: del magenta al naranja, sin llegar al amarillo para que el blanco se lea */
+  --t-cta:linear-gradient(100deg,var(--t-3) 0%,var(--t-4) 42%,var(--t-5) 80%,#FF8A3D 100%);
+  --t-cta-glow:0 10px 24px -10px rgba(242,84,45,.8),inset 0 1px 0 rgba(255,243,176,.45);
   --t-glow-cold:0 10px 30px -14px rgba(34,18,90,.45);
 }
