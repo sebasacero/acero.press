@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { isNight, landingAfterLogin, parseRoute, initials, redTop } from './micraApp.js';
+import { landingAfterLogin, parseRoute, initials, redTop } from './micraApp.js';
 import * as api from './api.js';
 import platform, { takeLogin } from './platform.js';
 import { ClientHome, BaristaPage, MyHolds } from './ClientViews.jsx';
@@ -80,13 +80,9 @@ function useManifest() {
   }, []);
 }
 
+// Solo el modo blanco (pedido del usuario, 5 nov 2026): la app ya no cambia a noche con la hora.
 function useNight() {
-  const [night, setNight] = useState(() => isNight());
-  useEffect(() => {
-    const id = setInterval(() => setNight(isNight()), 60000);
-    return () => clearInterval(id);
-  }, []);
-  return night;
+  return false;
 }
 
 function useRoute() {

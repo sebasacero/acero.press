@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import HeatGradient from '../../shared/layout/HeatGradient.jsx';
 import { BREW_STEPS, brewStepAt, clock, parseAmount, cupMath, shares, BASE_RECIPE } from './school.js';
 
 // Las figuras de las lecciones: cada una muestra lo que la lección cuenta.
@@ -19,6 +20,9 @@ function Plate({ fig, caption, children, className = '' }) {
 
 /** Despiece de la AeroPress en dibujo técnico: los números son los de la lista de partes. */
 function Parts({ fig, figure, points }) {
+  // Las piezas de la AeroPress con el gradiente térmico; el trazo sigue en tinta.
+  const heat = `sf-heat-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const part = { style: { fill: `url(#${heat})` } };
   const callout = (n, x, y, tx, ty) => (
     <g key={`${n}-${x}-${y}`}>
       <line x1={x + 12} y1={y} x2={tx} y2={ty} className="sf-leader" />
@@ -29,17 +33,18 @@ function Parts({ fig, figure, points }) {
   return (
     <Plate fig={fig} caption={figure.caption}>
       <svg viewBox="0 0 300 340" className="sf-parts" role="img" aria-label={`${figure.caption}: ${points.join(' ')}`}>
+        <defs><HeatGradient id={heat} from={1} /></defs>
         <line x1="150" y1="6" x2="150" y2="334" className="sf-axis" />
         {/* 2 · émbolo */}
-        <rect x="92" y="14" width="116" height="12" rx="3" className="sf-part" />
-        <rect x="104" y="26" width="92" height="90" rx="3" className="sf-part" />
+        <rect x="92" y="14" width="116" height="12" rx="3" className="sf-part" {...part} />
+        <rect x="104" y="26" width="92" height="90" rx="3" className="sf-part" {...part} />
         <line x1="116" y1="40" x2="116" y2="104" className="sf-detail" />
         <rect x="101" y="112" width="98" height="18" rx="4" className="sf-seal" />
         {/* flechas del armado */}
         <path d="M150 134 v10 m-5 -5 l5 5 l5 -5" className="sf-arrow" />
         {/* 1 · cámara con sus números */}
-        <rect x="78" y="148" width="144" height="10" rx="3" className="sf-part" />
-        <rect x="96" y="158" width="108" height="114" rx="3" className="sf-part" />
+        <rect x="78" y="148" width="144" height="10" rx="3" className="sf-part" {...part} />
+        <rect x="96" y="158" width="108" height="114" rx="3" className="sf-part" {...part} />
         {[0, 1, 2, 3].map((k) => (
           <g key={k}>
             <line x1="104" y1={254 - k * 20} x2="114" y2={254 - k * 20} className="sf-detail" />
@@ -49,12 +54,12 @@ function Parts({ fig, figure, points }) {
         <path d="M150 292 v-10 m-5 5 l5 -5 l5 5" className="sf-arrow" />
         {/* 3 · filtro de papel y tapa */}
         <ellipse cx="150" cy="298" rx="46" ry="4" className="sf-filter" />
-        <rect x="98" y="306" width="104" height="16" rx="5" className="sf-part" />
+        <rect x="98" y="306" width="104" height="16" rx="5" className="sf-part" {...part} />
         {[0, 1, 2, 3, 4, 5, 6].map((k) => <circle key={k} cx={114 + k * 12} cy="314" r="1.8" className="sf-hole" />)}
         {/* 4 · agitador y cuchara */}
-        <rect x="246" y="30" width="10" height="150" rx="4" className="sf-part" />
-        <rect x="238" y="176" width="26" height="44" rx="5" className="sf-part" />
-        <path d="M232 262 h40 l-5 30 a5 5 0 0 1 -5 4 h-20 a5 5 0 0 1 -5 -4 z" className="sf-part" />
+        <rect x="246" y="30" width="10" height="150" rx="4" className="sf-part" {...part} />
+        <rect x="238" y="176" width="26" height="44" rx="5" className="sf-part" {...part} />
+        <path d="M232 262 h40 l-5 30 a5 5 0 0 1 -5 4 h-20 a5 5 0 0 1 -5 -4 z" className="sf-part" {...part} />
         <line x1="272" y1="266" x2="290" y2="250" className="sf-part-line" />
         {callout(2, 40, 70, 104, 70)}
         {callout(1, 40, 214, 96, 214)}

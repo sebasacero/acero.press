@@ -1,71 +1,18 @@
-/* Piel térmica (ver termico.css). Va después de los estilos propios, por eso el !important. */
+/* La web conserva sus colores; solo los llamados a la acción llevan el
+   gradiente térmico (pedido del usuario, 5 nov 2026). Va después de los
+   estilos propios. */
 @import './termico.css';
-/* ---------- lecturas y textos del visor ---------- */
-.essp-script{
-  background:linear-gradient(90deg,var(--t-3),var(--t-4) 35%,var(--t-5) 65%,var(--t-6)) !important;
-  -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important;
-}
-.essp-tag, .lh-kicker, .shop-kicker{letter-spacing:.06em}
-.essp-tag::before, .shop-kicker::before{
-  content:""; display:inline-block; width:9px; height:9px; margin-right:7px; vertical-align:-1px;
-  border:1.6px solid currentColor; border-radius:50%;
-  background:radial-gradient(circle,currentColor 0 1.5px,transparent 2px);
-}
 
-
-/* =================== WEB =================== */
-.navbar-content{background:rgba(13,8,32,.88) !important;backdrop-filter:blur(10px);border-radius:14px !important;box-shadow:0 0 0 1px rgba(255,194,60,.18),var(--t-glow-cold) !important}
-.navbar-content a, .navbar-content .nav-links a, .navbar-content svg, .navbar-content button{color:#fff !important;stroke:#fff}
-/* portada: noche fría, la persona caliente, una mancha de calor detrás del celular */
-.essp-hero{
-  background-color:var(--t-0) !important;
-  background-image:
-    radial-gradient(38% 55% at 76% 52%, rgba(255,243,176,.9), rgba(255,194,60,.85) 16%, rgba(242,84,45,.8) 32%, rgba(222,27,27,.7) 46%, rgba(176,18,122,.55) 62%, rgba(90,30,158,.4) 80%, transparent 96%),
-    radial-gradient(30% 40% at 12% 85%, rgba(90,30,158,.6), transparent 85%),
-    linear-gradient(180deg,var(--t-0),var(--t-1)) !important;
+.essp-btn:not(.is-ghost):not(.is-link):not(.is-wa),
+.btn-buy-shop,
+.nav-links .nav-app-link {
+  background: var(--t-cta) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: var(--t-cta-glow) !important;
 }
-.essp-hero .essp-slide{--essp-fg:#fff;--essp-soft:#CFC4EA;color:#fff}
-.essp-hero .essp-title{color:#fff !important}
-.essp-hero .essp-lede, .essp-hero .essp-loc{color:#D9D0EE !important}
-.essp-hero .essp-tag{color:var(--t-6) !important}
-.essp-new, .essp-badge{background:var(--t-ramp) !important;color:var(--t-ink) !important}
-.essp-btn{background:linear-gradient(180deg,var(--t-5),var(--t-4) 55%,#C0162C) !important;color:#fff !important;border:0 !important;box-shadow:0 10px 26px -8px rgba(242,84,45,.8), inset 0 1px 0 rgba(255,243,176,.55) !important}
-.essp-btn.is-ghost{background:#fff !important;color:var(--t-ink) !important;box-shadow:inset 0 0 0 1.5px var(--t-2) !important}
-.essp-hero .essp-btn.is-ghost, .lh .essp-btn.is-ghost{background:transparent !important;color:#fff !important;box-shadow:inset 0 0 0 1.5px rgba(255,194,60,.7) !important}
-.essp-hero .essp-btn.is-link{color:var(--t-6) !important;background:none !important;box-shadow:none !important}
-img[src*="/image/personas/"]{filter:url(#t-thermal)}
-.essp-live{background:#fff !important;box-shadow:var(--t-glow) !important}
-.essp-live-tag{background:var(--t-ramp) !important;color:var(--t-ink) !important}
-/* la hoja de plano de los banners pasa a frío */
-.essp-hero [class*="sheet"], .essp-hero [class*="paper"]{background:transparent !important}
-/* Micra: papel claro, los pasos como lecturas que suben de temperatura */
-.micra{background:var(--t-paper) !important}
-.micra .essp-title, .micra-head h2{color:var(--t-ink) !important}
-.micra-steps > *{background:var(--t-0) !important;border:0 !important;box-shadow:var(--t-glow-cold) !important;position:relative;overflow:hidden}
-.micra-steps > *::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px}
-.micra-steps > *:nth-child(1)::after{background:linear-gradient(90deg,var(--t-1),var(--t-2),var(--t-3))}
-.micra-steps > *:nth-child(2)::after{background:linear-gradient(90deg,var(--t-3),var(--t-4),var(--t-5))}
-.micra-steps > *:nth-child(3)::after{background:linear-gradient(90deg,var(--t-5),var(--t-6),var(--t-7))}
-.micra-steps *{color:#fff !important}
-.micra-steps > *:nth-child(1) .micra-step-n{color:#A98BF0 !important}
-.micra-steps > *:nth-child(2) .micra-step-n{color:var(--t-5) !important}
-.micra-steps > *:nth-child(3) .micra-step-n{color:var(--t-6) !important}
-.micra-stage{background-color:var(--t-0) !important;background-image:radial-gradient(45% 50% at 50% 45%, rgba(255,194,60,.75), rgba(242,84,45,.7) 25%, rgba(176,18,122,.55) 50%, rgba(90,30,158,.4) 72%, transparent 92%),linear-gradient(180deg,var(--t-1),var(--t-0)) !important;box-shadow:var(--t-glow) !important}
-.micra-stats *{color:#fff !important}
-.micra-stats > *{background:rgba(13,8,32,.55) !important;border:1px solid rgba(255,194,60,.3) !important;backdrop-filter:blur(4px)}
-/* tienda: papel claro; la tarjeta elegida se calienta */
-.product-section, .product-section.shop{background:var(--t-paper) !important}
-.shop-card{background:#fff !important;border:1px solid var(--t-line) !important;box-shadow:var(--t-glow-cold) !important;position:relative;overflow:hidden}
-.shop-card.is-selected{box-shadow:0 0 0 2px var(--t-5),var(--t-glow) !important}
-.shop-card-media{background:radial-gradient(60% 70% at 50% 60%, #FFE9C2, #F6EEF9 70%) !important}
-.shop-title{color:var(--t-ink) !important}
-.shop-tabs .is-on, .shop-size.active{background:var(--t-ink) !important;color:#fff !important;box-shadow:inset 0 -3px 0 var(--t-5) !important}
-.shop-buybar{background:var(--t-0) !important;color:#fff !important;box-shadow:var(--t-glow) !important}
-.shop-buybar *{color:#fff}
-.btn-buy-shop, .shop-buybar button{background:linear-gradient(180deg,var(--t-5),var(--t-4) 55%,#C0162C) !important;color:#fff !important}
-/* Visítanos: el plano en frío, el pin como punto caliente */
-.lh{background-color:var(--t-0) !important;background-image:radial-gradient(28% 40% at 30% 55%, rgba(255,194,60,.55), rgba(242,84,45,.45) 30%, rgba(176,18,122,.35) 58%, transparent 90%),linear-gradient(180deg,var(--t-1),var(--t-0)) !important}
-.lh .visit-title, .lh .visit-word, .lh .visit-address, .lh .essp-loc, .lh .lh-kicker, .lh .fig-label, .lh h2, .lh h3, .lh p{color:#fff !important}
-.lh .essp-tag{color:var(--t-6) !important}
-.lh-photo img, .lh img[src*="local"]{filter:url(#t-thermal-photo)}
-.brew{background:var(--t-paper) !important}
+.essp-btn:not(.is-ghost):not(.is-link):not(.is-wa):hover,
+.btn-buy-shop:hover:not(:disabled) {
+  filter: saturate(1.1) brightness(1.04);
+}
+.btn-buy-shop:disabled { filter: grayscale(.6); opacity: .6; }

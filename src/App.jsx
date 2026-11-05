@@ -23,7 +23,6 @@ import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // La piel de la app Micra sobre toda la web: va después de las hojas de cada sección
 import './shared/styles/estilo-app.css';
 import './shared/styles/termico-web.css';
-import ThermalDefs from './shared/layout/ThermalDefs.jsx';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda la receta oficial en cinco pasos (BrewGuide), que lleva a ella.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
@@ -50,7 +49,6 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <AdminUIProvider>
-            <ThermalDefs />
             {isPrivacyRoute() ? (
               <Suspense fallback={null}><PrivacyPage /></Suspense>
             ) : school ? (

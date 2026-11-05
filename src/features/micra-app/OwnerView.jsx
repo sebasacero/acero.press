@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { money, cupsLabel, weekBars, weekdayLetter, baristaPath, isNight } from './micraApp.js';
+import { money, cupsLabel, weekBars, weekdayLetter, baristaPath } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { Cargando } from './Animado.jsx';
@@ -146,7 +146,7 @@ export default function OwnerView({ onActAs, go }) {
       )}
 
       {/* Lo mismo que ve un barista en la calle: todos los que salieron y dónde quieren café */}
-      <Suspense fallback={null}><LivePanel mode="team" night={isNight()} go={go} /></Suspense>
+      <Suspense fallback={null}><LivePanel mode="team" night={false} go={go} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Tazas por día · 7 días</p>
