@@ -809,6 +809,10 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </span>
           <button type="button" className="mapp-chead-near" onClick={() => go('/micra/barista/qr')} data-testid="head-qr">Mi QR</button>
         </div>
+        {!live && board && (
+          // La plata del día y la meta siempre a la vista, como en las apps de repartidores
+          <p className="mapp-chead-day" data-testid="head-day"><b>{money(board.total)}</b> hoy · <b>{board.cups}/{goal}</b> tazas</p>
+        )}
       </section>
     );
     body = (
@@ -821,13 +825,17 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
               <h1 className="mapp-title is-small">{greeting()}, {first}.</h1>
             </section>
             <StreakRow streak={streak} />
-            <ModePicker mode={mode} onPick={(m) => { pickMode(m); setError(null); }} disabled={busy === 'out'} />
-            <button type="button" className="mapp-btn is-cta is-big is-go" onClick={() => out(true)} disabled={busy === 'out'} data-testid="go-out">
-              {busy === 'out' ? 'Avisando…' : mode ? `Salí a vender · ${modeOf(mode).label.toLowerCase()}` : 'Salí a vender'}
-            </button>
+            {/* «Salí a vender» abajo, al alcance del pulgar (el termo va en la otra mano), con cómo
+                sale justo encima: la opción B que eligió el usuario, 6 nov 2026 (DoorDash, Rappi) */}
+            <section className="mapp-gosheet" aria-label="Salir a vender" data-testid="go-sheet">
+              <ModePicker mode={mode} onPick={(m) => { pickMode(m); setError(null); }} disabled={busy === 'out'} />
+              <button type="button" className="mapp-btn is-cta is-big is-go" onClick={() => out(true)} disabled={busy === 'out'} data-testid="go-out">
+                {busy === 'out' ? 'Avisando…' : mode ? `Salí a vender · ${modeOf(mode).label.toLowerCase()}` : 'Salí a vender'}
+              </button>
+              <p className="mapp-gosheet-meta">{waiting.length ? <span><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron</span> : <span>{isPublic ? 'Se apaga solo en 4 horas' : 'Te pedimos la ubicación al salir'}</span>}<span>meta <b>{goal} tazas</b></span></p>
+            </section>
             {consent}
             {trip.pendingEnd && <p className="mapp-fine">Tu último recorrido no ha subido: se envía solo cuando haya señal.</p>}
-            <p className="mapp-fine is-center">{waiting.length ? <><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron para hoy · meta <b>{goal} tazas</b></> : isPublic ? 'Tus clientes ven que saliste y te apartan. Se apaga solo en 4 horas.' : 'Al salir te pedimos tu ubicación y aparecer en el mapa, para que tus clientes te encuentren.'}</p>
           </>
         )}
         {errorBox}
