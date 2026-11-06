@@ -59,9 +59,10 @@ body { background: var(--app-cream); }
   position: relative; overflow: hidden; min-height: 460px; padding: 22px 22px 62px;
   background: #fff; border-radius: 28px; box-shadow: var(--app-shadow); color: var(--app-fg); text-align: left;
 }
+/* Arriba a la izquierda, sobre la columna del texto: a la derecha tapaba la cara de la persona */
 .essp-live-tag {
-  position: absolute; right: 14px; top: 14px; z-index: 2; background: var(--app-cold); color: #fff;
-  font: 700 10px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; transform: rotate(2deg);
+  position: absolute; left: 16px; top: 14px; z-index: 2; background: var(--app-cold); color: #fff;
+  font: 700 10px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; transform: rotate(-2deg);
 }
 .essp-live-persona { position: absolute; right: 18px; bottom: 44px; height: 78%; max-height: 400px; width: auto; z-index: 1; pointer-events: none; }
 .essp-live-who { position: relative; z-index: 2; width: min(270px, 60%); display: grid; gap: 8px; justify-items: start; margin-top: 26px; }
