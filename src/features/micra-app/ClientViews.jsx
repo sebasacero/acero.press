@@ -23,6 +23,7 @@ import Globito, { ping } from './Globito.jsx';
 const SeekNote = lazy(() => import('./SeekNote.jsx'));
 // El muro de Hoy, debajo de los baristas en el inicio del cliente (cargado aparte)
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
+const AceroAd = lazy(() => import('./AceroAd.jsx'));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
 
@@ -323,6 +324,9 @@ export function ClientHome({ go }) {
       )}
 
       {!searching && <StampsCard />}
+
+      {/* La publicidad de ACERO.press: el plano de la lata y luego las latas de la casa */}
+      {!searching && <Suspense fallback={null}><AceroAd /></Suspense>}
 
       {!searching && <section className="mapp-join">
         <div>

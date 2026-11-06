@@ -190,11 +190,6 @@ test('cliente: su perfil cambia el nombre, quita un barista y «Borrar mis datos
   await page.getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page).toHaveURL(/\/micra\/perfil$/);
 
-  // El banner de la lata sale una vez al día: se cierra con la X
-  await expect(page.getByTestId('promo-coldbrew')).toBeVisible();
-  await page.getByTestId('promo-close').click();
-  await expect(page.getByTestId('promo-coldbrew')).toHaveCount(0);
-
   const prof = page.getByTestId('client-profile');
   await expect(prof.getByRole('heading', { name: 'Sebas', level: 1 })).toBeVisible();
   await page.getByTestId('tile-nombre').click();
@@ -254,25 +249,38 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
   expect(errors).toEqual([]);
 });
 
-test('cliente: el banner de la lata de cold brew sale una vez al día, se pide por WhatsApp y vuelve desde su acceso', async ({ browser }) => {
+test('cliente: la publicidad de ACERO.press está en el inicio (video de la lata y luego las latas), no encima del perfil', async ({ browser }) => {
   const { page, errors } = await open(browser);
-  await page.goto('/micra/perfil', { waitUntil: 'load' });
-  const promo = page.getByTestId('promo-coldbrew');
-  await expect(promo).toBeVisible();
-  await expect(promo).toContainText('Cold brew en lata');
-  // Sin precio en el sitio, la lata dice su tamaño (el precio sale de page_sections cold_brew)
-  await expect(page.getByTestId('promo-price')).toHaveText('355 ml');
-  await expect(page.getByTestId('promo-cta')).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*cold%20brew/);
-  await page.keyboard.press('Escape');
-  await expect(promo).toHaveCount(0);
-  // El mismo día no vuelve a salir solo
-  await page.reload({ waitUntil: 'load' });
+  await page.goto('/micra', { waitUntil: 'load' });
+  await expect(page.getByTestId('micra-splash')).toHaveCount(0);
+  const ad = page.getByTestId('acero-ad');
+  await ad.scrollIntoViewIfNeeded();
+  await expect(ad).toContainText('Recetas de la casa');
+  // Primero el video plano de la lata (mudo); «Ver las latas» o su final pasan al carrusel
+  const skip = page.getByTestId('acero-skip');
+  await expect(page.getByTestId('acero-video').or(page.getByTestId('acero-cans'))).toBeVisible();
+  if (await skip.isVisible()) {
+    // Si el video termina o no se puede reproducir, pasa solo a las latas
+    await skip.click({ timeout: 3000 }).catch(() => {});
+  }
+  const cans = page.getByTestId('acero-cans');
+  await expect(cans.getByRole('listitem')).toHaveCount(4);
+  await expect(cans).toContainText('Cold brew');
+  await expect(cans).toContainText('Matcha mambé');
+  // Sin precio en el sitio no se inventa uno; se pide por WhatsApp
+  await expect(cans.getByRole('listitem').first()).toContainText('Pregunta el precio');
+  await expect(page.getByTestId('acero-buy-cold-brew')).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*cold%20brew/);
+  await page.getByRole('group', { name: 'Elegir lata' }).getByRole('button', { name: 'Latte' }).click();
+  await expect(cans.getByRole('listitem').nth(1)).toHaveAttribute('aria-current', 'true');
+
+  // En Mi perfil ya no sale sola; se abre desde «Otros › ACERO.press» y se cierra con Escape
+  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page.getByTestId('client-profile')).toBeVisible();
+  const promo = page.getByTestId('promo-acero');
   await expect(promo).toHaveCount(0);
-  // Desde «Otros › Cold brew» se abre cuando quiera
   await page.getByTestId('tile-coldbrew').click();
   await expect(promo).toBeVisible();
-  await page.getByTestId('promo-close').click();
+  await page.keyboard.press('Escape');
   await expect(promo).toHaveCount(0);
   expect(errors).toEqual([]);
 });

@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
-import { initials, menuOf, windowLabel, baristaPath, cupsLabel, bogota } from './micraApp.js';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { initials, menuOf, windowLabel, baristaPath, cupsLabel } from './micraApp.js';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToClear, clearStored } from './perfil.js';
-import { promoDue, promoSeen } from './promo.js';
 import { seekOff, setSeekOff } from './seek.js';
 import * as api from './api.js';
 import platform from './platform.js';
@@ -12,7 +11,7 @@ import { StampsCard } from './Loyalty.jsx';
 import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
 import { methodsLabel } from './flow.js';
 import Termo from './Termo.jsx';
-import ColdBrewPromo from './ColdBrew.jsx';
+const AceroAd = lazy(() => import('./AceroAd.jsx'));
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
   IconVideo, IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
@@ -317,7 +316,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
       <Group title="Otros">
         <Tile icon={IconVideo} label="Video con filtro" onClick={() => go('/micra/video')} />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
-        <Tile icon={IconCan} label="Cold brew" onClick={() => setPromo(true)} testid="tile-coldbrew" />
+        <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/barista/reto')} testid="tile-reto" />
         {/* «Cliente / Barista» ya no va arriba (ahí va la meta del día): se cambia desde aquí */}
         <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />
@@ -441,7 +440,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         </Sheet>
       )}
 
-      {promo && <ColdBrewPromo onClose={() => setPromo(false)} />}
+      {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
     </div>
   );
 }
@@ -451,8 +450,8 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
 /**
  * El cliente no tiene cuenta: su perfil es lo que guarda este celular (nombre,
  * sus baristas, la tarjeta de sellos, la zona). Borrarlo no toca sus apartados:
- * esos quedan con el barista. Al abrirlo, una vez al día, sale el banner de la
- * lata de cold brew.
+ * esos quedan con el barista. La publicidad de ACERO.press ya no sale sola aquí:
+ * está en el inicio y se abre desde «Otros».
  */
 export function ClientProfile({ go, who }) {
   const [name, setName] = useState(api.savedName);
@@ -461,14 +460,12 @@ export function ClientProfile({ go, who }) {
   const [list, setList] = useState(null);
   const [zoneOff, setZoneOff] = useState(seekOff);
   const [sheet, setSheet] = useState(null); // 'nombre' | 'baristas' | 'zona'
-  const [promo, setPromo] = useState(() => promoDue(store(), bogota().day));
+  const [promo, setPromo] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const help = useHelp('Hola, equipo de Micra. Necesito ayuda con ');
   useEffect(() => { api.listBaristas().then((l) => setList(l ?? [])).catch(() => setList([])); }, []);
-  // Visto hoy apenas sale: aunque se cierre la app sin tocar la X, mañana vuelve
-  useEffect(() => { if (promo) promoSeen(store(), bogota().day); }, [promo]);
 
   const session = who?.session ?? null;
   const team = !!(who?.barista || who?.admin);
@@ -528,7 +525,7 @@ export function ClientProfile({ go, who }) {
 
       <Group title="Otros">
         <Tile icon={IconThermo} label="Sé barista" onClick={() => go('/micra/barista')} />
-        <Tile icon={IconCan} label="Cold brew" onClick={() => setPromo(true)} testid="tile-coldbrew" />
+        <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
         <Tile icon={IconBag} label="Tienda" href={platform.siteUrl('/#beans')} />
       </Group>
@@ -593,7 +590,7 @@ export function ClientProfile({ go, who }) {
         </Sheet>
       )}
 
-      {promo && <ColdBrewPromo onClose={() => setPromo(false)} />}
+      {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
     </div>
   );
 }

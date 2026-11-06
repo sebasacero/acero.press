@@ -1234,39 +1234,48 @@
 .mapp-pfoot .mapp-brand-mark .mapp-termo { height: 22px; }
 .mapp-profile > .mapp-signout { display: block; width: 100%; }
 
-/* ── El banner de la lata de cold brew ───────────────────────────────── */
-/* La hoja de plano crema del sitio con la lata original y el título a mano en
-   rojo; la persona de la calle como sombra detrás; abajo la franja roja */
+/* ── La publicidad de ACERO.press (6 nov 2026) ─────────────────────────── */
+/* En el inicio del cliente: la hoja de plano crema del sitio con el video de la lata
+   y luego el carrusel de las latas de la casa. A pantalla completa desde Mi perfil. */
 .mapp-promo { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); animation: mapp-in .25s both; }
 .mapp-promo-scrim { position: absolute; inset: 0; border: 0; background: rgba(20, 22, 27, .62); cursor: pointer; }
-.mapp-promo-card { position: relative; overflow: hidden; width: min(100%, 340px); height: min(calc(100vh - 150px), 470px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; border-radius: 26px; color: #1F2452; background:
+.mapp-promo-x { position: relative; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .9); background: rgba(0, 0, 0, .25); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.mapp-acero { position: relative; margin: 18px 0; padding: 16px 0 14px; border-radius: 24px; overflow: hidden; color: #1F2452; background:
   linear-gradient(rgba(31, 36, 82, .07) 1px, transparent 1px) 0 0 / 22px 22px,
   linear-gradient(90deg, rgba(31, 36, 82, .07) 1px, transparent 1px) 0 0 / 22px 22px,
   #F5EFE4;
-  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, .6); animation: mapp-promo-in .45s cubic-bezier(.2, .9, .25, 1.15) both; }
-@keyframes mapp-promo-in { from { transform: translateY(24px) scale(.94); opacity: 0; } }
-.mapp-promo-ghost { position: absolute; right: -24%; top: -2%; height: 92%; width: auto; opacity: .09; filter: brightness(0); pointer-events: none; }
-.mapp-promo-h { position: relative; z-index: 1; margin: 0; padding: 22px 20px 0; display: grid; justify-items: start; font: 400 2.35rem/.92 'Permanent Marker', cursive; color: #DE1B1B; transform: rotate(-5deg); transform-origin: left top; }
-.mapp-promo-h span:last-child { margin-left: 18px; }
-.mapp-promo-can { position: relative; z-index: 1; justify-self: center; align-self: end; width: auto; height: 100%; max-height: 250px; min-height: 0; margin: -18px 0 -14px 70px; object-fit: contain; filter: drop-shadow(0 16px 14px rgba(31, 36, 82, .28)); animation: mapp-promo-can 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
-@keyframes mapp-promo-can { 50% { transform: translateY(-6px) rotate(2deg); } }
-.mapp-promo-band { position: relative; z-index: 2; padding: 16px 18px 16px; background: #DE1B1B; color: #F5EFE4; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 20px -14px rgba(120, 8, 8, .6); }
-.mapp-promo-foot { display: flex; align-items: center; gap: 14px; }
-.mapp-promo-logo { flex: none; width: 70px; height: 62px; border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 0; background: #F5EFE4; box-shadow: 0 8px 16px -10px rgba(0, 0, 0, .5); }
-.mapp-promo-logo b { font: 800 .95rem/1 'Archivo', sans-serif; letter-spacing: .04em; color: #1F2452; }
-.mapp-promo-logo i { font: 400 1.05rem/1 'Permanent Marker', cursive; font-style: normal; color: #DE1B1B; transform: rotate(-6deg); }
-.mapp-promo-copy { min-width: 0; padding-left: 14px; border-left: 2px solid rgba(245, 239, 228, .45); }
-.mapp-promo-name { margin: 0; font: 800 1.1rem/1.1 'Archivo', sans-serif; }
-.mapp-promo-sub { margin: 2px 0 0; font: 500 .92rem 'Archivo', sans-serif; opacity: .92; }
-.mapp-promo-big { margin: 4px 0 0; font: 800 2.1rem/1 'Archivo', sans-serif; letter-spacing: -.03em; }
-.mapp-promo-bottom { display: flex; align-items: flex-end; gap: 12px; margin-top: 12px; }
-.mapp-promo-fine { flex: 1; margin: 0; font: 500 .58rem/1.35 'JetBrains Mono', monospace; opacity: .88; }
-.mapp-promo-cta { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #fff; color: #DE1B1B; font: 800 1.05rem 'Archivo', sans-serif; text-decoration: none; box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .55); }
-.mapp-promo-cta:focus { outline: none; }
-.mapp-promo-cta:focus-visible { outline: 3px solid rgba(255, 255, 255, .75); outline-offset: 3px; }
-.mapp-promo-x { position: relative; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .9); background: rgba(0, 0, 0, .25); color: #fff; display: grid; place-items: center; cursor: pointer; }
-@media (max-height: 640px) { .mapp-promo-h { font-size: 1.9rem; } .mapp-promo-big { font-size: 1.7rem; } }
-@media (prefers-reduced-motion: reduce) { .mapp-promo-card, .mapp-promo-can { animation: none; } }
+  box-shadow: 0 16px 34px -22px rgba(31, 36, 82, .55); }
+.mapp-acero.is-full { position: relative; z-index: 1; width: min(100%, 360px); margin: 0; max-height: calc(100vh - 110px); overflow-y: auto; animation: mapp-in .3s both; }
+.mapp-acero-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 16px; }
+.mapp-acero-logo b { font: 800 1rem/1 'Archivo', sans-serif; letter-spacing: .04em; }
+.mapp-acero-logo i { font: 400 1.1rem/1 'Permanent Marker', cursive; font-style: normal; color: #DE1B1B; }
+.mapp-acero-head small { font: 600 .62rem 'JetBrains Mono', monospace; letter-spacing: .14em; text-transform: uppercase; opacity: .6; }
+.mapp-acero-h { margin: 6px 16px 10px; font: 800 1.45rem/1.05 'Archivo', sans-serif; letter-spacing: -.02em; }
+.mapp-acero-h .mapp-script { color: #DE1B1B; }
+.mapp-acero-video { position: relative; margin: 0 16px; border-radius: 18px; overflow: hidden; aspect-ratio: 9 / 13; background: #E9E0CF; }
+.mapp-acero-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mapp-acero-skip { position: absolute; right: 10px; bottom: 10px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(31, 36, 82, .82); color: #F5EFE4; font: 700 .85rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-acero-track { display: flex; gap: 12px; margin: 0; padding: 4px 16px 8px; list-style: none; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.mapp-acero-track::-webkit-scrollbar { display: none; }
+.mapp-acero-can { flex: 0 0 72%; scroll-snap-align: center; display: grid; justify-items: center; gap: 2px; padding: 12px 12px 14px; border-radius: 20px; background: #fff; box-shadow: 0 10px 24px -18px rgba(31, 36, 82, .6); text-align: center; transition: transform .35s, opacity .35s; opacity: .55; transform: scale(.92); }
+.mapp-acero-can.on { opacity: 1; transform: none; }
+.mapp-acero-can img { width: auto; height: 190px; object-fit: contain; filter: drop-shadow(0 12px 10px rgba(31, 36, 82, .22)); }
+.mapp-acero-can.on img { animation: mapp-acero-float 2.6s ease-in-out infinite; }
+@keyframes mapp-acero-float { 50% { transform: translateY(-7px) rotate(3deg); } }
+.mapp-acero-can b { margin-top: 6px; font: 800 1.2rem/1.1 'Archivo', sans-serif; }
+.mapp-acero-temp { padding: 3px 10px; border-radius: 999px; font: 600 .7rem 'JetBrains Mono', monospace; color: #fff; background: var(--t-4, #DE1B1B); }
+.mapp-acero-can.is-cold .mapp-acero-temp { background: var(--t-1, #2B59C3); }
+.mapp-acero-can.is-warm .mapp-acero-temp { background: var(--t-3, #B2245F); }
+.mapp-acero-can.is-hot .mapp-acero-temp { background: var(--t-5, #F0590E); }
+.mapp-acero-can small { font: 500 .8rem/1.3 'Archivo', sans-serif; opacity: .75; }
+.mapp-acero-price { margin: 4px 0 6px; font: 800 1.5rem/1 'JetBrains Mono', monospace; letter-spacing: -.03em; }
+.mapp-acero-price.is-ask { font: 600 .85rem 'JetBrains Mono', monospace; letter-spacing: 0; opacity: .7; }
+.mapp-acero-dots { display: flex; justify-content: center; gap: 2px; }
+.mapp-acero-dots button { width: 44px; height: 32px; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.mapp-acero-dots button::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: rgba(31, 36, 82, .25); transition: width .3s; }
+.mapp-acero-dots button[aria-pressed='true']::after { width: 22px; border-radius: 6px; background: #1F2452; }
+.mapp-acero-replay { display: block; margin: 2px auto 0; min-height: 44px; }
+@media (prefers-reduced-motion: reduce) { .mapp-acero-can.on img { animation: none; } .mapp-acero-can { transition: none; } }
 
 /* ── El cliente como Instagram (31 oct) ───────────────────────────────── */
 /* Arriba: la marca a mano y el avión de los mensajes; las historias de los
