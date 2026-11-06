@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import * as api from './api.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf } from './competencia.js';
 import { IconTrophy, IconBean } from './icons.jsx';
 import Figure from './Elenco.jsx';
 import { Cargando } from './Animado.jsx';
@@ -77,6 +77,46 @@ function EntryView({ entry, url, challenge, onVote, onClose, voting, error }) {
   );
 }
 
+/**
+ * Los retos básicos: las experiencias de base del barismo por sección (filtrados, espresso,
+ * arte latte, leche, molienda, cata, calle). El barista los ve todos para practicar; el equipo
+ * abre uno como reto de la semana. El reto abierto sale marcado en su sección.
+ */
+function Basics({ current, barista }) {
+  const here = sectionOf(current);
+  const [sec, setSec] = useState(here?.id ?? BASIC_SECTIONS[0].id);
+  const s = BASIC_SECTIONS.find((x) => x.id === sec) ?? BASIC_SECTIONS[0];
+  return (
+    <section className="mapp-glass mapp-basics" aria-labelledby="basics-h" data-testid="basics">
+      <p className="mapp-cota" id="basics-h">Retos básicos del barismo</p>
+      <p className="mapp-muted">{barista ? 'Lo que todo barista domina, por secciones. Practícalos: cada semana el equipo abre uno.' : 'Lo que todo barista domina. Cada semana se abre uno y tú calificas.'}</p>
+      <div className="mapp-chips is-scroll" role="tablist" aria-label="Secciones">
+        {BASIC_SECTIONS.map((x) => (
+          <button key={x.id} type="button" role="tab" aria-selected={sec === x.id} className={sec === x.id ? 'on' : ''} onClick={() => setSec(x.id)} data-testid={`basics-${x.id}`}>
+            <span aria-hidden="true">{x.icon}</span> {x.label}{here?.id === x.id ? ' ·' : ''}
+          </button>
+        ))}
+      </div>
+      <p className="mapp-basics-why">{s.why}</p>
+      <ol className="mapp-basics-list" role="tabpanel" aria-label={s.label}>
+        {s.challenges.map((c, i) => {
+          const live = current && current.title === c.title;
+          return (
+            <li key={c.title} className={live ? 'is-live' : ''}>
+              <span className="mapp-basics-n" aria-hidden="true">{i + 1}</span>
+              <div>
+                <b>{c.title.replace(/^[^:]+:\s*/, '')}{live && <em className="mapp-basics-now">Reto de esta semana</em>}</b>
+                <p>{c.brief}</p>
+                <small>{c.kind === 'arte_latte' ? '🏅 ' : '✓ '}{c.how}</small>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 export default function Competencia({ go, audience = 'client', selfId = null, asId = null }) {
   const [data, setData] = useState(null);
   const [urls, setUrls] = useState({});
@@ -126,14 +166,14 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
       <header className="mapp-reto-head">
         <span className="mapp-reto-cup" aria-hidden="true"><IconTrophy /></span>
         <div>
-          <p className="mapp-kicker">Competencia · reto de la semana</p>
+          <p className="mapp-kicker">Competencia · {sectionOf(ch)?.label ?? 'reto de la semana'}</p>
           <h1 className="mapp-title is-small">{ch ? ch.title : 'Sin reto abierto'}</h1>
         </div>
       </header>
 
       {!ch && (
         <section className="mapp-glass mapp-reto-empty">
-          <p>{data.missing ? 'La competencia abre muy pronto.' : 'El equipo abre un reto nuevo cada semana: arte latte, la foto del puesto, el cliente de siempre. Vuelve pronto.'}</p>
+          <p>{data.missing ? 'La competencia abre muy pronto.' : 'El equipo abre un reto nuevo cada semana: filtrados, espresso, arte latte, leche, cata y la calle. Mira abajo los retos básicos y practica.'}</p>
           {barista && !data.missing && <p className="mapp-muted">Mientras tanto, practica tu corazón en el perico: la Escuela tiene la lección de leche.</p>}
         </section>
       )}
@@ -208,6 +248,8 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
           <p><b>{data.my_wins === 1 ? 'Has ganado 1 reto' : `Has ganado ${data.my_wins} retos`}</b><small>Sale en tu perfil y en Hoy.</small></p>
         </section>
       )}
+
+      <Basics current={ch} barista={barista} />
 
       {data.past.length > 0 && (
         <section className="mapp-glass" aria-label="Retos anteriores" data-testid="past">

@@ -37,7 +37,13 @@ test('equipo: abre el reto de la semana desde una idea y lo ve abierto con sus c
   await expect(panel).toContainText('sin reto abierto');
   await panel.getByTestId('challenge-new').click();
   const form = panel.getByTestId('challenge-form');
-  await form.getByRole('group', { name: 'Ideas' }).getByRole('button', { name: 'Arte latte: la rosetta' }).click();
+  // Las ideas son los retos básicos por sección: primero un espresso, luego la rosetta
+  await form.getByRole('group', { name: 'Sección' }).getByRole('button', { name: /Espresso/ }).click();
+  await form.getByRole('group', { name: 'Ideas' }).getByRole('button', { name: 'la crema avellana' }).click();
+  await expect(form.getByLabel('Nombre del reto')).toHaveValue('Espresso: la crema avellana');
+  await expect(form.getByRole('group', { name: 'Tipo' }).getByRole('button', { name: 'Foto del puesto' })).toHaveAttribute('aria-pressed', 'true');
+  await form.getByRole('group', { name: 'Sección' }).getByRole('button', { name: /Arte latte/ }).click();
+  await form.getByRole('group', { name: 'Ideas' }).getByRole('button', { name: 'la rosetta' }).click();
   await expect(form.getByLabel('Nombre del reto')).toHaveValue('Arte latte: la rosetta');
   await form.getByLabel(/Premio/).fill('Un kilo de café de origen');
   await form.getByRole('button', { name: 'Guardar' }).click();
@@ -127,6 +133,15 @@ test('barista: no califica su propia entrada y ve sus retos ganados', async ({ b
   await reto.getByTestId('entries').getByRole('button', { name: /^Marlene/ }).click();
   await expect(page.getByTestId('entry-mine')).toContainText('Esta es tu entrada');
   await expect(page.getByTestId('entry-view').getByRole('radio')).toHaveCount(0);
+  await page.getByTestId('entry-view').getByRole('button', { name: 'Listo' }).click();
+  // Los retos básicos por sección: abre en la del reto abierto, marcado como el de esta semana
+  const basics = page.getByTestId('basics');
+  await expect(basics.getByRole('tab', { name: /Arte latte/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(basics.getByRole('listitem').filter({ hasText: 'Reto de esta semana' })).toContainText('tu mejor corazón');
+  await basics.getByTestId('basics-filtrados').click();
+  await expect(basics.getByRole('tabpanel')).toContainText('tu receta de AeroPress');
+  await basics.getByTestId('basics-espresso').click();
+  await expect(basics.getByRole('tabpanel')).toContainText('18 g en 28 segundos');
   expect(errors).toEqual([]);
 });
 
