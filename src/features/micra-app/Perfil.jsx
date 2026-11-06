@@ -14,7 +14,7 @@ import Termo from './Termo.jsx';
 const AceroAd = lazy(() => import('./AceroAd.jsx'));
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
-  IconVideo, IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
+  IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
   IconCamera, IconOut, IconTrophy, IconHome,
 } from './icons.jsx';
 
@@ -314,7 +314,6 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
       </Group>
 
       <Group title="Otros">
-        <Tile icon={IconVideo} label="Video con filtro" onClick={() => go('/micra/video')} />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
         <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/barista/reto')} testid="tile-reto" />

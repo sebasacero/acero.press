@@ -121,7 +121,7 @@ function Tile({ tone, tag, children }) {
   );
 }
 
-function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false }) {
+function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false, onPhoto }) {
   const shareLink = (title, url) => () => platform.share({ title, text: title, url });
   const meAv = <Figure name={figureFor(selfId)} className="is-avatar" />;
   if (item.kind === 'logros') {
@@ -159,13 +159,13 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false })
   }
   if (item.kind === 'publicar') {
     const media = (
-      <button type="button" className="mapp-ig-tile is-idea" onClick={() => go('/micra/video')} aria-label={`Tomar: ${item.title}`}>
+      <button type="button" className="mapp-ig-tile is-idea" onClick={onPhoto} disabled={!onPhoto} aria-label={`Tomar: ${item.title}`}>
         <span className="mapp-ig-tag">Idea de foto</span>
         <span className="mapp-ig-badge" aria-hidden="true">{item.icon}</span>
         <span className="mapp-ig-shot">📷 Toca para tomarla</span>
       </button>
     );
-    return <Shell item={item} testid="feed-idea" av={<span className="mapp-post-av is-idea" aria-hidden="true">✨</span>} who="Idea para hoy" where="Sugerido para ti" media={media} title={item.title} text={item.text} cta={<button type="button" className="mapp-btn is-small" onClick={() => go('/micra/video')}>📷 Tomar la foto</button>} />;
+    return <Shell item={item} testid="feed-idea" av={<span className="mapp-post-av is-idea" aria-hidden="true">✨</span>} who="Idea para hoy" where="Sugerido para ti" media={media} title={item.title} text={item.text} cta={onPhoto ? <button type="button" className="mapp-btn is-small" onClick={onPhoto}>📷 Tomar la foto</button> : null} />;
   }
   if (item.kind === 'cafe') {
     const mark = item.org === 'Finca' ? '🌱' : item.org === 'Marca' ? '🏷️' : 'FNC';
@@ -306,12 +306,10 @@ function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false, on
         <h2 className="mapp-title is-small">¿Qué quieres mostrar hoy?</h2>
         <div className="mapp-publish">
           {onCompose && <button type="button" onClick={() => { onClose(); onCompose(); }} data-testid="publish-micra"><span aria-hidden="true">📸</span>En Micra</button>}
-          <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">🎥</span>Video con filtro</button>
-          <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">📍</span>Foto del puesto</button>
           <button type="button" onClick={() => { onClose(); onShareDay(); }} disabled={!canShareDay}><span aria-hidden="true">🗺️</span>Mi día de hoy</button>
           <a href={wa(recipe)} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span>Una receta</a>
         </div>
-        <p className="mapp-fine">«En Micra» sale aquí en Hoy cuando el equipo la revisa. El video y tu día se comparten en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
+        <p className="mapp-fine">«En Micra» (foto o video) sale aquí en Hoy cuando el equipo la revisa. Tu día se comparte en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
       </section>
     </div>
   );
@@ -460,7 +458,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
           : item.kind === 'patrocinado'
             ? <AdPost key={item.id} ad={item} />
-            : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} />))}
+            : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} onPhoto={canPost ? () => setComposing(true) : null} />))}
       </div>
       {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} onCompose={canPost ? () => setComposing(true) : null} />}
       {composing && <PostComposer selfId={selfId} asId={asId} onClose={() => setComposing(false)} onSent={loadMine} />}

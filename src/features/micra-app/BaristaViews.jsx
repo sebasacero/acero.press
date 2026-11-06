@@ -792,11 +792,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         {showPay
           ? <section className="mapp-glass"><p className="mapp-cota">Cómo te pagan</p><PayMethods methods={extras?.payments} asId={asId} onSaved={() => { setShowPay(false); loadExtras(); }} onCancel={() => setShowPay(false)} /></section>
           : <button type="button" className="mapp-link" onClick={() => setShowPay(true)} data-testid="pay-open">Cómo te pagan{extras?.payments?.length ? ` · ${methodsLabel(extras.payments)}` : ''}</button>}
-        <section className="mapp-glass">
-          <p className="mapp-cota">Para tus redes</p>
-          <p>Un video o una foto con los filtros de Micra: tu café, tu puesto, la app. Lo compartes donde quieras.</p>
-          <button type="button" className="mapp-btn is-small" onClick={() => go('/micra/video')} data-testid="barista-video">🎥 Hacer un video con filtro</button>
-        </section>
         {!asId && <a className="mapp-link" href={platform.siteUrl('/ruta')}>Medir mi recorrido (Mi ruta)</a>}
       </>
     );

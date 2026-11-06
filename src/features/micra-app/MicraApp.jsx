@@ -173,7 +173,7 @@ export default function MicraApp() {
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
-  // /micra/video: la cámara con filtros para un barista de la app (o el equipo); vive en el modo barista
+  // /micra/video: la cámara con filtros en modo barista, solo para el equipo
   const videoView = route.view === 'video';
   const viewMode = teamView ? 'owner' : route.view === 'barista' || videoView ? 'barista' : 'client';
   // La cabecera roja de domicilios: el inicio del cliente y Vender del barista
@@ -209,6 +209,11 @@ export default function MicraApp() {
     go(m === 'owner' ? '/micra/equipo' : m === 'barista' ? '/micra/barista' : '/micra');
   };
 
+  // Un barista que llega a /micra/video (un enlace viejo) vuelve a su inicio
+  useEffect(() => {
+    if (videoView && !who.loading && who.barista && !who.admin) go('/micra/barista');
+  }, [videoView, who.loading, who.barista, who.admin, go]);
+
   useEffect(() => {
     platform.setNight(night, red);
   }, [night, red]);
@@ -229,7 +234,10 @@ export default function MicraApp() {
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (videoView) {
     if (who.loading) body = <Cargando />;
-    else if (who.barista || who.admin) body = <Cargando fig="caminando">Abriendo la cámara…</Cargando>;
+    // La cámara con filtros es solo del equipo (pedido del usuario, 6 nov 2026): el barista tiene su
+    // perfil aparte, con la cámara de su barra para la foto de la venta
+    else if (who.admin) body = <Cargando fig="caminando">Abriendo la cámara…</Cargando>;
+    else if (who.barista) body = <Cargando />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (teamView) {
     if (who.loading) body = <Cargando />;
@@ -313,7 +321,7 @@ export default function MicraApp() {
           </button>
         </nav>
       )}
-      {((route.view === 'camera' && who.admin) || (videoView && (who.barista || who.admin))) && (
+      {((route.view === 'camera' && who.admin) || (videoView && who.admin)) && (
         // A pantalla completa sobre el estudio (equipo) o sobre el inicio del barista; `lite`: sin venta, ficha ni publicar.
         // En modo barista es `lite` para todos, también para el dueño: la encuesta y la ficha viven solo en Equipo
         <Suspense fallback={null}>

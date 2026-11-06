@@ -571,7 +571,9 @@ test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y 
   await expect(feed.getByRole('button', { name: 'Ver en el mapa ›' }).first()).toBeVisible();
   // Publicar lleva a lo que ya existe
   await page.getByRole('button', { name: '＋ Publicar' }).click();
-  await expect(page.getByTestId('publish')).toContainText('Video con filtro');
+  await expect(page.getByTestId('publish')).toContainText('En Micra');
+  // La cámara con filtros es solo del equipo
+  await expect(page.getByTestId('publish')).not.toContainText('Video con filtro');
   await page.getByRole('button', { name: 'Cerrar' }).click();
 
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();
@@ -705,8 +707,10 @@ test('barista: Hoy celebra la racha y sugiere qué publicar; no publica cuántas
   await page.getByRole('tab', { name: 'Café de Colombia' }).click();
   await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
   await page.getByRole('tab', { name: 'Para publicar' }).click();
+  // La idea abre la misma foto de «En Micra» (va a revisión), no la cámara del equipo
   await page.getByTestId('feed-idea').first().getByRole('button', { name: /Tomar la foto/ }).click();
-  await expect(page).toHaveURL(/\/micra\/video$/);
+  await expect(page.getByTestId('post-composer')).toBeVisible();
+  await expect(page).toHaveURL(/\/micra\/barista\/hoy$/);
   expect(errors).toEqual([]);
 });
 

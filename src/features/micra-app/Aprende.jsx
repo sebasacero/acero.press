@@ -4,6 +4,7 @@ import { readSeen, writeSeen } from '../school/progress.js';
 import { lessonHash } from '../school/school.js';
 import { lessonPath, LEVELS } from './motivation.js';
 import platform from './platform.js';
+import * as api from './api.js';
 import Figure from './Elenco.jsx';
 import { IconCheck } from './icons.jsx';
 
@@ -79,6 +80,10 @@ function LessonSheet({ lesson, n, seen, onDone, onClose }) {
 }
 
 export default function Aprende({ go }) {
+  // El video del nivel se graba con la cámara del celular y se manda al equipo por WhatsApp
+  // (la cámara con filtros de Micra es solo del equipo)
+  const [team, setTeam] = useState('573152125327');
+  useEffect(() => { api.teamWhatsApp().then((n) => n && setTeam(n)).catch(() => {}); }, []);
   const lessons = lessonsFor('es');
   const [seen, setSeen] = useState(readSeen);
   const [open, setOpen] = useState(null);
@@ -136,8 +141,8 @@ export default function Aprende({ go }) {
       {path.ready && (
         <section className="mapp-glass mapp-final" data-testid="level-video">
           <p className="mapp-cota">Siguiente nivel · {nextLvl.name}</p>
-          <p>Graba un video corto preparando una taza con la receta y compártelo con el equipo de Micra. Lo revisamos para subirte a <b>{nextLvl.name}</b>.</p>
-          <button type="button" className="mapp-btn is-cta" onClick={() => go('/micra/video')}>Grabar mi video</button>
+          <p>Graba con tu celular un video corto preparando una taza con la receta y mándaselo al equipo de Micra por WhatsApp. Lo revisamos para subirte a <b>{nextLvl.name}</b>.</p>
+          <a className="mapp-btn is-cta" href={`https://wa.me/${team}?text=${encodeURIComponent(`Hola, equipo de Micra. Les mando mi video para subir a ${nextLvl.name}.`)}`} target="_blank" rel="noopener noreferrer" data-testid="level-video-send">Mandar mi video por WhatsApp</a>
         </section>
       )}
 

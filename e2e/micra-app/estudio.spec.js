@@ -125,19 +125,10 @@ test('un barista sin equipo no ve el estudio ni la cámara del equipo', async ({
   await page.goto('/micra/camara', { waitUntil: 'load' });
   await expect(page.locator('.mapp-main')).toBeVisible();
   await expect(page.locator('.mstudio')).toHaveCount(0);
-  // Pero sí tiene la cámara con filtros para sus redes: sin venta, sin ficha, sin publicar en ACERO
-  // (este barista del simulador no tiene día enlazado: se entra por la ruta, que es la del botón de su inicio)
+  // La cámara con filtros es solo del equipo: el barista tiene su perfil aparte (la cámara de su barra)
   await page.goto('/micra/video', { waitUntil: 'load' });
-  await expect(page.locator('.mstudio.is-camera')).toHaveCount(1);
-  await expect(page.locator('.mst-ticket')).toHaveCount(0);
-  await expect(page.locator('.mst-tintero')).toHaveCount(0);
-  // Ni el modelo de anuncio «Tintero aliado», que es solo del equipo
-  await page.click('.mc-kinds button:has-text("Anuncio")');
-  await expect(page.getByRole('option', { name: 'Promo' })).toHaveCount(1);
-  await expect(page.getByRole('option', { name: 'Tintero aliado' })).toHaveCount(0);
-  await expect(page.locator('.mc-text', { hasText: /tintero/i })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Cerrar la cámara' }).click();
-  await expect(page).toHaveURL(/\/micra\/barista$/);
+  await expect(page.locator('.mapp-main')).toBeVisible();
+  await expect(page.locator('.mstudio')).toHaveCount(0);
 });
 
 test('el dueño en modo barista tampoco ve la ficha ni la encuesta en la cámara', async ({ browser }) => {
