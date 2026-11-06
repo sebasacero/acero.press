@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   PRODUCTS, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
-  baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota, searchDay,
+  baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota,
 } from './micraApp.js';
 import { streakOf, streakLabel, goalOf, milestone, stepText, lessonPath, figureFor, fillOf, GOAL_CHOICES } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
@@ -9,7 +9,7 @@ import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconToday, IconCup, IconCap, IconWallet, IconBack, IconPin, IconSearch } from './icons.jsx';
+import { IconToday, IconCup, IconCap, IconWallet, IconBack, IconPin } from './icons.jsx';
 import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
@@ -437,7 +437,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [moment, setMoment] = useState(null); // la primera taza del día o un hito de racha
   const [ordering, setOrdering] = useState(false);
   // El buscador de la cabecera roja de Vender: un cliente, un fiado o un producto
-  const [q, setQ] = useState('');
   const prevCups = useRef(null);
   const flushing = useRef(false);
 
@@ -778,14 +777,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     );
   } else {
     // Vender: su inicio. Salir, contar cada taza y ver quién lo espera, en una sola pantalla.
-    // Arriba, la cabecera roja como la del cliente (apps de domicilios): su punto, «Mi QR» y el
-    // buscador; al buscar, solo los resultados con su botón (Entregado, Pagó, +1)
-    const searching = q.trim().length > 0;
-    const found = searching ? searchDay(day, menu, q) : null;
-    const total = found ? found.holds.length + found.fiados.length + found.products.length : 0;
+    // Arriba, la cabecera roja como la del cliente (apps de domicilios): su punto y «Mi QR», sin
+    // buscador (pedido del usuario, 6 nov 2026); en la calle sigue sin corte en la taza
     const where = day.zone || day.localidad || null;
     const head = (
-      <section className={`mapp-chead ${live && !searching ? 'is-joined' : ''}`} aria-label="Buscar en tu día" data-testid="barista-head">
+      <section className={`mapp-chead ${live ? 'is-joined' : ''}`} aria-label="Tu punto" data-testid="barista-head">
         <div className="mapp-chead-row">
           <span className="mapp-chead-loc is-static">
             <span className="mapp-chead-pin" aria-hidden="true"><IconPin /></span>
@@ -793,67 +789,9 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </span>
           <button type="button" className="mapp-chead-near" onClick={() => go('/micra/barista/qr')} data-testid="head-qr">Mi QR</button>
         </div>
-        <label className="mapp-search">
-          <IconSearch />
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value.slice(0, 40))} placeholder="Busca un cliente, un fiado o un producto" aria-label="Buscar clientes, fiados o productos" enterKeyHint="search" data-testid="barista-search" />
-          {searching && <button type="button" className="mapp-search-x" onClick={() => setQ('')} aria-label="Borrar búsqueda">×</button>}
-        </label>
       </section>
     );
-    const results = searching && (
-      <section className="mapp-glass mapp-dsearch" aria-label="Resultados" data-testid="day-search">
-        <p className="mapp-cota">{total === 1 ? '1 resultado' : `${total} resultados`} para «{q.trim()}»</p>
-        {total === 0 && <p className="mapp-muted">Nada con «{q.trim()}» hoy. Busca por el nombre de quien te apartó o te debe, o por un producto.</p>}
-        {found.holds.length > 0 && (
-          <>
-            <p className="mapp-dsearch-h">Te esperan</p>
-            <ul className="mapp-holds">
-              {found.holds.map((h) => (
-                <li key={h.id}>
-                  <span className="mapp-av" aria-hidden="true">{initials(h.name)}</span>
-                  <div><b>{h.name}</b><span>{itemsLabel(h.items)} · {money(h.total)}</span></div>
-                  <span className="mapp-hold-act"><button type="button" className="mapp-btn is-small" onClick={() => closeHold(h, true)} disabled={busy === h.id}>Entregado</button></span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {found.fiados.length > 0 && (
-          <>
-            <p className="mapp-dsearch-h">Te deben</p>
-            <ul className="mapp-holds">
-              {found.fiados.map((f) => (
-                <li key={f.name}>
-                  <span className="mapp-av" aria-hidden="true">{initials(f.name)}</span>
-                  <div><b>{f.name}</b><span>{cupsLabel(f.cups)} · {money(f.total)}</span></div>
-                  <span className="mapp-hold-act"><button type="button" className="mapp-btn is-small" onClick={() => paid(f.name)} disabled={busy === `f-${f.name}`}>Pagó</button></span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {found.products.length > 0 && (
-          <>
-            <p className="mapp-dsearch-h">Tus productos</p>
-            <ul className="mapp-holds">
-              {found.products.map((m) => (
-                <li key={m.id}>
-                  <span className="mapp-av" aria-hidden="true">☕</span>
-                  <div><b>{m.label}</b><span>{money(m.price)} · {counts[m.id] || 0} hoy</span></div>
-                  <span className="mapp-hold-act"><button type="button" className="mapp-btn is-small is-cta" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`}>+1</button></span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
-    );
-    body = searching ? (
-      <>
-        {head}
-        {results}
-      </>
-    ) : (
+    body = (
       <>
         {head}
         {live ? outCard : (

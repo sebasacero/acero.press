@@ -27,6 +27,14 @@
 }
 .mapp .mapp-top{background-image:linear-gradient(180deg,var(--t-0),var(--t-1)) !important;border-bottom:0 !important}
 .mapp.is-redtop .mapp-chead, .mapp .mapp-sellhead{position:relative; box-shadow:var(--t-glow-cold) !important}
+/* Un solo gradiente de arriba abajo (pedido del usuario, 6 nov): la barra queda en el frío de
+   arriba y la cabecera sigue desde ese mismo tono, sin manchas sueltas ni corte entre las dos.
+   Del barista en la calle, la cabecera y su salida son un solo tramo que se calienta al bajar. */
+.mapp.is-redtop .mapp-top{background-image:none !important;background-color:var(--t-0) !important}
+.mapp.is-redtop .mapp-chead{background-image:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 40%,var(--t-2) 76%,var(--t-3) 100%) !important}
+.mapp.is-redtop .mapp-chead.is-joined{background-image:linear-gradient(180deg,var(--t-0),var(--t-1)) !important;box-shadow:none !important}
+.mapp.is-redtop .mapp-chead.is-joined::after{display:none}
+.mapp.is-redtop .mapp-chead.is-joined + .mapp-sellhead{background-image:linear-gradient(180deg,var(--t-1) 0%,var(--t-2) 42%,var(--t-3) 78%,var(--t-4) 100%) !important}
 /* la barra de temperatura al pie de la cabecera */
 .mapp.is-redtop .mapp-chead::after, .mapp .mapp-sellhead::after{
   content:""; position:absolute; left:16px; right:16px; bottom:8px; height:4px; border-radius:4px; background:var(--t-ramp); opacity:.95;

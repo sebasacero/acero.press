@@ -322,30 +322,17 @@ test('cliente con apartado: arriba va «Tu apartado» con sus etapas; las tarjet
   expect(errors).toEqual([]);
 });
 
-test('barista: la cabecera roja de Vender busca un cliente, un fiado o un producto y resuelve ahí mismo', async ({ browser }) => {
-  const { page, api, errors } = await open(browser, { who: 'barista' });
+test('barista: la cabecera roja de Vender lleva su punto y «Mi QR», sin buscador', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista', { waitUntil: 'load' });
   const head = page.getByTestId('barista-head');
   await expect(head).toBeVisible();
+  await expect(head).toContainText('Mi QR');
   await expect(page.locator('.mapp')).toHaveClass(/is-redtop/);
+  await expect(head.getByRole('searchbox')).toHaveCount(0);
   await head.getByTestId('head-qr').click();
   await expect(page).toHaveURL(/\/micra\/barista\/qr$/);
   await page.goBack();
-  // Un producto: +1 desde el resultado
-  const search = page.getByTestId('barista-search');
-  await search.fill('perico');
-  const found = page.getByTestId('day-search');
-  await expect(found).toContainText('Tus productos');
-  const before = api.all('/rpc/micra_barista_sale').length;
-  await found.getByRole('button', { name: 'Vendí un perico' }).click();
-  await expect.poll(() => api.all('/rpc/micra_barista_sale').length).toBe(before + 1);
-  expect(api.all('/rpc/micra_barista_sale').at(-1).data.p_product).toBe('perico');
-  // Nada: lo dice
-  await search.fill('zzz');
-  await expect(found).toContainText('0 resultados');
-  // Borrar vuelve a Vender
-  await page.getByRole('button', { name: 'Borrar búsqueda' }).click();
-  await expect(found).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Vendí un tinto/ }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
