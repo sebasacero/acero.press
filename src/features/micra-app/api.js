@@ -178,4 +178,4 @@ export async function coldBrewContent() {
 }
 
 /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
-export const onePosition = (timeout) => platform.position(timeout);
+export const onePosition = (timeout, precise = false) => platform.position(timeout, precise);

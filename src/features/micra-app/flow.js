@@ -2,18 +2,35 @@
 // caminando), qué permisos faltan, cómo le pagan (solo el medio, sin número) y
 // sus productos propios junto a tinto, perico y aromática. Lógica pura.
 import { menuOf } from './micraApp.js';
+import { meters } from '../../shared/lib/bogotaGeo.js';
 
 // Puesto fijo: el carrito del logo (ronda 3); sombrilla: solo la sombrilla;
 // caminando: el chico animado que camina su ruta (animado/caminando.mp4)
 export const OUT_MODES = [
-  { id: 'fijo', label: 'Puesto fijo', hint: 'Siempre en el mismo punto', icon: '/image/micra-modo/fijo.svg' },
-  { id: 'sombrilla', label: 'Sombrilla', hint: 'Armo mi puesto donde hay gente', icon: '/image/micra-modo/sombrilla.svg' },
-  { id: 'caminando', label: 'Caminando', hint: 'Recorro mi ruta con el termo', anim: 'caminando' },
+  { id: 'fijo', label: 'Puesto fijo', hint: 'Siempre en el mismo punto', icon: '/image/micra-modo/fijo.svg', gps: 'Al salir se guarda el punto de tu puesto y se queda ahí.' },
+  { id: 'sombrilla', label: 'Sombrilla', hint: 'Armo mi puesto donde hay gente', icon: '/image/micra-modo/sombrilla.svg', gps: 'Solo se toma el punto donde armes la sombrilla hoy.' },
+  { id: 'caminando', label: 'Caminando', hint: 'Recorro mi ruta con el termo', anim: 'caminando', gps: 'Se graba tu ruta y las paradas donde vendes.' },
 ];
 export const isMode = (m) => OUT_MODES.some((x) => x.id === m);
 export const modeOf = (id) => OUT_MODES.find((x) => x.id === id) ?? null;
 /** Caminando se graba el recorrido; en un punto basta con dónde está. */
 export const recordsTrip = (mode) => mode === 'caminando';
+
+// El puesto fijo (6 nov 2026, pedido del usuario): su punto es el lugar donde está el puesto. Se
+// guarda en el celular la primera vez y se reusa, así el GPS que baila no lo mueve de cuadra;
+// si sale a más de FIXED_MOVE_M del punto guardado, el puesto se movió y se guarda el nuevo.
+export const FIXED_KEY = 'micra_puesto_v1';
+export const FIXED_MOVE_M = 150;
+
+/** El punto con que sale: { pos, save } (save: lo que hay que guardar como puesto, o null). */
+export function outPoint(mode, gps, saved) {
+  const ok = (p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng);
+  if (mode !== 'fijo') return { pos: ok(gps) ? gps : null, save: null };
+  if (!ok(gps)) return { pos: ok(saved) ? { lat: saved.lat, lng: saved.lng } : null, save: null };
+  if (ok(saved) && meters([gps.lng, gps.lat], [saved.lng, saved.lat]) <= FIXED_MOVE_M) return { pos: { lat: saved.lat, lng: saved.lng }, save: null };
+  const spot = { lat: gps.lat, lng: gps.lng };
+  return { pos: spot, save: spot };
+}
 
 /**
  * Lo que hay que pedir antes de salir. Salir siempre se puede: si falta algo,

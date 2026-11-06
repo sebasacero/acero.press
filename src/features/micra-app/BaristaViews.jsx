@@ -14,7 +14,7 @@ import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
 import { km } from '../ruta/track.js';
-import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel } from './flow.js';
+import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel, outPoint, FIXED_KEY } from './flow.js';
 import { ModePicker, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
@@ -38,6 +38,15 @@ const LivePanel = lazy(() => import('./LiveMap.jsx'));
 const Aprende = lazy(() => import('./Aprende.jsx'));
 // El muro de Hoy (precios, videos, puestos, recetas, noticias)
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
+
+// El punto con que sale según cómo sale (flow.js): el puesto fijo se guarda en el celular
+const readSpot = () => { try { return JSON.parse(localStorage.getItem(FIXED_KEY)); } catch { return null; } };
+async function outPosition(mode) {
+  // Lectura nueva (sin la guardada de hace minutos): es el punto donde está ahora
+  const { pos, save } = outPoint(mode, await api.onePosition(8000, true), readSpot());
+  if (save) { try { localStorage.setItem(FIXED_KEY, JSON.stringify(save)); } catch { /* sin memoria */ } }
+  return pos;
+}
 const Competencia = lazy(() => import('./Competencia.jsx'));
 const Party = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.Party })));
 const DayStory = lazy(() => import('./Celebrate.jsx').then((m) => ({ default: m.DayStory })));
@@ -624,7 +633,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     setBusy('out');
     try {
       // Pide el permiso del GPS del celular cada vez que sale (con cualquier forma de salir)
-      const pos = on ? await api.onePosition() : null;
+      const pos = on ? await outPosition(mode) : null;
       // Antes de cerrar el recorrido se guarda lo de hoy para «Mi día en la calle»
       const before = !on ? { ...dayTripOf(trip.view, readDayTrip(), bogota().day), day: bogota().day } : null;
       if (before && before.path.length > 1) writeDayTrip(before);
@@ -651,7 +660,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     setAsking(false);
     setBusy('out');
     try {
-      const pos = await api.onePosition();
+      const pos = await outPosition(mode);
       await api.goOut(OUT_MINUTES, pos, asId);
       if (recordsTrip(mode) && trip.ready && !trip.recording) await trip.start();
       await load();
@@ -711,7 +720,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         </div>
         {trip.recording && (
           <p className="mapp-sellhead-cota mapp-trip" role="status" data-testid="trip-recording">
-            📍 Grabando tu recorrido · {km(trip.view.distance)}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
+            📍 Grabando tu ruta · {km(trip.view.distance)} · {trip.view.stops === 1 ? '1 parada' : `${trip.view.stops} paradas`}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
           </p>
         )}
       </section>

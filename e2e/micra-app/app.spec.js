@@ -582,6 +582,49 @@ test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y 
   expect(errors).toEqual([]);
 });
 
+test('barista: el puesto fijo guarda su punto y sale ahí aunque el GPS baile; la sombrilla toma el punto de hoy', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  delete seed.baristas[0].live_until;
+  const { page, api, errors } = await open(browser, { who: 'barista', seed });
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 4.6432, longitude: -74.0641 });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  const go = page.getByTestId('go-out');
+  const salir = async () => {
+    await go.click();
+    const sheet = page.getByRole('dialog', { name: 'Permisos para salir' });
+    if (await sheet.isVisible().catch(() => false)) {
+      for (const id of ['consent-public', 'consent-location']) { const c = sheet.getByTestId(id); if (await c.count()) await c.check(); }
+      await sheet.getByTestId('consent-accept').click();
+    }
+    await expect(page.getByRole('region', { name: 'Tu salida' })).toBeVisible();
+  };
+  const volver = async () => {
+    await page.getByRole('region', { name: 'Tu salida' }).getByRole('button', { name: 'Volver' }).click();
+    await expect(go).toBeVisible();
+  };
+  const lastOut = () => api.all('/rpc/micra_barista_out').filter((c) => c.data.p_minutes > 0).at(-1).data;
+
+  await page.getByTestId('mode-fijo').click();
+  await expect(page.getByTestId('mode-gps')).toContainText('el punto de tu puesto');
+  await salir();
+  expect(lastOut().p_lat).toBeCloseTo(4.6432, 4);
+  await volver();
+  // Al otro día el GPS marca 50 m al lado: el puesto no se mueve
+  await page.context().setGeolocation({ latitude: 4.6436, longitude: -74.0643 });
+  await salir();
+  expect(lastOut().p_lat).toBeCloseTo(4.6432, 4);
+  expect(lastOut().p_lng).toBeCloseTo(-74.0641, 4);
+  await volver();
+  // Con sombrilla vale el punto de hoy
+  await page.getByTestId('mode-sombrilla').click();
+  await expect(page.getByTestId('mode-gps')).toContainText('donde armes la sombrilla');
+  await salir();
+  expect(lastOut().p_lat).toBeCloseTo(4.6436, 4);
+  await expect(page.getByTestId('trip-recording')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en la misma hoja), agrega un producto con + y escoge cómo le pagan', async ({ browser }) => {
   const seed = structuredClone(SEED);
   delete seed.baristas[0].live_until;
@@ -599,6 +642,7 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
   await page.getByTestId('mode-caminando').click();
   await expect(page.getByTestId('mode-caminando')).toHaveAttribute('aria-checked', 'true');
   expect(api.find('/rpc/micra_barista_mode').data.p_mode).toBe('caminando');
+  await expect(page.getByTestId('mode-gps')).toContainText('ruta y las paradas');
   await go.click();
   const sheet = page.getByRole('dialog', { name: 'Permisos para salir' });
   await expect(sheet).toContainText('Salir en el mapa de Micra');
@@ -611,7 +655,7 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
   expect(api.micra.baristas[0].public).toBe(true);
   expect(api.find('/rpc/micra_barista_out').data.p_lat).toBeCloseTo(4.6432, 3);
   // Caminando: se graba el recorrido
-  await expect(page.getByTestId('trip-recording')).toBeVisible();
+  await expect(page.getByTestId('trip-recording')).toContainText(/Grabando tu ruta · .* · \d+ paradas?/);
 
   // El + junto a tinto, perico y aromática
   await page.getByTestId('product-add').click();
