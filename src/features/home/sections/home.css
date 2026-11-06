@@ -68,7 +68,8 @@
   .lh-in { padding: 54px 24px 36px; gap: 22px; }
   .lh-store { padding: 12px 8px 14px; border-radius: 22px; }
   .lh .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .lh .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  /* Misma letra que los demás botones de la página (estilo-app.css), no la chica espaciada */
+  .lh .essp-ctas .essp-btn { justify-content: center; text-align: center; }
   /* La foto del local completa, también en celular: el banner se ve en su ventana, no la tapa */
   .lh-stage { width: 100%; min-width: 0; border-radius: 18px; }
 }
@@ -128,19 +129,20 @@
 .micra-title .essp-script { font-size: .3em; display: block; margin-top: .25em; }
 .micra-lede { max-width: 48ch; }
 .micra-steps { list-style: none; margin: 4px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-/* Tres cajitas como las de las cifras del panel del celular (pedido del usuario): vidrio oscuro, el número en grande y el rótulo en mono */
+/* Tres tarjetas blancas con sombra, como las de la app y el resto de la página (el vidrio oscuro no
+   combinaba con el crema, 6 nov 2026): el número en grande y el rótulo en mono */
 .micra-steps li {
-  display: grid; align-content: start; gap: 6px; padding: 14px 16px 16px; border-radius: 14px; color: #fff;
-  background: linear-gradient(160deg, #34353d 0%, #1c1d23 100%); border: 1px solid rgba(255, 255, 255, .22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 12px 30px rgba(20, 20, 26, .18);
+  display: grid; align-content: start; gap: 6px; padding: 14px 16px 16px; border-radius: 18px; color: var(--app-fg, var(--ink));
+  background: #fff; border: 1px solid var(--app-line, rgba(20, 22, 27, .12));
+  box-shadow: var(--app-shadow, 0 14px 30px -18px rgba(31, 36, 82, .45));
 }
 .micra-steps li:nth-child(1) { transform: rotate(-1.5deg); }
 .micra-steps li:nth-child(2) { transform: rotate(1deg); }
 .micra-steps li:nth-child(3) { transform: rotate(-.5deg); }
-.micra-step-n { font: 700 28px/1 'JetBrains Mono', monospace; color: #fff; }
+.micra-step-n { font: 700 28px/1 'JetBrains Mono', monospace; color: var(--app-ink, var(--ink)); }
 .micra-steps li:nth-child(1) .micra-step-n { color: var(--red); }
-.micra-steps b { font: 700 11px/1.3 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: #fff; }
-.micra-steps li > span:last-child { font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, .72); }
+.micra-steps b { font: 700 11px/1.3 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--app-cold, var(--ink)); }
+.micra-steps li > span:last-child { font-size: 13px; line-height: 1.45; color: var(--app-soft, var(--ink-soft)); }
 /* Panel oscuro: el celular al centro, las cifras alrededor y las tiendas abajo */
 .micra-stage {
   position: relative; display: grid; justify-items: center; align-content: center; gap: 22px;
@@ -178,11 +180,12 @@
   .micra-steps li, .micra-steps li:nth-child(n) { transform: none; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; padding: 12px 14px; }
   .micra-step-n { grid-row: span 2; align-self: center; font-size: 24px; }
   .micra .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .micra .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  /* Misma letra que los demás botones de la página (estilo-app.css), no la chica espaciada */
+  .micra .essp-ctas .essp-btn { justify-content: center; text-align: center; }
   /* En celular: las tiendas arriba, el celular asoma y las cifras en fila debajo */
   .micra-stage { padding: 26px 16px 22px; gap: 18px; }
   .micra-stage .essp-stores { order: -1; }
-  .micra-phone { width: 210px; }
+  .micra-phone { width: 250px; }
   .micra-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
   .micra-stats li, .micra-stats li:nth-child(n) { position: static; transform: none; min-width: 0; padding: 10px; }
   .micra-stats b { font-size: 22px; }
@@ -396,7 +399,8 @@
   .brew-dots button { width: auto; flex: 0 1 28px; min-width: 20px; }
   .brew-foot { justify-content: center; }
   .brew .essp-ctas { width: 100%; flex-wrap: nowrap; gap: 10px; }
-  .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  /* Misma letra que los demás botones de la página (estilo-app.css), no la chica espaciada */
+  .brew .essp-ctas .essp-btn { justify-content: center; text-align: center; }
 }
 
 /* Anterior / Siguiente a los lados de los puntos (solo en el celular de pie) */

@@ -253,9 +253,9 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
   /* En celular la persona se para delante, junto a la esquina del iPhone, sin tapar el texto */
   .essp-persona { height: 270px; left: 14px; right: auto; bottom: 22px; z-index: 3; }
 
-  /* Los dos llamados en una fila, para que el celular siga asomando */
+  /* Sin letra chica ni espaciada: los botones van con la misma letra de la página (estilo-app.css) */
   .essp-ctas { flex-wrap: nowrap; gap: 10px; }
-  .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
+  .essp-ctas .essp-btn { justify-content: center; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -324,3 +324,68 @@ a.essp-appicon:hover { background: var(--ink); color: #fff; }
   .essp-slide .essp-hero-device .essp-stores { order: -1; }
   .essp-slide .essp-hero-phone { flex: none; width: 210px; margin-top: 2px; }
 }
+
+/* Vender dentro del celular de Micra (SellPhone.jsx): la cabecera térmica de la app, la taza que se
+   llena y las tarjetas con +1 que se pueden tocar; al tocar saltan la plata y las monedas */
+.essp-phone.sellp { background: #fff; color: #14161B; display: flex; flex-direction: column; }
+.sellp-top {
+  color: #fff; padding: 0 0 12px; border-radius: 0 0 22px 22px;
+  background: linear-gradient(180deg, var(--t-0) 0%, var(--t-1) 34%, var(--t-2) 62%, var(--t-3) 86%, var(--t-4) 100%);
+}
+.sellp-where { display: flex; align-items: center; gap: 8px; padding: 6px 14px 0; }
+.sellp-pin { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: rgba(255, 255, 255, .14); }
+.sellp-where small { display: block; font: 700 8.5px 'JetBrains Mono', monospace; color: var(--t-6); letter-spacing: .04em; }
+.sellp-where b { display: block; font: 900 15px/1.1 'Archivo', sans-serif; letter-spacing: -.02em; }
+.sellp-goal { display: flex; align-items: center; gap: 8px; padding: 10px 14px 0; }
+.sellp-cup { width: 74px; height: auto; flex: none; }
+.sellp-cup .is-line { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.sellp-cup .is-steam { fill: none; stroke: var(--t-6); stroke-width: 3; stroke-linecap: round; opacity: .8; }
+.sellp-coffee { transition: d .5s cubic-bezier(.3, 1.4, .5, 1); }
+.sellp-count { margin: 0; display: flex; align-items: baseline; }
+.sellp-count b {
+  font: 900 44px/1 'Archivo', sans-serif; letter-spacing: -.04em;
+  background: linear-gradient(180deg, var(--t-7), var(--t-6) 45%, var(--t-5)); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.sellp-count span { font: 800 18px 'Archivo', sans-serif; color: var(--t-7); }
+.sellp-cash { margin: 2px 0 0; font: 800 12px 'Archivo', sans-serif; }
+.sellp-left { margin: 2px 0 0; font: 600 8.5px 'JetBrains Mono', monospace; color: rgba(255, 255, 255, .78); }
+.sellp-bar { margin: 12px 14px 0; height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.sellp-bar i { display: block; height: 100%; border-radius: inherit; background: var(--t-ramp); transition: width .5s ease; }
+.sellp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 10px; }
+.sellp-card {
+  position: relative; display: grid; gap: 2px; padding: 10px 9px 9px; border-radius: 16px; background: #fff;
+  border: 1px solid rgba(20, 22, 27, .1); box-shadow: 0 10px 22px -16px rgba(31, 36, 82, .5);
+}
+.sellp-card b { font: 900 14px 'Archivo', sans-serif; }
+.sellp-card small { font: 600 8.5px 'JetBrains Mono', monospace; color: #5D6475; }
+.sellp-plus {
+  margin-top: 6px; min-height: 52px; border: 0; border-radius: 14px; cursor: pointer; color: #fff;
+  font: 900 22px 'Archivo', sans-serif; background: var(--t-cta); box-shadow: 0 10px 18px -10px rgba(222, 27, 27, .9);
+  transition: transform .12s ease;
+}
+.sellp-plus:active { transform: scale(.94); }
+.sellp-plus:focus-visible { outline: 2px solid var(--t-1); outline-offset: 2px; }
+.sellp-pop { position: absolute; left: 50%; bottom: 46px; pointer-events: none; }
+.sellp-pop em {
+  position: absolute; left: 0; bottom: 0; transform: translateX(-50%); white-space: nowrap; font: 900 15px 'Archivo', sans-serif; font-style: normal;
+  color: var(--t-4); text-shadow: 0 1px 0 #fff; animation: sellp-rise 1.05s ease-out forwards;
+}
+.sellp-pop i { position: absolute; left: 0; bottom: 0; font-size: 14px; font-style: normal; animation: sellp-coin 1s cubic-bezier(.2, .7, .4, 1) forwards; }
+.sellp-pop i:nth-of-type(1) { --x: -34px; --y: -46px; }
+.sellp-pop i:nth-of-type(2) { --x: 30px; --y: -54px; animation-delay: .05s; }
+.sellp-pop i:nth-of-type(3) { --x: 4px; --y: -70px; animation-delay: .1s; }
+@keyframes sellp-rise { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.7); } 20% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -56px) scale(1); } }
+@keyframes sellp-coin { 0% { opacity: 0; transform: translate(-50%, 0) scale(.4) rotate(0); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), var(--y)) scale(1) rotate(200deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .sellp-pop i { display: none; }
+  .sellp-pop em { animation-duration: .01s; animation-fill-mode: none; opacity: 0; }
+  .sellp-coffee, .sellp-bar i { transition: none; }
+}
+.sellp-grid { flex: 1; align-content: start; min-height: 0; }
+.sellp-tabs {
+  display: flex; justify-content: space-around; align-items: center; margin: 0 8px 8px; padding: 6px 4px; border-radius: 18px;
+  background: var(--t-0); font-size: 13px;
+}
+.sellp-tabs span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; opacity: .55; filter: grayscale(1) brightness(1.6); }
+.sellp-tabs span.is-on { opacity: 1; filter: none; }
+.sellp-tabs span.is-cam { opacity: 1; filter: none; width: 38px; height: 38px; margin-top: -14px; background: var(--t-cta); box-shadow: 0 6px 14px -6px rgba(222, 27, 27, .9); }

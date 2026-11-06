@@ -2,6 +2,9 @@ import { useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { championOf, embedOf } from '../data/champions.js';
 
+const noSoundAutoplay = () =>
+  typeof navigator !== 'undefined' && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
 // Botón «▶ video» del campeón y su ventana. El reproductor (YouTube sin cookies o
 // Vimeo) solo se pide al abrir: el carrusel no carga nada de terceros hasta el clic.
 export default function ChampionVideo({ recipe, className = '' }) {
@@ -9,7 +12,8 @@ export default function ChampionVideo({ recipe, className = '' }) {
   const dialog = useRef(null);
   const [open, setOpen] = useState(false);
   const champ = championOf(recipe.year);
-  const src = embedOf(champ?.video);
+  // iPhone y iPad (también el iPad que dice ser Mac) no arrancan con sonido: ahí sale mudo y corriendo
+  const src = embedOf(champ?.video, { muted: noSoundAutoplay() });
   if (!src) return null;
   const label = t(`champ.videoKind.${champ.videoKind}`);
 

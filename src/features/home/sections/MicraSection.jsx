@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
-import { StreetPhone } from '../../esspresale/AppPhones.jsx';
+import SellPhone from '../../esspresale/SellPhone.jsx';
 import { SheetFrame } from '../../esspresale/parts.jsx';
 import SocialBanners from './SocialBanners.jsx';
 import StreetPeople from './StreetPeople.jsx';
@@ -12,13 +12,14 @@ import '../../esspresale/esspresale.css';
 import './home.css';
 
 // Micra, justo después de los banners principales. A la izquierda qué es y sus tres pasos
-// (aprende, vende, certifícate); a la derecha un panel oscuro con el celular, las cifras reales
+// (aprende, vende, certifícate); a la derecha un panel oscuro con el celular (Vender, que se puede
+// tocar), las cifras reales
 // del estudio alrededor y las tiendas; abajo las fichas de redes. Textos en micra.*.
 const show = (n) => (n === null || n === undefined ? '—' : String(n));
 
 export default function MicraSection() {
   const { t } = useLanguage();
-  const { layers, summary: street } = useStreetMap();
+  const { summary: street } = useStreetMap();
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
   useEffect(() => {
     fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setNumber(n || FALLBACK_WHATSAPP_NUMBER));
@@ -61,7 +62,8 @@ export default function MicraSection() {
             </div>
           </div>
           <div className="micra-stage">
-            <StreetPhone className="micra-phone" street={street} layers={layers} />
+            {/* Vender, como lo ve el barista: se toca +1 y la taza se llena */}
+            <SellPhone className="micra-phone" />
             {/* Las cifras del estudio de calle, las mismas del celular, sueltas alrededor */}
             <ul className="micra-stats" aria-label={stats.label}>
               <li><b>{show(street?.cups)}</b><span>{stats.cups}</span></li>

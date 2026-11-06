@@ -35,6 +35,8 @@ test('las recetas tienen los mismos pasos en los tres idiomas', () => {
 test('embedOf: YouTube sin cookies, Vimeo sin rastreo, lo demás no', () => {
   assert.equal(embedOf('https://www.youtube.com/watch?v=G1e1FfR162c'), 'https://www.youtube-nocookie.com/embed/G1e1FfR162c?autoplay=1&rel=0');
   assert.equal(embedOf('https://vimeo.com/115890941'), 'https://player.vimeo.com/video/115890941?autoplay=1&dnt=1');
+  assert.equal(embedOf('https://www.youtube.com/watch?v=G1e1FfR162c', { muted: true }), 'https://www.youtube-nocookie.com/embed/G1e1FfR162c?autoplay=1&rel=0&mute=1&playsinline=1');
+  assert.equal(embedOf('https://vimeo.com/115890941', { muted: true }), 'https://player.vimeo.com/video/115890941?autoplay=1&dnt=1&muted=1&playsinline=1');
   assert.equal(embedOf('https://evil.example/watch?v=G1e1FfR162c'), null);
   assert.equal(embedOf(undefined), null);
 });
