@@ -1612,3 +1612,5 @@
 
 /* Qué ubicación toma cada forma de salir (6 nov 2026) */
 .mapp-outmodes-gps { margin: 10px 2px 0; font-size: .88rem; line-height: 1.35; color: var(--m-ink); opacity: .8; }
+/* La entrada de los baristas lleva la barra del cliente abajo */
+.mapp.is-barista.has-tabs .mapp-main { padding-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }

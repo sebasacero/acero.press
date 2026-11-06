@@ -37,8 +37,10 @@ test('equipo: del día al estudio; marca el GPS de una ficha y sube su foto', as
   const { page, api, errors } = await open(browser);
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   const tabs = page.getByRole('navigation', { name: 'Equipo' });
-  // Hoy, el mapa, la cámara al centro (solo ícono), la encuesta y el estudio
-  await expect(tabs.getByRole('button')).toHaveText(['Hoy', 'Mapa', '', 'Encuesta', 'Estudio']);
+  // Hoy, el mapa, la cámara al centro, la encuesta y el estudio: solo íconos, como la barra del cliente
+  await expect(tabs.getByRole('button')).toHaveCount(5);
+  for (const name of ['Hoy', 'Mapa', 'Encuesta', 'Estudio']) await expect(tabs.getByRole('button', { name, exact: true })).toBeVisible();
+  await expect(tabs.getByRole('button')).toHaveText(['', '', '', '', '']);
   await expect(tabs.getByRole('button', { name: 'Cámara' })).toBeVisible();
   await tabs.getByRole('button', { name: 'Estudio' }).click();
   await expect(page).toHaveURL(/\/micra\/estudio$/);

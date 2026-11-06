@@ -100,7 +100,9 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   expect(api.find('/auth/v1/logout', 'POST')).toBeTruthy();
   const left = await page.evaluate(() => ['sb-mock-auth-token', 'micra_mode_v1', 'micra_goal_v1'].map((k) => localStorage.getItem(k)));
   expect(left).toEqual([null, null, null]);
-  await expect(page.getByRole('button', { name: 'Mi perfil' })).toHaveCount(0);
+  // Arriba ya no está su círculo; abajo queda la barra del cliente, como en toda la app
+  await expect(page.locator('header').getByRole('button', { name: 'Mi perfil' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Micra' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 

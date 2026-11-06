@@ -61,8 +61,9 @@ test('cliente: ve quién está en la calle, aparta 2 tintos y 1 perico y lo canc
 
   // Queda en «Mis apartados» y el nombre se recuerda
   await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: /Mis apartados/ }).click();
-  await expect(page.getByRole('listitem').filter({ hasText: 'Marlene' })).toContainText('Te espera');
-  await page.getByRole('listitem').filter({ hasText: 'Marlene' }).getByRole('button').click();
+  // (Marlene sale también abajo, en «Tus baristas»: el primero es el apartado)
+  await expect(page.getByRole('listitem').filter({ hasText: 'Marlene' }).first()).toContainText('Te espera');
+  await page.getByRole('listitem').filter({ hasText: 'Marlene' }).first().getByRole('button').click();
   await expect(page.getByLabel('Tu nombre (así te llama)')).toHaveValue('Sebas · 302');
   await page.getByRole('button', { name: 'Ya no lo necesito' }).click();
   await expect(page.getByRole('button', { name: 'Apartar', exact: true })).toBeVisible();

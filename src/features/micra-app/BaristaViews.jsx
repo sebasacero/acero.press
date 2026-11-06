@@ -411,16 +411,17 @@ const TABS = [
   ['cuenta', 'Mi plata', IconWallet, '/micra/barista/cuenta'],
 ];
 
-/** La barra del barista: sus cuatro pestañas y, al centro, la cámara para la foto de la venta. */
+/** La barra del barista: sus cuatro pestañas y, al centro, la cámara para la foto de la venta.
+ *  Mismo diseño que la del cliente (pedido del usuario, 6 nov 2026): solo íconos, el centro en rojo. */
 function BaristaTabs({ tab, go, waiting, onCamera }) {
   const btn = ([id, label, Icon, path]) => (
-    <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(path)}>
-      <Icon />{label}
+    <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(path)} aria-label={label} title={label}>
+      <Icon />
       {id === 'vender' && waiting > 0 && <span className="mapp-tabs-badge" aria-label={`${waiting} te esperan`}>{waiting}</span>}
     </button>
   );
   return (
-    <nav className="mapp-tabs is-five" aria-label="Barista">
+    <nav className="mapp-tabs is-ig" aria-label="Barista">
       {TABS.slice(0, 2).map(btn)}
       <button type="button" className="mapp-tabs-cam" onClick={onCamera} aria-label="Foto de la venta" title="Foto de la venta" data-testid="tab-camera">
         <IconCamera />
