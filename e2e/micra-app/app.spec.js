@@ -238,9 +238,9 @@ test('barista: entra con su celular y el código del SMS y cae en su inicio, sin
   await page.getByRole('button', { name: 'Enviarme el código' }).click();
   expect(api.sms.sent).toEqual(['+573001234567']);
 
-  await expect(page.getByText('Te mandamos un SMS al')).toContainText('300 123 4567');
+  await expect(page.getByText('Te mandamos el código por WhatsApp al')).toContainText('300 123 4567');
   await expect(page.getByRole('button', { name: /Reenviar en \d+ s/ })).toBeDisabled();
-  const code = page.getByLabel('Código del SMS');
+  const code = page.getByLabel('Código de WhatsApp');
   await expect(code).toHaveAttribute('autocomplete', 'one-time-code');
   // Un código malo se dice en español; con los seis números buenos entra solo
   await code.fill('111111');
@@ -261,7 +261,7 @@ test('barista: un número que no está registrado lo dice y deja el WhatsApp del
   await page.goto('/micra/barista', { waitUntil: 'load' });
   await page.getByLabel('Tu celular').fill('+57 310 999 8877');
   await page.getByRole('button', { name: 'Enviarme el código' }).click();
-  await page.getByLabel('Código del SMS').fill('123456');
+  await page.getByLabel('Código de WhatsApp').fill('123456');
 
   const box = page.getByTestId('phone-not-found');
   await expect(box).toContainText('310 999 8877');

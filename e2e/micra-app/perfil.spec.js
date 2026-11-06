@@ -62,7 +62,7 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   await page.getByTestId('tile-datos').click();
   await expect(page.getByTestId('profile-phone')).toHaveText('300 ••• 4567');
   await expect(page.getByTestId('sheet-datos')).not.toContainText('300 123 4567');
-  await expect(page.getByTestId('profile-method')).toHaveText('Con tu celular (SMS)');
+  await expect(page.getByTestId('profile-method')).toHaveText('Con tu celular');
   await expect(page.getByTestId('profile-link')).toContainText(`/micra/b/${MARLENE}`);
   await page.getByTestId('sheet-datos').getByRole('button', { name: 'Listo' }).click();
   await expect(page.getByTestId('sheet-datos')).toHaveCount(0);

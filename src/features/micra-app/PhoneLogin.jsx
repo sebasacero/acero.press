@@ -16,9 +16,9 @@ export function TeamWhatsApp({ phone }) {
 }
 
 /**
- * Entrar con el celular: el número, el SMS y los seis números. Sin enlaces ni
+ * Entrar con el celular: el número, el código por WhatsApp y los seis números. Sin enlaces ni
  * ida y vuelta por el navegador (igual en la app instalada). Con `preview` es
- * la vista del equipo: se ve igual, pero no manda SMS ni cambia su sesión.
+ * la vista del equipo: se ve igual, pero no manda el código ni cambia su sesión.
  */
 export default function PhoneLogin({ preview = false }) {
   const [step, setStep] = useState('phone');
@@ -41,7 +41,7 @@ export default function PhoneLogin({ preview = false }) {
     e?.preventDefault();
     setError(null);
     if (!e164) { setError('Escribe tu celular: son 10 números y empieza por 3.'); return; }
-    if (preview) { setNote('Vista del equipo: aquí el barista recibe un SMS con su código. No se mandó nada.'); setStep('code'); setSentAt(Date.now()); setNow(Date.now()); return; }
+    if (preview) { setNote('Vista del equipo: aquí al barista le llega su código por WhatsApp. No se mandó nada.'); setStep('code'); setSentAt(Date.now()); setNow(Date.now()); return; }
     setBusy(true);
     try {
       await api.sendSmsCode(e164);
@@ -64,9 +64,9 @@ export default function PhoneLogin({ preview = false }) {
   if (step === 'code') {
     return (
       <form className="mapp-phone-login" onSubmit={(e) => { e.preventDefault(); verify(code); }} data-testid="sms-code">
-        <p className="mapp-lede">Te mandamos un SMS al <b>{formatCoPhone(phone)}</b>. Escribe los seis números.</p>
+        <p className="mapp-lede">Te mandamos el código por WhatsApp al <b>{formatCoPhone(phone)}</b>. Escribe los seis números.</p>
         <label className="mapp-field">
-          <span>Código del SMS</span>
+          <span>Código de WhatsApp</span>
           <input
             className="mapp-code" value={code} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder="000000" autoFocus
             onChange={(e) => { const v = cleanOtp(e.target.value); setCode(v); if (v.length === 6) verify(v); }}
@@ -93,7 +93,7 @@ export default function PhoneLogin({ preview = false }) {
       </label>
       {error && <p className="mapp-error" role="alert">{error}</p>}
       <button type="submit" className="mapp-btn is-cta" disabled={busy || !e164}>{busy ? 'Enviando…' : 'Enviarme el código'}</button>
-      <p className="mapp-fine">Te llega un SMS con seis números. Usa el celular que le diste al equipo de Micra.</p>
+      <p className="mapp-fine">Te llega un WhatsApp de Micra con seis números. Usa el celular que le diste al equipo.</p>
     </form>
   );
 }

@@ -137,7 +137,7 @@ export function BaristaJoin({ session, onLinked, team = false, preview = false, 
     setByPhone('busy');
     api.claimPhone()
       .then(() => { if (alive) { setByPhone(null); onLinked(); } })
-      .catch((e) => alive && setByPhone({ error: e.missing ? 'La entrada por SMS todavía no está activa. Entra con el código de seis letras que te dio el equipo.' : e.message }));
+      .catch((e) => alive && setByPhone({ error: e.missing ? 'La entrada con tu celular todavía no está activa. Entra con el código de seis letras que te dio el equipo.' : e.message }));
     return () => { alive = false; };
   }, [smsPhone]); // eslint-disable-line react-hooks/exhaustive-deps
 

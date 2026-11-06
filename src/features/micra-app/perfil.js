@@ -61,7 +61,7 @@ export function signInMethod(user) {
   return user.phone ? 'celular' : null;
 }
 
-export const METHOD_LABEL = { celular: 'Con tu celular (SMS)', google: 'Con Google', correo: 'Con tu correo' };
+export const METHOD_LABEL = { celular: 'Con tu celular', google: 'Con Google', correo: 'Con tu correo' };
 
 const readJson = (storage, key, fallback) => {
   try { return JSON.parse(storage?.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; }

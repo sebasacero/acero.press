@@ -59,9 +59,9 @@ export function resendIn(sentAt, now = Date.now(), wait = 60) {
 export function smsError(err) {
   const m = String(err?.message ?? err ?? '');
   const code = err?.code ?? '';
-  if (/expired|invalid/i.test(m) || code === 'otp_expired') return 'Ese código no sirve o ya venció. Revisa el SMS o pide otro.';
+  if (/expired|invalid/i.test(m) || code === 'otp_expired') return 'Ese código no sirve o ya venció. Revisa el WhatsApp o pide otro.';
   if (/rate limit|too many|seconds/i.test(m) || code === 'over_sms_send_rate_limit') return 'Pediste muchos códigos seguidos. Espera un minuto y vuelve a intentar.';
-  if (/provider|disabled|unsupported phone/i.test(m) || code === 'phone_provider_disabled') return 'La entrada por SMS todavía no está activa. Entra con el código de seis letras que te dio el equipo.';
+  if (/provider|disabled|unsupported phone/i.test(m) || code === 'phone_provider_disabled') return 'La entrada con tu celular todavía no está activa. Entra con el código de seis letras que te dio el equipo.';
   if (/fetch|network/i.test(m)) return 'Sin señal. Revisa tu conexión y vuelve a intentar.';
   return m || 'No se pudo. Vuelve a intentar.';
 }

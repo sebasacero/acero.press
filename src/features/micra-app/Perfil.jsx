@@ -344,7 +344,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
             {outFailed
               ? <p className="mapp-error" role="alert">Sin señal: no pudimos sacarte del mapa. Si cierras sesión igual, sigues en el mapa hasta las {new Date(day.live_until).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })}.</p>
               : live && <p data-testid="signout-live">Estás en <b>Salí a vender</b>. Al cerrar sesión te sacamos del mapa y Micra deja de usar tu ubicación.</p>}
-            <p className="mapp-muted">Tus ventas, fiados y apartados quedan guardados en tu cuenta. Para volver a entrar, usa tu celular y el código del SMS.</p>
+            <p className="mapp-muted">Tus ventas, fiados y apartados quedan guardados en tu cuenta. Para volver a entrar, usa tu celular y el código que te llega por WhatsApp.</p>
           </Confirm>
         ) : (
           <button type="button" className="mapp-btn is-ghost mapp-signout" onClick={openConfirm} data-testid="signout">Cerrar sesión</button>

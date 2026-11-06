@@ -114,6 +114,43 @@ la app dice «La entrada por SMS todavía no está activa» y sigue sirviendo
 No hay redirect: funciona igual en la web y en la app instalada (no necesita
 `com.aceropress.micra://auth` ni Redirect URLs).
 
+### 1.6 El código por WhatsApp en vez de SMS (más barato)
+
+En vez de Twilio, Supabase le pasa el código a la Edge Function
+`micra-otp-whatsapp` (un «Send SMS Hook») y ella lo manda por WhatsApp con el
+mismo número y token de los avisos (§10.7). La app no cambia: el barista pide
+el código, le llega un WhatsApp de Micra con seis números y botón «Copiar
+código», y lo escribe. Un código de autenticación de Meta en Colombia cuesta del
+orden de USD 0,008 (un SMS de Twilio, unos USD 0,05); revisa la tabla de Meta.
+Solo manda a celulares de Colombia (57 3…).
+
+1. Haz los pasos 1 a 4 de §10.7 (negocio verificado, app con WhatsApp, número y
+   token permanente) si todavía no están.
+2. **La plantilla** (WhatsApp Manager › Plantillas › Crear): categoría
+   **Autenticación**, nombre `micra_codigo`, idioma **Español (es)**, entrega
+   del código **Copiar código**; marca «Añadir aviso de seguridad» y, si quieres,
+   «Añadir vencimiento» (10 minutos). Meta escribe el texto. Espera «Aprobada».
+3. **Despliega** `supabase/functions/micra-otp-whatsapp` **sin verificar JWT**
+   (la llama Supabase Auth; la función revisa la firma del hook).
+4. **Supabase › Authentication › Auth Hooks › Add hook › Send SMS hook** →
+   tipo HTTPS → URL
+   `https://<proyecto>.supabase.co/functions/v1/micra-otp-whatsapp` → «Generate
+   secret» → guardar.
+5. **Secrets** en Supabase › Edge Functions › Secrets:
+
+   | Secret | Valor |
+   |---|---|
+   | `SEND_SMS_HOOK_SECRET` | el secreto del paso 4, tal cual (`v1,whsec_…`) |
+   | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_ID` | los mismos de §10.7 |
+   | `WHATSAPP_OTP_TEMPLATE` | opcional; por defecto `micra_codigo` |
+
+6. Deja **Phone** activo en Providers con OTP de 6 números (§1.5, paso 3; la
+   plantilla del SMS ya no se usa). Si el panel pide un proveedor de SMS para
+   activarlo, el hook lo reemplaza: no hace falta pagar Twilio.
+7. Prueba con tu celular en `/micra/barista`. Si no llega: Edge Functions ›
+   `micra-otp-whatsapp` › Logs (solo trae el error de Meta, nunca el número ni
+   el código). Para volver a SMS, desactiva el hook.
+
 ---
 
 ## 2. Número de WhatsApp — ya no está en el código
