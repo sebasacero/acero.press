@@ -5,6 +5,7 @@ import { biApi } from '../admin/micra/tinteroApi.js';
 import { photoPath } from '../admin/micra/tinteroForm.js';
 import { studyRows, studyCounts, whereLine, gpsPatch, PENDING_LABEL } from './study.js';
 import platform from './platform.js';
+import { postPoints } from './api.js';
 import { Cargando } from './Animado.jsx';
 
 // Estudio de calle en la app (modo equipo): lo mismo que «Tintero» en la cámara
@@ -129,6 +130,9 @@ export default function StudyView({ go }) {
     loadStudy().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.message));
   }, []);
   useEffect(() => { load(); }, [load]);
+  // Las fotos de venta con su lugar (sin la migración todavía: el mapa queda sin esa capa)
+  const [photos, setPhotos] = useState([]);
+  useEffect(() => { postPoints().then((p) => setPhotos(Array.isArray(p) ? p : [])).catch(() => setPhotos([])); }, []);
 
   const done = (text) => { setNotice(`✓ ${text}`); setOpen(null); load(); };
 
@@ -160,7 +164,7 @@ export default function StudyView({ go }) {
         <div><dt>Con foto</dt><dd>{n.foto}<small> de {n.total}</small></dd></div>
       </dl>
 
-      <Suspense fallback={null}><StudyHeatMap rows={rows} routes={data.routes ?? []} /></Suspense>
+      <Suspense fallback={null}><StudyHeatMap rows={rows} routes={data.routes ?? []} photos={photos} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Fichas · {n.total - n.done} con algo pendiente</p>

@@ -384,7 +384,8 @@ test('al volver de Google, el equipo cae en su panel y el barista en su día', a
   const barista = await open(browser, { who: 'barista' });
   await barista.page.addInitScript(() => { localStorage.setItem('micra_login_pending', String(Date.now())); });
   await barista.page.goto('/micra/barista', { waitUntil: 'load' });
-  await expect(barista.page.getByRole('tab', { name: 'Barista' })).toHaveAttribute('aria-selected', 'true');
+  // En su inicio, arriba va la meta del día (el cambio de modo está en Mi perfil)
+  await expect(barista.page.getByTestId('top-goal')).toBeVisible();
   await expect(barista.page).toHaveURL(/\/micra\/barista$/);
   // Su panel: el mapa de lo que hay cerca y, debajo, quién le apartó
   await expect(barista.page.getByTestId('micra-map')).toBeVisible();
@@ -750,5 +751,40 @@ test('equipo sin la migración de activación: el resumen sale igual, sin la tar
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   await expect(page.getByTestId('owner-activation')).toContainText('de 60 fichas');
   await expect(page.getByTestId('owner-clients')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('barista: la meta arriba, las monedas del +1 y la foto de la venta con su lugar desde la cámara de la barra', async ({ browser }) => {
+  const { page, api, errors } = await open(browser, { who: 'barista' });
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 4.64853, longitude: -74.05862 });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  const goal = page.getByTestId('top-goal');
+  await expect(goal).toBeVisible();
+  await expect(page.getByRole('tablist', { name: 'Ver Micra como' })).toHaveCount(0);
+  const before = Number((await goal.getAttribute('aria-label')).match(/: (\d+) de/)[1]);
+
+  await page.getByRole('button', { name: 'Vendí un tinto' }).click();
+  await expect(page.locator('.mapp-coinpop em')).toContainText('+$');
+  await expect.poll(async () => Number((await goal.getAttribute('aria-label')).match(/: (\d+) de/)[1])).toBe(before + 1);
+
+  // La cámara al centro de la barra: foto del cliente con su vasito, con la cuadra donde se vendió
+  await page.getByTestId('tab-camera').click();
+  const sheet = page.getByRole('dialog', { name: 'Foto de la venta' });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByTestId('sale-place')).toContainText('Guardamos la cuadra');
+  await sheet.getByTestId('post-file').setInputFiles({ name: 'venta.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') });
+  await sheet.getByTestId('post-consent').check();
+  await sheet.getByTestId('post-send').click();
+  await expect(sheet.getByTestId('post-sent')).toBeVisible();
+  await expect.poll(() => api.micra.posts?.at(-1)?.lat).toBeCloseTo(4.6485, 4);
+  expect(api.micra.posts.at(-1).lng).toBeCloseTo(-74.0585, 4);
+
+  await sheet.getByRole('button', { name: 'Listo' }).click();
+  await expect(sheet).toHaveCount(0);
+
+  // El cambio de modo quedó en Mi perfil
+  await page.getByTestId('me-button').click();
+  await expect(page.getByTestId('tile-mode-client')).toBeVisible();
   expect(errors).toEqual([]);
 });

@@ -122,6 +122,11 @@ export const postsPending = () => call('micra_posts_pending');
 export const postReview = (id, approve) => call('micra_post_review', { p_id: id, p_approve: approve });
 export const postRemove = (id) => call('micra_post_remove', { p_id: id });
 
+// La foto de la venta: dónde se vendió (redondeado a ~55 m en la base) y el mapa del equipo en Estudio
+// (20261106180000_micra_post_place.sql)
+export const postPlace = (id, lat, lng, asId) => call('micra_post_place', { p_id: id, p_lat: lat, p_lng: lng, ...as(asId) });
+export const postPoints = (days = 90) => call('micra_post_points', { p_days: days });
+
 /** Sube el archivo a la carpeta del barista y lo deja en revisión. */
 export async function publishPost({ path, blob, type, kind, caption, asId, challengeId = null, judge = null }) {
   const { error } = await supabase.storage.from(POSTS_BUCKET).upload(path, blob, { contentType: type, upsert: false });

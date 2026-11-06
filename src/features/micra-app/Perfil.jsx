@@ -16,7 +16,7 @@ import ColdBrewPromo from './ColdBrew.jsx';
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
   IconVideo, IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
-  IconCamera, IconOut, IconTrophy,
+  IconCamera, IconOut, IconTrophy, IconHome,
 } from './icons.jsx';
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
@@ -172,7 +172,14 @@ function Confirm({ title, children, confirmLabel, onConfirm, onCancel, busy, blo
  * BaristaHome (pestaña «perfil») porque cerrar sesión necesita lo de ahí: salir
  * del mapa, el recorrido y la cola de ventas sin subir.
  */
-export function BaristaProfile({ day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
+// El mismo recuerdo de modo que usa MicraApp: al volver a /micra cada quien cae en el que escogió
+const MODE_KEY = 'micra_mode_v1';
+function switchTo(mode, go) {
+  try { localStorage.setItem(MODE_KEY, mode); } catch { /* sin memoria */ }
+  go(mode === 'owner' ? '/micra/equipo' : '/micra');
+}
+
+export function BaristaProfile({ admin = false, day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
   const own = !asId;
   const user = useUser();
   const [profile, setProfile] = useState(null);
@@ -312,6 +319,9 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
         <Tile icon={IconCan} label="Cold brew" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/barista/reto')} testid="tile-reto" />
+        {/* «Cliente / Barista» ya no va arriba (ahí va la meta del día): se cambia desde aquí */}
+        <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />
+        {admin && <Tile icon={IconClipboard} label="Equipo" onClick={() => switchTo('owner', go)} testid="tile-mode-owner" />}
       </Group>
 
       {error && <p className="mapp-error" role="alert">{error}</p>}

@@ -313,7 +313,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     // Publicaciones de los baristas en Hoy (20261031160000_micra_barista_posts.sql), en memoria
-    const pfn = p.match(/\/rpc\/(micra_post_add|micra_posts_feed|micra_posts_mine|micra_posts_pending|micra_post_review|micra_post_remove)$/)?.[1];
+    const pfn = p.match(/\/rpc\/(micra_post_add|micra_posts_feed|micra_posts_mine|micra_posts_pending|micra_post_review|micra_post_remove|micra_post_place|micra_post_points)$/)?.[1];
     if (pfn) {
       const M = micra;
       M.posts ??= [];
@@ -328,6 +328,18 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         const r = { id: `post-${M.posts.length + 1}`, tintero_id: me.id, kind: data.p_kind, media_path: data.p_path, caption: data.p_caption, status: 'pending', created_at: new Date().toISOString(), challenge_id: data.p_challenge_id ?? null, judge: data.p_judge ?? null };
         M.posts.push(r);
         return json(200, r);
+      }
+      // La foto de la venta con su lugar (20261106180000_micra_post_place.sql): redondeado a 0,0005°
+      if (pfn === 'micra_post_place') {
+        const r = M.posts.find((x) => x.id === data.p_id && x.tintero_id === me?.id && x.lat == null);
+        if (!r) return fail(404, 'P0002', 'Esa publicación no se puede ubicar.');
+        const round = (v) => Math.round(v / 0.0005) * 0.0005;
+        Object.assign(r, { lat: round(data.p_lat), lng: round(data.p_lng), sale: true });
+        return json(200, { id: r.id, lat: r.lat, lng: r.lng });
+      }
+      if (pfn === 'micra_post_points') {
+        if (!M.admin) return fail(403, '42501', 'Solo el equipo.');
+        return json(200, M.posts.filter((x) => x.lat != null && x.status !== 'removed').map((x) => ({ lat: x.lat, lng: x.lng, at: x.created_at, status: x.status })));
       }
       if (pfn === 'micra_posts_feed') {
         return json(200, M.posts.filter((r) => r.status === 'approved').map(named).filter((r) => r.public)

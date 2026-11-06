@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pendingOf, studyRows, studyCounts, whereLine, gpsPatch } from './study.js';
+import { salePhotoPoints, pendingOf, studyRows, studyCounts, whereLine, gpsPatch } from './study.js';
 
 const JAIRO = { id: 't1', name: 'Don Jairo', referencia: 'Salida de la 72', localidad: 'Chapinero', lat: 4.6577, lng: -74.0634, gps_accuracy_m: 9, photo_url: 'https://x/estudio/a.jpg' };
 const ROSA = { id: 't2', name: 'Doña Rosa', carrera: 13, calle: 60, zone: 'Chapinero' };
@@ -50,4 +50,11 @@ test('heatPoints: solo las fichas con GPS; el peso sale de las tazas por hora', 
   assert.deepEqual(g.features[1].geometry.coordinates, [-74.1, 4.6]);
   assert.deepEqual(g.features.map((f) => f.properties.weight), [1, 0.3, 0.5]);
   assert.deepEqual(heatPoints(null).features, []);
+});
+
+test('salePhotoPoints: las fotos de venta con punto válido, en [lng, lat]', () => {
+  const g = salePhotoPoints([{ lat: 4.6485, lng: -74.0585, at: '2026-11-06' }, { lat: null, lng: -74 }, { lat: 'x', lng: 1 }, null]);
+  assert.equal(g.features.length, 1);
+  assert.deepEqual(g.features[0].geometry.coordinates, [-74.0585, 4.6485]);
+  assert.equal(salePhotoPoints(undefined).features.length, 0);
 });

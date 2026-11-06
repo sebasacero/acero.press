@@ -9,7 +9,7 @@ import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconToday, IconCup, IconCap, IconWallet, IconBack, IconPin } from './icons.jsx';
+import { IconToday, IconCup, IconCap, IconWallet, IconBack, IconPin, IconCamera } from './icons.jsx';
 import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
@@ -20,6 +20,8 @@ import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
 import { seenHolds, rememberHolds, hasHoldMemory, newHolds, holdAlert, POLL_MS } from './alerts.js';
 import Globito, { ping } from './Globito.jsx';
+
+const PostComposer = lazy(() => import('./PostComposer.jsx'));
 
 // Modo barista en cuatro pestañas: Vender, su inicio (la racha, salir, la meta,
 // +1 por taza, fiados y quién te espera), Hoy (el muro del barismo), Aprende
@@ -370,16 +372,33 @@ const TABS = [
   ['cuenta', 'Mi plata', IconWallet, '/micra/barista/cuenta'],
 ];
 
-function BaristaTabs({ tab, go, waiting }) {
+/** La barra del barista: sus cuatro pestañas y, al centro, la cámara para la foto de la venta. */
+function BaristaTabs({ tab, go, waiting, onCamera }) {
+  const btn = ([id, label, Icon, path]) => (
+    <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(path)}>
+      <Icon />{label}
+      {id === 'vender' && waiting > 0 && <span className="mapp-tabs-badge" aria-label={`${waiting} te esperan`}>{waiting}</span>}
+    </button>
+  );
   return (
-    <nav className="mapp-tabs is-four" aria-label="Barista">
-      {TABS.map(([id, label, Icon, path]) => (
-        <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(path)}>
-          <Icon />{label}
-          {id === 'vender' && waiting > 0 && <span className="mapp-tabs-badge" aria-label={`${waiting} te esperan`}>{waiting}</span>}
-        </button>
-      ))}
+    <nav className="mapp-tabs is-five" aria-label="Barista">
+      {TABS.slice(0, 2).map(btn)}
+      <button type="button" className="mapp-tabs-cam" onClick={onCamera} aria-label="Foto de la venta" title="Foto de la venta" data-testid="tab-camera">
+        <IconCamera />
+      </button>
+      {TABS.slice(2).map(btn)}
     </nav>
+  );
+}
+
+/** Las monedas que saltan al tocar +1: la plata de esa taza sube y se va (gamificado, pedido del usuario). */
+function CoinPop({ pop }) {
+  if (!pop) return null;
+  return (
+    <span className="mapp-coinpop" key={pop.id} aria-hidden="true">
+      <em>{pop.label}</em>
+      <i>🪙</i><i>🪙</i><i>🪙</i><i>🪙</i>
+    </span>
   );
 }
 
@@ -402,7 +421,7 @@ const TRIP_KEY = 'micra_dia_v1';
 const readDayTrip = () => { try { return JSON.parse(localStorage.getItem(TRIP_KEY)); } catch { return null; } };
 const writeDayTrip = (t) => { try { localStorage.setItem(TRIP_KEY, JSON.stringify(t)); } catch { /* sin memoria */ } };
 
-export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender', onLive, refreshKey = 0 }) {
+export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = false, tab = 'vender', onLive, onBoard, refreshKey = 0 }) {
   const [day, setDay] = useState(null);
   const [error, setError] = useState(null);
   const [missing, setMissing] = useState(false);
@@ -428,6 +447,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [fiadoFor, setFiadoFor] = useState(null); // producto que espera el nombre del fiado
   const [fiadoName, setFiadoName] = useState('');
   const [last, setLast] = useState(null); // la última venta, para deshacer
+  const [pop, setPop] = useState(null); // las monedas del último +1
+  const [shooting, setShooting] = useState(false); // la cámara de la barra: foto de la venta
   const [busy, setBusy] = useState(null);
   const [showPrices, setShowPrices] = useState(false);
   const [goalPick, setGoalPick] = useState(null); // la meta que escogió en esta sesión
@@ -513,6 +534,10 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const allPrices = { ...(day?.prices ?? {}), ...Object.fromEntries(ownProducts.map((x) => [x.id, x.price])) };
   const board = day ? scoreboard(day, queued, allPrices) : null;
   const goal = day ? goalOf(day.week, goalPick ?? readGoal(day.id)) : 0;
+  // La meta del día sube a la barra de arriba (donde estaba «Cliente / Barista»)
+  const boardCups = board?.cups ?? null;
+  useEffect(() => { onBoard?.(boardCups === null ? null : { cups: boardCups, goal }); }, [boardCups, goal, onBoard]);
+  useEffect(() => () => onBoard?.(null), [onBoard]);
   const partyKey = day ? `${day.id}:${bogota().day}` : '';
   useEffect(() => {
     if (!board) return;
@@ -559,6 +584,10 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
 
   const plusOne = (product, fiado = null) => {
     const s = { ref: newRef('venta'), product, qty: 1, fiado, asId };
+    const price = Number(allPrices[product]) || 0;
+    const id = Date.now();
+    setPop({ id, product, label: fiado ? 'Fiado ✍️' : price ? `+${money(price)}` : '+1 ☕' });
+    setTimeout(() => setPop((p) => (p?.id === id ? null : p)), 1100);
     writeQueue([...readQueue(), s]);
     setPending(readQueue().length);
     setLast(s);
@@ -700,7 +729,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     body = (
       <Suspense fallback={<Cargando fig="caminando" />}>
         <BaristaProfile
-          day={day} asId={asId} trip={trip} live={live} pending={pending} flush={flush} onReload={load} go={go}
+          admin={admin || !!asId} day={day} asId={asId} trip={trip} live={live} pending={pending} flush={flush} onReload={load} go={go}
           streak={streak} goal={goal} board={board}
           renderPrices={({ onSaved }) => <Prices day={day} asId={asId} onSaved={onSaved} />}
           extras={extras} menu={menu} onExtras={loadExtras}
@@ -820,6 +849,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
                   <span className="mapp-tile-name">{m.label}</span>
                   <span className="mapp-tile-n">{money(m.price)} · <b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
                   <button type="button" className="mapp-plus" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`}>+1</button>
+                  {pop?.product === m.id && <CoinPop pop={pop} />}
                   <button type="button" className="mapp-tile-fiado" onClick={() => setFiadoFor(m.id)} aria-label={`Fié un ${m.one}`}>Fiado</button>
                 </div>
               ))}
@@ -893,7 +923,12 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         </Suspense>
       )}
       {ordering && <CoffeeOrder day={day} onClose={() => setOrdering(false)} />}
-      <BaristaTabs tab={tab} go={go} waiting={waiting.length} />
+      {shooting && (
+        <Suspense fallback={null}>
+          <PostComposer sale selfId={day.id} asId={asId} onClose={() => setShooting(false)} />
+        </Suspense>
+      )}
+      <BaristaTabs tab={tab} go={go} waiting={waiting.length} onCamera={() => setShooting(true)} />
     </div>
   );
 }

@@ -109,3 +109,33 @@
 /* de noche la barra del momento también va oscura: su letra vuelve a clara */
 .mapp.is-night .mapp-sellbar b{color:#fff !important}
 .mapp.is-night .mapp-sellbar > span:nth-child(2), .mapp.is-night .mapp-sellbar small{color:rgba(255,255,255,.78) !important}
+
+/* La barra del barista con la cámara al centro (6 nov 2026): la foto de la venta a un toque */
+.mapp-tabs.is-five{grid-template-columns:1fr 1fr 64px 1fr 1fr;width:min(calc(100% - 20px),460px)}
+.mapp .mapp-tabs .mapp-tabs-cam{align-self:center;justify-self:center;width:58px;height:58px;min-height:58px;margin-top:-26px;border-radius:50%;background:var(--t-cta) !important;box-shadow:0 0 0 4px var(--t-0),0 12px 22px -8px rgba(222,27,27,.95)}
+.mapp .mapp-tabs .mapp-tabs-cam *{color:#fff !important}
+.mapp .mapp-tabs .mapp-tabs-cam svg{width:26px;height:26px}
+.mapp .mapp-tabs .mapp-tabs-cam:active{transform:scale(.94)}
+
+/* Las monedas del +1: la plata sube con un rebote y las monedas saltan y giran */
+.mapp-tile{position:relative}
+.mapp-tile .mapp-plus{transition:transform .12s ease}
+.mapp-tile .mapp-plus:active{transform:scale(.93)}
+.mapp-coinpop{position:absolute;left:50%;top:46%;pointer-events:none;z-index:3}
+.mapp-coinpop em{position:absolute;left:0;top:0;transform:translateX(-50%);white-space:nowrap;font:900 1.5rem 'Archivo',sans-serif;font-style:normal;background:linear-gradient(180deg,var(--t-6),var(--t-5));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(13,8,32,.35));animation:mapp-rise 1.05s ease-out forwards}
+.mapp-coinpop i{position:absolute;left:0;top:0;font-size:1.3rem;font-style:normal;animation:mapp-coin 1s cubic-bezier(.2,.7,.4,1) forwards}
+.mapp-coinpop i:nth-of-type(1){--x:-56px;--y:-60px}
+.mapp-coinpop i:nth-of-type(2){--x:50px;--y:-70px;animation-delay:.04s}
+.mapp-coinpop i:nth-of-type(3){--x:-18px;--y:-96px;animation-delay:.08s}
+.mapp-coinpop i:nth-of-type(4){--x:26px;--y:-40px;animation-delay:.12s}
+@keyframes mapp-rise{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}22%{opacity:1;transform:translate(-50%,-14px) scale(1.25)}100%{opacity:0;transform:translate(-50%,-80px) scale(1)}}
+@keyframes mapp-coin{0%{opacity:0;transform:translate(-50%,0) scale(.4) rotate(0)}25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),var(--y)) scale(1.05) rotate(220deg)}}
+@media (prefers-reduced-motion:reduce){.mapp-coinpop i{display:none}.mapp-coinpop em{animation:none;transform:translate(-50%,-30px)}}
+
+/* La meta del día en la barra de arriba del barista (antes «Cliente / Barista») */
+.mapp-topgoal{display:flex;align-items:center;gap:8px;margin-left:auto;padding:4px 12px 4px 6px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;font:800 .95rem 'Archivo',sans-serif;min-height:44px;cursor:pointer}
+.mapp-topgoal svg{width:32px;height:32px;flex:none}
+.mapp-topgoal b{font:900 1.15rem 'Archivo',sans-serif;background:linear-gradient(180deg,var(--t-7),var(--t-6) 50%,var(--t-5));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapp-topgoal small{font:600 .68rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.75);letter-spacing:.02em}
+.mapp-topgoal.is-met{background:var(--t-cta);border-color:transparent}
+.mapp:not(.is-redtop) .mapp-topgoal{background:var(--t-0)}

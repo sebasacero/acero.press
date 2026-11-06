@@ -46,8 +46,8 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   const { page, api, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista', { waitUntil: 'load' });
   await expect(page.getByRole('heading', { name: /Marlene\.$/ })).toBeVisible();
-  // Sin quinta pestaña: el perfil está en las iniciales de arriba
-  await expect(page.getByRole('navigation', { name: 'Barista' }).getByRole('button')).toHaveCount(4);
+  // Cuatro pestañas y la cámara al centro; el perfil está en las iniciales de arriba
+  await expect(page.getByRole('navigation', { name: 'Barista' }).getByRole('button')).toHaveCount(5);
   await page.getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page).toHaveURL(/\/micra\/barista\/perfil$/);
 
