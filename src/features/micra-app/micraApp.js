@@ -388,3 +388,30 @@ export function joinStats(list, now = new Date()) {
   const mid = prices.length ? (prices.length % 2 ? prices[(prices.length - 1) / 2] : Math.round((prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2)) : null;
   return { baristas: all.length || null, live: all.length ? all.filter((b) => status(b, now) === 'live').length : null, tinto: mid };
 }
+
+/** Suma al historial del cliente (en su celular) los baristas de sus apartados, una vez por apartado. */
+export function recordBaristaHistory(hist = {}, holds = []) {
+  const next = { ...(hist && typeof hist === 'object' ? hist : {}) };
+  let changed = false;
+  for (const h of holds ?? []) {
+    if (!h?.tintero_id || h.status === 'cancelled') continue;
+    const prev = next[h.tintero_id] ?? { n: 0, holds: [] };
+    if (prev.holds?.includes(h.id)) continue;
+    next[h.tintero_id] = { n: (prev.n ?? 0) + 1, holds: [...(prev.holds ?? []), h.id].slice(-20), last: h.for_day ?? prev.last ?? null };
+    changed = true;
+  }
+  return changed ? next : hist;
+}
+
+/**
+ * «Tus baristas» en Mis apartados (6 nov 2026, pedido del usuario: historial de los que le gustan
+ * y cuáles están disponibles): sus favoritos y a quienes les ha apartado, primero los que están en
+ * la calle, luego los que suelen estar a esta hora; dentro, los que más le han vendido.
+ */
+export function myBaristas(list, { favorites = [], history = {}, now = new Date() } = {}) {
+  const rank = { live: 0, usual: 1, off: 2 };
+  return (list ?? [])
+    .filter((b) => favorites.includes(b.id) || history?.[b.id])
+    .map((b) => ({ ...b, status: status(b, now), fav: favorites.includes(b.id), times: history?.[b.id]?.n ?? 0 }))
+    .sort((a, b) => rank[a.status] - rank[b.status] || b.times - a.times || Number(b.fav) - Number(a.fav) || String(a.name).localeCompare(String(b.name)));
+}

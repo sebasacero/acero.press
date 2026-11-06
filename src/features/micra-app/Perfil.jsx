@@ -8,7 +8,6 @@ import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToC
 import { seekOff, setSeekOff } from './seek.js';
 import * as api from './api.js';
 import platform from './platform.js';
-import { StampsCard } from './Loyalty.jsx';
 import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
 import { methodsLabel } from './flow.js';
 import Termo from './Termo.jsx';
@@ -551,9 +550,6 @@ export function ClientProfile({ go, who }) {
       <ClientHead name={name} favs={favs} list={list} />
 
       {done && <p className="mapp-notice" role="status" data-testid="wiped">Listo: este celular ya no guarda tus datos de Micra.{plainSession ? ' Cerraste sesión.' : ''}</p>}
-
-      {/* La tarjeta destacada: los sellos (10 tazas = 1 tinto gratis) */}
-      {!done && <StampsCard />}
 
       <Group title="Mi café">
         <Tile icon={IconCup} label="Mis apartados" onClick={() => go('/micra/apartados')} />

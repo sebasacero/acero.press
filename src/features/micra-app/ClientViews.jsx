@@ -3,6 +3,7 @@ import {
   sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
   searchBaristas, drinkFromQuery, nearZone,
+  recordBaristaHistory, myBaristas,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
@@ -503,13 +504,26 @@ export function BaristaPage({ id, go }) {
   );
 }
 
+const HIST_KEY = 'micra_mis_baristas_v1';
+
 export function MyHolds({ go }) {
   const [holds, setHolds] = useState(null);
   const [{ list }] = useBaristas();
   const [error, setError] = useState(null);
+  const [hist, setHist] = useState(() => { try { return JSON.parse(localStorage.getItem(HIST_KEY) ?? '{}') || {}; } catch { return {}; } });
   useEffect(() => {
-    api.myHolds().then((h) => setHolds(h ?? [])).catch((e) => { setHolds([]); if (!e.missing) setError(e.message); });
+    api.myHolds().then((h) => {
+      setHolds(h ?? []);
+      // El historial de a quién le ha apartado se queda en su celular (para «Tus baristas»)
+      try {
+        const prev = JSON.parse(localStorage.getItem(HIST_KEY) ?? '{}');
+        const next = recordBaristaHistory(prev, h ?? []);
+        if (next !== prev) { localStorage.setItem(HIST_KEY, JSON.stringify(next)); setHist(next); }
+      } catch { /* sin memoria */ }
+    }).catch((e) => { setHolds([]); if (!e.missing) setError(e.message); });
   }, []);
+  const mineList = myBaristas(list, { favorites: api.favorites(), history: hist });
+  const availableNow = mineList.filter((b) => b.status === 'live').length;
   const nameOf = (id) => (list ?? []).find((b) => b.id === id)?.name ?? 'Tu barista';
   const text = { waiting: 'Te espera', served: 'Entregado', missed: 'No se encontraron', cancelled: 'Cancelado' };
   const live = (holds ?? []).filter((h) => h.status !== 'cancelled');
@@ -542,6 +556,29 @@ export function MyHolds({ go }) {
           </li>
         ))}
       </ul>
+
+      {/* Tus baristas (pedido del usuario): los favoritos y a quienes les ha apartado, primero los disponibles */}
+      <section className="mapp-mybaristas" aria-labelledby="mapp-mybaristas-t" data-testid="my-baristas">
+        <h2 className="mapp-cota" id="mapp-mybaristas-t">Tus baristas{mineList.length ? ` · ${availableNow} en la calle ahora` : ''}</h2>
+        {mineList.length === 0
+          ? <p className="mapp-muted">Toca ♡ en un barista o apártale una vez y queda aquí, con si está disponible.</p>
+          : (
+            <ul className="mapp-list">
+              {mineList.map((b) => (
+                <li key={b.id}>
+                  <button type="button" className="mapp-row" onClick={() => go(baristaPath(b.id))} data-testid={`my-barista-${b.id}`}>
+                    <span className={`mapp-av ${b.status === 'live' ? 'is-live' : ''}`} aria-hidden="true">{initials(b.name)}</span>
+                    <span className="mapp-row-main">
+                      <b>{b.name}{b.fav ? ' ♥' : ''}</b>
+                      <span>{[b.referencia || b.localidad, b.times ? `le apartaste ${b.times === 1 ? '1 vez' : `${b.times} veces`}` : null].filter(Boolean).join(' · ')}</span>
+                    </span>
+                    <StatusBadge s={b.status} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+      </section>
     </div>
   );
 }

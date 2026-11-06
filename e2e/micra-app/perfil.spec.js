@@ -214,7 +214,8 @@ test('cliente: su perfil cambia el nombre, quita un barista y «Borrar mis datos
   await page.getByTestId('zone-toggle').check();
   expect(await page.evaluate(() => localStorage.getItem('micra_seek_off_v1'))).toBe('false');
   await page.keyboard.press('Escape');
-  await expect(page.getByTestId('stamps')).toBeVisible();
+  // La tarjeta de sellos ya no va en Mi perfil (pedido del usuario, 6 nov 2026)
+  await expect(page.getByTestId('stamps')).toHaveCount(0);
 
   await page.getByTestId('client-wipe').click();
   await expect(page.getByTestId('signout-confirm')).toContainText('sigue con el barista');
@@ -366,5 +367,22 @@ test('barista sin sesión: la cabecera en gradiente con las cifras de Micra y si
   await expect(page.getByTestId('join-kpis')).toContainText('baristas en Micra');
   await expect(page.getByTestId('join-kpis')).toContainText('el tinto típico');
   await expect(page.locator('.mapp-perks')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('cliente: «Mis apartados» muestra sus baristas (favoritos y a quién le ha apartado) con si están en la calle', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.addInitScript(([m, j]) => {
+    localStorage.setItem('micra_favs_v1', JSON.stringify([j]));
+    localStorage.setItem('micra_mis_baristas_v1', JSON.stringify({ [m]: { n: 2, holds: ['x', 'y'], last: '2026-11-05' } }));
+  }, [MARLENE, JAIRO]);
+  await page.goto('/micra/apartados', { waitUntil: 'load' });
+  const mine = page.getByTestId('my-baristas');
+  await expect(mine.getByRole('heading', { level: 2 })).toContainText('Tus baristas');
+  await expect(page.getByTestId(`my-barista-${MARLENE}`)).toContainText('le apartaste 2 veces');
+  await expect(page.getByTestId(`my-barista-${JAIRO}`)).toContainText('Jairo ♥');
+  await expect(mine).not.toContainText('Wilson');
+  await page.getByTestId(`my-barista-${JAIRO}`).click();
+  await expect(page).toHaveURL(new RegExp(`/micra/b/${JAIRO}`));
   expect(errors).toEqual([]);
 });

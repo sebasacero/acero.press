@@ -432,3 +432,13 @@
 
 .mapp-gustos .mapp-title{color:var(--t-ink,#1F2452) !important}
 .mapp-gustos-fact{color:var(--t-ink,#1F2452)}
+
+/* Sellos: «.mapp.is-day .mapp-glass» les ponía fondo blanco con letra blanca (ilegible); vuelven a la lectura de la cámara */
+.mapp.is-day .mapp-stamps{
+  background-color:var(--t-0) !important;
+  background-image:radial-gradient(55% 80% at 92% 18%, rgba(255,194,60,.85), rgba(242,84,45,.75) 22%, rgba(176,18,122,.55) 48%, transparent 75%), linear-gradient(160deg,var(--t-1),var(--t-0)) !important;
+  color:#fff !important;
+}
+/* Tus baristas, en Mis apartados */
+.mapp .mapp-mybaristas{margin-top:18px}
+.mapp .mapp-mybaristas .mapp-av.is-live{box-shadow:0 0 0 2px var(--t-cta,#DE1B1B)}
