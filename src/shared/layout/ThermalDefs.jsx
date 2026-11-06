@@ -1,18 +1,15 @@
 import { THERMAL_STOPS, thermalTable } from '../lib/thermal.js';
 
 const LUMA = '.3 .59 .11 0 0  .3 .59 .11 0 0  .3 .59 .11 0 0  0 0 0 1 0';
-const funcs = (inkHot, stops) => ['R', 'G', 'B'].map((c, i) => {
+const funcs = (inkHot) => ['R', 'G', 'B'].map((c, i) => {
   const Tag = `feFunc${c}`;
-  return <Tag key={c} type="table" tableValues={thermalTable(i, stops ? { inkHot, stops } : { inkHot })} />;
+  return <Tag key={c} type="table" tableValues={thermalTable(i, { inkHot })} />;
 });
-// Una persona en la cámara térmica está tibia: su cuerpo va del magenta al blanco caliente, nunca al violeta del fondo
-const WARM = THERMAL_STOPS.slice(0, 5);
 
 /**
  * Filtros y degradé de la piel térmica, una vez por página: `#t-thermal` (las
  * personas a tinta, la línea caliente sobre fondo frío), `#t-thermal-photo`
- * (fotos, lo claro caliente), `#t-thermal-warm` (la persona entera tibia, la tinta al rojo
- * blanco: sobre el visor frío) y `#t-heat` (el café de la taza de la meta).
+ * (fotos, lo claro caliente) y `#t-heat` (el café de la taza de la meta).
  * Fuera de pantalla, sin `display:none` (el navegador no aplicaría los filtros).
  */
 export default function ThermalDefs() {
@@ -21,10 +18,6 @@ export default function ThermalDefs() {
       <filter id="t-thermal" colorInterpolationFilters="sRGB">
         <feColorMatrix type="matrix" values={LUMA} />
         <feComponentTransfer>{funcs(true)}</feComponentTransfer>
-      </filter>
-      <filter id="t-thermal-warm" colorInterpolationFilters="sRGB">
-        <feColorMatrix type="matrix" values={LUMA} />
-        <feComponentTransfer>{funcs(true, WARM)}</feComponentTransfer>
       </filter>
       <filter id="t-thermal-photo" colorInterpolationFilters="sRGB">
         <feColorMatrix type="matrix" values={LUMA} />

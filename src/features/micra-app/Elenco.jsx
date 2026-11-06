@@ -14,6 +14,8 @@ const FIGURES = {
   empujando: () => import('./elenco/empujando.svg?raw'),
   duo: () => import('./elenco/duo.svg?raw'),
   sombrilla: () => import('./elenco/sombrilla.svg?raw'),
+  // La de la sombrilla con el kit de Micra: termos y delantal en gradiente, carrito de acero
+  kit: () => import('./elenco/barista-kit.svg?raw'),
 };
 
 const cache = {};

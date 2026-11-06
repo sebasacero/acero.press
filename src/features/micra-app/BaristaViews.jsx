@@ -113,7 +113,7 @@ export function BaristaJoin({ session, onLinked, team = false, preview = false, 
             <button type="button" className="mapp-link" onClick={() => go?.('/micra/equipo')}>Actuar como › Equipo</button>
           </p>
         )}
-        <Figure name="sombrilla" className="is-join" />
+        <Figure name="kit" className="is-join" />
         <p className="mapp-kicker">Para baristas</p>
         <h1 className="mapp-title">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
         {/* Lo primero después del título: entrar es lo que vino a hacer */}
