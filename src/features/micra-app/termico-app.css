@@ -154,3 +154,41 @@
   background:#ECE8F3 !important;background-image:none !important;color:#6E6787 !important;box-shadow:none !important;border-color:transparent !important;opacity:1 !important;
 }
 .mapp .mapp-fig.is-join svg{filter:url(#t-thermal-warm)}
+
+/* Mi plata como tablero (6 nov 2026): la cabecera de Vender (frío arriba, se calienta al bajar)
+   con lo de hoy en grande, y la contabilidad en tarjetas blancas debajo */
+.mapp-plata{display:grid;gap:14px}
+.mapp-plata-head{
+  margin:-18px -16px 0;padding:18px 18px 20px;border-radius:0 0 28px 28px;color:#fff;position:relative;
+  background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 34%,var(--t-2) 66%,var(--t-3) 92%,var(--t-4) 100%);
+  box-shadow:var(--t-glow-cold);
+}
+.mapp-plata-kicker{margin:0;font:700 .72rem 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--t-6)}
+.mapp-plata-total{margin:4px 0 0;font:900 3.2rem/1 'Archivo',sans-serif;letter-spacing:-.04em;background:linear-gradient(180deg,var(--t-7),var(--t-6) 50%,var(--t-5));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapp-plata-sub{margin:6px 0 0;font:600 .78rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.78)}
+.mapp-plata-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.mapp-plata-kpis div{padding:10px 10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
+.mapp-plata-kpis dt{font:600 .68rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.04em}
+.mapp-plata-kpis dd{margin:2px 0 0;font:800 1.05rem 'Archivo',sans-serif}
+.mapp-plata-win{display:grid;gap:2px;margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--t-cta);box-shadow:0 12px 24px -12px rgba(222,27,27,.9)}
+.mapp-plata-win span{font:700 .72rem 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+.mapp-plata-win b{font:900 1.9rem/1.05 'Archivo',sans-serif}
+.mapp-plata-win small{font-size:.74rem;opacity:.9}
+.mapp-plata-win.is-neg{background:var(--t-1);box-shadow:none}
+.mapp-plata-kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mapp-plata-kinds button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;border-radius:14px;border:1px solid var(--t-line);background:#fff;font:700 .86rem 'Archivo',sans-serif;color:var(--t-ink);cursor:pointer}
+.mapp-plata-kinds button.on{background:var(--t-0);color:#fff;border-color:transparent;box-shadow:var(--t-glow)}
+.mapp-plata-add{display:grid;gap:8px;margin-top:10px}
+.mapp-plata-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.mapp-plata-list li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--t-line)}
+.mapp-plata-list em{font-style:normal;font-weight:800}
+.mapp-plata-bars{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.mapp-plata-bars li{display:grid;grid-template-columns:1fr auto;gap:4px 8px}
+.mapp-plata-bars em{font-style:normal;font-weight:800}
+.mapp-plata-bars li > i{grid-column:1 / -1;height:8px;border-radius:99px;background:#EEE9F6;overflow:hidden}
+.mapp-plata-bars li > i > i{display:block;height:100%;border-radius:inherit;background:var(--t-ramp)}
+.mapp-plata-hours{display:flex;align-items:flex-end;gap:3px;height:76px;margin:6px 0 14px}
+.mapp-plata-hours span{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+.mapp-plata-hours i{display:block;width:100%;border-radius:4px 4px 2px 2px;background:var(--t-2);opacity:.35}
+.mapp-plata-hours .is-best i{background:var(--t-cta);opacity:1}
+.mapp-plata-hours small{font:600 .6rem 'JetBrains Mono',monospace;color:var(--t-soft,#6E6787);min-height:.8em}

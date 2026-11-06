@@ -138,6 +138,16 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await expect(luis.getByRole('link', { name: 'Cobrar' })).toHaveAttribute('href', /wa\.me.*Don%20Luis%20taxi/);
   await luis.getByRole('button', { name: 'Pagó' }).click();
   await expect(luis).toHaveCount(0);
+  // Mi plata es su contabilidad: un gasto de café baja la ganancia de hoy (solo en el celular)
+  const win = page.getByTestId('plata-ganancia');
+  const before = Number((await win.locator('b').innerText()).replace(/\D/g, ''));
+  await page.getByRole('group', { name: 'Qué compraste' }).getByRole('button', { name: /Café/ }).click();
+  await page.getByLabel('Valor del gasto').fill('1000');
+  await page.getByTestId('gasto-add').click();
+  await expect(page.getByRole('listitem').filter({ hasText: 'Café' })).toContainText('$1.000');
+  await expect.poll(async () => Number((await win.locator('b').innerText()).replace(/\D/g, ''))).toBe(Math.abs(before - 1000));
+  await page.getByRole('button', { name: 'Quitar el gasto de café' }).click();
+  await expect(page.getByRole('button', { name: 'Quitar el gasto de café' })).toHaveCount(0);
 
   // La flecha: vuelve a «¿Cómo sales hoy?» y sale del mapa
   await tabs.getByRole('button', { name: /Vender/ }).click();

@@ -20,6 +20,7 @@ import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
 import { seenHolds, rememberHolds, hasHoldMemory, newHolds, holdAlert, POLL_MS } from './alerts.js';
 import Globito, { ping } from './Globito.jsx';
+import MiPlata from './MiPlata.jsx';
 
 const PostComposer = lazy(() => import('./PostComposer.jsx'));
 
@@ -758,22 +759,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   } else if (tab === 'cuenta') {
     body = (
       <>
-        <section className="mapp-glass mapp-today">
-          <p className="mapp-cota">Hoy llevas · {cupsLabel(board.cups)}</p>
-          <Digits value={money(board.total)} label="Vendido hoy" />
-          {sum.fiado > 0 && <p className="mapp-muted">{money(sum.cash)} cobrado · {money(sum.fiado)} fiado</p>}
-          <p className="mapp-muted">Esta semana: {money(board.weekMoney)} · {cupsLabel(board.weekCups)}</p>
-          <div className="mapp-week" aria-label="Tazas por día, esta semana">
-            {bars.map((d) => (
-              <span key={d.day} className={d.today ? 'is-today' : ''} title={`${d.cups} tazas`}>
-                <i style={{ height: `${Math.max(4, d.h * 100)}%` }} />
-                <small>{weekdayLetter(d.day)}</small>
-              </span>
-            ))}
-          </div>
-          <button type="button" className="mapp-btn is-cta" onClick={() => setStory(true)} disabled={board.cups === 0} data-testid="story-open">Compartir mi día</button>
-        </section>
-
+        <MiPlata day={day} board={board} sum={sum} menu={menu} bars={bars} onShare={() => setStory(true)}>
         <section className="mapp-glass" aria-labelledby="mapp-fiados">
           <p className="mapp-cota" id="mapp-fiados">Te deben · {money(sum.owed)}</p>
           {day.fiados.length === 0 && <p className="mapp-muted">Nadie te debe. Para anotar un fiado, toca «Fiado» en Vender.</p>}
@@ -789,6 +775,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             ))}
           </ul>
         </section>
+        </MiPlata>
 
         {showPrices
           ? <Prices day={day} asId={asId} onSaved={() => { setShowPrices(false); load(); }} />
