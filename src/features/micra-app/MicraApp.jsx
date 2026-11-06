@@ -9,7 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
-import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
+import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
 import './micra-app.css';
 import './termico-app.css';
 import ThermalDefs from '../../shared/layout/ThermalDefs.jsx';
@@ -243,7 +243,7 @@ export default function MicraApp() {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
     else if (route.view === 'ficha') body = <Suspense fallback={<Cargando fig="caminando" />}><FichaFlow go={go} /></Suspense>;
-    else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} /></Suspense>;
+    else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} focus={route.tab} /></Suspense>;
     else if (route.tab === 'perfil') body = <Suspense fallback={<Cargando />}><OwnerProfile go={go} onSignedOut={() => setActAs(null)} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
   } else body = <ClientHome go={go} />;
@@ -309,15 +309,22 @@ export default function MicraApp() {
         </nav>
       )}
       {teamTabs && (
-        <nav className="mapp-tabs" aria-label="Equipo">
+        // El equipo en la calle (6 nov 2026): Hoy, el mapa, la cámara al centro, la encuesta y el estudio con sus cifras
+        <nav className="mapp-tabs is-five" aria-label="Equipo">
           <button type="button" className={route.view === 'owner' && !route.tab ? 'on' : ''} onClick={() => go('/micra/equipo')}>
             <IconToday />Hoy
           </button>
-          <button type="button" className={route.view === 'study' ? 'on' : ''} onClick={() => go('/micra/estudio')}>
-            <IconClipboard />Estudio
+          <button type="button" className={route.view === 'study' && route.tab === 'mapa' ? 'on' : ''} onClick={() => go('/micra/mapa')} data-testid="tab-map">
+            <IconPin />Mapa
           </button>
-          <button type="button" className={route.view === 'camera' ? 'on' : ''} onClick={() => go('/micra/camara')}>
-            <IconCamera />Cámara
+          <button type="button" className={`mapp-tabs-cam ${route.view === 'camera' ? 'on' : ''}`} onClick={() => go('/micra/camara')} aria-label="Cámara" title="Cámara" data-testid="tab-camera">
+            <IconCamera />
+          </button>
+          <button type="button" className={route.view === 'ficha' ? 'on' : ''} onClick={() => go('/micra/ficha')} data-testid="tab-survey">
+            <IconClipboard />Encuesta
+          </button>
+          <button type="button" className={route.view === 'study' && route.tab !== 'mapa' ? 'on' : ''} onClick={() => go('/micra/estudio')}>
+            <IconBars />Estudio
           </button>
         </nav>
       )}

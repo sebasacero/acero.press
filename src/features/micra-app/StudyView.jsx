@@ -5,7 +5,10 @@ import { biApi } from '../admin/micra/tinteroApi.js';
 import { photoPath } from '../admin/micra/tinteroForm.js';
 import { studyRows, studyCounts, whereLine, gpsPatch, PENDING_LABEL } from './study.js';
 import platform from './platform.js';
-import { postPoints } from './api.js';
+import { postPoints, addSighting, sightings as listSightings } from './api.js';
+import { newRef } from './micraApp.js';
+import { EMPTY_FICHA, quickBody, enqueue, isOffline } from './fichaFlow.js';
+import { SPOT_KINDS, readSightingQueue, queueSighting, unqueueSighting, sightingFrom, sightingCounts } from './avistar.js';
 import { Cargando } from './Animado.jsx';
 
 // Estudio de calle en la app (modo equipo): lo mismo que «Tintero» en la cámara
@@ -119,7 +122,77 @@ function Complete({ row, onDone }) {
   );
 }
 
-export default function StudyView({ go }) {
+/**
+ * El botón de GPS: al pasar y ver un puesto o a alguien tomando tinto, un toque lee el punto y
+ * otro dice qué era. El puesto queda como ficha sin nombre; el avistamiento, solo punto y hora.
+ */
+function SpotButton({ onDone }) {
+  const [pos, setPos] = useState(null); // la lectura (o la promesa) mientras se elige
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const start = () => {
+    setError(null);
+    // El GPS empieza a leer de una vez: mientras se elige qué era, ya está buscando
+    setPos(platform.position(15000, true));
+  };
+  const mark = async (kind) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const fix = await pos;
+      const gps = gpsPatch(fix);
+      if (gps.error) throw new Error(gps.error);
+      const acc = gps.gps_accuracy_m != null ? ` · ±${gps.gps_accuracy_m} m` : '';
+      if (kind === 'puesto') {
+        const { body } = quickBody({ ...EMPTY_FICHA, notes: 'Marcado al pasar' }, gps);
+        try {
+          await biApi('/tinteros', { method: 'POST', body });
+          onDone(`Puesto marcado${acc}. Complétalo en la lista cuando puedas.`, true);
+        } catch (e) {
+          if (!isOffline(e)) throw e;
+          enqueue(localStorage, { ref: newRef('f'), body });
+          onDone(`Sin señal: el puesto quedó en el celular y sube solo${acc}.`, false);
+        }
+      } else {
+        const item = sightingFrom(fix, newRef('av'));
+        try {
+          await addSighting(item);
+          onDone(`Alguien tomando tinto, marcado${acc}.`, true);
+        } catch (e) {
+          if (!e.missing && !isOffline(e)) throw e;
+          queueSighting(localStorage, item);
+          onDone(`Marcado en el celular${acc}: sube cuando haya señal.`, true);
+        }
+      }
+      setPos(null);
+    } catch (e) { setError(e.message); } finally { setBusy(false); }
+  };
+  return (
+    <section className="mapp-spot" aria-label="Marcar al pasar">
+      {!pos ? (
+        <button type="button" className="mapp-spot-btn" onClick={start} data-testid="spot-btn">
+          <span aria-hidden="true">📍</span>
+          <b>Marcar aquí</b>
+          <small>Un puesto o alguien tomando tinto</small>
+        </button>
+      ) : (
+        <div className="mapp-spot-pick" role="group" aria-label="¿Qué viste?">
+          <p className="mapp-cota">¿Qué viste? · leyendo el GPS</p>
+          {SPOT_KINDS.map((k) => (
+            <button key={k.id} type="button" className={`mapp-spot-kind is-${k.id}`} onClick={() => mark(k.id)} disabled={busy} data-testid={`spot-${k.id}`}>
+              <span aria-hidden="true">{k.id === 'puesto' ? '☕' : '🙋'}</span>
+              <span><b>{k.label}</b><small>{k.hint}</small></span>
+            </button>
+          ))}
+          <button type="button" className="mapp-link" onClick={() => setPos(null)} disabled={busy}>Cancelar</button>
+        </div>
+      )}
+      {error && <p className="mapp-error" role="alert">{error}</p>}
+    </section>
+  );
+}
+
+export default function StudyView({ go, focus = null }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(null); // la ficha que se está completando
@@ -133,8 +206,22 @@ export default function StudyView({ go }) {
   // Las fotos de venta con su lugar (sin la migración todavía: el mapa queda sin esa capa)
   const [photos, setPhotos] = useState([]);
   useEffect(() => { postPoints().then((p) => setPhotos(Array.isArray(p) ? p : [])).catch(() => setPhotos([])); }, []);
+  // Los avistamientos: primero sube lo que quedó en el celular y luego se leen
+  const [seen, setSeen] = useState([]);
+  const [queued, setQueued] = useState(() => readSightingQueue(localStorage));
+  const loadSightings = useCallback(async () => {
+    for (const item of readSightingQueue(localStorage)) {
+      try { await addSighting(item); unqueueSighting(localStorage, item.ref); } catch { break; }
+    }
+    setQueued(readSightingQueue(localStorage));
+    listSightings().then((l) => setSeen(Array.isArray(l) ? l : [])).catch(() => setSeen([]));
+  }, []);
+  useEffect(() => { loadSightings(); }, [loadSightings]);
+  const mapRef = useRef(null);
+  useEffect(() => { if (focus === 'mapa' && data) mapRef.current?.scrollIntoView({ block: 'start' }); }, [focus, data]);
 
   const done = (text) => { setNotice(`✓ ${text}`); setOpen(null); load(); };
+  const spotted = (text) => { setNotice(`✓ ${text}`); load(); loadSightings(); };
 
   if (error && !data) return <p className="mapp-error" role="alert">No se pudo leer el estudio: {error}</p>;
   if (!data) return <Cargando fig="caminando">Leyendo el estudio…</Cargando>;
@@ -142,34 +229,35 @@ export default function StudyView({ go }) {
   const rows = studyRows(data.tinteros, data.surveys);
   const n = studyCounts(rows);
   const surveysReady = data.surveysReady !== false;
+  const tinto = sightingCounts(seen, queued);
 
   return (
     <div className="mapp-study">
-      <section className="mapp-hello">
-        <p className="mapp-kicker">Equipo · estudio de calle</p>
-        <h1 className="mapp-title is-small">Baristas en la calle</h1>
-        <p className="mapp-muted">Frente al puesto: foto, punto de GPS, ficha y encuesta en dos minutos. Todo llega al mismo estudio del panel.</p>
+      {/* La cabecera de Vender, con las cifras del estudio; la encuesta y la cámara están en la barra */}
+      <section className="mapp-studyhead" aria-label="El estudio en cifras" data-testid="study-head">
+        <p className="mapp-coffeehead-kicker">Equipo · estudio de calle</p>
+        <h1 className="mapp-coffeehead-title">Estudio de calle</h1>
+        <dl className="mapp-coffeehead-kpis is-four">
+          <div><dd data-testid="study-total">{n.total}</dd><dt>puestos</dt></div>
+          <div><dd>{n.encuesta}</dd><dt>con encuesta</dt></div>
+          <div><dd>{n.gps}</dd><dt>con GPS</dt></div>
+          <div><dd data-testid="study-tinto">{tinto.today}</dd><dt>tomando tinto hoy</dt></div>
+        </dl>
+        <p className="mapp-coffeehead-fine">{n.total - n.done} fichas con algo pendiente · {n.foto} con foto · {tinto.week} avistamientos en 7 días{tinto.pending ? ` · ${tinto.pending} en el celular` : ''}</p>
       </section>
 
-      <button type="button" className="mapp-btn is-cta is-big" onClick={() => go('/micra/ficha')}>Registrar un barista</button>
-      <button type="button" className="mapp-btn is-ghost" onClick={() => go('/micra/camara')}>Cámara con filtros</button>
+      <SpotButton onDone={spotted} />
 
       {notice && <p className="mapp-notice" role="status">{notice}</p>}
       {error && <p className="mapp-error" role="alert">{error}</p>}
 
-      <dl className="mapp-kpis">
-        <div><dt>Fichas</dt><dd data-testid="study-total">{n.total}</dd></div>
-        <div><dt>Con encuesta</dt><dd>{n.encuesta}<small> de {n.total}</small></dd></div>
-        <div><dt>Con GPS</dt><dd>{n.gps}<small> de {n.total}</small></dd></div>
-        <div><dt>Con foto</dt><dd>{n.foto}<small> de {n.total}</small></dd></div>
-      </dl>
-
-      <Suspense fallback={null}><StudyHeatMap rows={rows} routes={data.routes ?? []} photos={photos} /></Suspense>
+      <div ref={mapRef} id="estudio-mapa" />
+      <Suspense fallback={null}><StudyHeatMap rows={rows} routes={data.routes ?? []} photos={photos} sightings={[...seen, ...queued]} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Fichas · {n.total - n.done} con algo pendiente</p>
         {rows.length === 0 ? (
-          <p className="mapp-muted">Aún no hay fichas. Toca «Registrar un barista» frente a su puesto.</p>
+          <p className="mapp-muted">Aún no hay fichas. Toca «Encuesta» abajo frente a un puesto, o «Marcar aquí» al pasar.</p>
         ) : (
           <ul className="mapp-team mapp-study-list" aria-label="Fichas del estudio">
             {rows.map((r) => (

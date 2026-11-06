@@ -179,3 +179,8 @@ export async function coldBrewContent() {
 
 /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
 export const onePosition = (timeout, precise = false) => platform.position(timeout, precise);
+
+// Avistamientos del estudio (equipo): alguien tomando tinto, marcado al pasar
+export const addSighting = ({ lat, lng, accuracy = null, ref, at = null, people = 1 }) =>
+  call('micra_sighting_add', { p_lat: lat, p_lng: lng, p_accuracy: accuracy, p_client_ref: ref, p_people: people, p_seen_at: at });
+export const sightings = (days = 90) => call('micra_sightings', { p_days: days });

@@ -312,6 +312,21 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, c);
     }
 
+    // Avistamientos del estudio (20261106200000_micra_sightings.sql): solo el equipo, punto redondeado
+    const sfn = p.match(/\/rpc\/(micra_sighting_add|micra_sightings)$/)?.[1];
+    if (sfn) {
+      const M = micra;
+      M.sightings ??= [];
+      const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
+      if (M.sightingsMissing) return fail(404, 'PGRST202', `Could not find the function public.${sfn} in the schema cache`);
+      if (!M.admin) return fail(403, '42501', 'Solo el equipo.');
+      if (sfn === 'micra_sightings') return json(200, M.sightings.slice().reverse());
+      const round = (v) => Math.round(v / 0.0005) * 0.0005;
+      let r = M.sightings.find((x) => x.ref === data.p_client_ref);
+      if (!r) { r = { ref: data.p_client_ref, lat: round(data.p_lat), lng: round(data.p_lng), at: data.p_seen_at ?? new Date().toISOString(), people: 1 }; M.sightings.push(r); }
+      return json(200, { lat: r.lat, lng: r.lng, at: r.at });
+    }
+
     // Publicaciones de los baristas en Hoy (20261031160000_micra_barista_posts.sql), en memoria
     const pfn = p.match(/\/rpc\/(micra_post_add|micra_posts_feed|micra_posts_mine|micra_posts_pending|micra_post_review|micra_post_remove|micra_post_place|micra_post_points)$/)?.[1];
     if (pfn) {

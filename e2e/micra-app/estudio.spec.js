@@ -37,11 +37,13 @@ test('equipo: del día al estudio; marca el GPS de una ficha y sube su foto', as
   const { page, api, errors } = await open(browser);
   await page.goto('/micra/equipo', { waitUntil: 'load' });
   const tabs = page.getByRole('navigation', { name: 'Equipo' });
-  await expect(tabs.getByRole('button')).toHaveText(['Hoy', 'Estudio', 'Cámara']);
+  // Hoy, el mapa, la cámara al centro (solo ícono), la encuesta y el estudio
+  await expect(tabs.getByRole('button')).toHaveText(['Hoy', 'Mapa', '', 'Encuesta', 'Estudio']);
+  await expect(tabs.getByRole('button', { name: 'Cámara' })).toBeVisible();
   await tabs.getByRole('button', { name: 'Estudio' }).click();
   await expect(page).toHaveURL(/\/micra\/estudio$/);
 
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Baristas en la calle');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Estudio de calle');
   await expect(page.getByTestId('study-total')).toHaveText('6');
   const fichas = page.getByRole('list', { name: 'Fichas del estudio' }).getByRole('listitem');
   await expect(fichas).toHaveCount(6);
@@ -76,7 +78,41 @@ test('equipo: del día al estudio; marca el GPS de una ficha y sube su foto', as
   expect(errors).toEqual([]);
 });
 
-test('equipo: la encuesta de una ficha y «Registrar un barista» abre la cámara con la ficha', async ({ browser }) => {
+test('equipo: el botón de GPS marca al pasar un puesto (ficha sin nombre) y a alguien tomando tinto', async ({ browser }) => {
+  const { page, api, errors } = await open(browser);
+  await page.goto('/micra/estudio', { waitUntil: 'load' });
+  await expect(page.getByTestId('study-tinto')).toHaveText('0');
+  await page.getByTestId('spot-btn').click();
+  await page.getByTestId('spot-tomando').click();
+  await expect(page.getByRole('status')).toContainText('Alguien tomando tinto, marcado · ±9 m');
+  await expect(page.getByTestId('study-tinto')).toHaveText('1');
+  expect(api.find('/rest/v1/rpc/micra_sighting_add', 'POST').data).toMatchObject({ p_lat: 4.6577, p_lng: -74.0634, p_accuracy: 9 });
+
+  await page.getByTestId('spot-btn').click();
+  await page.getByTestId('spot-puesto').click();
+  await expect(page.getByRole('status')).toContainText('Puesto marcado · ±9 m');
+  expect(api.find('/api/v1/bi/tinteros', 'POST').data).toMatchObject({ notes: 'Marcado al pasar', lat: 4.6577, gps_accuracy_m: 9 });
+  expect(api.find('/api/v1/bi/tinteros', 'POST').data.name).toMatch(/^Puesto · /);
+
+  // El mapa de la barra abre el mismo estudio, con el mapa a la vista
+  await page.getByTestId('tab-map').click();
+  await expect(page).toHaveURL(/\/micra\/mapa$/);
+  await expect(page.getByTestId('study-head')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('equipo: sin la migración de avistamientos, «tomando tinto» queda en el celular', async ({ browser }) => {
+  const { page, api } = await open(browser);
+  api.micra.sightingsMissing = true;
+  await page.goto('/micra/estudio', { waitUntil: 'load' });
+  await page.getByTestId('spot-btn').click();
+  await page.getByTestId('spot-tomando').click();
+  await expect(page.getByRole('status')).toContainText('Marcado en el celular');
+  await expect(page.getByTestId('study-head')).toContainText('1 en el celular');
+  await expect(page.getByTestId('study-tinto')).toHaveText('1');
+});
+
+test('equipo: la encuesta de una ficha y «Encuesta» de la barra abre la ficha rápida', async ({ browser }) => {
   const { page, api, errors } = await open(browser);
   await page.goto('/micra/estudio', { waitUntil: 'load' });
   const luis = page.getByRole('list', { name: 'Fichas del estudio' }).getByRole('listitem').filter({ hasText: 'Don Luis' });
@@ -88,7 +124,7 @@ test('equipo: la encuesta de una ficha y «Registrar un barista» abre la cámar
   await expect(enc).toHaveCount(0);
 
   // La ficha rápida: la cámara primero (el GPS se lee solo), todo lo demás opcional
-  await page.getByRole('button', { name: 'Registrar un barista' }).click();
+  await page.getByTestId('tab-survey').click();
   await expect(page).toHaveURL(/\/micra\/ficha$/);
   const flow = page.locator('.mff');
   await expect(flow).toHaveAttribute('data-screen', 'foto');
