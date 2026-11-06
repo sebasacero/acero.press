@@ -280,3 +280,65 @@
 .mapp-spot-kind.is-tomando{border-color:var(--t-3)}
 .mapp-heat-modes{overflow-x:auto}
 .mapp-heat-modes button{flex:0 0 auto;padding:0 14px}
+
+/* Ficha del barista (6 nov 2026): una sola cabecera en gradiente con quién es y cuándo pasa */
+.mapp-bhead{margin:-18px -16px 14px;padding:12px 18px 18px;border-radius:0 0 28px 28px;color:#fff;
+  background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 34%,var(--t-2) 66%,var(--t-3) 92%,var(--t-4) 100%);box-shadow:var(--t-glow-cold)}
+.mapp-bhead .mapp-back{color:#fff}
+.mapp-bhead .mapp-card-head p{color:rgba(255,255,255,.8)}
+.mapp-bhead .mapp-card-name{color:#fff}
+.mapp-bhead .mapp-star{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.75)}
+.mapp-bhead .mapp-star.on{color:var(--t-6);border-color:var(--t-6)}
+.mapp-bhead-when{margin-top:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
+.mapp-bhead-when .mapp-cota{color:var(--t-6)}
+.mapp-bhead-when .mapp-big{color:#fff}
+.mapp-bhead-when .mapp-muted{color:rgba(255,255,255,.8);margin:4px 0 0}
+.mapp-bhead .mapp-hours span{background:rgba(255,255,255,.16)}
+.mapp-bhead .mapp-hours span.on{background:linear-gradient(180deg,var(--t-6),var(--t-5))}
+.mapp-bhead .mapp-hours small{color:rgba(255,255,255,.7)}
+
+/* Hoy: los filtros como globitos de estados (6 nov 2026) */
+.mapp-hists.is-feed{margin:0 -16px 12px;border-bottom:0}
+.mapp-hist.is-topic .mapp-hist-ring{padding:3px;background:linear-gradient(160deg,var(--t-1),var(--t-2) 45%,var(--t-3))}
+.mapp-hist.is-topic .mapp-hist-av{font-size:1.6rem;line-height:1;background:#F7F3EC}
+.mapp-hist.is-topic.on .mapp-hist-ring{background:linear-gradient(160deg,var(--t-3),var(--t-4) 45%,var(--t-5) 80%,var(--t-6))}
+.mapp-hist.is-topic.on small{color:var(--t-4);font-weight:800}
+
+/* Una sola barra de abajo para toda la app (6 nov 2026): la hoja blanca de «Salí a vender»,
+   pegada abajo con las esquinas de arriba redondas; lo activo en caliente y la acción del
+   centro en el gradiente. Cliente, barista y equipo */
+.mapp .mapp-tabs,.mapp .mapp-tabs.is-four,.mapp .mapp-tabs.is-five,.mapp .mapp-tabs.is-ig{left:0;right:0;bottom:0;transform:none;width:100%;
+  padding:6px 8px calc(6px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));border-radius:24px 24px 0 0;border:0 !important;
+  background:#fff !important;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 -12px 30px -18px rgba(13,8,32,.45),0 0 0 1px rgba(13,8,32,.06) !important}
+.mapp .mapp-tabs *{color:#6B6684 !important}
+.mapp .mapp-tabs button,.mapp .mapp-tabs a{border-radius:16px}
+.mapp .mapp-tabs .on,.mapp .mapp-tabs [aria-current=page]{background:linear-gradient(180deg,rgba(242,84,45,.1),rgba(176,18,122,.08)) !important}
+.mapp .mapp-tabs .on *,.mapp .mapp-tabs [aria-current=page] *{color:var(--t-4) !important}
+.mapp .mapp-tabs .mapp-tabs-cam{box-shadow:0 0 0 5px #fff,0 12px 22px -8px rgba(222,27,27,.7) !important}
+.mapp .mapp-tabs .mapp-tabs-cam *{color:#fff !important}
+.mapp .mapp-tabs.is-ig .is-me.on .mapp-tab-av{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--t-4)}
+.mapp .mapp-tabs .mapp-tabs-badge{color:#fff !important}
+.mapp-gosheet{bottom:calc(78px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))}
+
+/* Mi perfil del cliente (6 nov 2026): cabecera en gradiente con sus datos y su QR chico */
+.mapp-mehead{margin:-18px -16px 14px;padding:18px;border-radius:0 0 28px 28px;color:#fff;
+  background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 34%,var(--t-2) 66%,var(--t-3) 92%,var(--t-4) 100%);box-shadow:var(--t-glow-cold)}
+.mapp-mehead-top{display:flex;align-items:center;gap:12px}
+.mapp-mehead-top > div{flex:1;min-width:0}
+.mapp-mehead .mapp-hello2-name{color:#fff}
+.mapp-mehead .mapp-hello2-sub{color:rgba(255,255,255,.8)}
+.mapp-mehead .mapp-hello2-av{background:#fff;color:var(--t-4)}
+.mapp-mehead-qr{appearance:none;display:grid;justify-items:center;gap:3px;padding:6px;border:0;border-radius:14px;background:#fff;cursor:pointer;min-width:44px}
+.mapp-mehead-qrimg{display:block;width:62px;height:62px;border-radius:6px}
+.mapp-mehead-qrimg.is-loading{background:#eee}
+.mapp-mehead-qr small{font:700 .6rem 'JetBrains Mono',monospace;color:var(--t-ink,#1F2452)}
+.mapp-mehead .mapp-coffeehead-kpis dd{font-size:1.15rem}
+
+/* Equipo › Hoy: qué ajustar para crecer (6 nov 2026), numerado y con el dato que lo justifica */
+.mapp-tips ol{margin:8px 0 0;padding:0;list-style:none;counter-reset:tip;display:grid;gap:12px}
+.mapp-tips li{counter-increment:tip;display:grid;grid-template-columns:32px 1fr;column-gap:10px;row-gap:2px}
+.mapp-tips li::before{content:counter(tip);grid-row:span 3;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font:800 .9rem 'Archivo',sans-serif;background:linear-gradient(160deg,var(--t-3),var(--t-4) 55%,var(--t-5))}
+.mapp-tips li b{font:800 1rem 'Archivo',sans-serif}
+.mapp-tips li span{color:var(--m-soft);font-size:.9rem;line-height:1.4}
+.mapp-tips li .mapp-link{justify-self:start}
+.mapp .mapp-bhead .mapp-badge:not(.is-live){background:rgba(255,255,255,.16) !important;color:#fff !important;border-color:rgba(255,255,255,.3) !important}

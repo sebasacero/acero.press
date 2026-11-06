@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { money, cupsLabel } from './micraApp.js';
 import { dayStory } from './motivation.js';
 import platform from './platform.js';
+import MiniQr, { useQr, qrEyes } from './MiniQr.jsx';
 import Figure, { loadFigure } from './Elenco.jsx';
 import { km } from '../ruta/track.js';
 import { LEVELS } from './motivation.js';
@@ -10,38 +11,8 @@ import { routeLine, storyVariant, storyFigure, goalTimeLabel } from './daycard.j
 // La meta cumplida (una vez al día) y la tarjeta de «mi día» para WhatsApp o
 // Historias. Se cargan aparte: solo las ve quien llega a su meta o la pide.
 
-/** El QR del perfil del barista, en SVG; qr.js se carga aparte al abrir la tarjeta. */
-function useQr(url) {
-  const [qr, setQr] = useState(null);
-  useEffect(() => {
-    let on = true;
-    import('./qr.js').then(({ qrMatrix, modulesPath }) => {
-      const m = qrMatrix(url);
-      if (on) setQr({ m, n: m.length, d: modulesPath(m, { quiet: 2 }) });
-    }).catch(() => {});
-    return () => { on = false; };
-  }, [url]);
-  return qr;
-}
-
-/** Los tres ojos del QR (7 × 7), que modulesPath deja fuera. */
-const qrEyes = (n, q = 2) => [[q, q], [q + n - 7, q], [q, q + n - 7]];
-
 function StoryQr({ qr }) {
-  if (!qr) return null;
-  const side = qr.n + 4;
-  return (
-    <svg className="mapp-story-qr" viewBox={`0 0 ${side} ${side}`} role="img" aria-label="QR a mi perfil de Micra" data-testid="story-qr">
-      <rect width={side} height={side} fill="#fff" />
-      <path d={qr.d} fill="#16181F" />
-      {qrEyes(qr.n).map(([x, y]) => (
-        <g key={`${x}-${y}`}>
-          <rect x={x + 0.5} y={y + 0.5} width="6" height="6" rx="1.6" fill="none" stroke="#16181F" />
-          <rect x={x + 2} y={y + 2} width="3" height="3" rx=".8" fill="#DE1B1B" />
-        </g>
-      ))}
-    </svg>
-  );
+  return <MiniQr qr={qr} className="mapp-story-qr" label="QR a mi perfil de Micra" testid="story-qr" />;
 }
 
 /** Cerrar con Escape y devolver el foco al botón principal al abrir. */

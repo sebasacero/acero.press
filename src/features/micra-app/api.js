@@ -20,6 +20,15 @@ export function deviceRef() {
   if (!ref) { ref = newRef('cel'); write(DEVICE_KEY, ref); }
   return ref;
 }
+/**
+ * La marca corta del QR de invitar (Mi perfil): aparte de la llave de los apartados,
+ * para que compartirla no deje ver nada de este celular.
+ */
+export function inviteCode() {
+  let c = read('micra_invite_v1', null);
+  if (!c) { c = newRef('i').slice(-8); write('micra_invite_v1', c); }
+  return c;
+}
 export const savedName = () => read(NAME_KEY, '');
 export const saveName = (n) => write(NAME_KEY, n);
 export const favorites = () => read(FAV_KEY, []);

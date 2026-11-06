@@ -423,6 +423,8 @@ export function BaristaPage({ id, go }) {
 
   return (
     <article className="mapp-card" aria-labelledby="mapp-b-name">
+      {/* Una sola cabecera en gradiente (6 nov 2026): quién es, dónde y cuándo suele pasar */}
+      <section className="mapp-bhead" data-testid="barista-head">
       <button type="button" className="mapp-back" onClick={() => go('/micra')}>‹ Baristas</button>
       <header className="mapp-card-head">
         <Avatar b={b} big />
@@ -440,11 +442,12 @@ export function BaristaPage({ id, go }) {
         >★</button>
       </header>
 
-      <section className="mapp-glass">
+      <div className="mapp-bhead-when">
         <p className="mapp-cota">Suele pasar</p>
         <p className="mapp-big">{windowLabel(b.hora_inicio, b.hora_fin) ?? 'Pregúntale su horario'}</p>
         <HoursBar from={b.hora_inicio} to={b.hora_fin} />
         {b.waiting > 0 && <p className="mapp-muted">{b.waiting === 1 ? '1 persona lo espera hoy' : `${b.waiting} personas lo esperan hoy`}</p>}
+      </div>
       </section>
 
       {mine && mine.status !== 'waiting' ? (
@@ -480,7 +483,7 @@ export function BaristaPage({ id, go }) {
           {error && <p className="mapp-error" role="alert">{error}</p>}
           {(!mine || editing) && (
             <button type="submit" className="mapp-btn is-cta" disabled={busy || cups === 0 || !name.trim()}>
-              {busy ? 'Apartando…' : cups ? `${mine ? 'Cambiar a' : 'Apartar'} ${cupsLabel(cups)} · ${money(total)}` : 'Elige qué quieres'}
+              {busy ? 'Apartando…' : cups ? `${mine ? 'Cambiar a' : 'Apartar'} ${cupsLabel(cups)} · ${money(total)}` : 'Apartar'}
             </button>
           )}
           <p className="mapp-fine">No es domicilio: {b.name} sigue su ruta y te entrega cuando pase. Pagas al recibir{pays.length ? `: ${pays.join(', ')}` : ''}.</p>

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { initials, menuOf, windowLabel, baristaPath, cupsLabel } from './micraApp.js';
+import { initials, menuOf, windowLabel, baristaPath, cupsLabel, status as baristaStatus } from './micraApp.js';
+import MiniQr, { useQr } from './MiniQr.jsx';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
@@ -452,6 +453,48 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
  * esos quedan con el barista. La publicidad de ACERO.press ya no sale sola aquí:
  * está en el inicio y se abre desde «Otros».
  */
+/**
+ * La cabecera del cliente (6 nov 2026): su nombre, lo más importante de su café y un QR chico
+ * propio para invitar a alguien a Micra (lleva a /micra con su marca corta, sin datos suyos).
+ */
+function ClientHead({ name, favs, list }) {
+  const [stamps, setStamps] = useState(null);
+  const [waiting, setWaiting] = useState(null);
+  useEffect(() => {
+    api.myStamps().then(setStamps).catch(() => setStamps(null));
+    api.myHolds().then((h) => setWaiting((h ?? []).filter((x) => x.status === 'waiting').length)).catch(() => setWaiting(null));
+  }, []);
+  const live = (list ?? []).filter((b) => baristaStatus(b) === 'live').length;
+  const url = `${platform.siteUrl('/micra')}?de=${api.inviteCode()}`;
+  const qr = useQr(url);
+  const per = stamps?.per ?? 10;
+  const kpis = [
+    Number.isFinite(stamps?.cups) && { id: 'tazas', value: stamps.cups, label: stamps.cups === 1 ? 'taza recogida' : 'tazas recogidas' },
+    Number.isFinite(stamps?.toward) && { id: 'sellos', value: `${stamps.toward}/${per}`, label: 'sellos al gratis' },
+    waiting != null && { id: 'apartados', value: waiting, label: 'apartados hoy' },
+    { id: 'baristas', value: favs.length, label: favs.length === 1 ? 'mi barista' : 'mis baristas' },
+    list && { id: 'calle', value: live, label: 'en la calle ahora' },
+  ].filter(Boolean).slice(0, 4);
+  return (
+    <section className="mapp-mehead" aria-label="Tu perfil" data-testid="client-head">
+      <div className="mapp-mehead-top">
+        <span className="mapp-hello2-av" aria-hidden="true">{name ? initials(name) : '☕'}</span>
+        <div>
+          <h1 className="mapp-hello2-name">{name || 'Tu perfil'}</h1>
+          <p className="mapp-hello2-sub">¡Hola! Micra te recuerda solo en este celular.</p>
+        </div>
+        <button type="button" className="mapp-mehead-qr" onClick={() => platform.share({ title: 'Micra', text: 'Aparta tu tinto con los baristas de la calle:', url })} aria-label="Mi QR: invita a alguien a Micra" data-testid="client-qr">
+          <MiniQr qr={qr} className="mapp-mehead-qrimg" label="QR para invitar a Micra" />
+          <small>Mi QR</small>
+        </button>
+      </div>
+      <dl className="mapp-coffeehead-kpis is-four">
+        {kpis.map((k) => <div key={k.id} data-testid={`client-${k.id}`}><dd>{k.value}</dd><dt>{k.label}</dt></div>)}
+      </dl>
+    </section>
+  );
+}
+
 export function ClientProfile({ go, who }) {
   const [name, setName] = useState(api.savedName);
   const [saved, setSaved] = useState(false);
@@ -500,7 +543,7 @@ export function ClientProfile({ go, who }) {
 
   return (
     <div className="mapp-client mapp-profile" data-testid="client-profile">
-      <Hello av={name ? initials(name) : '☕'} name={name || 'Tu perfil'} sub="¡Hola! Micra te recuerda solo en este celular." />
+      <ClientHead name={name} favs={favs} list={list} />
 
       {done && <p className="mapp-notice" role="status" data-testid="wiped">Listo: este celular ya no guarda tus datos de Micra.{plainSession ? ' Cerraste sesión.' : ''}</p>}
 

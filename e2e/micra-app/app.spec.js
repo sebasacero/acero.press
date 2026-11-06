@@ -65,7 +65,7 @@ test('cliente: ve quién está en la calle, aparta 2 tintos y 1 perico y lo canc
   await page.getByRole('listitem').filter({ hasText: 'Marlene' }).getByRole('button').click();
   await expect(page.getByLabel('Tu nombre (así te llama)')).toHaveValue('Sebas · 302');
   await page.getByRole('button', { name: 'Ya no lo necesito' }).click();
-  await expect(page.getByRole('button', { name: 'Elige qué quieres' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Apartar', exact: true })).toBeVisible();
   expect(api.micra.holds.find((h) => h.name === 'Sebas · 302').status).toBe('cancelled');
   expect(errors).toEqual([]);
 });

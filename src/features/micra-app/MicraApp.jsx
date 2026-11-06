@@ -297,7 +297,7 @@ export default function MicraApp() {
           <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/hoy')} aria-label="Hoy en el café" title="Hoy en el café">
             <IconCompass />
           </button>
-          <button type="button" onClick={() => setPublishing(true)} aria-label="Publicar" title="Publicar" data-testid="tab-publish">
+          <button type="button" className="mapp-tabs-cam" onClick={() => setPublishing(true)} aria-label="Publicar" title="Publicar" data-testid="tab-publish">
             <IconPlus />
           </button>
           <button type="button" className={route.view === 'holds' ? 'on' : ''} aria-current={route.view === 'holds' ? 'page' : undefined} onClick={() => go('/micra/apartados')} aria-label="Mis apartados" title="Mis apartados">

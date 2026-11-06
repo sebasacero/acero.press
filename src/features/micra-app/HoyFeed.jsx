@@ -386,6 +386,9 @@ function CuratedForm({ current, onSaved, onCancel }) {
  * muro de Instagram bajo las historias): título h2 y sin su propio «Publicar»,
  * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
  */
+// El dibujo de cada globito del muro
+const CHIP_ICON = { todo: '☕', publicaciones: '📸', logros: '🔥', publicar: '✨', cafe: '🌱', precios: '💲', puestos: '📍', recetas: '📝', videos: '▶' };
+
 export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null, challenge }) {
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
@@ -457,11 +460,32 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
       ) : (
         <CoffeeHead head={coffeeHead({ prices, baristas })} title={client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} />
       )}
-      <div className="mapp-chips is-scroll" role="tablist" aria-label="Qué ver">
+      {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
+          Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
+      <ul className="mapp-hists is-feed" role="tablist" aria-label="Qué ver" data-testid="feed-bubbles">
         {CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={chip === id} className={chip === id ? 'on' : ''} onClick={() => setChip(id)}>{label}</button>
+          <li key={id} role="presentation">
+            <button type="button" role="tab" aria-selected={chip === id} aria-label={label} className={`mapp-hist is-topic ${chip === id ? 'on' : ''}`} onClick={() => setChip(id)}>
+              <span className="mapp-hist-ring"><span className="mapp-hist-av" aria-hidden="true">{CHIP_ICON[id] ?? '☕'}</span></span>
+              <small>{label}</small>
+            </button>
+          </li>
         ))}
-      </div>
+        {!embedded && baristas.filter((b) => b.status === 'live' && b.id !== selfId).slice(0, 12).map((b) => {
+          const first = String(b.name ?? '').split(' ')[0];
+          return (
+            <li key={b.id} role="presentation">
+              <button type="button" className="mapp-hist is-live" onClick={() => go(baristaPath(b.id))} aria-label={`${first}, en la calle ahora`}>
+                <span className="mapp-hist-ring">
+                  <span className="mapp-hist-av"><Figure name={figureFor(b.id)} className="is-avatar" /></span>
+                  <i className="mapp-hist-tag" aria-hidden="true">AHORA</i>
+                </span>
+                <small>{first}</small>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
       {admin && !curating && chip === 'cafe' && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
       {editing && <PriceForm prices={prices} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
