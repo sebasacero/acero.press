@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import * as api from './api.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf, shortTitle } from './competencia.js';
 import { IconTrophy, IconBean } from './icons.jsx';
 import Figure from './Elenco.jsx';
 import { Cargando } from './Animado.jsx';
@@ -105,7 +105,7 @@ function Basics({ current, barista }) {
             <li key={c.title} className={live ? 'is-live' : ''}>
               <span className="mapp-basics-n" aria-hidden="true">{i + 1}</span>
               <div>
-                <b>{c.title.replace(/^[^:]+:\s*/, '')}{live && <em className="mapp-basics-now">Reto de esta semana</em>}</b>
+                <b>{shortTitle(c.title)}{live && <em className="mapp-basics-now">Reto de esta semana</em>}</b>
                 <p>{c.brief}</p>
                 <small>{c.kind === 'arte_latte' ? '🏅 ' : '✓ '}{c.how}</small>
               </div>

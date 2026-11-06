@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, challengeDraft as draft } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, shortTitle, challengeDraft as draft } from './competencia.js';
 
 const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
 
@@ -71,4 +71,10 @@ test('sectionOf: la sección de un reto por su nombre', () => {
   assert.equal(sectionOf({ title: 'Corazón libre', kind: 'arte_latte' }).id, 'arte_latte');
   assert.equal(sectionOf({ title: 'Otra cosa', kind: 'foto' }), null);
   assert.equal(sectionOf(null), null);
+});
+
+test('shortTitle: sin la sección y con mayúscula', () => {
+  assert.equal(shortTitle('Espresso: la crema avellana'), 'La crema avellana');
+  assert.equal(shortTitle('Corazón libre'), 'Corazón libre');
+  assert.equal(shortTitle(null), '');
 });

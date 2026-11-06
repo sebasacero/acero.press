@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './api.js';
 import { bogota } from './micraApp.js';
-import { challengeDraft, BASIC_SECTIONS, KINDS } from './competencia.js';
+import { challengeDraft, BASIC_SECTIONS, KINDS, shortTitle } from './competencia.js';
 
 // Equipo › Hoy › Competencia: abrir el reto de la semana (nombre, descripción,
 // premio y fechas; las ideas vienen listas), cambiarlo y ver cuántas entradas
@@ -40,7 +40,7 @@ function ChallengeForm({ initial, onSaved, onCancel }) {
           </div>
           <div className="mapp-chips is-wrap" role="group" aria-label="Ideas">
             {BASIC_SECTIONS.find((x) => x.id === sec).challenges.map((i) => (
-              <button key={i.title} type="button" className={f.title === i.title ? 'on' : ''} onClick={() => setF((o) => ({ ...o, title: i.title, brief: i.brief, kind: i.kind }))}>{i.title.replace(/^[^:]+:\s*/, '')}</button>
+              <button key={i.title} type="button" className={f.title === i.title ? 'on' : ''} onClick={() => setF((o) => ({ ...o, title: i.title, brief: i.brief, kind: i.kind }))}>{shortTitle(i.title)}</button>
             ))}
           </div>
         </div>

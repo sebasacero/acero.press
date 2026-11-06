@@ -72,6 +72,12 @@ export const BASIC_SECTIONS = [
 // Ideas para abrir un reto (el equipo las toca y las ajusta): todos los retos básicos
 export const CHALLENGE_IDEAS = BASIC_SECTIONS.flatMap((s) => s.challenges.map((c) => ({ ...c, section: s.id })));
 
+/** El nombre sin la sección, con mayúscula: «Espresso: la crema avellana» → «La crema avellana». */
+export function shortTitle(title) {
+  const t = String(title ?? '').replace(/^[^:]+:\s*/, '');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 /** La sección de un reto por su nombre («Espresso: …»); los viejos sin prefijo también. */
 export function sectionOf(challenge) {
   const title = String(challenge?.title ?? '').trim().toLowerCase();
