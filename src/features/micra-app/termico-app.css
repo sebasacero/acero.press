@@ -139,3 +139,18 @@
 .mapp-topgoal small{font:600 .68rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.75);letter-spacing:.02em}
 .mapp-topgoal.is-met{background:var(--t-cta);border-color:transparent}
 .mapp:not(.is-redtop) .mapp-topgoal{background:var(--t-0)}
+
+/* Entrada del barista (6 nov 2026, revisión de color): como en las tarjetas de los baristas, la
+   persona va sobre el fondo frío del visor, donde la tinta caliente se lee como calor. Sobre blanco
+   el mismo filtro la dejaba violeta (fría), al revés de una cámara térmica. */
+.mapp .mapp-fig.is-join{
+  width:100%;max-width:none;margin:0;padding:14px 0 6px;border-radius:24px;overflow:hidden;
+  background:radial-gradient(60% 75% at 50% 58%,#2A1466,var(--t-0) 78%) !important;box-shadow:var(--t-glow-cold);
+  display:flex;justify-content:center;position:relative;
+}
+.mapp .mapp-fig.is-join svg{width:auto;height:190px;max-width:70%}
+/* Un botón que aún no se puede tocar es frío (inactivo), no un rojo desteñido que parece roto */
+.mapp .mapp-btn.is-cta:disabled, .mapp .mapp-btn.is-cta.is-disabled{
+  background:#ECE8F3 !important;background-image:none !important;color:#6E6787 !important;box-shadow:none !important;border-color:transparent !important;opacity:1 !important;
+}
+.mapp .mapp-fig.is-join svg{filter:url(#t-thermal-warm)}
