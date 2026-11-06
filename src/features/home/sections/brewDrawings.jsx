@@ -1,23 +1,35 @@
 // Los dibujos de la hoja de instrucciones de AeroPress Go, a trazo (como la hoja impresa): uno por
 // paso, en un lienzo de 160 × 120. Piezas: cámara, émbolo, tapa del filtro, taza. Sin texto adentro.
+// El color térmico dice la temperatura de verdad, como una cámara térmica (pedido del usuario,
+// 6 nov): la prensa vacía y el café molido están a temperatura ambiente (trazo sin color); el agua
+// caliente y el café recién hecho brillan en caliente; el disco usado sale tibio y el cold brew
+// con hielo en frío.
 
 import { createContext, useContext, useId } from 'react';
 import HeatGradient from '../../../shared/layout/HeatGradient.jsx';
+import { THERMAL_STOPS } from '../../../shared/lib/thermal.js';
 
 const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
 const W = '#fff';
-// Las piezas de la AeroPress van con el gradiente térmico (cada dibujo lleva el suyo en <defs>).
-const HeatId = createContext('');
-const useHeat = () => `url(#${useContext(HeatId)})`;
+// Tres lecturas de la escala (cada dibujo lleva las suyas en <defs>): caliente (80 °C), tibio
+// (el disco usado) y frío (hielo).
+const HeatId = createContext({ hot: '', warm: '', cold: '' });
+const useHeat = (k = 'hot') => `url(#${useContext(HeatId)[k]})`;
+const WARM = THERMAL_STOPS.slice(2, 6); // naranja → violeta
+const COLD = THERMAL_STOPS.slice(5, 8); // violeta → frío profundo
 
-/** Cámara de la Go con sus marcas 1–3 (la ③ resaltada si se llena). */
-function Chamber({ x = 60, y = 34, w = 40, h = 56, level = 0, mark = false }) {
+/** Cámara de la Go con sus marcas 1–3 (la ③ resaltada si se llena). `fill`: lo que tiene adentro
+ *  ('grounds' café molido, a temperatura ambiente; 'hot' agua o café caliente). La cámara misma
+ *  es plástico: va sin color. */
+function Chamber({ x = 60, y = 34, w = 40, h = 56, level = 0, mark = false, fill = 'hot' }) {
   const lv = level > 0 ? y + h - (h - 6) * level : null;
-  const heat = useHeat();
+  const heat = useHeat('hot');
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} rx="3" {...S} fill={heat} />
-      {lv && <rect x={x + 2} y={lv} width={w - 4} height={y + h - lv - 1} fill="currentColor" opacity=".18" />}
+      <rect x={x} y={y} width={w} height={h} rx="3" {...S} fill={W} />
+      {lv && (fill === 'hot'
+        ? <rect x={x + 2} y={lv} width={w - 4} height={y + h - lv - 1} rx="1.5" fill={heat} />
+        : <rect x={x + 2} y={lv} width={w - 4} height={y + h - lv - 1} fill="currentColor" opacity=".55" />)}
       <path d={`M${x - 3} ${y}h${w + 6}`} {...S} />
       {[0.25, 0.5, 0.75].map((f, i) => (
         <g key={i}>
@@ -30,12 +42,18 @@ function Chamber({ x = 60, y = 34, w = 40, h = 56, level = 0, mark = false }) {
   );
 }
 
+/** Vapor: tres hilos sobre lo caliente. */
+const Steam = ({ x, y }) => (
+  <g opacity=".6">
+    {[-8, 0, 8].map((dx) => <path key={dx} d={`M${x + dx} ${y}c-3-4 3-6 0-10s3-6 0-10`} {...S} strokeWidth="1.4" />)}
+  </g>
+);
+
 /** Tapa del filtro con sus huecos, vista de lado. */
 function Cap({ x = 56, y = 90, w = 48 }) {
-  const heat = useHeat();
   return (
     <g>
-      <path d={`M${x} ${y}h${w}l-3 8h${-(w - 6)}z`} {...S} fill={heat} />
+      <path d={`M${x} ${y}h${w}l-3 8h${-(w - 6)}z`} {...S} fill={W} />
       {Array.from({ length: 6 }, (_, i) => <path key={i} d={`M${x + 8 + i * 6.5} ${y + 3}v2.5`} {...S} strokeWidth="1.4" />)}
     </g>
   );
@@ -43,11 +61,10 @@ function Cap({ x = 56, y = 90, w = 48 }) {
 
 /** Émbolo: vástago, borde de arriba y sello de caucho abajo. */
 function Plunger({ x = 64, y = 6, w = 32, h = 50 }) {
-  const heat = useHeat();
   return (
     <g>
-      <rect x={x - 5} y={y} width={w + 10} height="6" rx="2" {...S} fill={heat} />
-      <rect x={x} y={y + 6} width={w} height={h - 12} {...S} fill={heat} />
+      <rect x={x - 5} y={y} width={w + 10} height="6" rx="2" {...S} fill={W} />
+      <rect x={x} y={y + 6} width={w} height={h - 12} {...S} fill={W} />
       <rect x={x - 1} y={y + h - 6} width={w + 2} height="6" rx="1.5" fill="currentColor" stroke="currentColor" strokeWidth="1" />
     </g>
   );
@@ -103,7 +120,7 @@ const DRAWINGS = [
   // 4 · Sobre la taza, una cucharada colmada de café
   () => (
     <>
-      <Chamber y={36} h={56} level={0.12} />
+      <Chamber y={36} h={56} level={0.12} fill="grounds" />
       <Cap y={92} w={48} />
       <Mug y={100} />
       <path d="M96 10h22a8 8 0 0 1-8 10H98z" fill={W} {...S} transform="rotate(28 106 15)" />
@@ -114,7 +131,7 @@ const DRAWINGS = [
   // 5 · Agita suave para nivelar
   () => (
     <>
-      <Chamber y={30} h={58} level={0.14} />
+      <Chamber y={30} h={58} level={0.14} fill="grounds" />
       <Cap y={88} />
       <Mug y={96} />
       <path d="M36 52c-8 10-8 22 0 32M124 52c8 10 8 22 0 32" {...S} strokeWidth="1.8" />
@@ -136,6 +153,7 @@ const DRAWINGS = [
     <>
       <Chamber y={40} h={56} level={0.72} />
       <Cap y={96} />
+      <Steam x={70} y={34} />
       <rect x="86" y="8" width="7" height="72" rx="3" fill={W} {...S} transform="rotate(14 89 44)" />
       <path d="M66 70c6 6 22 6 28 0" {...S} strokeWidth="1.6" />
       <path d="M90 66l4 4-5 2" {...S} strokeWidth="1.6" />
@@ -153,39 +171,52 @@ const DRAWINGS = [
       <Arrow d="M36 26v24" head="M30 44l6 7 6-7" />
     </>
   ),
-  // 9 · Fuera la tapa y el disco de café
-  () => (
+  // 9 · Fuera la tapa y el disco de café (sale tibio)
+  () => {
+    const warm = useHeat('warm');
+    return (
     <>
       <g transform="rotate(-20 72 56)">
         <Chamber x={46} y={36} h={46} />
         <Plunger x={50} y={12} h={34} />
       </g>
-      <ellipse cx="108" cy="94" rx="15" ry="5" fill="currentColor" opacity=".55" />
-      <path d="M93 94v4c0 2.8 6.7 5 15 5s15-2.2 15-5v-4" {...S} />
+      <path d="M93 94v4c0 2.8 6.7 5 15 5s15-2.2 15-5v-4" {...S} fill={warm} />
+      <ellipse cx="108" cy="94" rx="15" ry="5" {...S} strokeWidth="1.2" fill={warm} />
       <path d="M128 52l12 6-6 12-12-6z" fill={W} {...S} />
       <Arrow d="M96 74l8 10" head="M98 84l6 1 1-6" />
     </>
-  ),
-  // 10 · A tu gusto: espresso, americano, latte o cold brew
-  () => (
-    <>
-      <path d="M30 52h40v50a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6z" fill={W} {...S} />
-      <rect x="33" y="80" width="34" height="25" rx="3" fill="currentColor" opacity=".7" />
-      <path d="M86 40h46v60a6 6 0 0 1-6 6H92a6 6 0 0 1-6-6z" fill={W} {...S} />
-      <rect x="89" y="58" width="40" height="45" rx="3" fill="currentColor" opacity=".25" />
-      {Array.from({ length: 4 }, (_, i) => <path key={i} d={`M${88 + i * 11} 48v54`} {...S} strokeWidth="1" opacity=".35" />)}
-    </>
-  ),
+    );
+  },
+  // 10 · A tu gusto: el espresso caliente (con vapor) y el cold brew frío, con hielo
+  () => {
+    const hot = useHeat('hot');
+    const cold = useHeat('cold');
+    return (
+      <>
+        <Steam x={50} y={44} />
+        <path d="M30 52h40v50a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6z" fill={W} {...S} />
+        <rect x="33" y="80" width="34" height="25" rx="3" fill={hot} />
+        <path d="M86 40h46v60a6 6 0 0 1-6 6H92a6 6 0 0 1-6-6z" fill={W} {...S} />
+        <rect x="89" y="58" width="40" height="45" rx="3" fill={cold} />
+        {[[94, 62], [110, 66], [100, 80]].map(([x, y]) => <rect key={x} x={x} y={y} width="12" height="12" rx="2" {...S} strokeWidth="1.2" fill={W} fillOpacity=".55" />)}
+      </>
+    );
+  },
 ];
 
 export default function BrewDrawing({ index }) {
-  const id = `brew-heat-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const base = `brew-heat-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const ids = { hot: `${base}-hot`, warm: `${base}-warm`, cold: `${base}-cold` };
   const Draw = DRAWINGS[index];
   if (!Draw) return null;
   return (
     <svg className="brew-draw" viewBox="0 0 160 120" aria-hidden="true">
-      <defs><HeatGradient id={id} from={1} /></defs>
-      <HeatId.Provider value={id}><Draw /></HeatId.Provider>
+      <defs>
+        <HeatGradient id={ids.hot} from={1} cy={0.35} />
+        <HeatGradient id={ids.warm} stops={WARM} cy={0.4} />
+        <HeatGradient id={ids.cold} stops={COLD} cy={0.3} r={0.9} />
+      </defs>
+      <HeatId.Provider value={ids}><Draw /></HeatId.Provider>
     </svg>
   );
 }

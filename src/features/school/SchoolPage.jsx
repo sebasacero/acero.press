@@ -209,7 +209,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
         title={recipe.title}
         script={recipe.script}
         steps={recipe.steps}
-        labels={{ dots: recipe.dots, goStep: recipe.goStep, swipe: recipe.swipe }}
+        labels={{ dots: recipe.dots, goStep: recipe.goStep, swipe: recipe.swipe, prev: recipe.prev, next: recipe.next }}
         source={recipe.source}
         persona={personaSrc('aeropress')}
         streetSeed={5}

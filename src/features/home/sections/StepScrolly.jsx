@@ -13,16 +13,36 @@ import './home.css';
 // Se cuenta en la calle del guion de Micra: la calle a trazo al pie (StreetScene), la hoja
 // como tarjeta blanca encima y, si se pasa `persona`, una persona de la calle parada en el
 // andén junto a la hoja (`streetSeed` cambia las fachadas de una sección a otra).
+// En el celular (de pie) no se secuestra el scroll: los pasos son tarjetas que se pasan de lado
+// con el dedo o con Anterior/Siguiente, y la página sigue bajando normal (pedido del usuario, 6 nov).
+const SWIPE_MQ = '(max-width: 760px) and (min-height: 561px)';
+const swipeNow = () => typeof window !== 'undefined' && !!window.matchMedia?.(SWIPE_MQ).matches;
 export default function StepScrolly({ id, tag, badge, title, script, legend, steps, labels, source, ctas, persona, streetSeed = 7, headingLevel = 2 }) {
   const n = steps.length;
   const ref = useRef(null);
+  const sheetRef = useRef(null);
   const [active, setActive] = useState(0);
+  const [swipe, setSwipe] = useState(swipeNow);
   const Heading = `h${headingLevel}`;
 
   useEffect(() => {
+    const mq = window.matchMedia?.(SWIPE_MQ);
+    if (!mq) return undefined;
+    const on = () => setSwipe(mq.matches);
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, []);
+
+  useEffect(() => {
     let frame = 0;
+    // De lado: el paso es la tarjeta que está a la vista; de pie, el tramo de scroll de la página
     const update = () => {
       frame = 0;
+      if (swipe) {
+        const sh = sheetRef.current;
+        if (sh && sh.clientWidth) setActive(Math.max(0, Math.min(n - 1, Math.round(sh.scrollLeft / sh.clientWidth))));
+        return;
+      }
       const el = ref.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
@@ -30,27 +50,35 @@ export default function StepScrolly({ id, tag, badge, title, script, legend, ste
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const target = swipe ? sheetRef.current : window;
+    target?.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      target?.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [n]);
+  }, [n, swipe]);
 
-  // Los puntos llevan el scroll al tramo de ese paso (y así el paso queda activo)
+  // Los puntos (y Anterior/Siguiente) llevan a ese paso: de lado mueven la fila; de pie, el scroll
   const goTo = (i) => {
+    const k = Math.max(0, Math.min(n - 1, i));
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (swipe) {
+      const sh = sheetRef.current;
+      if (sh) sh.scrollTo({ left: sh.clientWidth * k, behavior: reduce ? 'auto' : 'smooth' });
+      setActive(k);
+      return;
+    }
     const el = ref.current;
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
     const run = el.offsetHeight - window.innerHeight;
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: top + run * progressFor(i, n), behavior: reduce ? 'auto' : 'smooth' });
+    window.scrollTo({ top: top + run * progressFor(k, n), behavior: reduce ? 'auto' : 'smooth' });
   };
 
   return (
-    <section ref={ref} className="brew" id={id} aria-labelledby={`${id}-title`} style={{ '--brew-steps': n }}>
+    <section ref={ref} className={`brew${swipe ? ' is-swipe' : ''}`} id={id} aria-labelledby={`${id}-title`} style={{ '--brew-steps': n }}>
       <div className="brew-pin">
         <SheetFrame />
         <StreetScene className="brew-street" seed={streetSeed} />
@@ -71,7 +99,7 @@ export default function StepScrolly({ id, tag, badge, title, script, legend, ste
             )}
           </div>
           <div className="brew-stage">
-            <ol className="brew-sheet">
+            <ol className="brew-sheet" ref={sheetRef}>
               {steps.map((s, i) => (
                 <li
                   key={i}
@@ -103,19 +131,31 @@ export default function StepScrolly({ id, tag, badge, title, script, legend, ste
           </div>
           {/* El aviso para que se entienda que se baja: en el primer paso; al bajar se va (ya se entendió) */}
           <div className={`brew-swipe${active > 0 ? ' is-gone' : ''}`} aria-hidden="true">
-            <span className="brew-swipe-icon">↓</span> {labels.swipe}
+            <span className="brew-swipe-icon">{swipe ? '→' : '↓'}</span> {labels.swipe}
           </div>
-          <div className="brew-dots" role="group" aria-label={labels.dots}>
-            {steps.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                className={i === active ? 'is-on' : i < active ? 'is-done' : undefined}
-                aria-label={labels.goStep.replace('{n}', i + 1)}
-                aria-pressed={i === active}
-                onClick={() => goTo(i)}
-              />
-            ))}
+          <div className="brew-nav">
+            {swipe && (
+              <button type="button" className="brew-step-btn" onClick={() => goTo(active - 1)} disabled={active === 0} aria-label={labels.prev}>
+                <span aria-hidden="true">←</span>
+              </button>
+            )}
+            <div className="brew-dots" role="group" aria-label={labels.dots}>
+              {steps.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={i === active ? 'is-on' : i < active ? 'is-done' : undefined}
+                  aria-label={labels.goStep.replace('{n}', i + 1)}
+                  aria-pressed={i === active}
+                  onClick={() => goTo(i)}
+                />
+              ))}
+            </div>
+            {swipe && (
+              <button type="button" className="brew-step-btn is-next" onClick={() => goTo(active + 1)} disabled={active === n - 1} aria-label={labels.next}>
+                <span aria-hidden="true">→</span>
+              </button>
+            )}
           </div>
           <div className="brew-foot">
             {ctas && <div className="essp-ctas">{ctas}</div>}

@@ -35,6 +35,35 @@ test('portada: la hoja de AeroPress Go en diez pasos lleva a la Escuela', async 
   await page.context().close();
 });
 
+test('celular de pie: los diez pasos se pasan de lado con Siguiente/Anterior y los puntos, sin fijar la página', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: PHONE });
+  await page.goto('/', { waitUntil: 'load' });
+  const brew = page.locator('#escuela');
+  await brew.scrollIntoViewIfNeeded();
+  await expect(brew).toHaveClass(/is-swipe/);
+  // La sección mide lo que su contenido: no diez pantallas de scroll
+  expect(await brew.evaluate((el) => el.offsetHeight)).toBeLessThan(1400);
+  const sheet = brew.locator('.brew-sheet');
+  const dots = brew.locator('.brew-dots button');
+  const prev = brew.getByRole('button', { name: 'Anterior' });
+  const next = brew.getByRole('button', { name: 'Siguiente' });
+  await expect(prev).toBeDisabled();
+  await next.click();
+  await expect(dots.nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => sheet.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(1);
+  await dots.nth(9).click();
+  await expect.poll(() => sheet.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(9);
+  await expect(next).toBeDisabled();
+  await prev.click();
+  await expect(dots.nth(8)).toHaveAttribute('aria-pressed', 'true');
+  // El color térmico va solo en lo caliente: el paso 1 (prensa vacía) sin color, el 6 (agua a 80 °C) con él
+  const steps = brew.locator('.brew-sheet > li');
+  expect(await steps.nth(0).locator('[fill^="url(#"]').count()).toBe(0);
+  expect(await steps.nth(5).locator('[fill^="url(#"]').count()).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
 test('celular acostado: sin altura para fijar la hoja, los pasos de Aprende quedan en fila y a la vista', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 844, height: 390 }, hasTouch: true } });
   await page.goto('/', { waitUntil: 'load' });

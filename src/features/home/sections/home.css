@@ -399,6 +399,42 @@
   .brew .essp-ctas .essp-btn { padding: 12px 14px; font-size: 11px; letter-spacing: .1em; flex: 1; justify-content: center; text-align: center; }
 }
 
+/* Anterior / Siguiente a los lados de los puntos (solo en el celular de pie) */
+.brew-nav { display: flex; justify-content: center; align-items: center; gap: 8px; min-width: 0; }
+.brew-step-btn {
+  flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fff; color: var(--ink); cursor: pointer;
+  display: grid; place-items: center; font: 800 18px/1 'Archivo', sans-serif; box-shadow: 0 10px 28px rgba(28, 37, 65, .14);
+}
+.brew-step-btn.is-next:not(:disabled) { background: var(--ink); color: #fff; }
+.brew-step-btn:disabled { opacity: .35; cursor: default; }
+.brew-step-btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+/* Celular de pie (pedido del usuario, 6 nov): sin secuestrar el scroll de la página. Los pasos
+   son tarjetas que se pasan de lado (con el dedo, los puntos o Anterior/Siguiente), todas del
+   mismo alto, y la página sigue bajando normal; la calle queda al pie de la sección. */
+.brew.is-swipe { height: auto; }
+.brew.is-swipe .brew-pin { position: relative; height: auto; }
+.brew.is-swipe .brew-in { height: auto; grid-template-rows: none; padding-bottom: 120px; }
+.brew.is-swipe .brew-swipe { display: none; }
+.brew.is-swipe .brew-sheet {
+  display: flex; gap: 0; max-height: none; padding: 4px 0 18px; border-radius: 0; background: none; box-shadow: none;
+  overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.brew.is-swipe .brew-sheet::-webkit-scrollbar { display: none; }
+/* La tarjeta ocupa el ancho entero (así cada paso cae justo en un múltiplo del ancho); el blanco
+   va solo en el contenido para que entre una tarjeta y otra quede un respiro */
+.brew.is-swipe .brew-sheet li {
+  grid-area: auto; flex: 0 0 100%; box-sizing: border-box; scroll-snap-align: center; scroll-snap-stop: always;
+  opacity: 1; transform: none; pointer-events: auto;
+  padding: 16px 20px; border-inline: 4px solid transparent; background: #fff; background-clip: padding-box; border-radius: 22px;
+  filter: drop-shadow(0 14px 22px rgba(28, 37, 65, .12));
+  grid-template-rows: auto auto 250px auto; align-content: start;
+}
+.brew.is-swipe .brew-draw { max-width: 320px; height: 250px; }
+.brew.is-swipe .brew-sheet li.is-serve .brew-draw { display: block; }
+.brew.is-swipe .brew-sheet li.is-serve { grid-template-rows: auto auto 150px auto; gap: 6px; }
+.brew.is-swipe .brew-sheet li.is-serve .brew-draw { height: 150px; }
+
 /* Celular angosto y bajo (320 × 568): en «Sírvelo» el texto no cabe con el dibujo y se salía de la hoja */
 @media (max-width: 760px) and (max-height: 700px) {
   .brew-sheet li.is-serve .brew-draw { display: none; }

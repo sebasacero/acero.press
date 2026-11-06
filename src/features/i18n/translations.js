@@ -122,7 +122,7 @@ const translations = {
       script: 'paso a paso, como lo indica AeroPress',
       hot: 'CALIENTE',
       cold: 'COLD BREW',
-      dots: 'Pasos de la receta', swipe: 'Desliza para ver los 10 pasos', goStep: 'Ir al paso {n}',
+      dots: 'Pasos de la receta', swipe: 'Desliza para ver los 10 pasos', goStep: 'Ir al paso {n}', prev: 'Anterior', next: 'Siguiente',
       steps: [
         { text: 'Saca el émbolo de la cámara.', notes: ['Cilindro de precisión', 'Ø base = 9,5 cm'] },
         { text: 'Pon un filtro de papel en la tapa del filtro.' },
@@ -177,7 +177,7 @@ const translations = {
         badge: 'AEROPRESS ORIGINAL',
         title: ['Tu primera taza', 'en nueve pasos'],
         script: 'como lo indica AeroPress',
-        dots: 'Pasos de la receta', swipe: 'Desliza para ver los 9 pasos', goStep: 'Ir al paso {n}',
+        dots: 'Pasos de la receta', swipe: 'Desliza para ver los 9 pasos', goStep: 'Ir al paso {n}', prev: 'Anterior', next: 'Siguiente',
         steps: [
           { draw: 2, text: 'Pon un filtro de papel en la tapa y enróscala en la cámara.' },
           { draw: 3, text: 'Para la cámara sobre una taza firme. Agrega 16 a 18 g de café de molienda media: una cucharada colmada.' },
@@ -560,7 +560,7 @@ const translations = {
       script: 'step by step, the way AeroPress says',
       hot: 'HOT',
       cold: 'COLD BREW',
-      dots: 'Recipe steps', swipe: 'Scroll to see all 10 steps', goStep: 'Go to step {n}',
+      dots: 'Recipe steps', swipe: 'Scroll to see all 10 steps', goStep: 'Go to step {n}', prev: 'Previous', next: 'Next',
       steps: [
         { text: 'Remove the plunger from the chamber.', notes: ['Precision cylinder', 'Base Ø = 9.5 cm'] },
         { text: 'Place a paper filter in the filter cap.' },
@@ -614,7 +614,7 @@ const translations = {
         badge: 'AEROPRESS ORIGINAL',
         title: ['Your first cup', 'in nine steps'],
         script: 'the way AeroPress says',
-        dots: 'Recipe steps', swipe: 'Scroll to see the 9 steps', goStep: 'Go to step {n}',
+        dots: 'Recipe steps', swipe: 'Scroll to see the 9 steps', goStep: 'Go to step {n}', prev: 'Previous', next: 'Next',
         steps: [
           { draw: 2, text: 'Put a paper filter in the cap and screw it onto the chamber.' },
           { draw: 3, text: 'Stand the chamber on a sturdy mug. Add 16–18 g of medium-ground coffee: one heaping scoop.' },
@@ -997,7 +997,7 @@ const translations = {
       script: 'エアロプレスの手順どおりに',
       hot: 'ホット',
       cold: '水出し',
-      dots: 'レシピの手順', swipe: 'スクロールして10の手順を見る', goStep: '手順{n}へ',
+      dots: 'レシピの手順', swipe: 'スクロールして10の手順を見る', goStep: '手順{n}へ', prev: '前へ', next: '次へ',
       steps: [
         { text: 'チャンバーからプランジャーを押し出します。', notes: ['精密シリンダー', '底面 Ø = 9.5 cm'] },
         { text: 'フィルターをフィルターキャップに入れます。' },
@@ -1051,7 +1051,7 @@ const translations = {
         badge: 'AEROPRESS ORIGINAL',
         title: ['最初の一杯を', '9つのステップで'],
         script: 'エアロプレス公式のとおりに',
-        dots: 'レシピのステップ', swipe: 'スクロールして9ステップを見る', goStep: 'ステップ{n}へ',
+        dots: 'レシピのステップ', swipe: 'スクロールして9ステップを見る', goStep: 'ステップ{n}へ', prev: '前へ', next: '次へ',
         steps: [
           { draw: 2, text: 'キャップにペーパーフィルターを入れ、チャンバーに取り付けます。' },
           { draw: 3, text: '丈夫なマグにチャンバーをのせ、中挽きのコーヒーを16〜18 g（山盛り1杯）入れます。' },
