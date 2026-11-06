@@ -1,11 +1,34 @@
-/* La web conserva sus colores; solo los llamados a la acción llevan el
-   gradiente térmico (pedido del usuario, 5 nov 2026). Va después de los
-   estilos propios. */
+/* La web con la piel de la app Micra (pedido del usuario, 5 nov 2026: «añade a
+   la web este mismo estilo de diseño»). Va después de estilo-app.css y de las
+   hojas de cada sección: cambia colores, formas y superficies, no el orden ni
+   el contenido.
+   Lo mismo que la app: fondo blanco papel como una red social, tinta índigo,
+   tarjetas blancas con borde suave y sombra fría, el filo de calor (la barra de
+   temperatura) arriba de lo importante, cabeceras frías con una mancha de calor,
+   lo que se toca en el gradiente térmico, chips con el elegido en tinta y una
+   raya naranja, y las personas de la calle en falso color sobre fondo frío.
+   Frío = fondo e inactivo; caliente = lo de ahora y lo que se toca. */
 @import './termico.css';
 
+:root {
+  --app-cream: var(--t-paper);
+  --app-fg: var(--t-ink);
+  --app-ink: var(--t-1);
+  --app-cold: var(--t-2);
+  --app-line: var(--t-line);
+  --app-shadow: var(--t-glow-cold);
+  /* lo destacado: la lectura de la cámara (frío con una mancha de calor arriba a la derecha) */
+  --t-reading:
+    radial-gradient(55% 80% at 92% 18%, rgba(255, 194, 60, .85), rgba(242, 84, 45, .75) 22%, rgba(176, 18, 122, .55) 48%, transparent 75%),
+    linear-gradient(160deg, var(--t-1), var(--t-0));
+}
+body { background: var(--t-paper); color: var(--t-ink); }
+
+/* ---------- llamados a la acción: el punto más caliente ---------- */
 .essp-btn:not(.is-ghost):not(.is-link):not(.is-wa),
 .btn-buy-shop,
-.nav-links .nav-app-link {
+.nav-links .nav-app-link,
+.consent-btn:not(.is-ghost) {
   background: var(--t-cta) !important;
   border-color: transparent !important;
   color: #fff !important;
@@ -16,3 +39,151 @@
   filter: saturate(1.1) brightness(1.04);
 }
 .btn-buy-shop:disabled { filter: grayscale(.6); opacity: .6; }
+/* el secundario, como en la app: blanco con el filo violeta */
+.essp-btn.is-ghost, .shop-add, .consent-btn.is-ghost {
+  background: #fff !important; color: var(--t-ink) !important; border: 0 !important;
+  box-shadow: inset 0 0 0 1.5px var(--t-2), var(--t-glow-cold) !important;
+}
+.essp-btn.is-link { color: var(--t-2); }
+
+/* ---------- el menú: la cabecera de la app (fría, con su mancha de calor y la barra de temperatura) ---------- */
+.navbar--sheet .navbar-content {
+  position: relative; overflow: hidden; color: #fff;
+  background-color: var(--t-0) !important;
+  background-image:
+    radial-gradient(40% 160% at 96% 110%, rgba(255, 194, 60, .55), rgba(242, 84, 45, .45) 30%, rgba(176, 18, 122, .3) 60%, transparent 85%),
+    radial-gradient(30% 140% at 2% -20%, rgba(90, 30, 158, .7), transparent 80%),
+    linear-gradient(180deg, var(--t-0), var(--t-1)) !important;
+  border: 0 !important; box-shadow: var(--t-glow-cold), 0 0 0 1px rgba(255, 255, 255, .06) inset !important;
+}
+.navbar--sheet .navbar-content::after {
+  content: ''; position: absolute; left: 18px; right: 18px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0;
+  background: var(--t-ramp); opacity: .9; pointer-events: none;
+}
+.navbar--sheet, .navbar--sheet.navbar--photo { color: #fff; }
+.navbar--sheet .nav-links.left a { color: #CFC4EA; }
+.navbar--sheet .nav-links.left a:hover, .navbar--sheet .nav-links.left a[aria-current='page'] { color: var(--t-6); opacity: 1; }
+.navbar--sheet .nav-icons.right a, .navbar--sheet .hamburger-btn,
+.navbar--sheet .lang-switcher--light .lang-btn, .navbar--sheet .lang-switcher--light .lang-btn.is-active,
+.navbar--sheet .lang-switcher--ink .lang-btn { color: #fff; }
+/* el logo en su baldosa clara, como el termo en la barra de la app */
+.navbar--sheet .nav-logo img, .navbar--sheet .navbar-sheet-logo img { background: #fff; border-radius: 10px; padding: 3px 6px; box-shadow: 0 0 0 1px rgba(255, 194, 60, .35); }
+.navbar--sheet .logo-press { color: var(--t-6); }
+.nav-links .nav-app-link { border-radius: 14px; }
+
+/* ---------- títulos y lecturas ---------- */
+.essp-slide, .essp-slide--photo { --essp-fg: var(--t-ink); --essp-soft: #5B5470; --essp-line: var(--t-line); }
+.essp-title, .people-title, .shop-title, .sec-h2, .visit-title { color: var(--t-ink); }
+/* lo escrito a mano: el texto caliente de la app («¿Qué te gustaría probar HOY?») */
+.essp-script, .visit-script {
+  background: linear-gradient(90deg, var(--t-3), var(--t-4) 35%, var(--t-5) 65%, var(--t-6));
+  -webkit-background-clip: text; background-clip: text; color: transparent !important;
+}
+/* las cotas con la mira del visor */
+.essp-tag, .shop-kicker, .section-label { color: var(--t-2); }
+.essp-tag::before, .shop-kicker::before {
+  content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 7px; vertical-align: -1px;
+  border: 1.6px solid currentColor; border-radius: 50%;
+  background: radial-gradient(circle, currentColor 0 1.5px, transparent 2px);
+}
+/* las etiquetas: el tramo caliente de la escala con letra tinta, como «AHORA» y «EN LA CALLE» */
+.essp-new, .essp-badge, .essp-live-tag {
+  background: linear-gradient(90deg, var(--t-5), var(--t-6) 55%, var(--t-7)) !important; color: var(--t-ink) !important; font-weight: 800; border-radius: 99px; padding: 3px 10px;
+}
+.essp-lede, .people-text, .shop-sub { color: #5B5470; }
+
+/* ---------- tarjetas: blancas, borde suave, sombra fría y el filo de calor ---------- */
+.essp-live, .people, .brew-sheet, .shop-card, .lh-store, .posts-banner {
+  border: 1px solid var(--t-line); box-shadow: var(--t-glow-cold);
+}
+.essp-live, .people, .brew-sheet { background: #fff; }
+.essp-live::before, .people::before, .brew-sheet::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--t-ramp); z-index: 3; pointer-events: none;
+}
+.brew-sheet { position: relative; overflow: hidden; }
+.essp-live { --app-cream: #F4F0FA; }
+.essp-live-anden { background-color: #F4F0FA; border-top-color: var(--t-1); }
+.essp-live-pill.is-off, .essp-live-pill.is-wait { background: #F1ECF8; color: #5B5470; }
+.essp-live-how b { background: var(--t-0); color: var(--t-6); }
+.essp-live-coffee { background: var(--t-0); }
+.essp-live-cota { color: var(--t-3); }
+/* la persona de la tarjeta: caliente sobre su recuadro frío, como la foto de la tarjeta del barista */
+.essp-live::after {
+  content: ''; position: absolute; z-index: 0; right: 14px; top: 18px; bottom: 54px; width: 40%; border-radius: 22px;
+  background: radial-gradient(70% 70% at 50% 55%, #2A1466, var(--t-0)); pointer-events: none;
+}
+.essp-live-persona { filter: url(#t-thermal); }
+@media (max-width: 900px) { .essp-live::after { width: 44%; right: 8px; top: 14px; bottom: 50px; border-radius: 16px; } }
+
+/* ---------- Micra: los tres pasos y el panel, como lo destacado de la app ---------- */
+.micra-steps li {
+  background-color: var(--t-0); background-image: var(--t-reading);
+  border: 0; box-shadow: var(--t-glow); position: relative; overflow: hidden;
+}
+.micra-steps li::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: 8px; height: 3px; border-radius: 3px; background: var(--t-ramp); }
+.micra-step-n, .micra-steps li:nth-child(1) .micra-step-n { color: var(--t-6); }
+.micra-stage {
+  background-color: var(--t-0);
+  background-image:
+    radial-gradient(50% 45% at 50% 52%, rgba(242, 84, 45, .45), rgba(176, 18, 122, .3) 45%, transparent 80%),
+    radial-gradient(60% 40% at 0% 0%, rgba(90, 30, 158, .7), transparent 80%),
+    linear-gradient(180deg, var(--t-1), var(--t-0));
+  box-shadow: var(--t-glow-cold);
+}
+.micra-stage::before { opacity: .35; }
+.micra-stats li { background: rgba(13, 8, 32, .45); border-color: rgba(255, 194, 60, .35); }
+.micra-stats b, .micra-stats li:nth-child(1) b {
+  background: linear-gradient(180deg, var(--t-7), var(--t-6) 45%, var(--t-5));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* las personas de la calle: frío de fondo, la persona caliente */
+.people-row { background: radial-gradient(70% 90% at 50% 60%, #2A1466, var(--t-0)); border-radius: 18px; padding-top: 16px; }
+.people-item img { filter: url(#t-thermal); }
+.people-row::before { background: var(--t-ramp); left: 0; right: 0; }
+.people-row::after { border-top-color: rgba(207, 196, 234, .4); left: 0; right: 0; }
+.people-item span, .people-item p, .people-item small { color: #CFC4EA; }
+
+/* redes: el botón blanco como las fichas de la app */
+.posts-app { color: var(--t-ink); }
+
+/* ---------- tienda: chips y tarjetas de la app ---------- */
+body .shop-tabs button, body .shop-size, body .lh-tablist button, body .rb-years button {
+  background: #fff; color: var(--t-ink); border: 1px solid var(--t-line); border-radius: 99px;
+}
+body .shop-tabs button.is-on, body .shop-size.active, body .lh-tablist button[aria-selected='true'], body .rb-years button[aria-selected='true'] {
+  background: var(--t-ink); border-color: var(--t-ink); color: #fff; box-shadow: inset 0 -3px 0 var(--t-5);
+}
+.lh-arrow { border-color: var(--t-line); color: var(--t-ink); background: #fff; }
+body .shop-card { background: #fff; border-radius: 20px; }
+body .shop-card.is-selected { box-shadow: 0 0 0 2px var(--t-5), var(--t-glow); }
+body .shop-card-price { color: var(--t-3); }
+body .shop-rule span { background: var(--t-ramp); }
+body .shop-title { color: var(--t-ink); }
+body .shop-buybar { background: #fff; border: 1px solid var(--t-line); box-shadow: var(--t-glow-cold); }
+
+/* ---------- Visítanos y la vitrina ---------- */
+.lh { background: var(--t-paper); }
+.lh-store { background: #fff; position: relative; overflow: hidden; }
+.lh-store::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--t-ramp); }
+
+/* ---------- La guía de AeroPress: la calle crema queda, la hoja es tarjeta de la app ---------- */
+.brew-num { background: var(--t-0); box-shadow: var(--t-glow-cold); position: relative; overflow: hidden; }
+.brew-num::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 5px; height: 3px; border-radius: 3px; background: var(--t-ramp); }
+.brew-legend .is-hot, .brew .is-hot { color: var(--t-4); }
+.brew-legend .is-cold, .brew b.is-cold, .brew .brew-serve .is-cold { color: var(--t-2); }
+.brew-dots button.is-on::before { background: var(--t-cta); border-color: transparent; }
+.brew-dots button.is-done::before { background: var(--t-ink); border-color: var(--t-ink); }
+.brew-persona { filter: url(#t-thermal); }
+
+/* ---------- Recetas del Mundial ---------- */
+/* index.css se carga después de esta hoja: lo que pisa sus reglas lleva `body` */
+body .sec-h2 { color: var(--t-ink); text-transform: none; letter-spacing: -.03em; font-weight: 900; }
+body .section-label .num { border-color: var(--t-2); color: var(--t-2); }
+body .rb-dot { background: var(--t-5); }
+
+/* ---------- el pie: la barra de abajo de la app, fría con la barra de temperatura ---------- */
+body .footer-bottom { background: var(--t-0); position: relative; }
+body .footer-bottom::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--t-ramp); }
+body .footer-bottom p, body .footer-bottom a { color: #CFC4EA; }
+body .footer-bottom a:hover { color: var(--t-6); }

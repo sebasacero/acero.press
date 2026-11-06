@@ -19,6 +19,7 @@ import MicraSection from './features/home/sections/MicraSection.jsx';
 import BrewGuide from './features/home/sections/BrewGuide.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
 import ConsentBanner from './shared/layout/ConsentBanner.jsx';
+import ThermalDefs from './shared/layout/ThermalDefs.jsx';
 import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // La piel de la app Micra sobre toda la web: va después de las hojas de cada sección
 import './shared/styles/estilo-app.css';
@@ -84,6 +85,8 @@ export default function App() {
 
             <AdminDock />
             <AdminOverlayHost />
+            {/* El filtro térmico de las personas de la calle, como en la app */}
+            <ThermalDefs />
             <ConsentBanner />
           </AdminUIProvider>
         </CartProvider>
