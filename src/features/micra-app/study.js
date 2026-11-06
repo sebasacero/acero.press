@@ -71,3 +71,14 @@ export function heatPoints(rows) {
     });
   return { type: 'FeatureCollection', features };
 }
+
+/**
+ * Las fotos de venta (la cámara de la barra del barista) como puntos para el mapa de Estudio.
+ * La base ya las redondea a ~55 m; aquí solo se descartan las que no traen un punto válido.
+ */
+export function salePhotoPoints(list) {
+  const features = (list ?? [])
+    .filter((r) => r && Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng)) && r.lat !== null && r.lng !== null)
+    .map((r, i) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(r.lng), Number(r.lat)] }, properties: { id: i, weight: 1, at: r.at ?? null } }));
+  return { type: 'FeatureCollection', features };
+}

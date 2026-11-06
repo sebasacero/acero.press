@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { OUT_MODES, isMode, recordsTrip, consentNeeds, cleanMethods, methodsLabel, toggleMethod, newProduct, menuWith } from './flow.js';
+import { OUT_MODES, isMode, recordsTrip, consentNeeds, cleanMethods, methodsLabel, toggleMethod, newProduct, menuWith, outPoint } from './flow.js';
 
 test('tres formas de salir; solo caminando graba el recorrido', () => {
   assert.deepEqual(OUT_MODES.map((m) => m.id), ['fijo', 'sombrilla', 'caminando']);
@@ -39,4 +39,18 @@ test('el menú de Vender suma lo propio después de lo de siempre', () => {
   assert.deepEqual(m.map((x) => x.id), ['tinto', 'aromatica', 'xabc1234567']);
   assert.equal(m[2].one, 'empanada');
   assert.equal(m[2].custom, true);
+});
+
+test('cómo sale: el puesto fijo guarda su punto y lo reusa; la sombrilla y caminando usan el GPS de hoy', () => {
+  const casa = { lat: 4.6486, lng: -74.0628 };
+  const cerca = { lat: 4.6490, lng: -74.0630 }; // ~50 m: el GPS que baila
+  const lejos = { lat: 4.6600, lng: -74.0628 }; // ~1,3 km: movió el puesto
+  assert.deepEqual(outPoint('fijo', casa, null), { pos: casa, save: casa });
+  assert.deepEqual(outPoint('fijo', cerca, casa), { pos: casa, save: null });
+  assert.deepEqual(outPoint('fijo', lejos, casa), { pos: lejos, save: lejos });
+  assert.deepEqual(outPoint('fijo', null, casa), { pos: casa, save: null });
+  assert.deepEqual(outPoint('fijo', null, null), { pos: null, save: null });
+  assert.deepEqual(outPoint('sombrilla', cerca, casa), { pos: cerca, save: null });
+  assert.deepEqual(outPoint('caminando', null, casa), { pos: null, save: null });
+  assert.ok(OUT_MODES.every((m) => m.gps));
 });

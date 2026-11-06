@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL } from './feed.js';
+import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL, coffeeHead } from './feed.js';
 import { money, baristaPath, sortBaristas, bogota } from './micraApp.js';
 import { figureFor } from './motivation.js';
 import * as api from './api.js';
@@ -40,6 +40,31 @@ function PriceCard({ item, admin, onEdit }) {
       </dl>
       <p className="mapp-fine is-onink">{prices.date ? `Precios del ${dayLabel(prices.date)} · ` : ''}<a className="mapp-link is-onink" href={FNC_PRICE_URL} target="_blank" rel="noopener noreferrer">Precio del día en la FNC ›</a></p>
     </article>
+  );
+}
+
+/** La cabecera de Hoy, como la de Vender: el café hoy en grande y sus datos debajo. */
+function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
+  return (
+    <section className="mapp-coffeehead" aria-label="El café hoy" data-testid="coffee-head">
+      <div className="mapp-coffeehead-top">
+        <div>
+          <p className="mapp-coffeehead-kicker">{today}</p>
+          <h1 className="mapp-coffeehead-title">{title}</h1>
+        </div>
+        {onPublish && <button type="button" className="mapp-btn is-small mapp-coffeehead-pub" onClick={onPublish}>＋ Publicar</button>}
+      </div>
+      <p className="mapp-coffeehead-big" data-testid="coffee-big">{head.big.value}</p>
+      <p className="mapp-coffeehead-sub">{head.big.label}</p>
+      <dl className="mapp-coffeehead-kpis">
+        {head.kpis.map((k) => <div key={k.id} data-testid={`coffee-${k.id}`}><dd>{k.value}</dd><dt>{k.label}</dt></div>)}
+      </dl>
+      <p className="mapp-coffeehead-fine">
+        {head.date ? `Precios del ${dayLabel(head.date)} · ` : ''}
+        <a href={FNC_PRICE_URL} target="_blank" rel="noopener noreferrer">Precio del día en la FNC ›</a>
+        {admin && <> · <button type="button" className="mapp-link is-onink" onClick={onEdit}>Actualizar</button></>}
+      </p>
+    </section>
   );
 }
 
@@ -121,7 +146,7 @@ function Tile({ tone, tag, children }) {
   );
 }
 
-function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false }) {
+function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false, onPhoto }) {
   const shareLink = (title, url) => () => platform.share({ title, text: title, url });
   const meAv = <Figure name={figureFor(selfId)} className="is-avatar" />;
   if (item.kind === 'logros') {
@@ -159,13 +184,13 @@ function Post({ item, go, onShareDay, canShareDay, me, selfId, client = false })
   }
   if (item.kind === 'publicar') {
     const media = (
-      <button type="button" className="mapp-ig-tile is-idea" onClick={() => go('/micra/video')} aria-label={`Tomar: ${item.title}`}>
+      <button type="button" className="mapp-ig-tile is-idea" onClick={onPhoto} disabled={!onPhoto} aria-label={`Tomar: ${item.title}`}>
         <span className="mapp-ig-tag">Idea de foto</span>
         <span className="mapp-ig-badge" aria-hidden="true">{item.icon}</span>
         <span className="mapp-ig-shot">📷 Toca para tomarla</span>
       </button>
     );
-    return <Shell item={item} testid="feed-idea" av={<span className="mapp-post-av is-idea" aria-hidden="true">✨</span>} who="Idea para hoy" where="Sugerido para ti" media={media} title={item.title} text={item.text} cta={<button type="button" className="mapp-btn is-small" onClick={() => go('/micra/video')}>📷 Tomar la foto</button>} />;
+    return <Shell item={item} testid="feed-idea" av={<span className="mapp-post-av is-idea" aria-hidden="true">✨</span>} who="Idea para hoy" where="Sugerido para ti" media={media} title={item.title} text={item.text} cta={onPhoto ? <button type="button" className="mapp-btn is-small" onClick={onPhoto}>📷 Tomar la foto</button> : null} />;
   }
   if (item.kind === 'cafe') {
     const mark = item.org === 'Finca' ? '🌱' : item.org === 'Marca' ? '🏷️' : 'FNC';
@@ -306,12 +331,10 @@ function PublishSheet({ go, canShareDay, onShareDay, onClose, client = false, on
         <h2 className="mapp-title is-small">¿Qué quieres mostrar hoy?</h2>
         <div className="mapp-publish">
           {onCompose && <button type="button" onClick={() => { onClose(); onCompose(); }} data-testid="publish-micra"><span aria-hidden="true">📸</span>En Micra</button>}
-          <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">🎥</span>Video con filtro</button>
-          <button type="button" onClick={() => go('/micra/video')}><span aria-hidden="true">📍</span>Foto del puesto</button>
           <button type="button" onClick={() => { onClose(); onShareDay(); }} disabled={!canShareDay}><span aria-hidden="true">🗺️</span>Mi día de hoy</button>
           <a href={wa(recipe)} target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span>Una receta</a>
         </div>
-        <p className="mapp-fine">«En Micra» sale aquí en Hoy cuando el equipo la revisa. El video y tu día se comparten en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
+        <p className="mapp-fine">«En Micra» (foto o video) sale aquí en Hoy cuando el equipo la revisa. Tu día se comparte en tus redes. La receta le llega al equipo y sale aquí cuando la revisamos. Tu cara y tu ubicación exacta solo salen si tú quieres.</p>
       </section>
     </div>
   );
@@ -363,6 +386,9 @@ function CuratedForm({ current, onSaved, onCancel }) {
  * muro de Instagram bajo las historias): título h2 y sin su propio «Publicar»,
  * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
  */
+// El dibujo de cada globito del muro
+const CHIP_ICON = { todo: '☕', publicaciones: '📸', logros: '🔥', publicar: '✨', cafe: '🌱', precios: '💲', puestos: '📍', recetas: '📝', videos: '▶' };
+
 export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null, challenge }) {
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
@@ -418,25 +444,48 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   // Los anuncios «Patrocinado» van entre las publicaciones, solo en «Todo»
   const { feed: adFeed } = useAds(client ? 'client' : 'barista', ads);
   const counts = chipCounts(withDay);
-  const shown = chip === 'todo' ? withAds(withDay, adFeed) : filterFeed(withDay, chip);
+  const listed = embedded ? withDay : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
+  const shown = chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
     <div className={`mapp-feed ${embedded ? 'is-embedded' : ''}`} data-testid={embedded ? 'home-feed' : undefined}>
-      <header className="mapp-feed-head">
-        <div>
-          <p className="mapp-kicker">{today}</p>
-          {embedded
-            ? <h2 className="mapp-title is-small">Hoy en el café</h2>
-            : <h1 className="mapp-title is-small">{client ? 'Hoy en el café' : 'Hoy en la calle'}</h1>}
-        </div>
-        {!embedded && <button type="button" className="mapp-btn is-small is-dark" onClick={() => setPublishing(true)}>＋ Publicar</button>}
-      </header>
-      <div className="mapp-chips is-scroll" role="tablist" aria-label="Qué ver">
+      {embedded ? (
+        <header className="mapp-feed-head">
+          <div>
+            <p className="mapp-kicker">{today}</p>
+            <h2 className="mapp-title is-small">Hoy en el café</h2>
+          </div>
+        </header>
+      ) : (
+        <CoffeeHead head={coffeeHead({ prices, baristas })} title={client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} />
+      )}
+      {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
+          Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
+      <ul className="mapp-hists is-feed" role="tablist" aria-label="Qué ver" data-testid="feed-bubbles">
         {CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={chip === id} className={chip === id ? 'on' : ''} onClick={() => setChip(id)}>{label}</button>
+          <li key={id} role="presentation">
+            <button type="button" role="tab" aria-selected={chip === id} aria-label={label} className={`mapp-hist is-topic ${chip === id ? 'on' : ''}`} onClick={() => setChip(id)}>
+              <span className="mapp-hist-ring"><span className="mapp-hist-av" aria-hidden="true">{CHIP_ICON[id] ?? '☕'}</span></span>
+              <small>{label}</small>
+            </button>
+          </li>
         ))}
-      </div>
+        {!embedded && baristas.filter((b) => b.status === 'live' && b.id !== selfId).slice(0, 12).map((b) => {
+          const first = String(b.name ?? '').split(' ')[0];
+          return (
+            <li key={b.id} role="presentation">
+              <button type="button" className="mapp-hist is-live" onClick={() => go(baristaPath(b.id))} aria-label={`${first}, en la calle ahora`}>
+                <span className="mapp-hist-ring">
+                  <span className="mapp-hist-av"><Figure name={figureFor(b.id)} className="is-avatar" /></span>
+                  <i className="mapp-hist-tag" aria-hidden="true">AHORA</i>
+                </span>
+                <small>{first}</small>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
       {admin && !curating && chip === 'cafe' && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
       {editing && <PriceForm prices={prices} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
@@ -460,7 +509,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
           : item.kind === 'patrocinado'
             ? <AdPost key={item.id} ad={item} />
-            : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} />))}
+            : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} onPhoto={canPost ? () => setComposing(true) : null} />))}
       </div>
       {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} onCompose={canPost ? () => setComposing(true) : null} />}
       {composing && <PostComposer selfId={selfId} asId={asId} onClose={() => setComposing(false)} onSent={loadMine} />}

@@ -23,6 +23,7 @@ export function ModePicker({ mode, onPick, disabled = false }) {
           </button>
         ))}
       </div>
+      {mode && <p className="mapp-outmodes-gps" data-testid="mode-gps"><span aria-hidden="true">📍</span> {OUT_MODES.find((m) => m.id === mode)?.gps}</p>}
     </section>
   );
 }

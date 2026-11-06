@@ -1,5 +1,5 @@
-// Micra en la portada: qué es, el celular con las cifras reales del estudio (micra_street_map) y las
-// dos banners de siempre, las fichas de redes con video y los botones de las tiendas; vacío, el mapa del celular dice que es de ejemplo.
+// Micra en la portada: qué es, las cifras reales del estudio (micra_street_map) junto al celular con
+// Vender (se toca +1 y la taza se llena), los dos banners de siempre, las fichas de redes y las tiendas.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
@@ -36,8 +36,6 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(links.nth(0)).toContainText('@aceropress');
   await expect(links.nth(1)).toContainText('@acero.press');
   await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
-  await expect(micra.locator('.essp-phone-who')).toContainText('40 tazas en la calle');
-  await expect(micra.locator('.essp-phone-who')).toContainText('1 cuadras · 2 baristas');
   // En público se dice «baristas»; sin nombres
   await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
   // Los banners principales van arriba: el primero muestra quién está en la calle (micra_baristas) y lleva a la app
@@ -59,11 +57,19 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await page.context().close();
 });
 
-test('sin estudio aún, el celular marca su mapa como de ejemplo', async ({ browser }) => {
-  const { page, errors } = await openPage(browser, { context: DESK });
+test('el celular de Micra es Vender: cada +1 suma la taza y la plata y llena la meta, sin escribir nada', async ({ browser }) => {
+  const { page, errors, api } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
-  const micra = page.locator('#micra');
-  await expect(micra.locator('.essp-phone-badge')).toHaveText('MAPA DE EJEMPLO');
+  const phone = page.getByRole('group', { name: /el panel de vender del barista/ });
+  await phone.scrollIntoViewIfNeeded();
+  await expect(phone.locator('.sellp-count b')).toHaveText('4');
+  await expect(phone.locator('.sellp-cash')).toContainText('$6.000');
+  await phone.getByRole('button', { name: 'Vendí un perico' }).click();
+  await expect(phone.locator('.sellp-count b')).toHaveText('5');
+  await expect(phone.locator('.sellp-cash')).toContainText('$8.000');
+  await expect(phone.locator('.sellp-pop em')).toHaveText('+$2.000');
+  // Es un ejemplo: no registra ventas
+  expect(api.micra.sales ?? []).toEqual([]);
   expect(errors).toEqual([]);
   await page.context().close();
 });

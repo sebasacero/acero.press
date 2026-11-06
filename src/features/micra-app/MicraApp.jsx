@@ -9,7 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
-import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
+import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
 import './micra-app.css';
 import './termico-app.css';
 import ThermalDefs from '../../shared/layout/ThermalDefs.jsx';
@@ -122,6 +122,23 @@ function useWho() {
   return [who, () => supabase.auth.getSession().then(({ data }) => load(data.session ?? null))];
 }
 
+/** La meta del día en la barra de arriba del barista: la taza que se llena y «4/25». */
+function TopGoal({ board, onClick }) {
+  const pct = board.goal > 0 ? Math.min(1, board.cups / board.goal) : 0;
+  const met = board.goal > 0 && board.cups >= board.goal;
+  const top = 22 + (1 - pct) * 78;
+  return (
+    <button type="button" className={`mapp-topgoal${met ? ' is-met' : ''}`} onClick={onClick} aria-label={`Tu meta de hoy: ${board.cups} de ${board.goal} tazas`} data-testid="top-goal">
+      <svg viewBox="0 0 110 118" aria-hidden="true">
+        <defs><clipPath id="mapp-topcup"><path d="M10 22h72v44a34 34 0 0 1-34 34h-4a34 34 0 0 1-34-34z" /></clipPath></defs>
+        <g clipPath="url(#mapp-topcup)"><path fill="var(--t-5)" d={`M0 ${top} q12 -6 24 0 t24 0 t24 0 t24 0 V120 H0z`} /></g>
+        <path d="M10 22h72v44a34 34 0 0 1-34 34h-4a34 34 0 0 1-34-34zM82 34h8a14 14 0 0 1 0 28h-8" fill="none" stroke="#fff" strokeWidth="8" strokeLinejoin="round" />
+      </svg>
+      <span><b>{board.cups}</b>/{board.goal}<small> {met ? '¡meta!' : 'meta'}</small></span>
+    </button>
+  );
+}
+
 function ModeSwitch({ modes, mode, onChange }) {
   if (modes.length < 2) return null;
   const label = { client: 'Cliente', barista: 'Barista', owner: 'Equipo' };
@@ -145,6 +162,8 @@ export default function MicraApp() {
   const [actAs, setActAs] = useState(null);
   // Si el barista está en la calle (lo avisa BaristaHome): la barra va en rojo en Vender y su círculo lleva el punto verde
   const [live, setLive] = useState(false);
+  // La meta del día (la avisa BaristaHome): en la barra de arriba, en vez de «Cliente / Barista»
+  const [board, setBoard] = useState(null);
   const [publishing, setPublishing] = useState(false);
   // «Desliza para recargar»: el cliente y el equipo vuelven a montar la pantalla; el barista
   // relee su día sin desmontarse (lleva el GPS de la salida y la cola de ventas)
@@ -154,7 +173,7 @@ export default function MicraApp() {
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
-  // /micra/video: la cámara con filtros para un barista de la app (o el equipo); vive en el modo barista
+  // /micra/video: la cámara con filtros en modo barista, solo para el equipo
   const videoView = route.view === 'video';
   const viewMode = teamView ? 'owner' : route.view === 'barista' || videoView ? 'barista' : 'client';
   // La cabecera roja de domicilios: el inicio del cliente y Vender del barista
@@ -190,6 +209,11 @@ export default function MicraApp() {
     go(m === 'owner' ? '/micra/equipo' : m === 'barista' ? '/micra/barista' : '/micra');
   };
 
+  // Un barista que llega a /micra/video (un enlace viejo) vuelve a su inicio
+  useEffect(() => {
+    if (videoView && !who.loading && who.barista && !who.admin) go('/micra/barista');
+  }, [videoView, who.loading, who.barista, who.admin, go]);
+
   useEffect(() => {
     platform.setNight(night, red);
   }, [night, red]);
@@ -203,24 +227,30 @@ export default function MicraApp() {
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;
     // «Cambiar de barista» vuelve a Equipo, donde está «Actuar como»
-    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} onLive={setLive} refreshKey={refreshKey} />;
-    else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} onLive={setLive} refreshKey={refreshKey} />;
+    else if (who.admin && actAs) body = <BaristaHome asId={actAs} onPickAs={(id) => { setActAs(id); if (!id) switchMode('owner'); }} admin go={go} night={night} tab={route.tab} onLive={setLive} onBoard={setBoard} refreshKey={refreshKey} />;
+    else if (who.barista) body = <BaristaHome go={go} night={night} tab={route.tab} onLive={setLive} onBoard={setBoard} refreshKey={refreshKey} />;
     // El equipo sin ficha propia ve la entrada de los baristas (sin mandar SMS)
     else if (who.admin) body = <BaristaJoin session={who.session} preview night={night} go={go} />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (videoView) {
     if (who.loading) body = <Cargando />;
-    else if (who.barista || who.admin) body = <Cargando fig="caminando">Abriendo la cámara…</Cargando>;
+    // La cámara con filtros es solo del equipo (pedido del usuario, 6 nov 2026): el barista tiene su
+    // perfil aparte, con la cámara de su barra para la foto de la venta
+    else if (who.admin) body = <Cargando fig="caminando">Abriendo la cámara…</Cargando>;
+    else if (who.barista) body = <Cargando />;
     else body = <BaristaJoin session={who.session} onLinked={reloadWho} night={night} go={go} />;
   } else if (teamView) {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
     else if (route.view === 'ficha') body = <Suspense fallback={<Cargando fig="caminando" />}><FichaFlow go={go} /></Suspense>;
-    else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} /></Suspense>;
+    else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} focus={route.tab} /></Suspense>;
     else if (route.tab === 'perfil') body = <Suspense fallback={<Cargando />}><OwnerProfile go={go} onSignedOut={() => setActAs(null)} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
   } else body = <ClientHome go={go} />;
   const teamTabs = teamView && who.admin;
+  // La entrada de los baristas (sin ficha enlazada) lleva la barra del cliente: toda la app tiene barra abajo
+  const joinTabs = route.view === 'barista' && !who.loading && !who.barista && !who.admin;
+  const clientTabs = viewMode === 'client' || joinTabs;
   // «Mi perfil», arriba a la derecha: las iniciales del barista, o la silueta (cliente, equipo, actuando como)
   const acting = who.admin && actAs;
   const meTo = viewMode === 'client' ? null
@@ -229,10 +259,24 @@ export default function MicraApp() {
   const meOn = route.view === 'me' || route.tab === 'perfil' || route.tab === 'qr';
   const meInitials = viewMode === 'barista' && who.barista && !acting ? initials(who.barista.name) : null;
   // El círculo de la barra de abajo del cliente: sus iniciales si dejó su nombre en el celular
-  const clientName = viewMode === 'client' ? api.savedName() : '';
+  const clientName = clientTabs ? api.savedName() : '';
+  // El punto de Mi perfil: vio las preguntas de gustos y no respondió ninguna (sin cargar gustos.js aquí)
+  const [, setGustosTick] = useState(0);
+  useEffect(() => {
+    const on = () => setGustosTick((n) => n + 1);
+    window.addEventListener('micra-gustos', on);
+    return () => window.removeEventListener('micra-gustos', on);
+  }, []);
+  const gustosDot = clientTabs && (() => {
+    try {
+      if (localStorage.getItem('micra_gustos_intro_v1') !== '1') return false;
+      const a = JSON.parse(localStorage.getItem('micra_gustos_v1') ?? 'null')?.answers ?? {};
+      return !Object.values(a).some((v) => (Array.isArray(v) ? v.length : v));
+    } catch { return false; }
+  })();
 
   return (
-    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
+    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs || joinTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
       <ThermalDefs />
       <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
         {/* El termo del icono en su baldosa crema (se ve igual sobre blanco, noche o rojo) y la palabra */}
@@ -240,7 +284,9 @@ export default function MicraApp() {
           <span className="mapp-brand-mark"><Termo /></span>
           <span className="mapp-brand-word">micra<i>.</i></span>
         </button>
-        <ModeSwitch modes={modes} mode={viewMode} onChange={switchMode} />
+        {viewMode === 'barista' && route.view === 'barista' && board
+          ? <TopGoal board={board} onClick={() => go('/micra/barista')} />
+          : <ModeSwitch modes={modes} mode={viewMode} onChange={switchMode} />}
         {viewMode === 'client' && (
           <button type="button" className="mapp-topicon is-bell" onClick={() => go('/micra/apartados')} aria-label={holdOn ? 'Mis apartados: tienes uno en curso' : 'Mis apartados'} title="Mis apartados" data-testid="top-bell">
             <IconBell />{holdOn && <i className="mapp-topicon-dot" aria-hidden="true" />}
@@ -259,7 +305,7 @@ export default function MicraApp() {
       </header>
       <PullRefresh onRefresh={() => setRefreshKey((k) => k + 1)} disabled={videoView || route.view === 'camera' || route.view === 'ficha' || route.view === 'study'} />
       <main className="mapp-main" key={route.view === 'barista' ? 'barista' : refreshKey}>{body}</main>
-      {viewMode === 'client' && (
+      {clientTabs && (
         // Como Instagram: inicio, explorar (Hoy), crear, lo tuyo (apartados) y tu perfil; solo íconos
         <nav className="mapp-tabs is-ig" aria-label="Micra">
           <button type="button" className={route.view === 'home' || route.view === 'barista-card' ? 'on' : ''} aria-current={route.view === 'home' ? 'page' : undefined} onClick={() => go('/micra')} aria-label="Inicio" title="Inicio">
@@ -268,7 +314,7 @@ export default function MicraApp() {
           <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/hoy')} aria-label="Hoy en el café" title="Hoy en el café">
             <IconCompass />
           </button>
-          <button type="button" onClick={() => setPublishing(true)} aria-label="Publicar" title="Publicar" data-testid="tab-publish">
+          <button type="button" className="mapp-tabs-cam" onClick={() => setPublishing(true)} aria-label="Publicar" title="Publicar" data-testid="tab-publish">
             <IconPlus />
           </button>
           <button type="button" className={route.view === 'holds' ? 'on' : ''} aria-current={route.view === 'holds' ? 'page' : undefined} onClick={() => go('/micra/apartados')} aria-label="Mis apartados" title="Mis apartados">
@@ -276,30 +322,38 @@ export default function MicraApp() {
           </button>
           <button type="button" className={`is-me ${route.view === 'me' ? 'on' : ''}`} aria-current={route.view === 'me' ? 'page' : undefined} onClick={() => go('/micra/perfil')} aria-label="Mi perfil" title="Mi perfil" data-testid="me-button">
             <span className="mapp-tab-av">{clientName ? initials(clientName) : <IconUser />}</span>
+            {gustosDot && <i className="mapp-tab-dot" aria-hidden="true" data-testid="gustos-dot" />}
           </button>
         </nav>
       )}
       {teamTabs && (
-        <nav className="mapp-tabs" aria-label="Equipo">
-          <button type="button" className={route.view === 'owner' && !route.tab ? 'on' : ''} onClick={() => go('/micra/equipo')}>
-            <IconToday />Hoy
+        // El equipo en la calle (6 nov 2026): Hoy, el mapa, la cámara al centro, la encuesta y el estudio; con el mismo diseño de la del cliente
+        <nav className="mapp-tabs is-ig" aria-label="Equipo">
+          <button type="button" className={route.view === 'owner' && !route.tab ? 'on' : ''} onClick={() => go('/micra/equipo')} aria-label="Hoy" title="Hoy">
+            <IconToday />
           </button>
-          <button type="button" className={route.view === 'study' ? 'on' : ''} onClick={() => go('/micra/estudio')}>
-            <IconClipboard />Estudio
+          <button type="button" className={route.view === 'study' && route.tab === 'mapa' ? 'on' : ''} onClick={() => go('/micra/mapa')} aria-label="Mapa" title="Mapa" data-testid="tab-map">
+            <IconPin />
           </button>
-          <button type="button" className={route.view === 'camera' ? 'on' : ''} onClick={() => go('/micra/camara')}>
-            <IconCamera />Cámara
+          <button type="button" className={`mapp-tabs-cam ${route.view === 'camera' ? 'on' : ''}`} onClick={() => go('/micra/camara')} aria-label="Cámara" title="Cámara" data-testid="tab-camera">
+            <IconCamera />
+          </button>
+          <button type="button" className={route.view === 'ficha' ? 'on' : ''} onClick={() => go('/micra/ficha')} aria-label="Encuesta" title="Encuesta" data-testid="tab-survey">
+            <IconClipboard />
+          </button>
+          <button type="button" className={route.view === 'study' && route.tab !== 'mapa' ? 'on' : ''} onClick={() => go('/micra/estudio')} aria-label="Estudio" title="Estudio">
+            <IconBars />
           </button>
         </nav>
       )}
-      {((route.view === 'camera' && who.admin) || (videoView && (who.barista || who.admin))) && (
+      {((route.view === 'camera' && who.admin) || (videoView && who.admin)) && (
         // A pantalla completa sobre el estudio (equipo) o sobre el inicio del barista; `lite`: sin venta, ficha ni publicar.
         // En modo barista es `lite` para todos, también para el dueño: la encuesta y la ficha viven solo en Equipo
         <Suspense fallback={null}>
           <MicraStudio key={route.view} lite={videoView} onExit={() => go(videoView ? '/micra/barista' : '/micra/estudio')} />
         </Suspense>
       )}
-      {publishing && viewMode === 'client' && <Suspense fallback={null}><ClientPublish onClose={() => setPublishing(false)} /></Suspense>}
+      {publishing && clientTabs && <Suspense fallback={null}><ClientPublish onClose={() => setPublishing(false)} /></Suspense>}
       {platform.native && <Splash />}
     </div>
   );

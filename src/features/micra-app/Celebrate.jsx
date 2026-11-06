@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { money, cupsLabel } from './micraApp.js';
 import { dayStory } from './motivation.js';
 import platform from './platform.js';
+import MiniQr, { useQr, qrEyes } from './MiniQr.jsx';
 import Figure, { loadFigure } from './Elenco.jsx';
 import { km } from '../ruta/track.js';
 import { LEVELS } from './motivation.js';
@@ -9,6 +10,10 @@ import { routeLine, storyVariant, storyFigure, goalTimeLabel } from './daycard.j
 
 // La meta cumplida (una vez al día) y la tarjeta de «mi día» para WhatsApp o
 // Historias. Se cargan aparte: solo las ve quien llega a su meta o la pide.
+
+function StoryQr({ qr }) {
+  return <MiniQr qr={qr} className="mapp-story-qr" label="QR a mi perfil de Micra" testid="story-qr" />;
+}
 
 /** Cerrar con Escape y devolver el foco al botón principal al abrir. */
 function useDialog(onClose) {
@@ -134,7 +139,7 @@ async function figureImage(name) {
  * La tarjeta de 1080 × 1920 (Historias): crema, la cifra grande, el personaje
  * en su andén. Si camina, «Mi día en la calle» con el trazo de su recorrido.
  */
-async function drawStory({ name, cups, streak, distance, stops, path, url, fig, variant }) {
+async function drawStory({ name, cups, streak, distance, stops, path, url, fig, variant, qr }) {
   const W = 1080; const H = 1920;
   const calle = variant === 'calle';
   const c = Object.assign(document.createElement('canvas'), { width: W, height: H });
@@ -142,7 +147,8 @@ async function drawStory({ name, cups, streak, distance, stops, path, url, fig, 
   await document.fonts?.ready;
   g.fillStyle = '#F5EFE4'; g.fillRect(0, 0, W, H);
   g.fillStyle = '#16181F';
-  g.font = '800 64px Archivo, sans-serif'; g.fillText('micra', 90, 170);
+  // «micra.» con la misma letra a mano de la marca en la app
+  g.font = '80px "Permanent Marker", cursive'; g.fillText('micra', 90, 170);
   g.fillStyle = '#DE1B1B'; g.fillText('.', 90 + g.measureText('micra').width, 170);
   g.fillStyle = '#626877'; g.font = '500 34px "JetBrains Mono", monospace'; g.fillText(today().toUpperCase(), 90, 230);
   g.save(); g.translate(90, 360); g.rotate(-0.04);
@@ -191,11 +197,25 @@ async function drawStory({ name, cups, streak, distance, stops, path, url, fig, 
   g.lineWidth = 2; g.globalAlpha = 0.35;
   for (let x = 60; x < W; x += 160) { g.beginPath(); g.moveTo(x, ground); g.lineTo(x, H); g.stroke(); }
   g.globalAlpha = 1;
-  g.fillStyle = '#626877'; g.font = '500 32px "JetBrains Mono", monospace'; g.fillText('Pídeme por Micra:', 90, calle ? 1580 : 1500);
-  g.fillStyle = '#16181F'; g.font = '700 30px "JetBrains Mono", monospace';
-  const link = url.replace(/^https?:\/\//, '').replace(/^www\./, '');
-  const half = Math.ceil(link.length / 2);
-  if (calle) { g.fillText(link.slice(0, link.indexOf('/b/') + 3), 90, 1625); g.fillText(link.slice(link.indexOf('/b/') + 3), 90, 1665); } else { g.fillText(link.slice(0, half), 90, 1550); g.fillText(link.slice(half), 90, 1590); }
+  // El QR lleva al perfil de Micra del barista; debajo, el enlace corto por si no lo escanean
+  const top = calle ? 1360 : 1290; const size = 260;
+  g.fillStyle = '#626877'; g.font = '500 30px "JetBrains Mono", monospace'; g.fillText('Pídeme por', 90, top - 24);
+  const lead = g.measureText('Pídeme por ').width;
+  g.fillStyle = '#16181F'; g.font = '44px "Permanent Marker", cursive'; g.fillText('micra', 90 + lead, top - 22);
+  g.fillStyle = '#DE1B1B'; g.fillText('.', 90 + lead + g.measureText('micra').width, top - 22);
+  if (qr) {
+    const side = qr.n + 4; const u = size / side;
+    g.fillStyle = '#fff'; g.beginPath(); g.roundRect(90, top, size, size, 18); g.fill();
+    g.save(); g.translate(90, top); g.scale(u, u);
+    g.fillStyle = '#16181F'; g.fill(new Path2D(qr.d));
+    for (const [x, y] of qrEyes(qr.n)) {
+      g.strokeStyle = '#16181F'; g.lineWidth = 1; g.beginPath(); g.roundRect(x + 0.5, y + 0.5, 6, 6, 1.6); g.stroke();
+      g.fillStyle = '#DE1B1B'; g.beginPath(); g.roundRect(x + 2, y + 2, 3, 3, 0.8); g.fill();
+    }
+    g.restore();
+  }
+  g.fillStyle = '#16181F'; g.font = '700 24px "JetBrains Mono", monospace';
+  g.fillText(url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/b/')[0] + '/b/…', 90, top + size + 44);
   return new Promise((resolve) => c.toBlob(resolve, 'image/png'));
 }
 
@@ -206,10 +226,11 @@ export function DayStory({ name, cups, total, streak, fig, km: distance = 0, sto
   const calle = variant === 'calle';
   const figure = mode ? storyFigure(mode) : fig;
   const text = dayStory({ cups, total, streak });
+  const qr = useQr(url);
   const shareImage = async () => {
     setBusy(true);
     try {
-      const blob = await drawStory({ name, cups, streak, distance, stops, path, url, fig: figure, variant });
+      const blob = await drawStory({ name, cups, streak, distance, stops, path, url, fig: figure, variant, qr });
       if (blob) await platform.shareImage({ blob, fileName: 'mi-dia-micra.png', title: 'Mi día en Micra', text: `${text} ${url}` });
       else await platform.share({ title: 'Mi día en Micra', text, url });
     } catch { await platform.share({ title: 'Mi día en Micra', text, url }); }
@@ -220,7 +241,7 @@ export function DayStory({ name, cups, total, streak, fig, km: distance = 0, sto
   return (
     <div className="mapp-storywrap" role="dialog" aria-modal="true" aria-label={calle ? 'Mi día en la calle' : 'Mi día'} data-testid="story" data-variant={variant}>
       <article className={`mapp-story is-${variant}`}>
-        <p className="mapp-story-brand">micra<i>.</i> <small>{today()}</small></p>
+        <p className="mapp-story-brand"><span className="mapp-micraword">micra<i>.</i></span> <small>{today()}</small></p>
         <p className="mapp-story-script">{calle ? 'Mi día en la calle' : `El día de ${name}`}</p>
         <p className="mapp-story-n">{cups}</p>
         <p className="mapp-story-unit">{cups === 1 ? 'taza de café' : 'tazas de café'}</p>
@@ -240,7 +261,11 @@ export function DayStory({ name, cups, total, streak, fig, km: distance = 0, sto
             </>
           )}
         </dl>
-        <p className="mapp-story-link">Pídeme por Micra:<br /><b>{url.replace(/^https?:\/\//, '').replace(/^www\./, '')}</b></p>
+        <div className="mapp-story-link">
+          <p>Pídeme por <span className="mapp-micraword">micra<i>.</i></span></p>
+          <StoryQr qr={qr} />
+          <a href={url} data-testid="story-link">Ver mi perfil</a>
+        </div>
         <Figure name={figure} className="is-story" />
         <i className="mapp-anden" aria-hidden="true" />
       </article>

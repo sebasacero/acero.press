@@ -4,6 +4,7 @@ import * as api from './api.js';
 import platform from './platform.js';
 import { Cargando } from './Animado.jsx';
 import { formatCoPhone, normalizeCoPhone } from './phone.js';
+import { growthTips } from './ajustes.js';
 import { teamSummary, findBaristas, missingStep, BARISTA_STEPS, CLIENT_RULES, LEVEL_LABEL } from './activation.js';
 
 const LivePanel = lazy(() => import('./LiveMap.jsx'));
@@ -30,6 +31,16 @@ export default function OwnerView({ onActAs, go }) {
   const [editing, setEditing] = useState(null); // { id, value }
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
+  // Para «Qué ajustar»: publicaciones por revisar, las de la semana y el reto abierto (sin la migración, null)
+  const [posts, setPosts] = useState(null);
+  const [reto, setReto] = useState(null);
+  useEffect(() => {
+    const since = Date.now() - 7 * 864e5;
+    Promise.all([api.postsPending(), api.postsFeed(100)])
+      .then(([p, f]) => setPosts({ pending: (p ?? []).length, week: (f ?? []).filter((x) => Date.parse(x.created_at) >= since).length }))
+      .catch(() => setPosts(null));
+    api.challenge().then((d) => setReto(d?.challenge ?? null)).catch(() => setReto(null));
+  }, []);
   const load = useCallback(() => {
     api.ownerDay().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.missing ? 'Falta activar las tablas de Micra en la base (migración 20261026210000_micra_app).' : e.message));
     api.baristaPhones().then((p) => setPhones(p ?? {})).catch(() => setPhones(null));
@@ -99,8 +110,27 @@ export default function OwnerView({ onActAs, go }) {
         <div><dt>En la calle</dt><dd>{tot.live}<small> de {list.length}</small></dd></div>
       </dl>
 
-      <Suspense fallback={null}><PostReview /></Suspense>
-      <Suspense fallback={null}><ChallengePanel /></Suspense>
+      {(() => {
+        const tips = growthTips({ sum, tot, week, posts, challenge: reto, clients: data.clients });
+        const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return tips.length > 0 && (
+          <section className="mapp-glass mapp-tips" aria-label="Qué ajustar para crecer" data-testid="owner-tips">
+            <p className="mapp-cota is-red">Qué ajustar para crecer</p>
+            <ol>
+              {tips.map((t) => (
+                <li key={t.key} data-testid={`tip-${t.key}`}>
+                  <b>{t.title}</b>
+                  <span>{t.text}</span>
+                  {t.action && <button type="button" className="mapp-link" onClick={() => jump(`owner-${t.action.to}`)}>{t.action.label} ›</button>}
+                </li>
+              ))}
+            </ol>
+          </section>
+        );
+      })()}
+
+      <div id="owner-review"><Suspense fallback={null}><PostReview /></Suspense></div>
+      <div id="owner-challenge"><Suspense fallback={null}><ChallengePanel /></Suspense></div>
       <Suspense fallback={null}><AdsPanel /></Suspense>
 
       {/* Lo que pide una mano: lo demás se activa solo */}
@@ -111,7 +141,7 @@ export default function OwnerView({ onActAs, go }) {
         </section>
       )}
 
-      <section className="mapp-glass mapp-funnel" aria-label="Activación de baristas" data-testid="owner-activation">
+      <section className="mapp-glass mapp-funnel" id="owner-activation" aria-label="Activación de baristas" data-testid="owner-activation">
         <p className="mapp-cota">Baristas · se activan solos</p>
         <p className="mapp-funnel-big"><b>{sum.active}</b> activos <span>de {sum.total} fichas</span></p>
         <ol>

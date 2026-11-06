@@ -380,3 +380,30 @@
   .st-cta { justify-self: stretch; justify-content: center; }
 }
 
+
+/* Las cuatro escuelas (6 nov 2026): el estante como en Aprende de Micra, con íconos a trazo que se
+   encienden al terminar */
+.ss { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 18px 0 16px; }
+.ss-item { display: grid; justify-items: center; gap: 4px; min-height: 44px; padding: 14px 6px 12px; border: 1px solid rgba(31, 36, 82, .12); border-radius: 18px; background: #fff; color: var(--ink, #1F2452); font: inherit; cursor: pointer; box-shadow: 0 8px 22px -16px rgba(13, 8, 32, .45); }
+.ss-item b { font: 800 .95rem 'Archivo', sans-serif; }
+.ss-item small { font: 600 .68rem 'JetBrains Mono', monospace; color: rgba(31, 36, 82, .65); }
+.ss-item.on { border-color: var(--ink, #1F2452); box-shadow: 0 0 0 2px var(--ink, #1F2452) inset; }
+.ss-ico { position: relative; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%; background: #F3EFE6; color: rgba(31, 36, 82, .45); }
+.ss-svg { width: 38px; height: 38px; }
+.ss-item.on .ss-ico, .ss-item.is-unlocked .ss-ico { color: #fff; background: linear-gradient(160deg, var(--t-3, #B5179E), var(--t-4, #DE1B1B) 55%, var(--t-5, #FF8A3D)); }
+.ss-ok, .ss-lock { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: .7rem; font-style: normal; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); }
+.ss-ok { color: #1E8E3E; font-weight: 800; }
+.ss-grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ss-grid .lv { margin: 0; max-height: none; }
+@media (max-width: 760px) {
+  .ss { gap: 6px; }
+  .ss-item { padding: 10px 2px; }
+  .ss-ico { width: 46px; height: 46px; }
+  .ss-svg { width: 30px; height: 30px; }
+  .ss-item small { font-size: .6rem; }
+  .ss-grid { grid-template-columns: 1fr; }
+}
+.sl-video { max-width: 340px; margin: 0 0 18px; }
+.ss-grid .sl-text { grid-area: auto; }
+.ss { max-width: 680px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ss { width: 100%; }

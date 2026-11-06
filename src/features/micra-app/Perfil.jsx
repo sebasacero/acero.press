@@ -1,22 +1,24 @@
-import { useEffect, useState } from 'react';
-import { initials, menuOf, windowLabel, baristaPath, cupsLabel, bogota } from './micraApp.js';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { initials, menuOf, windowLabel, baristaPath, cupsLabel, status as baristaStatus } from './micraApp.js';
+import MiniQr, { useQr } from './MiniQr.jsx';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToClear, clearStored } from './perfil.js';
-import { promoDue, promoSeen } from './promo.js';
 import { seekOff, setSeekOff } from './seek.js';
 import * as api from './api.js';
 import platform from './platform.js';
-import { StampsCard } from './Loyalty.jsx';
 import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
 import { methodsLabel } from './flow.js';
 import Termo from './Termo.jsx';
-import ColdBrewPromo from './ColdBrew.jsx';
+const AceroAd = lazy(() => import('./AceroAd.jsx'));
+import { InsumosSection, InsumosSheet } from './Insumos.jsx';
+import { GustosQuiz, useGustos } from './Gustos.jsx';
+import { tasteProfile, answeredCount } from './gustos.js';
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
-  IconVideo, IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
-  IconCamera, IconOut, IconTrophy,
+  IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
+  IconCamera, IconOut, IconTrophy, IconHome,
 } from './icons.jsx';
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
@@ -172,7 +174,14 @@ function Confirm({ title, children, confirmLabel, onConfirm, onCancel, busy, blo
  * BaristaHome (pestaña «perfil») porque cerrar sesión necesita lo de ahí: salir
  * del mapa, el recorrido y la cola de ventas sin subir.
  */
-export function BaristaProfile({ day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
+// El mismo recuerdo de modo que usa MicraApp: al volver a /micra cada quien cae en el que escogió
+const MODE_KEY = 'micra_mode_v1';
+function switchTo(mode, go) {
+  try { localStorage.setItem(MODE_KEY, mode); } catch { /* sin memoria */ }
+  go(mode === 'owner' ? '/micra/equipo' : '/micra');
+}
+
+export function BaristaProfile({ admin = false, day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
   const own = !asId;
   const user = useUser();
   const [profile, setProfile] = useState(null);
@@ -180,6 +189,7 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
   const [sheet, setSheet] = useState(null); // 'datos' | 'precios' | 'pagos' | 'meta' | 'permisos'
   const [edit, setEdit] = useState(null); // dentro de la hoja: 'prices' | 'pay'
   const [promo, setPromo] = useState(false);
+  const [insumos, setInsumos] = useState(null); // { cat, cart }: la hoja de pedir insumos
   const [confirm, setConfirm] = useState(false);
   const [block, setBlock] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -293,6 +303,8 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
         <Tile icon={IconEye} label="Ver como cliente" onClick={() => go(baristaPath(day.id))} />
       </Group>
 
+      <InsumosSection onOpen={(cat, cart = null) => setInsumos({ cat, cart })} />
+
       <Group title="Tu plata">
         <Tile icon={IconWallet} label="Mi plata" onClick={() => go('/micra/barista/cuenta')} />
         <Tile icon={IconTag} label="Lo que vendo" onClick={() => setSheet('precios')} testid="tile-precios" />
@@ -308,10 +320,12 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
       </Group>
 
       <Group title="Otros">
-        <Tile icon={IconVideo} label="Video con filtro" onClick={() => go('/micra/video')} />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
-        <Tile icon={IconCan} label="Cold brew" onClick={() => setPromo(true)} testid="tile-coldbrew" />
+        <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/barista/reto')} testid="tile-reto" />
+        {/* «Cliente / Barista» ya no va arriba (ahí va la meta del día): se cambia desde aquí */}
+        <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />
+        {admin && <Tile icon={IconClipboard} label="Equipo" onClick={() => switchTo('owner', go)} testid="tile-mode-owner" />}
       </Group>
 
       {error && <p className="mapp-error" role="alert">{error}</p>}
@@ -431,7 +445,8 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
         </Sheet>
       )}
 
-      {promo && <ColdBrewPromo onClose={() => setPromo(false)} />}
+      {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
+      {insumos && <InsumosSheet name={day.name} where={where} cat={insumos.cat} cart={insumos.cart} onClose={() => setInsumos(null)} />}
     </div>
   );
 }
@@ -441,9 +456,51 @@ export function BaristaProfile({ day, asId = null, trip, live, pending, flush, o
 /**
  * El cliente no tiene cuenta: su perfil es lo que guarda este celular (nombre,
  * sus baristas, la tarjeta de sellos, la zona). Borrarlo no toca sus apartados:
- * esos quedan con el barista. Al abrirlo, una vez al día, sale el banner de la
- * lata de cold brew.
+ * esos quedan con el barista. La publicidad de ACERO.press ya no sale sola aquí:
+ * está en el inicio y se abre desde «Otros».
  */
+/**
+ * La cabecera del cliente (6 nov 2026): su nombre, lo más importante de su café y un QR chico
+ * propio para invitar a alguien a Micra (lleva a /micra con su marca corta, sin datos suyos).
+ */
+function ClientHead({ name, favs, list }) {
+  const [stamps, setStamps] = useState(null);
+  const [waiting, setWaiting] = useState(null);
+  useEffect(() => {
+    api.myStamps().then(setStamps).catch(() => setStamps(null));
+    api.myHolds().then((h) => setWaiting((h ?? []).filter((x) => x.status === 'waiting').length)).catch(() => setWaiting(null));
+  }, []);
+  const live = (list ?? []).filter((b) => baristaStatus(b) === 'live').length;
+  const url = `${platform.siteUrl('/micra')}?de=${api.inviteCode()}`;
+  const qr = useQr(url);
+  const per = stamps?.per ?? 10;
+  const kpis = [
+    Number.isFinite(stamps?.cups) && { id: 'tazas', value: stamps.cups, label: stamps.cups === 1 ? 'taza recogida' : 'tazas recogidas' },
+    Number.isFinite(stamps?.toward) && { id: 'sellos', value: `${stamps.toward}/${per}`, label: 'sellos al gratis' },
+    waiting != null && { id: 'apartados', value: waiting, label: 'apartados hoy' },
+    { id: 'baristas', value: favs.length, label: favs.length === 1 ? 'mi barista' : 'mis baristas' },
+    list && { id: 'calle', value: live, label: 'en la calle ahora' },
+  ].filter(Boolean).slice(0, 4);
+  return (
+    <section className="mapp-mehead" aria-label="Tu perfil" data-testid="client-head">
+      <div className="mapp-mehead-top">
+        <span className="mapp-hello2-av" aria-hidden="true">{name ? initials(name) : '☕'}</span>
+        <div>
+          <h1 className="mapp-hello2-name">{name || 'Tu perfil'}</h1>
+          <p className="mapp-hello2-sub">¡Hola! Micra te recuerda solo en este celular.</p>
+        </div>
+        <button type="button" className="mapp-mehead-qr" onClick={() => platform.share({ title: 'Micra', text: 'Aparta tu tinto con los baristas de la calle:', url })} aria-label="Mi QR: invita a alguien a Micra" data-testid="client-qr">
+          <MiniQr qr={qr} className="mapp-mehead-qrimg" label="QR para invitar a Micra" />
+          <small>Mi QR</small>
+        </button>
+      </div>
+      <dl className="mapp-coffeehead-kpis is-four">
+        {kpis.map((k) => <div key={k.id} data-testid={`client-${k.id}`}><dd>{k.value}</dd><dt>{k.label}</dt></div>)}
+      </dl>
+    </section>
+  );
+}
+
 export function ClientProfile({ go, who }) {
   const [name, setName] = useState(api.savedName);
   const [saved, setSaved] = useState(false);
@@ -451,14 +508,16 @@ export function ClientProfile({ go, who }) {
   const [list, setList] = useState(null);
   const [zoneOff, setZoneOff] = useState(seekOff);
   const [sheet, setSheet] = useState(null); // 'nombre' | 'baristas' | 'zona'
-  const [promo, setPromo] = useState(() => promoDue(store(), bogota().day));
+  const [promo, setPromo] = useState(false);
+  // Sus gustos (pedido del usuario): si saltó las preguntas del inicio, aquí las completa (con su punto)
+  const [gustos, saveGustos] = useGustos();
+  const [quiz, setQuiz] = useState(false);
+  const taste = tasteProfile(gustos);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const help = useHelp('Hola, equipo de Micra. Necesito ayuda con ');
   useEffect(() => { api.listBaristas().then((l) => setList(l ?? [])).catch(() => setList([])); }, []);
-  // Visto hoy apenas sale: aunque se cierre la app sin tocar la X, mañana vuelve
-  useEffect(() => { if (promo) promoSeen(store(), bogota().day); }, [promo]);
 
   const session = who?.session ?? null;
   const team = !!(who?.barista || who?.admin);
@@ -494,16 +553,14 @@ export function ClientProfile({ go, who }) {
 
   return (
     <div className="mapp-client mapp-profile" data-testid="client-profile">
-      <Hello av={name ? initials(name) : '☕'} name={name || 'Tu perfil'} sub="¡Hola! Micra te recuerda solo en este celular." />
+      <ClientHead name={name} favs={favs} list={list} />
 
       {done && <p className="mapp-notice" role="status" data-testid="wiped">Listo: este celular ya no guarda tus datos de Micra.{plainSession ? ' Cerraste sesión.' : ''}</p>}
-
-      {/* La tarjeta destacada: los sellos (10 tazas = 1 tinto gratis) */}
-      {!done && <StampsCard />}
 
       <Group title="Mi café">
         <Tile icon={IconCup} label="Mis apartados" onClick={() => go('/micra/apartados')} />
         <Tile icon={IconHeart} label="Mis baristas" count={favs.length || null} onClick={() => setSheet('baristas')} testid="tile-baristas" />
+        <Tile icon={IconCup} label={taste ? `Mis gustos · ${taste.name}` : 'Mis gustos'} dot={answeredCount(gustos) === 0} onClick={() => setQuiz(true)} testid="tile-gustos" />
         <Tile icon={IconToday} label="Hoy en el café" onClick={() => go('/micra/hoy')} />
         <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/reto')} testid="tile-reto" />
         <Tile icon={IconGift} label="Invita amigos" onClick={invite} />
@@ -518,7 +575,7 @@ export function ClientProfile({ go, who }) {
 
       <Group title="Otros">
         <Tile icon={IconThermo} label="Sé barista" onClick={() => go('/micra/barista')} />
-        <Tile icon={IconCan} label="Cold brew" onClick={() => setPromo(true)} testid="tile-coldbrew" />
+        <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
         <Tile icon={IconBag} label="Tienda" href={platform.siteUrl('/#beans')} />
       </Group>
@@ -583,7 +640,8 @@ export function ClientProfile({ go, who }) {
         </Sheet>
       )}
 
-      {promo && <ColdBrewPromo onClose={() => setPromo(false)} />}
+      {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
+      {quiz && <GustosQuiz answers={gustos} onDone={saveGustos} onClose={() => setQuiz(false)} />}
     </div>
   );
 }

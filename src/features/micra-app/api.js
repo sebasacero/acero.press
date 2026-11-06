@@ -20,6 +20,15 @@ export function deviceRef() {
   if (!ref) { ref = newRef('cel'); write(DEVICE_KEY, ref); }
   return ref;
 }
+/**
+ * La marca corta del QR de invitar (Mi perfil): aparte de la llave de los apartados,
+ * para que compartirla no deje ver nada de este celular.
+ */
+export function inviteCode() {
+  let c = read('micra_invite_v1', null);
+  if (!c) { c = newRef('i').slice(-8); write('micra_invite_v1', c); }
+  return c;
+}
 export const savedName = () => read(NAME_KEY, '');
 export const saveName = (n) => write(NAME_KEY, n);
 export const favorites = () => read(FAV_KEY, []);
@@ -122,6 +131,11 @@ export const postsPending = () => call('micra_posts_pending');
 export const postReview = (id, approve) => call('micra_post_review', { p_id: id, p_approve: approve });
 export const postRemove = (id) => call('micra_post_remove', { p_id: id });
 
+// La foto de la venta: dónde se vendió (redondeado a ~55 m en la base) y el mapa del equipo en Estudio
+// (20261106180000_micra_post_place.sql)
+export const postPlace = (id, lat, lng, asId) => call('micra_post_place', { p_id: id, p_lat: lat, p_lng: lng, ...as(asId) });
+export const postPoints = (days = 90) => call('micra_post_points', { p_days: days });
+
 /** Sube el archivo a la carpeta del barista y lo deja en revisión. */
 export async function publishPost({ path, blob, type, kind, caption, asId, challengeId = null, judge = null }) {
   const { error } = await supabase.storage.from(POSTS_BUCKET).upload(path, blob, { contentType: type, upsert: false });
@@ -173,4 +187,9 @@ export async function coldBrewContent() {
 }
 
 /** Un punto del GPS, una sola vez (para «Salí»). Sin permiso o sin señal: null. */
-export const onePosition = (timeout) => platform.position(timeout);
+export const onePosition = (timeout, precise = false) => platform.position(timeout, precise);
+
+// Avistamientos del estudio (equipo): alguien tomando tinto, marcado al pasar
+export const addSighting = ({ lat, lng, accuracy = null, ref, at = null, people = 1 }) =>
+  call('micra_sighting_add', { p_lat: lat, p_lng: lng, p_accuracy: accuracy, p_client_ref: ref, p_people: people, p_seen_at: at });
+export const sightings = (days = 90) => call('micra_sightings', { p_days: days });

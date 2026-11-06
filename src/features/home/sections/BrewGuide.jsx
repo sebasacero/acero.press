@@ -18,7 +18,7 @@ export default function BrewGuide() {
       script={t('brew.script')}
       legend={{ hot: t('brew.hot'), cold: t('brew.cold') }}
       steps={t('brew.steps')}
-      labels={{ dots: t('brew.dots'), goStep: t('brew.goStep'), swipe: t('brew.swipe') }}
+      labels={{ dots: t('brew.dots'), goStep: t('brew.goStep'), swipe: t('brew.swipe'), prev: t('brew.prev'), next: t('brew.next') }}
       source={t('brew.source')}
       persona={personaSrc('ruana')}
       ctas={(

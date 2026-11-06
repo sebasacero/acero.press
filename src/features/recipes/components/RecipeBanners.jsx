@@ -117,7 +117,8 @@ function useOnScreen(ref) {
   useEffect(() => {
     const el = ref.current;
     if (!el || !('IntersectionObserver' in window)) { setOn(true); return undefined; }
-    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting), { rootMargin: '120px 0px' });
+    // Con una pantalla de ventaja: el reproductor ya viene cargado y corriendo cuando el banner llega
+    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting), { rootMargin: '100% 0px' });
     io.observe(el);
     return () => io.disconnect();
   }, [ref]);

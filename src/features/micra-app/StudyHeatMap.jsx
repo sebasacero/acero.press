@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { themeChanges } from '../../shared/lib/mapTheme.js';
-import { heatPoints } from './study.js';
+import { heatPoints, salePhotoPoints } from './study.js';
 import { routeSectors } from './routeStudy.js';
 
 // Mapa de calor del estudio de calle (equipo): dónde están los vendedores que
@@ -44,6 +44,24 @@ function addRouteLayers(map, sectors) {
   });
 }
 
+// Fotos de venta: dónde los baristas le toman la foto al cliente con su vasito (la cámara de su barra)
+function addPhotoLayers(map, data, id = 'fotos', color = '#F2542D') {
+  map.addSource(id, { type: 'geojson', data });
+  map.addLayer({
+    id: `${id}-calor`, type: 'heatmap', source: id, maxzoom: 17, layout: { visibility: 'none' },
+    paint: {
+      'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 13, 2, 16, 3],
+      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 18, 13, 36, 16, 70],
+      'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.85, 17, 0.4],
+      'heatmap-color': RAMP,
+    },
+  });
+  map.addLayer({
+    id: `${id}-puntos`, type: 'circle', source: id, minzoom: 13.5, layout: { visibility: 'none' },
+    paint: { 'circle-radius': 7, 'circle-color': color, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 },
+  });
+}
+
 function addLayers(map, data) {
   map.addSource('fichas', { type: 'geojson', data });
   map.addLayer({
@@ -84,11 +102,18 @@ function frame(map, data) {
   }
 }
 
-export default function StudyHeatMap({ rows, routes = [], theme = 'noche' }) {
+export default function StudyHeatMap({ rows, routes = [], photos = [], sightings = [], theme = 'noche' }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const [state, setState] = useState('loading');
-  const [mode, setMode] = useState('puestos'); // puestos | recorridos
+  const [mode, setMode] = useState('puestos'); // puestos | recorridos | fotos
+  const shots = salePhotoPoints(photos);
+  const shotsRef = useRef(shots);
+  shotsRef.current = shots;
+  // Alguien tomando tinto (avistamientos del equipo): el mismo formato, punto y hora
+  const tinto = salePhotoPoints(sightings);
+  const tintoRef = useRef(tinto);
+  tintoRef.current = tinto;
   const data = heatPoints(rows);
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -120,6 +145,8 @@ export default function StudyHeatMap({ rows, routes = [], theme = 'noche' }) {
         // Un cambio de estilo (el respaldo de OSM) borra las capas: se vuelven a poner
         if (!map.getSource('fichas')) addLayers(map, dataRef.current);
         if (!map.getSource('sectores')) addRouteLayers(map, sectorsRef.current);
+        if (!map.getSource('fotos')) addPhotoLayers(map, shotsRef.current);
+        if (!map.getSource('tinto')) addPhotoLayers(map, tintoRef.current, 'tinto', '#B0127A');
         frame(map, dataRef.current);
         mapRef.current = map;
         setState('ready');
@@ -145,7 +172,21 @@ export default function StudyHeatMap({ rows, routes = [], theme = 'noche' }) {
     map.getSource('trazos')?.setData(sectorsRef.current.lines);
   }, [routesKey, state]);
 
-  // Un modo a la vez: los puestos mapeados o los sectores que recorren
+  const shotsKey = shots.features.map((f) => f.geometry.coordinates.join(',')).join('|');
+  useEffect(() => {
+    const map = mapRef.current;
+    if (state !== 'ready' || !map) return;
+    map.getSource('fotos')?.setData(shotsRef.current);
+  }, [shotsKey, state]);
+
+  const tintoKey = tinto.features.map((f) => f.geometry.coordinates.join(',')).join('|');
+  useEffect(() => {
+    const map = mapRef.current;
+    if (state !== 'ready' || !map) return;
+    map.getSource('tinto')?.setData(tintoRef.current);
+  }, [tintoKey, state]);
+
+  // Un modo a la vez: los puestos mapeados, los sectores que recorren o las fotos de venta
   useEffect(() => {
     const map = mapRef.current;
     if (state !== 'ready' || !map) return;
@@ -154,6 +195,10 @@ export default function StudyHeatMap({ rows, routes = [], theme = 'noche' }) {
     show('fichas-puntos', mode === 'puestos');
     show('sectores-calor', mode === 'recorridos');
     show('trazos', mode === 'recorridos');
+    show('fotos-calor', mode === 'fotos');
+    show('fotos-puntos', mode === 'fotos');
+    show('tinto-calor', mode === 'tinto');
+    show('tinto-puntos', mode === 'tinto');
   }, [mode, state]);
 
   if (state === 'off') return null;
@@ -162,13 +207,17 @@ export default function StudyHeatMap({ rows, routes = [], theme = 'noche' }) {
       <div className="mapp-heat-modes" role="group" aria-label="Qué muestra el mapa">
         <button type="button" aria-pressed={mode === 'puestos'} onClick={() => setMode('puestos')}>Puestos</button>
         <button type="button" aria-pressed={mode === 'recorridos'} onClick={() => setMode('recorridos')} data-testid="heat-routes">Recorridos</button>
+        <button type="button" aria-pressed={mode === 'fotos'} onClick={() => setMode('fotos')} data-testid="heat-photos">Fotos de venta</button>
+        <button type="button" aria-pressed={mode === 'tinto'} onClick={() => setMode('tinto')} data-testid="heat-tinto">Tomando tinto</button>
       </div>
       <div className="mapp-map is-heat" ref={box} data-testid="study-heatmap" role="region"
-        aria-label={mode === 'puestos' ? `Mapa de calor del estudio: ${data.features.length} puestos con GPS` : `Sectores que recorren ${sectors.carts} carritos`} />
+        aria-label={mode === 'puestos' ? `Mapa de calor del estudio: ${data.features.length} puestos con GPS` : mode === 'tinto' ? `Dónde se vio gente tomando tinto: ${tinto.features.length}` : mode === 'fotos' ? `Dónde se toman las fotos de venta: ${shots.features.length}` : `Sectores que recorren ${sectors.carts} carritos`} />
       <figcaption className="mapp-heat-legend">
-        <span>Menos</span><i aria-hidden="true" /><span>{mode === 'puestos' ? 'Más vendedores' : 'Más carritos pasan'}</span>
-        <b>{mode === 'puestos' ? `${data.features.length} con GPS` : `${sectors.carts} carritos · ${routes.length} recorridos`}</b>
+        <span>Menos</span><i aria-hidden="true" /><span>{mode === 'puestos' ? 'Más vendedores' : mode === 'tinto' ? 'Más gente tomando tinto' : mode === 'fotos' ? 'Más fotos de venta' : 'Más carritos pasan'}</span>
+        <b>{mode === 'puestos' ? `${data.features.length} con GPS` : mode === 'tinto' ? `${tinto.features.length} avistamientos` : mode === 'fotos' ? `${shots.features.length} fotos` : `${sectors.carts} carritos · ${routes.length} recorridos`}</b>
       </figcaption>
+      {mode === 'tinto' && tinto.features.length === 0 && <p className="mapp-muted">Aún no hay avistamientos. Toca «Marcar aquí» cuando pases y veas a alguien tomando tinto.</p>}
+      {mode === 'fotos' && shots.features.length === 0 && <p className="mapp-muted">Aún no hay fotos de venta con lugar. Salen cuando un barista toca la cámara de su barra y envía la foto.</p>}
       {mode === 'recorridos' && (routes.length === 0
         ? <p className="mapp-muted">Aún no hay recorridos. En la ficha de un carrito toca «Su recorrido».</p>
         : sectors.top[0]?.carts > 1 && <p className="mapp-heat-top">El sector más recorrido: {sectors.top[0].carts} carritos distintos.</p>)}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as api from './api.js';
 import { bogota } from './micraApp.js';
-import { challengeDraft, CHALLENGE_IDEAS, KINDS } from './competencia.js';
+import { challengeDraft, BASIC_SECTIONS, KINDS, shortTitle } from './competencia.js';
 
 // Equipo › Hoy › Competencia: abrir el reto de la semana (nombre, descripción,
 // premio y fechas; las ideas vienen listas), cambiarlo y ver cuántas entradas
@@ -18,6 +18,7 @@ function ChallengeForm({ initial, onSaved, onCancel }) {
   const [f, setF] = useState(() => ({ ...EMPTY, starts_on: today, ends_on: plusDays(today, 6), ...(initial ?? {}) }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [sec, setSec] = useState(BASIC_SECTIONS[0].id);
   const set = (k) => (e) => setF((o) => ({ ...o, [k]: e.target.value }));
   const save = async (e) => {
     e.preventDefault();
@@ -32,8 +33,16 @@ function ChallengeForm({ initial, onSaved, onCancel }) {
     <form className="mapp-glass mapp-adform" onSubmit={save} data-testid="challenge-form">
       <p className="mapp-cota">{initial?.id ? 'Cambiar reto' : 'Nuevo reto'}</p>
       {!initial?.id && (
-        <div className="mapp-chips is-wrap" role="group" aria-label="Ideas">
-          {CHALLENGE_IDEAS.map((i) => <button key={i.title} type="button" onClick={() => setF((o) => ({ ...o, title: i.title, brief: i.brief, kind: i.kind }))}>{i.title}</button>)}
+        <div className="mapp-basics-pick" data-testid="challenge-ideas">
+          <p className="mapp-fine">Retos básicos por sección: toca uno y ajústalo.</p>
+          <div className="mapp-chips is-scroll" role="group" aria-label="Sección">
+            {BASIC_SECTIONS.map((x) => <button key={x.id} type="button" className={sec === x.id ? 'on' : ''} aria-pressed={sec === x.id} onClick={() => setSec(x.id)}><span aria-hidden="true">{x.icon}</span> {x.label}</button>)}
+          </div>
+          <div className="mapp-chips is-wrap" role="group" aria-label="Ideas">
+            {BASIC_SECTIONS.find((x) => x.id === sec).challenges.map((i) => (
+              <button key={i.title} type="button" className={f.title === i.title ? 'on' : ''} onClick={() => setF((o) => ({ ...o, title: i.title, brief: i.brief, kind: i.kind }))}>{shortTitle(i.title)}</button>
+            ))}
+          </div>
         </div>
       )}
       <label className="mapp-field"><span>Nombre del reto</span><input value={f.title} onChange={set('title')} maxLength={80} placeholder="Arte latte: tu mejor corazón" /></label>

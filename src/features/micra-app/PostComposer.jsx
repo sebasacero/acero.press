@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as api from './api.js';
 import { postKind, mediaError, postPath, cleanCaption, MAX_CAPTION } from './posts.js';
 import Juez from './Juez.jsx';
+import platform from './platform.js';
 
 // «Publicar en Micra»: el barista escoge una foto o un video (galería o cámara
 // del celular), le pone su texto y lo manda a revisión. La foto se achica en el
@@ -25,8 +26,13 @@ export async function shrinkPhoto(file, max = 1600) {
   }
 }
 
-/** `challenge`: la entrada al reto de la semana (solo foto; una por barista). */
-export default function PostComposer({ selfId, asId = null, onClose, onSent, challenge = null }) {
+/**
+ * `challenge`: la entrada al reto de la semana (solo foto; una por barista).
+ * `sale`: la foto de la venta, desde la cámara de la barra del barista: abre la cámara de una
+ * y guarda dónde se vendió (el GPS del celular, que la base redondea a la cuadra) para el mapa
+ * de Estudio. Sin GPS se publica igual, sin el lugar.
+ */
+export default function PostComposer({ selfId, asId = null, onClose, onSent, challenge = null, sale = false }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [caption, setCaption] = useState('');
@@ -39,6 +45,16 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
   const judging = challenge?.kind === 'arte_latte';
   const input = useRef(null);
   const kind = postKind(file);
+  // El GPS se pide al abrir, mientras toma la foto: al enviar ya está (o no hay y no espera)
+  const [place, setPlace] = useState(sale ? 'buscando' : null);
+  useEffect(() => {
+    if (!sale) return undefined;
+    let on = true;
+    platform.position(10000, true).then((p) => { if (on) setPlace(p ?? 'sin'); });
+    // La cámara de una: el barista tocó la cámara de la barra
+    input.current?.click();
+    return () => { on = false; };
+  }, [sale]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   useEffect(() => {
@@ -65,7 +81,9 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
       const type = kind === 'foto' ? (blob.type || 'image/jpeg') : file.type;
       const path = postPath(selfId, type);
       if (!path) throw new Error('Ese tipo de archivo no se puede subir.');
-      await api.publishPost({ path, blob, type, kind, caption: cleanCaption(caption), asId, challengeId: challenge?.id ?? null, judge: judging ? judge : null });
+      const post = await api.publishPost({ path, blob, type, kind, caption: cleanCaption(caption), asId, challengeId: challenge?.id ?? null, judge: judging ? judge : null });
+      // El lugar va aparte: si falla (sin la migración, fuera de Bogotá) la foto ya quedó enviada
+      if (sale && post?.id && place?.lat) await api.postPlace(post.id, place.lat, place.lng, asId).catch(() => null);
       setSent(true);
       onSent?.();
     } catch (e) {
@@ -75,12 +93,12 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
   };
 
   return (
-    <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label={challenge ? 'Tu entrada al reto' : 'Publicar en Micra'} data-testid="post-composer">
+    <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label={challenge ? 'Tu entrada al reto' : sale ? 'Foto de la venta' : 'Publicar en Micra'} data-testid="post-composer">
       <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" tabIndex={-1} onClick={() => !busy && onClose()} />
       <section className="mapp-sheet is-scroll">
         <i className="mapp-sheet-handle" aria-hidden="true" />
         <header className="mapp-sheet-head">
-          <h2 className="mapp-title is-small">{challenge ? 'Tu entrada al reto' : 'Publicar en Micra'}</h2>
+          <h2 className="mapp-title is-small">{challenge ? 'Tu entrada al reto' : sale ? 'Foto de la venta' : 'Publicar en Micra'}</h2>
           <button type="button" className="mapp-link" onClick={onClose} disabled={busy}>{sent ? 'Listo' : 'Cancelar'}</button>
         </header>
         {sent ? (
@@ -91,7 +109,7 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
         ) : (
           <>
             {challenge && <p className="mapp-cota">🏆 {challenge.title}</p>}
-            <input ref={input} type="file" accept={challenge ? 'image/*' : 'image/*,video/*'} onChange={pick} hidden data-testid="post-file" />
+            <input ref={input} type="file" accept={challenge || sale ? 'image/*' : 'image/*,video/*'} capture={sale ? 'environment' : undefined} onChange={pick} hidden data-testid="post-file" />
             {preview ? (
               <div className="mapp-compose-media">
                 {kind === 'video'
@@ -106,17 +124,22 @@ export default function PostComposer({ selfId, asId = null, onClose, onSent, cha
             {!preview && (
               <button type="button" className="mapp-compose-pick" onClick={() => input.current?.click()}>
                 <span aria-hidden="true">📸</span>
-                <b>{challenge ? 'Escoger la foto' : 'Escoger foto o video'}</b>
-                <small>{challenge ? 'De tu galería o con la cámara · solo una entrada' : 'De tu galería o con la cámara · video hasta 25 MB'}</small>
+                <b>{challenge ? 'Escoger la foto' : sale ? 'Tomar la foto' : 'Escoger foto o video'}</b>
+                <small>{challenge ? 'De tu galería o con la cámara · solo una entrada' : sale ? 'Tu cliente con su vasito' : 'De tu galería o con la cámara · video hasta 25 MB'}</small>
               </button>
             )}
             <label className="mapp-field">
               <span>Tu texto ({MAX_CAPTION - caption.length})</span>
-              <textarea value={caption} onChange={(e) => setCaption(e.target.value.slice(0, MAX_CAPTION))} rows={3} placeholder="Ej.: El primer tinto del día en la 85 ☕" />
+              <textarea value={caption} onChange={(e) => setCaption(e.target.value.slice(0, MAX_CAPTION))} rows={3} placeholder={sale ? 'Ej.: El tinto de Don Jorge en la 57 ☕' : 'Ej.: El primer tinto del día en la 85 ☕'} />
             </label>
+            {sale && (
+              <p className="mapp-fine" data-testid="sale-place">
+                {place === 'buscando' ? '📍 Buscando dónde estás…' : place?.lat ? '📍 Guardamos la cuadra donde vendiste, para el mapa del estudio.' : '📍 Sin GPS: se envía sin el lugar.'}
+              </p>
+            )}
             <label className="mapp-check">
               <input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} data-testid="post-consent" />
-              <span>No sale nadie más, o quien sale me dio permiso.</span>
+              <span>{sale ? 'Mi cliente me dio permiso de tomarle la foto y publicarla.' : 'No sale nadie más, o quien sale me dio permiso.'}</span>
             </label>
             {error && <p className="mapp-error" role="alert">{error}</p>}
             <button type="button" className="mapp-btn is-cta" onClick={send} disabled={!file || !ok || busy} data-testid="post-send">{busy ? 'Subiendo…' : 'Enviar a revisión'}</button>

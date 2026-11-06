@@ -35,6 +35,35 @@ test('portada: la hoja de AeroPress Go en diez pasos lleva a la Escuela', async 
   await page.context().close();
 });
 
+test('celular de pie: los diez pasos se pasan de lado con Siguiente/Anterior y los puntos, sin fijar la página', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: PHONE });
+  await page.goto('/', { waitUntil: 'load' });
+  const brew = page.locator('#escuela');
+  await brew.scrollIntoViewIfNeeded();
+  await expect(brew).toHaveClass(/is-swipe/);
+  // La sección mide lo que su contenido: no diez pantallas de scroll
+  expect(await brew.evaluate((el) => el.offsetHeight)).toBeLessThan(1400);
+  const sheet = brew.locator('.brew-sheet');
+  const dots = brew.locator('.brew-dots button');
+  const prev = brew.getByRole('button', { name: 'Anterior' });
+  const next = brew.getByRole('button', { name: 'Siguiente' });
+  await expect(prev).toBeDisabled();
+  await next.click();
+  await expect(dots.nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => sheet.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(1);
+  await dots.nth(9).click();
+  await expect.poll(() => sheet.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(9);
+  await expect(next).toBeDisabled();
+  await prev.click();
+  await expect(dots.nth(8)).toHaveAttribute('aria-pressed', 'true');
+  // El color térmico va solo en lo caliente: el paso 1 (prensa vacía) sin color, el 6 (agua a 80 °C) con él
+  const steps = brew.locator('.brew-sheet > li');
+  expect(await steps.nth(0).locator('[fill^="url(#"]').count()).toBe(0);
+  expect(await steps.nth(5).locator('[fill^="url(#"]').count()).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
 test('celular acostado: sin altura para fijar la hoja, los pasos de Aprende quedan en fila y a la vista', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { viewport: { width: 844, height: 390 }, hasTouch: true } });
   await page.goto('/', { waitUntil: 'load' });
@@ -61,11 +90,14 @@ test('escritorio: la receta paso a paso, lecciones en tarjetas, modo preparar, e
   await expect(recipe.locator('.brew-sheet > li').nth(3)).toContainText('85 °C hasta el n.º 4');
   await expect(recipe).toContainText('AeroPress Original (aeropress.com)');
 
-  // Las seis lecciones a la vista y cerradas; sin pestañas
+  // Las seis lecciones a la vista y cerradas; las lecciones no son pestañas, las escuelas sí
   const heads = page.locator('.sa-h button');
   await expect(heads).toHaveCount(6);
   for (let i = 0; i < 6; i += 1) await expect(heads.nth(i)).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.getByRole('tab')).toHaveCount(0);
+  await expect(page.locator('.sa').getByRole('tab')).toHaveCount(0);
+  const schools = page.getByRole('tablist', { name: 'Escuelas' });
+  await expect(schools.getByRole('tab')).toHaveText([/AeroPress/, /Termo/, /V60/, /Espresso/]);
+  await expect(schools.getByRole('tab', { name: /AeroPress/ })).toHaveAttribute('aria-selected', 'true');
   await heads.first().click();
   await expect(heads.first()).toHaveAttribute('aria-expanded', 'true');
   const first = page.getByRole('region', { name: /Conoce tu AeroPress/ });
@@ -222,4 +254,25 @@ test('el carrito sigue al pasar de la portada a la Escuela y volver', async ({ b
   await expect(badge()).toHaveText('1');
   expect(errors).toEqual([]);
   await page.context().close();
+});
+
+test('las cuatro escuelas: termo, V60 y espresso con su video; lo visto enciende el ícono', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.goto('/escuela', { waitUntil: 'load' });
+  const schools = page.getByRole('tablist', { name: 'Escuelas' });
+  await schools.getByRole('tab', { name: /Termo/ }).click();
+  await expect(page.getByRole('heading', { name: 'Escuela de termo' })).toBeVisible();
+  const list = page.getByTestId('web-school-lessons-termo');
+  await expect(list.locator('.sa-h button')).toHaveCount(4);
+  const video = list.getByTestId('lesson-video');
+  await expect(video).toContainText('Prepara el termo');
+  await video.getByTestId('lesson-video-play').click();
+  await video.getByRole('button', { name: 'Paso siguiente' }).click();
+  await expect(video).toContainText('Paso 1 de 3');
+  await expect(video).toContainText('Llénalo con agua caliente');
+  for (let i = 0; i < 3; i += 1) await list.getByRole('button', { name: 'Siguiente →' }).click();
+  await list.getByRole('button', { name: 'Terminar la escuela' }).click();
+  await expect(schools.getByRole('tab', { name: /Termo/ })).toContainText('Desbloqueada');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('micra_escuelas_v1')).termo.length)).toBe(4);
+  expect(errors).toEqual([]);
 });

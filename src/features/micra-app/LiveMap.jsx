@@ -62,7 +62,7 @@ function Legend({ counts, team, demand = true }) {
  * mode: 'barista' (live: en la calle; si no, vista previa) o 'team' (siempre en vivo).
  * selfId: el barista de la sesión (no se cuenta ni se pinta como otro).
  */
-export default function LivePanel({ mode = 'barista', live = false, selfId = null, night = false, go }) {
+export default function LivePanel({ mode = 'barista', live = false, selfId = null, night = false, go, children = null }) {
   const team = mode === 'team';
   const inLive = team || live;
   const { data, error } = useLiveMap({ poll: inLive });
@@ -95,6 +95,23 @@ export default function LivePanel({ mode = 'barista', live = false, selfId = nul
   const counts = legendCounts(data, { me: team ? null : me, selfId, min: data?.min_count });
   const theme = night ? 'noche' : 'plano';
   const open = (id) => go?.(baristaPath(id));
+
+  if (!inLive && children) {
+    // Vender antes de salir (pedido del usuario, 6 nov 2026): el mapa va detrás del saludo,
+    // entre la cabecera y «¿Cómo sales hoy?»; el saludo queda encima, sobre un velo blanco
+    return (
+      <section className="mapp-live is-preview is-backdrop" aria-label="Tu zona" data-testid="live-panel" data-live="false">
+        <div className="mapp-live-bg">
+          <Suspense fallback={<div className="mapp-map" aria-hidden="true" />}>
+            <MicraMap baristas={others} me={me} theme={theme} onPick={open} zones={zones} label="Mapa de los baristas cerca de ti" />
+          </Suspense>
+        </div>
+        <div className="mapp-live-over">{children}</div>
+        <p className="mapp-live-nudge" data-testid="live-nudge">Sal a vender para ver quién busca café ahora</p>
+        {others.length > 0 && <p className="mapp-live-near">{others.length === 1 ? '1 barista en la calle cerca' : `${others.length} baristas en la calle cerca`}</p>}
+      </section>
+    );
+  }
 
   if (!inLive) {
     return (

@@ -1349,13 +1349,16 @@ dialog.recipe-modal-banner::backdrop{ background: rgba(20,20,20,.6); backdrop-fi
 .rb-kit-btn{ justify-content:space-between; width:100%; cursor:pointer; }
 .rb-full{ justify-self:start; background:none; border:none; color:rgba(255,255,255,.85); font-family:'JetBrains Mono', monospace; font-size:.74rem; letter-spacing:.04em; text-decoration:underline; text-underline-offset:4px; cursor:pointer; padding:2px 0; }
 .rb-full:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
-.rb-years{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+/* Los años como las pestañas de la tienda (píldoras, la elegida en tinta) y con aire antes del pie */
+.rb{ margin-bottom:72px !important; }
+.rb-years{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:4px 0 6px; }
 .rb-count{ flex:none; white-space:nowrap; font-family:'JetBrains Mono', monospace; font-size:.75rem; color:var(--ink-soft); margin-right:6px; font-variant-numeric:tabular-nums; }
-.rb-years button{ font-family:'JetBrains Mono', monospace; font-size:.72rem; font-weight:700; padding:5px 9px; border:1.5px solid var(--ink); background:transparent; color:var(--ink); border-radius:2px; cursor:pointer; }
-.rb-years button[aria-selected="true"]{ background:var(--magenta-bright); border-color:var(--magenta-bright); color:#fff; }
+.rb-years button{ display:inline-flex; align-items:center; justify-content:center; min-width:72px; font-family:'Archivo', sans-serif; font-size:.9rem; font-weight:600; padding:10px 16px; border:1.5px solid var(--near-black); background:transparent; color:var(--near-black); border-radius:999px; cursor:pointer; transition:background-color .15s ease, color .15s ease; }
+.rb-years button:hover{ background:rgba(30,30,30,.06); }
+.rb-years button[aria-selected="true"]{ background:var(--near-black); border-color:var(--near-black); color:#fff; }
 .rb-years button:focus-visible{ outline:2px solid var(--magenta-bright); outline-offset:2px; }
 @media (max-width:900px){
-  .rb{ margin:0 16px; }
+  .rb{ margin:0 16px 56px !important; }
   .rb-in{ grid-template-columns:1fr; padding:56px 30px 64px; gap:26px; }
   .rb-col{ justify-self:stretch; max-width:100%; }
   .rb-years{ flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }

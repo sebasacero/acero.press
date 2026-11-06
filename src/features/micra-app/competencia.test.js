@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, shortTitle, challengeDraft as draft } from './competencia.js';
 
 const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
 
@@ -44,4 +44,37 @@ test('el formulario del equipo: nombre y fechas; las ideas vienen listas', () =>
   assert.match(challengeDraft({ title: 'Reto', starts_on: '2026-11-09', ends_on: '2026-11-08' }, '2026-11-01').error, /después/);
   assert.equal(challengeDraft({ title: 'Reto', ends_on: '2026-11-08', kind: 'raro' }, '2026-11-01').ch.kind, 'arte_latte');
   assert.ok(CHALLENGE_IDEAS.length >= 3 && CHALLENGE_IDEAS.every((i) => i.title && i.kind));
+});
+
+test('retos básicos: secciones con retos que caben en el formulario y en la base', () => {
+  assert.deepEqual(BASIC_SECTIONS.map((s) => s.id).slice(0, 3), ['filtrados', 'espresso', 'arte_latte']);
+  const titles = new Set();
+  for (const sec of BASIC_SECTIONS) {
+    assert.ok(sec.label && sec.why && sec.challenges.length >= 2, sec.id);
+    for (const c of sec.challenges) {
+      assert.ok(['arte_latte', 'foto'].includes(c.kind), c.title);
+      assert.ok(c.title.length <= 80 && c.brief.length <= 280 && c.how, c.title);
+      assert.ok(!titles.has(c.title), `repetido: ${c.title}`);
+      titles.add(c.title);
+      // Solo arte latte pasa por el juez
+      assert.equal(c.kind === 'arte_latte', sec.id === 'arte_latte', c.title);
+      assert.equal(draft({ title: c.title, brief: c.brief, kind: c.kind, starts_on: '2026-11-06', ends_on: '2026-11-12' }, '2026-11-06').error, undefined);
+    }
+  }
+  assert.equal(CHALLENGE_IDEAS.length, titles.size);
+});
+
+test('sectionOf: la sección de un reto por su nombre', () => {
+  assert.equal(sectionOf({ title: 'Espresso: la crema avellana' }).id, 'espresso');
+  assert.equal(sectionOf({ title: 'filtrados: mi receta' }).id, 'filtrados');
+  assert.equal(sectionOf({ title: 'Arte latte: tu mejor corazón', kind: 'arte_latte' }).id, 'arte_latte');
+  assert.equal(sectionOf({ title: 'Corazón libre', kind: 'arte_latte' }).id, 'arte_latte');
+  assert.equal(sectionOf({ title: 'Otra cosa', kind: 'foto' }), null);
+  assert.equal(sectionOf(null), null);
+});
+
+test('shortTitle: sin la sección y con mayúscula', () => {
+  assert.equal(shortTitle('Espresso: la crema avellana'), 'La crema avellana');
+  assert.equal(shortTitle('Corazón libre'), 'Corazón libre');
+  assert.equal(shortTitle(null), '');
 });

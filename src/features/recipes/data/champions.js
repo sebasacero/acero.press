@@ -35,12 +35,17 @@ export function championOf(year) {
   return champions[year] ?? null;
 }
 
-/** URL para incrustar el video (YouTube sin cookies hasta dar play, o Vimeo); null si no se reconoce. */
-export function embedOf(url) {
+/**
+ * URL para incrustar el video (YouTube sin cookies hasta dar play, o Vimeo); null si no se reconoce.
+ * Con `muted` arranca solo y sin sonido (el botón de sonido es del reproductor): en iPhone el
+ * navegador no deja que un video arranque con sonido dentro de un iframe, y se quedaba esperando
+ * un segundo toque.
+ */
+export function embedOf(url, { muted = false } = {}) {
   const yt = /^https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})$/.exec(url ?? '');
-  if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}?autoplay=1&rel=0`;
+  if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}?autoplay=1&rel=0${muted ? '&mute=1&playsinline=1' : ''}`;
   const vm = /^https:\/\/vimeo\.com\/(\d+)$/.exec(url ?? '');
-  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1&dnt=1`;
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=1&dnt=1${muted ? '&muted=1&playsinline=1' : ''}`;
   return null;
 }
 

@@ -2,11 +2,15 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import * as api from './api.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf, shortTitle } from './competencia.js';
 import { IconTrophy, IconBean } from './icons.jsx';
 import Figure from './Elenco.jsx';
 import { Cargando } from './Animado.jsx';
 import { JudgeBadge, JudgeBars } from './Juez.jsx';
+import { SchoolIcon } from '../school/LessonVideo.jsx';
+
+// El dibujo a trazo de cada sección de retos (los mismos de las escuelas)
+const SECTION_ICON = { filtrados: 'v60', espresso: 'espresso', arte_latte: 'taza', leche: 'leche', molienda: 'balanza', cata: 'cafe', calle: 'termo' };
 
 const PostComposer = lazy(() => import('./PostComposer.jsx'));
 
@@ -77,6 +81,46 @@ function EntryView({ entry, url, challenge, onVote, onClose, voting, error }) {
   );
 }
 
+/**
+ * Los retos básicos: las experiencias de base del barismo por sección (filtrados, espresso,
+ * arte latte, leche, molienda, cata, calle). El barista los ve todos para practicar; el equipo
+ * abre uno como reto de la semana. El reto abierto sale marcado en su sección.
+ */
+function Basics({ current, barista, sec, setSec }) {
+  const here = sectionOf(current);
+  const cur = sec ?? here?.id ?? BASIC_SECTIONS[0].id;
+  const s = BASIC_SECTIONS.find((x) => x.id === cur) ?? BASIC_SECTIONS[0];
+  return (
+    <section className="mapp-glass mapp-basics" id="mapp-basics" aria-labelledby="basics-h" data-testid="basics">
+      <p className="mapp-cota" id="basics-h">Retos básicos del barismo</p>
+      <p className="mapp-muted">{barista ? 'Lo que todo barista domina, por secciones. Practícalos: cada semana el equipo abre uno.' : 'Lo que todo barista domina. Cada semana se abre uno y tú calificas.'}</p>
+      <div className="mapp-chips is-scroll" role="tablist" aria-label="Secciones">
+        {BASIC_SECTIONS.map((x) => (
+          <button key={x.id} type="button" role="tab" aria-selected={cur === x.id} className={cur === x.id ? 'on' : ''} onClick={() => setSec(x.id)} data-testid={`basics-${x.id}`}>
+            <span aria-hidden="true">{x.icon}</span> {x.label}{here?.id === x.id ? ' ·' : ''}
+          </button>
+        ))}
+      </div>
+      <p className="mapp-basics-why">{s.why}</p>
+      <ol className="mapp-basics-list" role="tabpanel" aria-label={s.label}>
+        {s.challenges.map((c, i) => {
+          const live = current && current.title === c.title;
+          return (
+            <li key={c.title} className={live ? 'is-live' : ''}>
+              <span className="mapp-basics-n" aria-hidden="true">{i + 1}</span>
+              <div>
+                <b>{shortTitle(c.title)}{live && <em className="mapp-basics-now">Reto de esta semana</em>}</b>
+                <p>{c.brief}</p>
+                <small>{c.kind === 'arte_latte' ? '🏅 ' : '✓ '}{c.how}</small>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 export default function Competencia({ go, audience = 'client', selfId = null, asId = null }) {
   const [data, setData] = useState(null);
   const [urls, setUrls] = useState({});
@@ -85,6 +129,7 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
   const [voting, setVoting] = useState(false);
   const [voteError, setVoteError] = useState(null);
   const [composing, setComposing] = useState(false);
+  const [sec, setSec] = useState(null); // la sección de retos básicos a la vista (null: la del reto abierto)
   const ref = voteRef(store());
   const barista = audience === 'barista';
 
@@ -123,17 +168,44 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
 
   return (
     <div className="mapp-reto" data-testid="competencia">
-      <header className="mapp-reto-head">
-        <span className="mapp-reto-cup" aria-hidden="true"><IconTrophy /></span>
-        <div>
-          <p className="mapp-kicker">Competencia · reto de la semana</p>
-          <h1 className="mapp-title is-small">{ch ? ch.title : 'Sin reto abierto'}</h1>
+      {/* La cabecera en gradiente con los íconos de los retos (pedido del usuario, 6 nov 2026) */}
+      <header className="mapp-reto-head is-grad" data-testid="reto-head">
+        <div className="mapp-reto-headtop">
+          <span className="mapp-reto-cup" aria-hidden="true"><IconTrophy /></span>
+          <div>
+            <p className="mapp-kicker">Competencia · {sectionOf(ch)?.label ?? 'reto de la semana'}</p>
+            <h1 className="mapp-title is-small">{ch ? ch.title : 'Sin reto abierto'}</h1>
+          </div>
         </div>
+        {ch && (
+          <dl className="mapp-reto-kpis">
+            <div><dt>{ch.days_left > 0 ? 'días' : 'cierra'}</dt><dd>{ch.days_left > 0 ? ch.days_left : 'hoy'}</dd></div>
+            <div><dt>{entries.length === 1 ? 'entrada' : 'entradas'}</dt><dd>{entries.length}</dd></div>
+            <div><dt>{barista ? 'retos ganados' : 'votos'}</dt><dd>{barista ? (data.my_wins ?? 0) : entries.reduce((n, e) => n + (e.votes ?? 0), 0)}</dd></div>
+          </dl>
+        )}
+        <ul className="mapp-reto-icons" aria-label="Secciones de retos">
+          {BASIC_SECTIONS.map((x) => {
+            const on = (sec ?? sectionOf(ch)?.id ?? BASIC_SECTIONS[0].id) === x.id;
+            return (
+              <li key={x.id}>
+                <button
+                  type="button" className={`${on ? 'on' : ''} ${sectionOf(ch)?.id === x.id ? 'is-now' : ''}`} aria-pressed={on}
+                  onClick={() => { setSec(x.id); document.getElementById('mapp-basics')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                  data-testid={`reto-icon-${x.id}`}
+                >
+                  <SchoolIcon id={SECTION_ICON[x.id] ?? 'cafe'} />
+                  <span>{x.label.split(' ')[0]}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </header>
 
       {!ch && (
         <section className="mapp-glass mapp-reto-empty">
-          <p>{data.missing ? 'La competencia abre muy pronto.' : 'El equipo abre un reto nuevo cada semana: arte latte, la foto del puesto, el cliente de siempre. Vuelve pronto.'}</p>
+          <p>{data.missing ? 'La competencia abre muy pronto.' : 'El equipo abre un reto nuevo cada semana: filtrados, espresso, arte latte, leche, cata y la calle. Mira abajo los retos básicos y practica.'}</p>
           {barista && !data.missing && <p className="mapp-muted">Mientras tanto, practica tu corazón en el perico: la Escuela tiene la lección de leche.</p>}
         </section>
       )}
@@ -208,6 +280,8 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
           <p><b>{data.my_wins === 1 ? 'Has ganado 1 reto' : `Has ganado ${data.my_wins} retos`}</b><small>Sale en tu perfil y en Hoy.</small></p>
         </section>
       )}
+
+      <Basics current={ch} barista={barista} sec={sec} setSec={setSec} />
 
       {data.past.length > 0 && (
         <section className="mapp-glass" aria-label="Retos anteriores" data-testid="past">

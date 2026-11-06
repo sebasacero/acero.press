@@ -34,7 +34,8 @@ export default function LiveCard() {
   return (
     <div className="essp-live" aria-label={L.label} data-testid="hero-live">
       <span className="essp-live-tag">{L.label}</span>
-      <img className="essp-live-persona" src={personaSrc('lata')} alt="" decoding="async" aria-hidden="true" />
+      {/* El chico que lleva el carrito (pedido del usuario, 6 nov 2026): el que sale a la calle a venderte */}
+      <img className="essp-live-persona is-cart" src={personaSrc('ruta')} alt="" decoding="async" aria-hidden="true" />
       <div className="essp-live-who">
         {list === null ? <span className="essp-live-pill is-wait">…</span> : b ? (
           <>

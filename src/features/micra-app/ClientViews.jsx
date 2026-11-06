@@ -3,6 +3,7 @@ import {
   sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
   searchBaristas, drinkFromQuery, nearZone,
+  recordBaristaHistory, myBaristas,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
@@ -23,6 +24,8 @@ import Globito, { ping } from './Globito.jsx';
 const SeekNote = lazy(() => import('./SeekNote.jsx'));
 // El muro de Hoy, debajo de los baristas en el inicio del cliente (cargado aparte)
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
+const GustosIntro = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosIntro })));
+const GustosHead = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosHead })));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
 
@@ -287,6 +290,8 @@ export function ClientHome({ go }) {
         </div>
       </section>}
 
+      <Suspense fallback={null}><GustosIntro /></Suspense>
+
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">
           <button type="button" className={nowOnly ? 'on' : ''} aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)}>
@@ -324,6 +329,7 @@ export function ClientHome({ go }) {
 
       {!searching && <StampsCard />}
 
+      {/* La publicidad de ACERO.press salió del inicio (pedido del usuario, 6 nov 2026): queda en Mi perfil › Otros */}
       {!searching && <section className="mapp-join">
         <div>
           <b>¿Vendes café en la calle?</b>
@@ -419,6 +425,8 @@ export function BaristaPage({ id, go }) {
 
   return (
     <article className="mapp-card" aria-labelledby="mapp-b-name">
+      {/* Una sola cabecera en gradiente (6 nov 2026): quién es, dónde y cuándo suele pasar */}
+      <section className="mapp-bhead" data-testid="barista-head">
       <button type="button" className="mapp-back" onClick={() => go('/micra')}>‹ Baristas</button>
       <header className="mapp-card-head">
         <Avatar b={b} big />
@@ -436,11 +444,12 @@ export function BaristaPage({ id, go }) {
         >★</button>
       </header>
 
-      <section className="mapp-glass">
+      <div className="mapp-bhead-when">
         <p className="mapp-cota">Suele pasar</p>
         <p className="mapp-big">{windowLabel(b.hora_inicio, b.hora_fin) ?? 'Pregúntale su horario'}</p>
         <HoursBar from={b.hora_inicio} to={b.hora_fin} />
         {b.waiting > 0 && <p className="mapp-muted">{b.waiting === 1 ? '1 persona lo espera hoy' : `${b.waiting} personas lo esperan hoy`}</p>}
+      </div>
       </section>
 
       {mine && mine.status !== 'waiting' ? (
@@ -476,7 +485,7 @@ export function BaristaPage({ id, go }) {
           {error && <p className="mapp-error" role="alert">{error}</p>}
           {(!mine || editing) && (
             <button type="submit" className="mapp-btn is-cta" disabled={busy || cups === 0 || !name.trim()}>
-              {busy ? 'Apartando…' : cups ? `${mine ? 'Cambiar a' : 'Apartar'} ${cupsLabel(cups)} · ${money(total)}` : 'Elige qué quieres'}
+              {busy ? 'Apartando…' : cups ? `${mine ? 'Cambiar a' : 'Apartar'} ${cupsLabel(cups)} · ${money(total)}` : 'Apartar'}
             </button>
           )}
           <p className="mapp-fine">No es domicilio: {b.name} sigue su ruta y te entrega cuando pase. Pagas al recibir{pays.length ? `: ${pays.join(', ')}` : ''}.</p>
@@ -492,21 +501,35 @@ export function BaristaPage({ id, go }) {
   );
 }
 
+const HIST_KEY = 'micra_mis_baristas_v1';
+
 export function MyHolds({ go }) {
   const [holds, setHolds] = useState(null);
   const [{ list }] = useBaristas();
   const [error, setError] = useState(null);
+  const [hist, setHist] = useState(() => { try { return JSON.parse(localStorage.getItem(HIST_KEY) ?? '{}') || {}; } catch { return {}; } });
   useEffect(() => {
-    api.myHolds().then((h) => setHolds(h ?? [])).catch((e) => { setHolds([]); if (!e.missing) setError(e.message); });
+    api.myHolds().then((h) => {
+      setHolds(h ?? []);
+      // El historial de a quién le ha apartado se queda en su celular (para «Tus baristas»)
+      try {
+        const prev = JSON.parse(localStorage.getItem(HIST_KEY) ?? '{}');
+        const next = recordBaristaHistory(prev, h ?? []);
+        if (next !== prev) { localStorage.setItem(HIST_KEY, JSON.stringify(next)); setHist(next); }
+      } catch { /* sin memoria */ }
+    }).catch((e) => { setHolds([]); if (!e.missing) setError(e.message); });
   }, []);
+  const mineList = myBaristas(list, { favorites: api.favorites(), history: hist });
+  const availableNow = mineList.filter((b) => b.status === 'live').length;
   const nameOf = (id) => (list ?? []).find((b) => b.id === id)?.name ?? 'Tu barista';
   const text = { waiting: 'Te espera', served: 'Entregado', missed: 'No se encontraron', cancelled: 'Cancelado' };
   const live = (holds ?? []).filter((h) => h.status !== 'cancelled');
   return (
     <div className="mapp-client">
-      <h1 className="mapp-title is-small">Mis apartados de hoy</h1>
+      {/* La cabecera en gradiente con sus gustos y sus sellos (pedido del usuario, 6 nov 2026) */}
+      <Suspense fallback={<h1 className="mapp-title is-small">Mis apartados de hoy</h1>}><GustosHead waiting={live.filter((h) => h.status === 'waiting').length} /></Suspense>
       {error && <p className="mapp-error" role="alert">{error}</p>}
-      <StampsCard />
+      <h2 className="mapp-cota">Hoy</h2>
       {holds === null && <Cargando fig="servir" />}
       {holds && live.length === 0 && (
         <div className="mapp-empty">
@@ -530,6 +553,29 @@ export function MyHolds({ go }) {
           </li>
         ))}
       </ul>
+
+      {/* Tus baristas (pedido del usuario): los favoritos y a quienes les ha apartado, primero los disponibles */}
+      <section className="mapp-mybaristas" aria-labelledby="mapp-mybaristas-t" data-testid="my-baristas">
+        <h2 className="mapp-cota" id="mapp-mybaristas-t">Tus baristas{mineList.length ? ` · ${availableNow} en la calle ahora` : ''}</h2>
+        {mineList.length === 0
+          ? <p className="mapp-muted">Toca ♡ en un barista o apártale una vez y queda aquí, con si está disponible.</p>
+          : (
+            <ul className="mapp-list">
+              {mineList.map((b) => (
+                <li key={b.id}>
+                  <button type="button" className="mapp-row" onClick={() => go(baristaPath(b.id))} data-testid={`my-barista-${b.id}`}>
+                    <span className={`mapp-av ${b.status === 'live' ? 'is-live' : ''}`} aria-hidden="true">{initials(b.name)}</span>
+                    <span className="mapp-row-main">
+                      <b>{b.name}{b.fav ? ' ♥' : ''}</b>
+                      <span>{[b.referencia || b.localidad, b.times ? `le apartaste ${b.times === 1 ? '1 vez' : `${b.times} veces`}` : null].filter(Boolean).join(' · ')}</span>
+                    </span>
+                    <StatusBadge s={b.status} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+      </section>
     </div>
   );
 }

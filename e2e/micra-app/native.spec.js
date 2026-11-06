@@ -23,7 +23,6 @@ test('app instalada: arranca en Micra y comparte enlaces del sitio', async ({ br
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(3);
   // Los enlaces al sitio van con su dirección (la tienda, en Mi perfil › Otros)
   await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: 'Mi perfil' }).click();
-  await page.getByTestId('promo-close').click();
   await expect(page.getByRole('link', { name: 'Tienda' })).toHaveAttribute('href', 'https://www.aceropress.com/#beans');
   expect(errors).toEqual([]);
   await ctx.close();
