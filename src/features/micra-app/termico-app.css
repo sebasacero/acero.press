@@ -186,3 +186,20 @@
 .mapp-plata-hours i{display:block;width:100%;border-radius:4px 4px 2px 2px;background:var(--t-2);opacity:.35}
 .mapp-plata-hours .is-best i{background:var(--t-cta);opacity:1}
 .mapp-plata-hours small{font:600 .6rem 'JetBrains Mono',monospace;color:var(--t-soft,#6E6787);min-height:.8em}
+
+/* La cabecera de Hoy (6 nov 2026): la de Vender (frío arriba, se calienta al bajar) con el café hoy */
+.mapp-coffeehead{margin:-18px -16px 14px;padding:18px 18px 18px;border-radius:0 0 28px 28px;color:#fff;
+  background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 34%,var(--t-2) 66%,var(--t-3) 92%,var(--t-4) 100%);box-shadow:var(--t-glow-cold)}
+.mapp-coffeehead-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.mapp-coffeehead-kicker{margin:0;font:700 .72rem 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--t-6)}
+.mapp-coffeehead-title{margin:2px 0 0;font:800 1.5rem/1.1 'Archivo',sans-serif;letter-spacing:-.02em;color:#fff}
+.mapp .mapp-coffeehead-pub{background:rgba(255,255,255,.14) !important;background-image:none !important;color:#fff !important;border:1px solid rgba(255,255,255,.35) !important;box-shadow:none !important}
+.mapp-coffeehead-big{margin:14px 0 0;font:800 3rem/1 'Archivo',sans-serif;letter-spacing:-.04em;
+  background:linear-gradient(180deg,var(--t-7),var(--t-6) 45%,var(--t-5));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapp-coffeehead-sub{margin:4px 0 0;font:500 .85rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.82)}
+.mapp-coffeehead-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin:14px 0 0}
+.mapp-coffeehead-kpis div{padding:10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
+.mapp-coffeehead-kpis dd{margin:0;font:700 1.05rem/1.1 'JetBrains Mono',monospace;color:#fff}
+.mapp-coffeehead-kpis dt{margin-top:3px;font:500 .72rem/1.25 'Archivo',sans-serif;color:rgba(255,255,255,.8)}
+.mapp-coffeehead-fine{margin:12px 0 0;font:500 .72rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.8)}
+.mapp-coffeehead-fine a{color:#fff}

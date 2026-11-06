@@ -535,7 +535,10 @@ test('cliente: Hoy es el muro del café, sin logros ni ideas de foto; publicar l
   await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: /Hoy/ }).click();
   await expect(page).toHaveURL(/\/micra\/hoy$/);
   await expect(page.getByRole('heading', { name: 'Hoy en el café' })).toBeVisible();
-  await expect(page.getByTestId('price-card')).toContainText('$1.300');
+  // La cabecera como la de Vender: sin precio de la FNC, el tinto en la calle en grande
+  await expect(page.getByTestId('coffee-big')).toHaveText('$1.300');
+  await expect(page.getByTestId('coffee-live')).toContainText(/baristas? en la calle/);
+  await expect(page.getByTestId('price-card')).toHaveCount(0);
   const feed = page.getByTestId('feed');
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
   await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
@@ -562,7 +565,7 @@ test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y 
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista/hoy', { waitUntil: 'load' });
   await expect(page.getByRole('heading', { name: 'Hoy en la calle' })).toBeVisible();
-  await expect(page.getByTestId('price-card')).toContainText('$1.300');
+  await expect(page.getByTestId('coffee-head')).toContainText('$1.300');
   const feed = page.getByTestId('feed');
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
   // Los chips filtran: en «Puestos» solo quedan los puestos de otros baristas
@@ -700,7 +703,7 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
 test('barista: Hoy celebra la racha y sugiere qué publicar; no publica cuántas tazas vendió', async ({ browser }) => {
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista/hoy', { waitUntil: 'load' });
-  await expect(page.getByTestId('price-card')).toContainText('Precio del día en la FNC');
+  await expect(page.getByTestId('coffee-head')).toContainText('Precio del día en la FNC');
   await expect(page.getByTestId('feed-logro-racha')).toContainText('4 días en racha');
   await expect(page.getByTestId('feed-idea')).toHaveCount(2);
   await expect(page.getByTestId('feed-myday')).toHaveCount(0);

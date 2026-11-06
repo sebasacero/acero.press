@@ -5,7 +5,7 @@ import { STREAK_BADGES } from './motivation.js';
 // lo curado con su fuente, los puestos de la base (micra_baristas) y la racha
 // y las lecciones del propio barista. No se publica cuántas tazas vendió: el
 // muro celebra la constancia (racha, meta, lecciones), como Duolingo.
-import { windowLabel } from './micraApp.js';
+import { windowLabel, status } from './micraApp.js';
 
 export const CHIPS = [
   ['todo', 'Todo'],
@@ -208,4 +208,27 @@ export const cupCost = (perKilo, grams = 12) => Math.round((perKilo * grams) / 1
 export function coffeeOrderText({ name, kilos, where }) {
   const k = `${kilos} ${kilos === 1 ? 'kilo' : 'kilos'}`;
   return `Hola, soy ${String(name || '').split(' ')[0] || 'barista'} de Micra. Quiero pedir ${k} de café para la AeroPress${where ? `, para recoger o recibir en ${where}` : ''}. ¿Cuánto es y cuándo me llega?`;
+}
+
+/**
+ * La cabecera de Hoy (6 nov 2026, pedido del usuario: «como la de Vender, con los datos más
+ * importantes del café»): la carga de la FNC en grande (o, sin precio, el tinto en la calle) y
+ * debajo la libra en Nueva York, el kilo en pergamino, el café de una taza, el tinto en la calle y
+ * cuántos baristas hay en la calle ahora. Solo lo que existe: sin precio no hay cifra inventada.
+ */
+export function coffeeHead({ prices = {}, baristas = [], study = STUDY_TINTO, now = new Date() } = {}) {
+  const kilo = prices.carga ? Math.round(prices.carga / 125) : null;
+  const live = (baristas ?? []).filter((b) => status(b, now) === 'live').length;
+  const peso = (n) => `$${Math.round(n).toLocaleString('es-CO')}`;
+  const big = prices.carga
+    ? { value: millions(prices.carga), label: 'la carga de 125 kg · FNC' }
+    : { value: peso(study.value), label: `el tinto en la calle · mediana de ${study.n} puestos` };
+  const kpis = [
+    prices.ny && { id: 'ny', value: `US$${prices.ny.toLocaleString('es-CO', { minimumFractionDigits: 2 })}`, label: 'libra en Nueva York' },
+    kilo && { id: 'kilo', value: peso(kilo), label: 'kilo en pergamino' },
+    kilo && { id: 'taza', value: peso(cupCost(kilo)), label: 'de café por taza (12 g)' },
+    prices.carga && { id: 'tinto', value: peso(study.value), label: 'tinto en la calle' },
+    { id: 'live', value: String(live), label: live === 1 ? 'barista en la calle' : 'baristas en la calle' },
+  ].filter(Boolean);
+  return { big, kpis, date: prices.date ?? null };
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL } from './feed.js';
+import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL, coffeeHead } from './feed.js';
 import { money, baristaPath, sortBaristas, bogota } from './micraApp.js';
 import { figureFor } from './motivation.js';
 import * as api from './api.js';
@@ -40,6 +40,31 @@ function PriceCard({ item, admin, onEdit }) {
       </dl>
       <p className="mapp-fine is-onink">{prices.date ? `Precios del ${dayLabel(prices.date)} · ` : ''}<a className="mapp-link is-onink" href={FNC_PRICE_URL} target="_blank" rel="noopener noreferrer">Precio del día en la FNC ›</a></p>
     </article>
+  );
+}
+
+/** La cabecera de Hoy, como la de Vender: el café hoy en grande y sus datos debajo. */
+function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
+  return (
+    <section className="mapp-coffeehead" aria-label="El café hoy" data-testid="coffee-head">
+      <div className="mapp-coffeehead-top">
+        <div>
+          <p className="mapp-coffeehead-kicker">{today}</p>
+          <h1 className="mapp-coffeehead-title">{title}</h1>
+        </div>
+        {onPublish && <button type="button" className="mapp-btn is-small mapp-coffeehead-pub" onClick={onPublish}>＋ Publicar</button>}
+      </div>
+      <p className="mapp-coffeehead-big" data-testid="coffee-big">{head.big.value}</p>
+      <p className="mapp-coffeehead-sub">{head.big.label}</p>
+      <dl className="mapp-coffeehead-kpis">
+        {head.kpis.map((k) => <div key={k.id} data-testid={`coffee-${k.id}`}><dd>{k.value}</dd><dt>{k.label}</dt></div>)}
+      </dl>
+      <p className="mapp-coffeehead-fine">
+        {head.date ? `Precios del ${dayLabel(head.date)} · ` : ''}
+        <a href={FNC_PRICE_URL} target="_blank" rel="noopener noreferrer">Precio del día en la FNC ›</a>
+        {admin && <> · <button type="button" className="mapp-link is-onink" onClick={onEdit}>Actualizar</button></>}
+      </p>
+    </section>
   );
 }
 
@@ -416,20 +441,22 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   // Los anuncios «Patrocinado» van entre las publicaciones, solo en «Todo»
   const { feed: adFeed } = useAds(client ? 'client' : 'barista', ads);
   const counts = chipCounts(withDay);
-  const shown = chip === 'todo' ? withAds(withDay, adFeed) : filterFeed(withDay, chip);
+  const listed = embedded ? withDay : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
+  const shown = chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
     <div className={`mapp-feed ${embedded ? 'is-embedded' : ''}`} data-testid={embedded ? 'home-feed' : undefined}>
-      <header className="mapp-feed-head">
-        <div>
-          <p className="mapp-kicker">{today}</p>
-          {embedded
-            ? <h2 className="mapp-title is-small">Hoy en el café</h2>
-            : <h1 className="mapp-title is-small">{client ? 'Hoy en el café' : 'Hoy en la calle'}</h1>}
-        </div>
-        {!embedded && <button type="button" className="mapp-btn is-small is-dark" onClick={() => setPublishing(true)}>＋ Publicar</button>}
-      </header>
+      {embedded ? (
+        <header className="mapp-feed-head">
+          <div>
+            <p className="mapp-kicker">{today}</p>
+            <h2 className="mapp-title is-small">Hoy en el café</h2>
+          </div>
+        </header>
+      ) : (
+        <CoffeeHead head={coffeeHead({ prices, baristas })} title={client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} />
+      )}
       <div className="mapp-chips is-scroll" role="tablist" aria-label="Qué ver">
         {CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={chip === id} className={chip === id ? 'on' : ''} onClick={() => setChip(id)}>{label}</button>

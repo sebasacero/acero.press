@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildFeed, filterFeed, chipCounts, readPrices, millions, cupCost, coffeeOrderText, HOUSE, achievements, photoIdeas, readCurated, addCurated, CURATED } from './feed.js';
+import { buildFeed, filterFeed, chipCounts, readPrices, millions, cupCost, coffeeOrderText, HOUSE, achievements, photoIdeas, readCurated, addCurated, CURATED, coffeeHead } from './feed.js';
 
 const B = [
   { id: 'a', name: 'Marlene', referencia: 'Cl. 85 con Cra. 15', hora_inicio: 6, hora_fin: 11, prices: { tinto: 1500 }, status: 'usual' },
@@ -120,4 +120,19 @@ test('el reto de la semana va justo después del precio', () => {
   assert.equal(f[1].title, 'Arte latte: corazón');
   assert.equal(f[1].daysLeft, 4);
   assert.equal(buildFeed({ baristas: B, challenge: null }).some((i) => i.kind === 'reto'), false);
+});
+
+test('coffeeHead: la carga en grande y los datos del café; sin precio, el tinto de la calle', () => {
+  const now = new Date('2026-11-06T15:00:00Z');
+  const baristas = [{ live_until: '2026-11-06T17:00:00Z' }, { live_until: '2026-11-06T10:00:00Z' }, {}];
+  const h = coffeeHead({ prices: { carga: 2850000, ny: 3.8, date: '2026-11-06' }, baristas, now });
+  assert.equal(h.big.value, millions(2850000));
+  assert.deepEqual(h.kpis.map((k) => k.id), ['ny', 'kilo', 'taza', 'tinto', 'live']);
+  assert.equal(h.kpis.find((k) => k.id === 'kilo').value, '$22.800');
+  assert.equal(h.kpis.find((k) => k.id === 'taza').value, `$${cupCost(22800).toLocaleString('es-CO')}`);
+  assert.equal(h.kpis.find((k) => k.id === 'live').value, '1');
+  assert.equal(h.kpis.find((k) => k.id === 'live').label, 'barista en la calle');
+  const none = coffeeHead({ prices: {}, baristas: [], now });
+  assert.match(none.big.label, /tinto en la calle/);
+  assert.deepEqual(none.kpis.map((k) => k.id), ['live']);
 });
