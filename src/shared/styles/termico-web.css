@@ -16,3 +16,20 @@
   filter: saturate(1.1) brightness(1.04);
 }
 .btn-buy-shop:disabled { filter: grayscale(.6); opacity: .6; }
+
+/* El banner «Pide café en AeroPress a domicilio» con fondo en gradiente térmico
+   (pedido del usuario, 6 nov 2026): de lo frío arriba a lo caliente abajo, como
+   las cabeceras de la app Micra. Texto en claro. */
+.essp-slide--paper {
+  --essp-fg: #fff;
+  --essp-soft: rgba(255, 255, 255, .82);
+  --essp-line: rgba(255, 255, 255, .55);
+  background:
+    radial-gradient(70% 60% at 85% 100%, rgba(255, 194, 60, .45), transparent 70%),
+    linear-gradient(180deg, var(--t-0) 0%, var(--t-1) 30%, var(--t-2) 62%, var(--t-3) 88%, var(--t-4) 100%);
+}
+.essp-slide--paper .essp-lede,
+.essp-slide--paper .essp-tag { color: #fff; }
+.essp-slide--paper .essp-script { color: #FFD9A8; }
+.essp-slide--paper .essp-btn.is-link { color: #fff; }
+.essp-slide--paper .essp-loc { color: rgba(255, 255, 255, .82) !important; }
