@@ -376,3 +376,15 @@ export function scoreboard(day, queued = [], prices = {}) {
     weekCups, weekMoney,
   };
 }
+
+/**
+ * Las cifras de la entrada del barista (6 nov 2026, pedido del usuario): cuántos baristas hay en
+ * Micra, cuántos están en la calle ahora y el tinto típico (la mediana de sus precios). Solo lo
+ * que existe: sin baristas o sin precios, esa cifra es null.
+ */
+export function joinStats(list, now = new Date()) {
+  const all = Array.isArray(list) ? list : [];
+  const prices = all.map((b) => Number(b?.prices?.tinto)).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
+  const mid = prices.length ? (prices.length % 2 ? prices[(prices.length - 1) / 2] : Math.round((prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2)) : null;
+  return { baristas: all.length || null, live: all.length ? all.filter((b) => status(b, now) === 'live').length : null, tinto: mid };
+}

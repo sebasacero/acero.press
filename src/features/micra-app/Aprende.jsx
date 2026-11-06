@@ -7,6 +7,7 @@ import platform from './platform.js';
 import * as api from './api.js';
 import Figure from './Elenco.jsx';
 import { IconCheck } from './icons.jsx';
+import LessonVideo from '../school/LessonVideo.jsx';
 import { schoolOf, schoolLessons, seenFor, markSchool, gearShelf, readSchools, writeSchools } from './escuelas.js';
 
 /** Los íconos de cada escuela, a trazo: se encienden en térmico al desbloquearse. */
@@ -60,7 +61,7 @@ function Path({ steps }) {
   );
 }
 
-function LessonSheet({ lesson, n, seen, aero = true, onDone, onClose }) {
+function LessonSheet({ lesson, n, seen, aero = true, school = 'aeropress', onDone, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
     ref.current?.focus();
@@ -76,6 +77,8 @@ function LessonSheet({ lesson, n, seen, aero = true, onDone, onClose }) {
       </header>
       <div className="mapp-lesson-body">
         <h2 id="mapp-lesson-title" className="mapp-title is-small">{lesson.title}</h2>
+        {/* El video de la lección, armado con sus pasos (pedido del usuario, 6 nov 2026) */}
+        <LessonVideo lesson={lesson} school={school} label={`Video: ${lesson.title}`} />
         {aero && lesson.key === 'first' && (
           <video className="mapp-lesson-video" src={platform.siteUrl('/image/metodo/aeropress-metodo.mp4')} poster={platform.siteUrl('/image/metodo/poster.webp')} controls playsInline preload="none" />
         )}
@@ -199,7 +202,7 @@ export default function Aprende({ go }) {
       )}
 
       {open != null && (
-        <LessonSheet lesson={lessons[open]} n={open + 1} aero={aero} seen={seen.includes(lessons[open].key)} onDone={() => markSeen(lessons[open].key)} onClose={() => setOpen(null)} />
+        <LessonSheet lesson={lessons[open]} n={open + 1} aero={aero} school={school.id} seen={seen.includes(lessons[open].key)} onDone={() => markSeen(lessons[open].key)} onClose={() => setOpen(null)} />
       )}
     </div>
   );

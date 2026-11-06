@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   PRODUCTS, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
-  baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota,
+  baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota, joinStats,
 } from './micraApp.js';
 import { streakOf, streakLabel, goalOf, milestone, stepText, lessonPath, figureFor, fillOf, GOAL_CHOICES } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
@@ -87,6 +87,42 @@ function NearMap({ selfId = null, night = false, go }) {
   );
 }
 
+/**
+ * La cabecera de la entrada del barista (6 nov 2026, pedido del usuario): el gradiente con el
+ * dibujo, el título y las cifras reales de Micra (baristas, en la calle, el tinto típico).
+ */
+function JoinHead() {
+  const [list, setList] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    api.listBaristas().then((l) => alive && setList(l ?? [])).catch(() => alive && setList([]));
+    return () => { alive = false; };
+  }, []);
+  const st = joinStats(list);
+  const kpis = [
+    st.baristas != null && [st.baristas === 1 ? 'barista en Micra' : 'baristas en Micra', st.baristas],
+    st.live != null && ['en la calle ahora', st.live],
+    st.tinto != null && ['el tinto típico', money(st.tinto)],
+  ].filter(Boolean);
+  return (
+    <section className="mapp-joinhead" aria-labelledby="mapp-join-t" data-testid="join-head">
+      <Figure name="kit" className="is-join" />
+      <p className="mapp-kicker">Para baristas</p>
+      <h1 className="mapp-title" id="mapp-join-t">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
+      <ul className="mapp-joinhead-perks">
+        <li>Te apartan antes de que llegues</li>
+        <li>+1 por taza y sabes cuánto hiciste</li>
+        <li>Tus fiados en orden</li>
+      </ul>
+      {kpis.length > 0 && (
+        <dl className="mapp-joinhead-kpis" data-testid="join-kpis">
+          {kpis.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+        </dl>
+      )}
+    </section>
+  );
+}
+
 export function BaristaJoin({ session, onLinked, team = false, preview = false, night = false, go }) {
   const fromUrl = new URLSearchParams(window.location.search).get('codigo') ?? '';
   const [code, setCode] = useState(fromUrl.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6));
@@ -122,9 +158,7 @@ export function BaristaJoin({ session, onLinked, team = false, preview = false, 
             <button type="button" className="mapp-link" onClick={() => go?.('/micra/equipo')}>Actuar como › Equipo</button>
           </p>
         )}
-        <Figure name="kit" className="is-join" />
-        <p className="mapp-kicker">Para baristas</p>
-        <h1 className="mapp-title">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
+        <JoinHead />
         {/* Lo primero después del título: entrar es lo que vino a hacer */}
         <Suspense fallback={<Cargando />}><PhoneLogin preview={preview} /></Suspense>
         {!preview && (
@@ -134,11 +168,6 @@ export function BaristaJoin({ session, onLinked, team = false, preview = false, 
             <button type="button" className="mapp-link" onClick={() => api.signIn('/micra/barista')}>Entrar con Google</button>
           </div>
         )}
-        <ul className="mapp-perks">
-          <li><b>Te apartan antes de que llegues.</b> Tus clientes ven a qué hora pasas y te dicen «guárdame dos».</li>
-          <li><b>Cuentas con un dedo.</b> +1 por taza, y al final del día sabes cuánto hiciste.</li>
-          <li><b>Tus fiados en orden.</b> Quién te debe y cuánto, y se lo cobras por WhatsApp.</li>
-        </ul>
       </section>
     );
   }
@@ -820,11 +849,15 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         {head}
         {live ? outCard : (
           <>
-            <section className="mapp-hello">
-              <p className="mapp-kicker">{new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long' })}{day.localidad ? ` · ${day.localidad}` : ''}</p>
-              <h1 className="mapp-title is-small">{greeting()}, {first}.</h1>
-            </section>
-            <StreakRow streak={streak} />
+            <Suspense fallback={null}>
+              <LivePanel live={false} selfId={day.id} night={night} go={go}>
+                <section className="mapp-hello">
+                  <p className="mapp-kicker">{new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long' })}{day.localidad ? ` · ${day.localidad}` : ''}</p>
+                  <h1 className="mapp-title is-small">{greeting()}, {first}.</h1>
+                </section>
+                <StreakRow streak={streak} />
+              </LivePanel>
+            </Suspense>
             {/* «Salí a vender» abajo, al alcance del pulgar (el termo va en la otra mano), con cómo
                 sale justo encima: la opción B que eligió el usuario, 6 nov 2026 (DoorDash, Rappi) */}
             <section className="mapp-gosheet" aria-label="Salir a vender" data-testid="go-sheet">
@@ -881,7 +914,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </>
         )}
         {/* En la calle, el mapa en vivo (como al ponerse «en línea»), debajo de las tazas */}
-        <Suspense fallback={null}><LivePanel live={live} selfId={day.id} night={night} go={go} /></Suspense>
+        {live && <Suspense fallback={null}><LivePanel live selfId={day.id} night={night} go={go} /></Suspense>}
       </>
     );
   }

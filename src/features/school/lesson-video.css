@@ -1,0 +1,38 @@
+/* El video armado de cada lección (LessonVideo.jsx): 4:5, fondo térmico frío, dibujo a trazo que
+   se dibuja solo y el texto grande. Mismo estilo en la app (Aprende) y en /escuela. */
+.lv {
+  position: relative; margin: 0 0 16px; aspect-ratio: 4 / 5; max-height: 58vh; width: 100%;
+  border-radius: 24px; overflow: hidden; color: #fff; isolation: isolate;
+  background: radial-gradient(120% 80% at 50% 0%, var(--t-2, #6A1FA8) 0%, var(--t-1, #2B1466) 45%, var(--t-0, #0D0820) 100%);
+  box-shadow: 0 18px 40px -22px rgba(13, 8, 32, .7);
+}
+.lv.is-tip { background: radial-gradient(120% 80% at 50% 0%, var(--t-5, #FF8A3D) 0%, var(--t-4, #DE1B1B) 48%, var(--t-2, #6A1FA8) 100%); }
+.lv-bars { position: absolute; z-index: 3; top: 12px; left: 12px; right: 12px; display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.lv-bars li { flex: 1; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, .28); overflow: hidden; }
+.lv-bars i { display: block; height: 100%; background: #fff; transform-origin: left; }
+.lv-scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px 26px 64px; text-align: center; }
+.lv-art { width: 44%; max-width: 170px; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .08); box-shadow: 0 0 0 1px rgba(255, 255, 255, .14) inset; color: var(--t-6, #FFD27A); }
+.lv-draw { width: 70%; height: 70%; overflow: visible; }
+.lv-draw path, .lv-draw circle { stroke-dasharray: 1; stroke-dashoffset: 1; animation: lv-draw .9s cubic-bezier(.6, .1, .2, 1) forwards; animation-delay: calc(var(--i, 0) * .18s + .1s); }
+.lv-n { font: 700 .74rem 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: rgba(255, 255, 255, .78); animation: lv-up .5s .25s both; }
+.lv-text { margin: 0; font: 800 clamp(1.2rem, 5.4vw, 1.6rem)/1.2 'Archivo', system-ui, sans-serif; letter-spacing: -.01em; text-wrap: balance; animation: lv-up .55s .35s both; }
+.lv.is-title .lv-text { font-size: clamp(1.5rem, 7vw, 2rem); }
+.lv-sub { margin: 0; color: rgba(255, 255, 255, .82); font-size: .95rem; line-height: 1.35; animation: lv-up .55s .5s both; }
+.lv-tap { position: absolute; z-index: 2; top: 0; bottom: 0; width: 30%; border: 0; background: none; cursor: pointer; }
+.lv-tap.is-prev { left: 0; }
+.lv-tap.is-next { right: 0; }
+.lv-play { position: absolute; z-index: 4; left: 50%; bottom: 14px; transform: translateX(-50%); width: 52px; height: 52px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: #fff;
+  background: linear-gradient(135deg, var(--t-3, #B5179E), var(--t-4, #DE1B1B) 55%, var(--t-5, #FF8A3D)); box-shadow: 0 8px 20px -6px rgba(222, 27, 27, .6); }
+.lv-play svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.lv-play svg path[d^="M8 5l"] { fill: currentColor; }
+.lv:not(.is-started) .lv-play { width: 72px; height: 72px; bottom: 18%; }
+.lv:not(.is-started) .lv-play svg { width: 30px; height: 30px; }
+.lv:not(.is-started) .lv-scene { padding-bottom: 120px; }
+.lv:not(.is-started) .lv-art { display: none; }
+.lv-cap { position: absolute; z-index: 3; right: 14px; bottom: 26px; font: 600 .7rem 'JetBrains Mono', monospace; color: rgba(255, 255, 255, .7); }
+@keyframes lv-draw { to { stroke-dashoffset: 0; } }
+@keyframes lv-up { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  .lv-draw path, .lv-draw circle { animation: none; stroke-dashoffset: 0; }
+  .lv-n, .lv-text, .lv-sub { animation: none; }
+}

@@ -24,6 +24,8 @@ const SeekNote = lazy(() => import('./SeekNote.jsx'));
 // El muro de Hoy, debajo de los baristas en el inicio del cliente (cargado aparte)
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const AceroAd = lazy(() => import('./AceroAd.jsx'));
+const GustosNudge = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosNudge })));
+const GustosHead = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosHead })));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
 
@@ -288,6 +290,8 @@ export function ClientHome({ go }) {
         </div>
       </section>}
 
+      {!searching && <Suspense fallback={null}><GustosNudge /></Suspense>}
+
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">
           <button type="button" className={nowOnly ? 'on' : ''} aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)}>
@@ -511,9 +515,10 @@ export function MyHolds({ go }) {
   const live = (holds ?? []).filter((h) => h.status !== 'cancelled');
   return (
     <div className="mapp-client">
-      <h1 className="mapp-title is-small">Mis apartados de hoy</h1>
+      {/* La cabecera en gradiente con sus gustos y sus sellos (pedido del usuario, 6 nov 2026) */}
+      <Suspense fallback={<h1 className="mapp-title is-small">Mis apartados de hoy</h1>}><GustosHead waiting={live.filter((h) => h.status === 'waiting').length} /></Suspense>
       {error && <p className="mapp-error" role="alert">{error}</p>}
-      <StampsCard />
+      <h2 className="mapp-cota">Hoy</h2>
       {holds === null && <Cargando fig="servir" />}
       {holds && live.length === 0 && (
         <div className="mapp-empty">

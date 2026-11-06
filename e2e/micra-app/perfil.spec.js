@@ -284,3 +284,87 @@ test('cliente: la publicidad de ACERO.press está en el inicio (video de la lata
   await expect(promo).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('barista: Insumos en su perfil arma el pedido y lo manda por WhatsApp al equipo; luego lo repite', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.addInitScript(() => { window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }; });
+  await page.goto('/micra/barista/perfil', { waitUntil: 'load' });
+  const ins = page.getByTestId('insumos');
+  await expect(ins.getByRole('heading', { name: 'Insumos' })).toBeVisible();
+  await expect(page.getByTestId('insumos-repeat')).toHaveCount(0);
+  await page.getByTestId('insumos-vasos').click();
+  const sheet = page.getByTestId('insumos-sheet');
+  await expect(sheet.getByRole('tab', { name: /Vasos/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByTestId('insumos-send')).toBeDisabled();
+  await sheet.getByRole('button', { name: 'Agregar Vasos de 4 oz (tinto)' }).click();
+  await sheet.getByRole('button', { name: 'Agregar Vasos de 4 oz (tinto)' }).click();
+  await expect(page.getByTestId('insumo-vaso-4')).toHaveText('2');
+  await sheet.getByRole('tab', { name: /Cigarrillos/ }).click();
+  await expect(sheet).toContainText('Nunca a menores de edad');
+  await sheet.getByRole('button', { name: 'Agregar Cigarrillos' }).click();
+  await sheet.getByRole('tab', { name: /Vasos/ }).click();
+  await expect(sheet.getByRole('tab', { name: /Vasos/ })).toContainText('2');
+  await expect(page.getByTestId('insumos-sum')).toHaveText('Tu pedido: 2 paquetes de 50 · Vasos de 4 oz (tinto) · 1 cajetilla de 20 · Cigarrillos');
+  await page.getByTestId('insumos-send').click();
+  const url = await page.evaluate(() => window.__opened[0]);
+  expect(url).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
+  const text = decodeURIComponent(url.split('text=')[1]);
+  expect(text).toContain('Hola, soy Marlene de Micra. Quiero pedir insumos');
+  expect(text).toContain('• 2 paquetes de 50 · Vasos de 4 oz (tinto)\n• 1 cajetilla de 20 · Cigarrillos');
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+  // Repetir el último pedido: la hoja vuelve con lo mismo
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByTestId('insumos-repeat')).toContainText('3 cosas');
+  await page.getByTestId('insumos-repeat').click();
+  await expect(page.getByTestId('insumos-sum')).toContainText('2 paquetes de 50');
+  expect(errors).toEqual([]);
+});
+
+test('cliente: cuenta sus gustos en cinco preguntas opcionales y «Mis apartados» muestra su perfil de café', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra', { waitUntil: 'load' });
+  // La invitación en el inicio, una sola vez y se puede cerrar
+  await expect(page.getByTestId('gustos-nudge')).toContainText('sin datos personales');
+  await page.getByTestId('gustos-open').click();
+  const quiz = page.getByTestId('gustos-quiz');
+  await expect(quiz.getByRole('heading', { name: '¿Cómo te tomas el café?' })).toBeVisible();
+  await page.getByTestId('gusto-bebida-tinto').click();
+  await expect(page.getByTestId('gusto-bebida-tinto')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('gustos-next').click();
+  // Las marcas van con su nombre; «No compro café» va sola
+  await page.getByTestId('gusto-marcas-sello-rojo').click();
+  await page.getByTestId('gusto-marcas-ninguno').click();
+  await expect(page.getByTestId('gusto-marcas-sello-rojo')).toHaveAttribute('aria-pressed', 'false');
+  await page.getByTestId('gusto-marcas-amor-perfecto').click();
+  await page.getByTestId('gustos-next').click();
+  await page.getByTestId('gusto-fuerza-suave').click();
+  await page.getByTestId('gustos-next').click();
+  await expect(page.getByTestId('gustos-next')).toHaveText('Saltar');
+  await page.getByTestId('gustos-next').click();
+  await page.getByTestId('gustos-next').click();
+  await expect(page.getByTestId('gustos-result')).toContainText('Explorador de especialidad');
+  await page.getByTestId('gustos-done').click();
+  await expect(quiz).toHaveCount(0);
+  await expect(page.getByTestId('gustos-nudge')).toHaveCount(0);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('micra_gustos_v1')).answers);
+  expect(saved).toEqual({ bebida: ['tinto'], marcas: ['amor-perfecto'], fuerza: 'suave' });
+
+  await page.goto('/micra/apartados', { waitUntil: 'load' });
+  const head = page.getByTestId('gustos-head');
+  await expect(head.getByRole('heading', { level: 1 })).toHaveText('Explorador de especialidad');
+  await expect(page.getByTestId('gustos-chips')).toContainText('Amor Perfecto');
+  await expect(head).toContainText('7/10');
+  expect(errors).toEqual([]);
+});
+
+test('barista sin sesión: la cabecera en gradiente con las cifras de Micra y sin la tarjeta de ventajas', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  const head = page.getByTestId('join-head');
+  await expect(head.getByRole('heading', { level: 1 })).toContainText('Vende más en');
+  await expect(page.getByTestId('join-kpis')).toContainText('baristas en Micra');
+  await expect(page.getByTestId('join-kpis')).toContainText('el tinto típico');
+  await expect(page.locator('.mapp-perks')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

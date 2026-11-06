@@ -13,6 +13,7 @@ import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
 import { methodsLabel } from './flow.js';
 import Termo from './Termo.jsx';
 const AceroAd = lazy(() => import('./AceroAd.jsx'));
+import { InsumosSection, InsumosSheet } from './Insumos.jsx';
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
   IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
@@ -187,6 +188,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
   const [sheet, setSheet] = useState(null); // 'datos' | 'precios' | 'pagos' | 'meta' | 'permisos'
   const [edit, setEdit] = useState(null); // dentro de la hoja: 'prices' | 'pay'
   const [promo, setPromo] = useState(false);
+  const [insumos, setInsumos] = useState(null); // { cat, cart }: la hoja de pedir insumos
   const [confirm, setConfirm] = useState(false);
   const [block, setBlock] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -299,6 +301,8 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         <Tile icon={IconShare} label="Compartir enlace" onClick={share} />
         <Tile icon={IconEye} label="Ver como cliente" onClick={() => go(baristaPath(day.id))} />
       </Group>
+
+      <InsumosSection onOpen={(cat, cart = null) => setInsumos({ cat, cart })} />
 
       <Group title="Tu plata">
         <Tile icon={IconWallet} label="Mi plata" onClick={() => go('/micra/barista/cuenta')} />
@@ -441,6 +445,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
       )}
 
       {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
+      {insumos && <InsumosSheet name={day.name} where={where} cat={insumos.cat} cart={insumos.cart} onClose={() => setInsumos(null)} />}
     </div>
   );
 }

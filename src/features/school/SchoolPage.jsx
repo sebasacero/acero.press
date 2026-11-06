@@ -12,6 +12,8 @@ import { resumeIndex, totalMinutes, lessonHash, lessonFromHash, clock, BASE_RECI
 import { readSeen, writeSeen } from './progress.js';
 import LessonFigure from './LessonFigure.jsx';
 import SchoolVideo from './SchoolVideo.jsx';
+import { SchoolShelf, OtherSchool, useSchools } from './SchoolShelf.jsx';
+import LessonVideo from './LessonVideo.jsx';
 import CookMode, { useBrewTimer } from './CookMode.jsx';
 import { track } from '../../shared/lib/analytics.js';
 import './school.css';
@@ -25,14 +27,17 @@ import './school.css';
 const num = (i) => String(i + 1).padStart(2, '0');
 // La persona de la calle que acompaña cada lección en su tarjeta (ilustraciones, sin nombre)
 const LESSON_PERSONA = { meet: 'aeropress', first: 'carrito', measure: 'ruana', taste: 'pareja', street: 'sombrilla', price: 'ruta' };
+const SCHOOL_NAME = { termo: 'termo', v60: 'V60', espresso: 'espresso' };
 const reducedMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** Lo que tiene cada lección: entrada, la figura, la lista, el consejo, la práctica y para dónde seguir. */
-function LessonBody({ lesson, index, count, isSeen, t, timer, onOpenTimer, onPrev, onNext, onFinish }) {
+function LessonBody({ lesson, index, count, isSeen, t, timer, onOpenTimer, onPrev, onNext, onFinish, lang = 'es' }) {
   const Points = lesson.numbered ? 'ol' : 'ul';
   return (
     <>
       <p className="sl-lead">{lesson.lead}</p>
+      {/* El video armado con los pasos (como en Aprende de Micra); sus rótulos van en español */}
+      {lang === 'es' && <div className="sl-video"><LessonVideo lesson={lesson} school="aeropress" label={`Video: ${lesson.title}`} /></div>}
       <div className="sl-grid">
         <LessonFigure lesson={lesson} index={index} t={t} timer={timer} onOpenTimer={onOpenTimer} />
         <div className="sl-text">
@@ -75,6 +80,9 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
   const [active, setActive] = useState(() => lessonFromHash(window.location.hash, lessons.length));
   const [whatsapp, setWhatsapp] = useState(`https://wa.me/${FALLBACK_WHATSAPP_NUMBER}`);
   const [cookOpen, setCookOpen] = useState(false);
+  // Las cuatro escuelas (AeroPress, termo, V60, espresso), como en Aprende de Micra
+  const [schoolId, setSchoolId] = useState('aeropress');
+  const [schools, markOther] = useSchools();
   const timer = useBrewTimer();
   // A dónde llevar la vista (y el foco) después de pintar. Es estado y no ref: pedir la lección que
   // ya está abierta también tiene que mover la vista. Al llegar con #leccion-3, desde el primer cuadro.
@@ -167,6 +175,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
     onPrev: () => goPrev(i),
     onNext: () => goNext(i),
     onFinish: () => markSeen(lessons[i].key),
+    lang,
   });
 
   return (
@@ -233,9 +242,10 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
           <section className="sc" aria-labelledby="lecciones-title">
             <header className="sc-head">
               <div className="essp-tag">{t('school.lessonsTag')}</div>
-              <h2 className="essp-title sc-title" id="lecciones-title">{t('school.lessonsTitle')}</h2>
+              <h2 className="essp-title sc-title" id="lecciones-title">{schoolId === 'aeropress' ? t('school.lessonsTitle') : `Escuela de ${SCHOOL_NAME[schoolId]}`}</h2>
               <p className="sc-text">{t('school.lessonsText')}</p>
-              <div className="sp-progress" aria-label={t('school.progressLabel')}>
+              <SchoolShelf aeroLessons={lessons} aeroSeen={seen} stored={schools} current={schoolId} onPick={setSchoolId} />
+              {schoolId === 'aeropress' && <div className="sp-progress" aria-label={t('school.progressLabel')}>
                 <span className="sp-segs" aria-hidden="true">
                   {lessons.map((l) => <i key={l.key} className={seen.includes(l.key) ? 'on' : undefined} />)}
                 </span>
@@ -243,10 +253,11 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
                   {resume === -1 ? t('school.allDone') : t('school.progress').replace('{n}', done).replace('{total}', lessons.length)}
                 </span>
                 <button type="button" className="essp-btn is-ghost" onClick={() => open(progressCta.to, { focus: true })}>{progressCta.label}</button>
-              </div>
+              </div>}
             </header>
 
-            <ol className="sa">
+            {schoolId !== 'aeropress' && <OtherSchool id={schoolId} stored={schools} onSeen={(key) => markOther(schoolId, key)} />}
+            {schoolId === 'aeropress' && <ol className="sa">
               {lessons.map((l, i) => {
                 const isOpen = active === i;
                 const isSeen = seen.includes(l.key);
@@ -278,7 +289,7 @@ export default function SchoolPage({ navOpen, onOpenNavDrawer }) {
                   </li>
                 );
               })}
-            </ol>
+            </ol>}
           </section>
 
           <div className="school-cta">

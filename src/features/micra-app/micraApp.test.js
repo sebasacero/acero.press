@@ -256,3 +256,17 @@ test('el buscador del barista: quién lo espera, quién le debe y sus productos'
   assert.deepEqual(searchDay(day, menu, 'ana').holds, []); // ya entregado: no sale
   assert.deepEqual(searchDay(day, menu, '  '), { holds: [], fiados: [], products: [] });
 });
+
+test('joinStats: baristas, en la calle y la mediana del tinto', async () => {
+  const { joinStats } = await import('./micraApp.js');
+  const now = new Date('2026-11-06T15:00:00Z');
+  const list = [
+    { prices: { tinto: 1500 }, live_until: '2099-01-01T00:00:00Z' },
+    { prices: { tinto: 2000 } },
+    { prices: { tinto: 1200 } },
+    { prices: {} },
+  ];
+  assert.deepEqual(joinStats(list, now), { baristas: 4, live: 1, tinto: 1500 });
+  assert.equal(joinStats(list.slice(0, 2), now).tinto, 1750);
+  assert.deepEqual(joinStats(null, now), { baristas: null, live: null, tinto: null });
+});

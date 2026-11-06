@@ -90,11 +90,14 @@ test('escritorio: la receta paso a paso, lecciones en tarjetas, modo preparar, e
   await expect(recipe.locator('.brew-sheet > li').nth(3)).toContainText('85 °C hasta el n.º 4');
   await expect(recipe).toContainText('AeroPress Original (aeropress.com)');
 
-  // Las seis lecciones a la vista y cerradas; sin pestañas
+  // Las seis lecciones a la vista y cerradas; las lecciones no son pestañas, las escuelas sí
   const heads = page.locator('.sa-h button');
   await expect(heads).toHaveCount(6);
   for (let i = 0; i < 6; i += 1) await expect(heads.nth(i)).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.getByRole('tab')).toHaveCount(0);
+  await expect(page.locator('.sa').getByRole('tab')).toHaveCount(0);
+  const schools = page.getByRole('tablist', { name: 'Escuelas' });
+  await expect(schools.getByRole('tab')).toHaveText([/AeroPress/, /Termo/, /V60/, /Espresso/]);
+  await expect(schools.getByRole('tab', { name: /AeroPress/ })).toHaveAttribute('aria-selected', 'true');
   await heads.first().click();
   await expect(heads.first()).toHaveAttribute('aria-expanded', 'true');
   const first = page.getByRole('region', { name: /Conoce tu AeroPress/ });
@@ -251,4 +254,25 @@ test('el carrito sigue al pasar de la portada a la Escuela y volver', async ({ b
   await expect(badge()).toHaveText('1');
   expect(errors).toEqual([]);
   await page.context().close();
+});
+
+test('las cuatro escuelas: termo, V60 y espresso con su video; lo visto enciende el ícono', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.goto('/escuela', { waitUntil: 'load' });
+  const schools = page.getByRole('tablist', { name: 'Escuelas' });
+  await schools.getByRole('tab', { name: /Termo/ }).click();
+  await expect(page.getByRole('heading', { name: 'Escuela de termo' })).toBeVisible();
+  const list = page.getByTestId('web-school-lessons-termo');
+  await expect(list.locator('.sa-h button')).toHaveCount(4);
+  const video = list.getByTestId('lesson-video');
+  await expect(video).toContainText('Prepara el termo');
+  await video.getByTestId('lesson-video-play').click();
+  await video.getByRole('button', { name: 'Paso siguiente' }).click();
+  await expect(video).toContainText('Paso 1 de 3');
+  await expect(video).toContainText('Llénalo con agua caliente');
+  for (let i = 0; i < 3; i += 1) await list.getByRole('button', { name: 'Siguiente →' }).click();
+  await list.getByRole('button', { name: 'Terminar la escuela' }).click();
+  await expect(schools.getByRole('tab', { name: /Termo/ })).toContainText('Desbloqueada');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('micra_escuelas_v1')).termo.length)).toBe(4);
+  expect(errors).toEqual([]);
 });
