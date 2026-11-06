@@ -53,3 +53,14 @@ test('gustos: se guarda solo en el celular', () => {
   writeGustos({ answers: { fuerza: 'medio' } }, s);
   assert.deepEqual(readGustos(s), { answers: { fuerza: 'medio' } });
 });
+
+test('gustos: el punto en Mi perfil sale solo si ya vio las preguntas y no respondió nada', async () => {
+  const { gustosPending, markIntroSeen, introSeen, writeGustos } = await import('./gustos.js');
+  const m = new Map(); const s = { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) };
+  assert.equal(introSeen(s), false);
+  assert.equal(gustosPending(s), false);
+  markIntroSeen(s);
+  assert.equal(gustosPending(s), true);
+  writeGustos({ answers: { fuerza: 'suave' } }, s);
+  assert.equal(gustosPending(s), false);
+});

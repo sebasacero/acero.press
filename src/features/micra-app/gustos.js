@@ -133,3 +133,20 @@ export function readGustos(storage = globalThis.localStorage) {
 export function writeGustos(value, storage = globalThis.localStorage) {
   try { storage?.setItem(GUSTOS_KEY, JSON.stringify(value)); } catch { /* sin memoria: vale por ahora */ }
 }
+
+// Las preguntas salen solas la primera vez que el cliente abre Micra (pedido del usuario, 6 nov 2026).
+// Si las salta todas, queda un punto en Mi perfil hasta que cuente al menos un gusto.
+export const GUSTOS_INTRO_KEY = 'micra_gustos_intro_v1';
+
+export function introSeen(storage = globalThis.localStorage) {
+  try { return storage?.getItem(GUSTOS_INTRO_KEY) === '1'; } catch { return true; }
+}
+
+export function markIntroSeen(storage = globalThis.localStorage) {
+  try { storage?.setItem(GUSTOS_INTRO_KEY, '1'); } catch { /* sin memoria */ }
+}
+
+/** ¿Va el punto en Mi perfil? Ya vio las preguntas y no respondió ninguna. */
+export function gustosPending(storage = globalThis.localStorage) {
+  return introSeen(storage) && answeredCount(cleanAnswers(readGustos(storage)?.answers)) === 0;
+}

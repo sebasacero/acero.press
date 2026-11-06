@@ -42,7 +42,9 @@ const TEST_STYLE = {
 };
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range' };
 
-export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomic = true } = {}) {
+export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomic = true, gustosIntro = false } = {}) {
+  // Las preguntas de gustos salen solas la primera vez en Micra; las pruebas las dan por vistas salvo que las pidan
+  if (!gustosIntro) await page.addInitScript(() => { try { if (localStorage.getItem('micra_gustos_intro_v1') === null) localStorage.setItem('micra_gustos_intro_v1', '1'); } catch { /* about:blank */ } });
   const calls = [];
   const opts = { slowPublish: false, dropNextSaleResponse: false, streetMap: null, piloto: null };
   const stock = new Map((inventory ?? DEFAULT_STOCK(coffee)).map((r) => [r.variant_id, { ...r }]));

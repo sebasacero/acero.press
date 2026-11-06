@@ -13,6 +13,8 @@ import { methodsLabel } from './flow.js';
 import Termo from './Termo.jsx';
 const AceroAd = lazy(() => import('./AceroAd.jsx'));
 import { InsumosSection, InsumosSheet } from './Insumos.jsx';
+import { GustosQuiz, useGustos } from './Gustos.jsx';
+import { tasteProfile, answeredCount } from './gustos.js';
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
   IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
@@ -507,6 +509,10 @@ export function ClientProfile({ go, who }) {
   const [zoneOff, setZoneOff] = useState(seekOff);
   const [sheet, setSheet] = useState(null); // 'nombre' | 'baristas' | 'zona'
   const [promo, setPromo] = useState(false);
+  // Sus gustos (pedido del usuario): si saltó las preguntas del inicio, aquí las completa (con su punto)
+  const [gustos, saveGustos] = useGustos();
+  const [quiz, setQuiz] = useState(false);
+  const taste = tasteProfile(gustos);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -554,6 +560,7 @@ export function ClientProfile({ go, who }) {
       <Group title="Mi café">
         <Tile icon={IconCup} label="Mis apartados" onClick={() => go('/micra/apartados')} />
         <Tile icon={IconHeart} label="Mis baristas" count={favs.length || null} onClick={() => setSheet('baristas')} testid="tile-baristas" />
+        <Tile icon={IconCup} label={taste ? `Mis gustos · ${taste.name}` : 'Mis gustos'} dot={answeredCount(gustos) === 0} onClick={() => setQuiz(true)} testid="tile-gustos" />
         <Tile icon={IconToday} label="Hoy en el café" onClick={() => go('/micra/hoy')} />
         <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/reto')} testid="tile-reto" />
         <Tile icon={IconGift} label="Invita amigos" onClick={invite} />
@@ -634,6 +641,7 @@ export function ClientProfile({ go, who }) {
       )}
 
       {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
+      {quiz && <GustosQuiz answers={gustos} onDone={saveGustos} onClose={() => setQuiz(false)} />}
     </div>
   );
 }

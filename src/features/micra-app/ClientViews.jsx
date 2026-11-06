@@ -24,8 +24,7 @@ import Globito, { ping } from './Globito.jsx';
 const SeekNote = lazy(() => import('./SeekNote.jsx'));
 // El muro de Hoy, debajo de los baristas en el inicio del cliente (cargado aparte)
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
-const AceroAd = lazy(() => import('./AceroAd.jsx'));
-const GustosNudge = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosNudge })));
+const GustosIntro = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosIntro })));
 const GustosHead = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosHead })));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
 
@@ -291,7 +290,7 @@ export function ClientHome({ go }) {
         </div>
       </section>}
 
-      {!searching && <Suspense fallback={null}><GustosNudge /></Suspense>}
+      <Suspense fallback={null}><GustosIntro /></Suspense>
 
       <div className="mapp-bar">
         <div className="mapp-chips" role="group" aria-label="Filtrar">
@@ -330,9 +329,7 @@ export function ClientHome({ go }) {
 
       {!searching && <StampsCard />}
 
-      {/* La publicidad de ACERO.press: el plano de la lata y luego las latas de la casa */}
-      {!searching && <Suspense fallback={null}><AceroAd /></Suspense>}
-
+      {/* La publicidad de ACERO.press salió del inicio (pedido del usuario, 6 nov 2026): queda en Mi perfil › Otros */}
       {!searching && <section className="mapp-join">
         <div>
           <b>¿Vendes café en la calle?</b>

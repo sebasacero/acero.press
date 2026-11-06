@@ -442,3 +442,28 @@
 /* Tus baristas, en Mis apartados */
 .mapp .mapp-mybaristas{margin-top:18px}
 .mapp .mapp-mybaristas .mapp-av.is-live{box-shadow:0 0 0 2px var(--t-cta,#DE1B1B)}
+/* Entrada del barista: el chico del carrito en su hoja crema con la cuadrícula del plano */
+.mapp-joinhead-art{display:block;width:min(46%,180px);aspect-ratio:618/760;margin:0 auto 10px;border-radius:22px;overflow:hidden;
+  background:#F4EBDD linear-gradient(rgba(31,36,82,.07) 1px,transparent 1px) 0 0/16px 16px,#F4EBDD linear-gradient(90deg,rgba(31,36,82,.07) 1px,transparent 1px) 0 0/16px 16px;
+  box-shadow:0 10px 24px -12px rgba(13,8,32,.6)}
+.mapp-joinhead-art img{display:block;width:100%;height:auto;margin-top:2%}
+/* Competencia: la cabecera en gradiente con los íconos de los retos */
+.mapp .mapp-reto-head.is-grad{display:block;margin:-18px -16px 14px;padding:18px 18px 14px;border-radius:0 0 28px 28px;color:#fff;
+  background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 34%,var(--t-2) 66%,var(--t-3) 92%,var(--t-4) 100%);box-shadow:var(--t-glow-cold)}
+.mapp-reto-headtop{display:flex;align-items:center;gap:12px}
+.mapp .mapp-reto-head.is-grad .mapp-kicker{color:rgba(255,255,255,.8) !important}
+.mapp .mapp-reto-head.is-grad .mapp-title{color:#fff !important}
+.mapp .mapp-reto-head.is-grad .mapp-reto-cup{background:rgba(255,255,255,.14);color:#FFD9A8;border:1px solid rgba(255,255,255,.26)}
+.mapp-reto-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.mapp-reto-kpis div{display:flex;flex-direction:column-reverse;padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
+.mapp-reto-kpis dd{margin:0;font:700 1.2rem/1.1 'JetBrains Mono',monospace;color:#fff}
+.mapp-reto-kpis dt{margin-top:3px;font:500 .72rem 'Archivo',sans-serif;color:rgba(255,255,255,.8)}
+.mapp-reto-icons{list-style:none;display:flex;gap:6px;margin:14px -18px 0;padding:0 18px 2px;overflow-x:auto;scrollbar-width:none}
+.mapp-reto-icons::-webkit-scrollbar{display:none}
+.mapp-reto-icons button{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:62px;min-height:64px;padding:8px 6px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:600 .7rem 'Archivo',sans-serif;cursor:pointer}
+.mapp-reto-icons svg{width:28px;height:28px}
+.mapp-reto-icons button.on{background:#fff;color:var(--t-ink,#1F2452);border-color:#fff}
+.mapp-reto-icons button.is-now{box-shadow:0 0 0 2px #FFD9A8}
+/* La fila de íconos se desliza dentro de la cabecera, sin ensanchar la página */
+.mapp-reto > *{min-width:0}
+.mapp .mapp-reto-head.is-grad{max-width:calc(100% + 32px);overflow:hidden}

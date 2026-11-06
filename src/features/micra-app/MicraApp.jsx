@@ -260,6 +260,20 @@ export default function MicraApp() {
   const meInitials = viewMode === 'barista' && who.barista && !acting ? initials(who.barista.name) : null;
   // El círculo de la barra de abajo del cliente: sus iniciales si dejó su nombre en el celular
   const clientName = clientTabs ? api.savedName() : '';
+  // El punto de Mi perfil: vio las preguntas de gustos y no respondió ninguna (sin cargar gustos.js aquí)
+  const [, setGustosTick] = useState(0);
+  useEffect(() => {
+    const on = () => setGustosTick((n) => n + 1);
+    window.addEventListener('micra-gustos', on);
+    return () => window.removeEventListener('micra-gustos', on);
+  }, []);
+  const gustosDot = clientTabs && (() => {
+    try {
+      if (localStorage.getItem('micra_gustos_intro_v1') !== '1') return false;
+      const a = JSON.parse(localStorage.getItem('micra_gustos_v1') ?? 'null')?.answers ?? {};
+      return !Object.values(a).some((v) => (Array.isArray(v) ? v.length : v));
+    } catch { return false; }
+  })();
 
   return (
     <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs || joinTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
@@ -308,6 +322,7 @@ export default function MicraApp() {
           </button>
           <button type="button" className={`is-me ${route.view === 'me' ? 'on' : ''}`} aria-current={route.view === 'me' ? 'page' : undefined} onClick={() => go('/micra/perfil')} aria-label="Mi perfil" title="Mi perfil" data-testid="me-button">
             <span className="mapp-tab-av">{clientName ? initials(clientName) : <IconUser />}</span>
+            {gustosDot && <i className="mapp-tab-dot" aria-hidden="true" data-testid="gustos-dot" />}
           </button>
         </nav>
       )}

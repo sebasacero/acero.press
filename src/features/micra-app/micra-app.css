@@ -1614,3 +1614,7 @@
 .mapp-outmodes-gps { margin: 10px 2px 0; font-size: .88rem; line-height: 1.35; color: var(--m-ink); opacity: .8; }
 /* La entrada de los baristas lleva la barra del cliente abajo */
 .mapp.is-barista.has-tabs .mapp-main { padding-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+/* El punto de Mi perfil en la barra: le faltan sus gustos */
+.mapp-tabs .is-me { position: relative; }
+.mapp-tab-dot { position: absolute; top: 8px; left: calc(50% + 9px); width: 10px; height: 10px; border-radius: 50%; background: var(--red, #DE1B1B); box-shadow: 0 0 0 2px #fff; }
+.mapp-gustos-welcome { margin: 12px 0 0; font-size: .95rem; line-height: 1.4; color: var(--t-ink, #1F2452); }

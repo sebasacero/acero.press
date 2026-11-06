@@ -10,12 +10,12 @@ const MARLENE = SEED.baristas[0].id;
 const JAIRO = SEED.baristas[1].id;
 
 /** who: 'visitor' | 'barista' (entró por SMS, enlazado) | 'team' (dueño sin ficha propia) */
-async function open(browser, { who = 'visitor' } = {}) {
+async function open(browser, { who = 'visitor', gustosIntro = false } = {}) {
   const ctx = await browser.newContext(PHONE);
   const page = await ctx.newPage();
   page.setDefaultTimeout(8000);
   const errors = watchErrors(page);
-  const api = await mockBackend(page);
+  const api = await mockBackend(page, { gustosIntro });
   Object.assign(api.micra, structuredClone(SEED));
   if (who === 'barista') {
     api.micra.admin = false;
@@ -252,37 +252,27 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
   expect(errors).toEqual([]);
 });
 
-test('cliente: la publicidad de ACERO.press está en el inicio (video de la lata y luego las latas), no encima del perfil', async ({ browser }) => {
+test('cliente: la publicidad de ACERO.press ya no está en el inicio; se abre desde Mi perfil (video de la lata y luego las latas)', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
   await expect(page.getByTestId('micra-splash')).toHaveCount(0);
-  const ad = page.getByTestId('acero-ad');
-  await ad.scrollIntoViewIfNeeded();
-  await expect(ad).toContainText('Recetas de la casa');
-  // Primero el video plano de la lata (mudo); «Ver las latas» o su final pasan al carrusel
-  const skip = page.getByTestId('acero-skip');
-  await expect(page.getByTestId('acero-video').or(page.getByTestId('acero-cans'))).toBeVisible();
-  if (await skip.isVisible()) {
-    // Si el video termina o no se puede reproducir, pasa solo a las latas
-    await skip.click({ timeout: 3000 }).catch(() => {});
-  }
-  const cans = page.getByTestId('acero-cans');
-  await expect(cans.getByRole('listitem')).toHaveCount(4);
-  await expect(cans).toContainText('Cold brew');
-  await expect(cans).toContainText('Matcha mambé');
-  // Sin precio en el sitio no se inventa uno; se pide por WhatsApp
-  await expect(cans.getByRole('listitem').first()).toContainText('Pregunta el precio');
-  await expect(page.getByTestId('acero-buy-cold-brew')).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*cold%20brew/);
-  await page.getByRole('group', { name: 'Elegir lata' }).getByRole('button', { name: 'Latte' }).click();
-  await expect(cans.getByRole('listitem').nth(1)).toHaveAttribute('aria-current', 'true');
+  await expect(page.getByRole('heading', { name: /Qué te gustaría probar/ })).toBeVisible();
+  await expect(page.getByTestId('acero-ad')).toHaveCount(0);
 
-  // En Mi perfil ya no sale sola; se abre desde «Otros › ACERO.press» y se cierra con Escape
+  // En Mi perfil no sale sola; se abre desde «Otros › ACERO.press» y se cierra con Escape
   await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: 'Mi perfil' }).click();
   await expect(page.getByTestId('client-profile')).toBeVisible();
   const promo = page.getByTestId('promo-acero');
   await expect(promo).toHaveCount(0);
   await page.getByTestId('tile-coldbrew').click();
   await expect(promo).toBeVisible();
+  await expect(promo).toContainText('Recetas de la casa');
+  const skip = page.getByTestId('acero-skip');
+  await expect(page.getByTestId('acero-video').or(page.getByTestId('acero-cans'))).toBeVisible();
+  if (await skip.isVisible()) await skip.click({ timeout: 3000 }).catch(() => {});
+  const cans = page.getByTestId('acero-cans');
+  await expect(cans.getByRole('listitem')).toHaveCount(4);
+  await expect(cans).toContainText('Matcha mambé');
   await page.keyboard.press('Escape');
   await expect(promo).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -324,12 +314,22 @@ test('barista: Insumos en su perfil arma el pedido y lo manda por WhatsApp al eq
   expect(errors).toEqual([]);
 });
 
-test('cliente: cuenta sus gustos en cinco preguntas opcionales y «Mis apartados» muestra su perfil de café', async ({ browser }) => {
-  const { page, errors } = await open(browser);
+test('cliente: la primera vez salen solas las preguntas de gustos; si las salta, punto en Mi perfil y las completa allá', async ({ browser }) => {
+  const { page, errors } = await open(browser, { gustosIntro: true });
   await page.goto('/micra', { waitUntil: 'load' });
-  // La invitación en el inicio, una sola vez y se puede cerrar
-  await expect(page.getByTestId('gustos-nudge')).toContainText('sin datos personales');
-  await page.getByTestId('gustos-open').click();
+  // Primera vez: salen solas con la bienvenida; «Saltar todo» las cierra y deja el punto
+  await expect(page.getByTestId('gustos-welcome')).toContainText('Bienvenido a Micra');
+  await page.getByTestId('gustos-close').click();
+  await expect(page.getByTestId('gustos-quiz')).toHaveCount(0);
+  await expect(page.getByTestId('gustos-dot')).toBeVisible();
+  // No vuelven a salir solas
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByTestId('micra-splash')).toHaveCount(0);
+  await expect(page.getByTestId('gustos-quiz')).toHaveCount(0);
+  // En Mi perfil, «Mis gustos» con su punto abre las mismas preguntas
+  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: 'Mi perfil' }).click();
+  await expect(page.getByTestId('tile-gustos').locator('.mapp-ptile-dot')).toHaveCount(1);
+  await page.getByTestId('tile-gustos').click();
   const quiz = page.getByTestId('gustos-quiz');
   await expect(quiz.getByRole('heading', { name: '¿Cómo te tomas el café?' })).toBeVisible();
   await page.getByTestId('gusto-bebida-tinto').click();
@@ -349,7 +349,9 @@ test('cliente: cuenta sus gustos en cinco preguntas opcionales y «Mis apartados
   await expect(page.getByTestId('gustos-result')).toContainText('Explorador de especialidad');
   await page.getByTestId('gustos-done').click();
   await expect(quiz).toHaveCount(0);
-  await expect(page.getByTestId('gustos-nudge')).toHaveCount(0);
+  await expect(page.getByTestId('tile-gustos')).toContainText('Explorador de especialidad');
+  await expect(page.getByTestId('tile-gustos').locator('.mapp-ptile-dot')).toHaveCount(0);
+  await expect(page.getByTestId('gustos-dot')).toHaveCount(0);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('micra_gustos_v1')).answers);
   expect(saved).toEqual({ bebida: ['tinto'], marcas: ['amor-perfecto'], fuerza: 'suave' });
 

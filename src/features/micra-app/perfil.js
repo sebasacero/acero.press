@@ -30,7 +30,7 @@ export const SESSION_KEYS = [
 export const CLIENT_KEYS = [
   'micra_name_v1', 'micra_favs_v1', 'micra_device_v1',
   'micra_seek_ref_v1', 'micra_seek_at_v1', 'micra_seek_off_v1', 'micra_invite_v1',
-  'micra_gustos_v1', 'micra_gustos_off_v1', 'micra_mis_baristas_v1',
+  'micra_gustos_v1', 'micra_gustos_off_v1', 'micra_mis_baristas_v1', 'micra_gustos_intro_v1',
 ];
 
 const digits = (v) => String(v ?? '').replace(/\D/g, '');

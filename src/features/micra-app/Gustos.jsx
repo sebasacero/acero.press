@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
-import { QUESTIONS, pick, isPicked, cleanAnswers, answeredCount, tasteProfile, readGustos, writeGustos } from './gustos.js';
+import { QUESTIONS, pick, isPicked, cleanAnswers, answeredCount, tasteProfile, readGustos, writeGustos, introSeen, markIntroSeen } from './gustos.js';
 
 // Los gustos del cliente (6 nov 2026, pedido del usuario): cinco preguntas cortas, una por
 // pantalla, con un dato de café en cada una; todo opcional y solo en su celular. El perfil sale
 // en la cabecera de «Mis apartados». Lo puro en gustos.js. Llega aparte (el bundle está al borde).
 
-const NUDGE_OFF = 'micra_gustos_off_v1';
-const nudgeOff = () => { try { return localStorage.getItem(NUDGE_OFF) === '1'; } catch { return false; } };
+
+// Avisa a la barra de abajo (el punto de Mi perfil) que los gustos cambiaron
+const changed = () => { try { window.dispatchEvent(new Event('micra-gustos')); } catch { /* sin ventana */ } };
 
 export function useGustos() {
   const [answers, setAnswers] = useState(() => cleanAnswers(readGustos()?.answers));
-  const save = (a) => { const clean = cleanAnswers(a); writeGustos({ answers: clean, at: new Date().toISOString() }); setAnswers(clean); };
+  const save = (a) => { const clean = cleanAnswers(a); writeGustos({ answers: clean, at: new Date().toISOString() }); setAnswers(clean); changed(); };
   return [answers, save];
 }
 
 /** Las preguntas a pantalla completa: una a la vez, con «Saltar» y el perfil al final. */
-export function GustosQuiz({ answers: start = {}, onDone, onClose }) {
+export function GustosQuiz({ answers: start = {}, onDone, onClose, intro = false }) {
   const [answers, setAnswers] = useState(start);
   const [i, setI] = useState(0);
   const end = i >= QUESTIONS.length;
@@ -34,8 +35,9 @@ export function GustosQuiz({ answers: start = {}, onDone, onClose }) {
         <ol className="mapp-gustos-dots" aria-label={`Pregunta ${Math.min(i + 1, QUESTIONS.length)} de ${QUESTIONS.length}`}>
           {QUESTIONS.map((x, k) => <li key={x.id} className={k < i ? 'done' : k === i ? 'on' : ''} />)}
         </ol>
-        <button type="button" className="mapp-link" onClick={onClose}>Cerrar</button>
+        <button type="button" className="mapp-link" onClick={onClose} data-testid="gustos-close">{intro ? 'Saltar todo' : 'Cerrar'}</button>
       </header>
+      {intro && i === 0 && <p className="mapp-gustos-welcome" data-testid="gustos-welcome"><b>Bienvenido a Micra.</b> Antes de empezar, cuéntanos qué café te gusta: 5 preguntas, 30 segundos, sin datos personales.</p>}
       {!end ? (
         <section className="mapp-gustos-q" key={q.id}>
           <p className="mapp-cota">{q.multi ? 'Escoge las que quieras' : 'Escoge una'}</p>
@@ -83,24 +85,16 @@ export function GustosQuiz({ answers: start = {}, onDone, onClose }) {
   );
 }
 
-/** En el inicio del cliente, una vez: la invitación a contar sus gustos (se puede cerrar). */
-export function GustosNudge() {
+/**
+ * La primera vez que el cliente abre Micra salen las preguntas solas (pedido del usuario, 6 nov 2026).
+ * Si las salta, queda un punto en Mi perfil, donde las puede contestar después.
+ */
+export function GustosIntro() {
   const [answers, save] = useGustos();
-  const [hidden, setHidden] = useState(nudgeOff);
-  const [open, setOpen] = useState(false);
-  if (hidden || answeredCount(answers) > 0) return null;
-  const close = () => { try { localStorage.setItem(NUDGE_OFF, '1'); } catch { /* sin memoria */ } setHidden(true); };
-  return (
-    <>
-      <section className="mapp-gustos-nudge" aria-label="Tus gustos de café" data-testid="gustos-nudge">
-        <span aria-hidden="true">☕</span>
-        <div><b>¿Qué café te gusta?</b><small>5 preguntas · 30 segundos · sin datos personales</small></div>
-        <button type="button" className="mapp-btn is-small is-cta" onClick={() => setOpen(true)} data-testid="gustos-open">Empezar</button>
-        <button type="button" className="mapp-gustos-x" onClick={close} aria-label="Ahora no">×</button>
-      </section>
-      {open && <GustosQuiz answers={answers} onDone={save} onClose={() => setOpen(false)} />}
-    </>
-  );
+  const [open, setOpen] = useState(() => !introSeen() && answeredCount(answers) === 0);
+  if (!open) return null;
+  const close = () => { markIntroSeen(); changed(); setOpen(false); };
+  return <GustosQuiz intro answers={answers} onDone={save} onClose={close} />;
 }
 
 /**

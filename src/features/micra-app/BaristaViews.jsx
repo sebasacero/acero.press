@@ -8,7 +8,6 @@ import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
 import platform from './platform.js';
-import Figure from './Elenco.jsx';
 import { IconToday, IconCup, IconCap, IconWallet, IconBack, IconPin, IconCamera } from './icons.jsx';
 import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
@@ -106,7 +105,8 @@ function JoinHead() {
   ].filter(Boolean);
   return (
     <section className="mapp-joinhead" aria-labelledby="mapp-join-t" data-testid="join-head">
-      <Figure name="kit" className="is-join" />
+      {/* El chico que empuja el carrito (pedido del usuario, 6 nov 2026), sobre la hoja crema de la calle */}
+      <span className="mapp-joinhead-art" aria-hidden="true"><img src="/image/personas/ruta.webp" alt="" width="618" height="900" decoding="async" /></span>
       <p className="mapp-kicker">Para baristas</p>
       <h1 className="mapp-title" id="mapp-join-t">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
       <ul className="mapp-joinhead-perks">
