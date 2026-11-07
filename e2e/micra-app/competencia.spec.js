@@ -163,3 +163,20 @@ test('sin reto abierto ni migración, la competencia lo dice y la app sigue', as
   await expect(b.page.getByTestId('competencia')).toContainText('abre muy pronto');
   expect(b.errors.filter((e) => !/micra_challenge|404/.test(e))).toEqual([]);
 });
+
+test('reto básico: la tarjeta abre la hoja con la descripción y el video', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/reto', { waitUntil: 'load' });
+  const basics = page.getByTestId('basics');
+  await basics.getByTestId('basics-filtrados').click();
+  await expect(basics.getByRole('tabpanel')).not.toContainText('gramos, agua, temperatura');
+  await basics.getByTestId('basic-0').click();
+  const sheet = page.getByTestId('basic-sheet');
+  await expect(sheet).toContainText('Tu receta de AeroPress');
+  await expect(sheet).toContainText('gramos, agua, temperatura y tiempo');
+  await expect(sheet).toContainText('la receta está completa');
+  await expect(sheet.locator('video')).toHaveAttribute('src', '/image/metodo/aeropress-metodo.mp4');
+  await sheet.getByRole('button', { name: 'Listo' }).click();
+  await expect(sheet).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

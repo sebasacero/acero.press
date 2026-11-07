@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, shortTitle, challengeDraft as draft } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, shortTitle, challengeDraft as draft, videoOf } from './competencia.js';
 
 const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
 
@@ -92,4 +92,11 @@ test('medallero: una medalla por sección, encendida cuando su reto cerró', asy
   assert.equal(b.total, 2);
   assert.equal(b.won, 1);
   assert.deepEqual(medalBoard().medals.map((m) => m.done), BASIC_SECTIONS.map(() => 0));
+});
+
+test('el video del reto: solo rutas propias', () => {
+  assert.deepEqual(videoOf({ video: '/image/metodo/aeropress-metodo.mp4', poster: '/image/metodo/poster.webp' }), { src: '/image/metodo/aeropress-metodo.mp4', poster: '/image/metodo/poster.webp' });
+  assert.equal(videoOf({ video: 'https://youtube.com/x' }), null);
+  assert.equal(videoOf({}), null);
+  assert.equal(videoOf(BASIC_SECTIONS[0].challenges[0]).src, '/image/metodo/aeropress-metodo.mp4');
 });

@@ -84,7 +84,7 @@
 .mapp.is-day .mapp-chips .on{background:var(--t-ink) !important;color:#fff !important;box-shadow:inset 0 -3px 0 var(--t-5)}
 /* Vender: la cuenta del día como lectura de temperatura */
 .mapp .mapp-sellhead *{color:#fff}
-.mapp .mapp-sellhead-n{color:#fff !important} /* en blanco, sin gradiente en las letras (pedido del usuario, 7 nov 2026) */
+.mapp .mapp-sellhead-n, .mapp .mapp-sellhead-n small, .mapp .mapp-sellhead-sub, .mapp .mapp-sellhead-cota, .mapp .mapp-sellhead-hello, .mapp .mapp-sellhead-kpis dt, .mapp .mapp-sellhead-top > span:last-child{color:#fff !important;opacity:1 !important} /* letras en blanco, sin gradiente ni tintes (pedido del usuario, 7 nov 2026) */
 .mapp .mapp-sellhead-kpis > div{background:rgba(13,8,32,.45) !important;border:1px solid rgba(255,194,60,.35) !important;backdrop-filter:blur(4px)}
 .mapp .mapp-sellhead-bar{background:var(--t-ramp) !important}
 .mapp .mapp-sellbar{background:var(--t-ink) !important}
@@ -533,7 +533,7 @@
   box-shadow: 0 10px 24px -16px rgba(31, 36, 82, .5);
 }
 .mapp-basics-list.is-carousel li:only-child { flex-basis: 100%; }
-.mapp-basics-top {
+.mapp-basics-top { position: relative;
   display: flex; align-items: center; gap: 10px; padding: 14px 14px 16px; margin-bottom: 12px;
   background: linear-gradient(135deg, var(--t-1, #22125A), var(--t-2, #5A1E9E) 55%, var(--t-3, #B0127A));
   color: #fff;
@@ -547,6 +547,23 @@
 .mapp-basics-list.is-carousel b, .mapp-basics-list.is-carousel p, .mapp-basics-list.is-carousel small { padding: 0 14px; }
 .mapp-basics-list.is-carousel b { font-size: 1.12rem; }
 .mapp-basics-list.is-carousel small { margin-top: auto; padding-top: 8px; }
+.mapp-basics-open{display:flex;flex-direction:column;width:100%;height:100%;padding:0 0 12px;border:0;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;border-radius:inherit}
+/* El ícono grande del método llena la cabecera de la tarjeta */
+.mapp-basics-list.is-carousel .mapp-basics-top{min-height:150px;justify-content:center;align-items:center}
+.mapp-basics-list.is-carousel .mapp-basics-ic{width:96px;height:96px;border-radius:28px}
+.mapp-basics-list.is-carousel .mapp-basics-ic svg{width:64px;height:64px}
+.mapp-basics-list.is-carousel .mapp-basics-n{position:absolute;top:10px;right:10px;margin:0}
+.mapp-basics-list.is-carousel .mapp-basics-now{position:absolute;left:10px;bottom:10px;margin:0}
+.mapp-basics-list.is-carousel .mapp-basics-open small{margin-top:4px;padding:0 14px;color:var(--t-4);opacity:1;font-weight:700}
+.mapp-basics-sheet{display:flex;flex-direction:column;gap:12px}
+.mapp-basics-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:-10px -20px 0;padding:22px 20px 18px;border-radius:28px 28px 0 0;color:#fff;background:linear-gradient(160deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%)}
+.mapp-basics-hero .mapp-basics-ic{width:88px;height:88px;border-radius:26px;background:rgba(255,255,255,.18)}
+.mapp-basics-hero .mapp-basics-ic svg{width:58px;height:58px}
+.mapp-basics-hero .mapp-kicker, .mapp-basics-hero h2{color:#fff;margin:0}
+.mapp-basics-video{width:100%;aspect-ratio:16/9;border-radius:16px;background:#000;object-fit:cover}
+.mapp-basics-brief{margin:0;font-size:1rem;line-height:1.45}
+.mapp-basics-how{margin:0;padding:12px 14px;border-radius:14px;background:rgba(31,36,82,.06);font:500 .85rem/1.4 'JetBrains Mono',monospace}
+.mapp-basics-how b{display:block;font:700 .72rem 'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;color:var(--t-4)}
 .mapp-basics-dots { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
 .mapp-basics-dots i { width: 7px; height: 7px; border-radius: 999px; background: rgba(31, 36, 82, .2); transition: width .2s; }
 .mapp-basics-dots i.on { width: 20px; background: var(--t-4, #DE1B1B); }

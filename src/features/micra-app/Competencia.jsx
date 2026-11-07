@@ -1,8 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as api from './api.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf, shortTitle, medalBoard } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf, shortTitle, medalBoard, videoOf } from './competencia.js';
 import { IconTrophy, IconBean } from './icons.jsx';
 import Figure from './Elenco.jsx';
 import { Cargando } from './Animado.jsx';
@@ -86,6 +87,40 @@ function EntryView({ entry, url, challenge, onVote, onClose, voting, error }) {
  * arte latte, leche, molienda, cata, calle). El barista los ve todos para practicar; el equipo
  * abre uno como reto de la semana. El reto abierto sale marcado en su sección.
  */
+/** La hoja de un reto básico: el ícono grande, la descripción, cómo se califica y el video si lo tiene. */
+function BasicSheet({ c, section, live, onClose }) {
+  useEffect(() => {
+    const esc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [onClose]);
+  const video = videoOf(c);
+  // En el body: la sección de los retos recorta lo que se sale (overflow) y taparía la hoja
+  return createPortal(
+    <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label={shortTitle(c.title)} data-testid="basic-sheet">
+      <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" tabIndex={-1} onClick={onClose} />
+      <section className="mapp-sheet is-scroll mapp-basics-sheet">
+        <i className="mapp-sheet-handle" aria-hidden="true" />
+        <div className="mapp-basics-hero">
+          <span className="mapp-basics-ic" aria-hidden="true"><SchoolIcon id={SECTION_ICON[section.id] ?? 'cafe'} /></span>
+          <p className="mapp-kicker">{section.label}{live ? ' · Reto de esta semana' : ''}</p>
+          <h2 className="mapp-title is-small">{shortTitle(c.title)}</h2>
+        </div>
+        {video && (
+          <video className="mapp-basics-video" src={video.src} poster={video.poster ?? undefined} controls playsInline preload="none" aria-label={`Video: ${shortTitle(c.title)}`} />
+        )}
+        <p className="mapp-basics-brief">{c.brief}</p>
+        <p className="mapp-basics-how"><b>{c.kind === 'arte_latte' ? '🏅 Cómo se califica' : '✓ Qué se mira'}</b>{c.how}</p>
+        {live
+          ? <a className="mapp-btn is-cta" href="#mapp-reto" onClick={onClose}>Participar en el reto</a>
+          : <p className="mapp-fine">Cuando el equipo abra este reto, participas desde aquí con una foto.</p>}
+        <button type="button" className="mapp-btn is-ghost" onClick={onClose}>Listo</button>
+      </section>
+    </div>,
+    document.querySelector('.mapp') ?? document.body, // dentro de la app, para heredar sus colores
+  );
+}
+
 function Basics({ current, sec, setSec }) {
   const here = sectionOf(current);
   const cur = sec ?? here?.id ?? BASIC_SECTIONS[0].id;
@@ -93,6 +128,7 @@ function Basics({ current, sec, setSec }) {
   // Qué tarjeta está a la vista, para los puntos de abajo
   const track = useRef(null);
   const [at, setAt] = useState(0);
+  const [open, setOpen] = useState(null); // el reto abierto en la hoja
   useEffect(() => { setAt(0); }, [cur]);
   const onScroll = () => {
     const el = track.current;
@@ -121,14 +157,16 @@ function Basics({ current, sec, setSec }) {
           const live = current && current.title === c.title;
           return (
             <li key={c.title} className={live ? 'is-live' : ''} aria-label={`${i + 1} de ${s.challenges.length}`}>
-              <div className="mapp-basics-top">
-                <span className="mapp-basics-ic" aria-hidden="true"><SchoolIcon id={SECTION_ICON[s.id] ?? 'cafe'} /></span>
-                <span className="mapp-basics-n" aria-hidden="true">{i + 1}/{s.challenges.length}</span>
-                {live && <em className="mapp-basics-now">Reto de esta semana</em>}
-              </div>
-              <b>{shortTitle(c.title)}</b>
-              <p>{c.brief}</p>
-              <small>{c.kind === 'arte_latte' ? '🏅 ' : '✓ '}{c.how}</small>
+              {/* Solo el ícono grande del método y el nombre; la descripción y el video, al entrar (pedido del usuario, 7 nov 2026) */}
+              <button type="button" className="mapp-basics-open" onClick={() => setOpen(c)} data-testid={`basic-${i}`}>
+                <div className="mapp-basics-top">
+                  <span className="mapp-basics-ic" aria-hidden="true"><SchoolIcon id={SECTION_ICON[s.id] ?? 'cafe'} /></span>
+                  <span className="mapp-basics-n" aria-hidden="true">{i + 1}/{s.challenges.length}</span>
+                  {live && <em className="mapp-basics-now">Reto de esta semana</em>}
+                </div>
+                <b>{shortTitle(c.title)}</b>
+                <small>{videoOf(c) ? '▶ Con video · ' : ''}Ver el reto</small>
+              </button>
             </li>
           );
         })}
@@ -138,6 +176,7 @@ function Basics({ current, sec, setSec }) {
           {s.challenges.map((c, i) => <i key={c.title} className={i === at ? 'on' : ''} />)}
         </div>
       )}
+      {open && <BasicSheet c={open} section={s} live={current && current.title === open.title} onClose={() => setOpen(null)} />}
     </section>
   );
 }
