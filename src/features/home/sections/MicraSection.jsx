@@ -30,6 +30,7 @@ export default function MicraSection() {
       .then(([apple, google]) => setStores({ apple: apple || '', google: google || '' }));
   }, []);
   const stats = t('micra.stats');
+  const notices = t('micra.notices');
   const steps = t('micra.steps');
   const wa = (msg) => `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
 
@@ -65,10 +66,23 @@ export default function MicraSection() {
             {/* Vender, como lo ve el barista: se toca +1 y la taza se llena */}
             <SellPhone className="micra-phone" />
             {/* Las cifras del estudio de calle, las mismas del celular, sueltas alrededor */}
-            <ul className="micra-stats" aria-label={stats.label}>
-              <li><b>{show(street?.cups)}</b><span>{stats.cups}</span></li>
-              <li><b>{show(street?.blocks)}</b><span>{stats.blocks}</span></li>
-              <li><b>{show(street?.tinteros)}</b><span>{stats.baristas}</span></li>
+            {/* Las cifras solo cuando hay (nada de ceros) y, alrededor, avisos de la app como
+                notificaciones del celular (pedido del usuario, 7 nov 2026) */}
+            {street?.cups > 0 && (
+              <ul className="micra-stats" aria-label={stats.label}>
+                <li><b>{show(street.cups)}</b><span>{stats.cups}</span></li>
+                {street.blocks > 0 && <li><b>{show(street.blocks)}</b><span>{stats.blocks}</span></li>}
+                {street.tinteros > 0 && <li><b>{show(street.tinteros)}</b><span>{stats.baristas}</span></li>}
+              </ul>
+            )}
+            <ul className="micra-notices" aria-label={notices.label}>
+              {notices.items.map(([title, body], i) => (
+                <li key={i}>
+                  <img src="/image/micra-icon-180.png" alt="" width="30" height="30" />
+                  <span><b>{title}</b>{body}</span>
+                  <small>{notices.now}</small>
+                </li>
+              ))}
             </ul>
             <StoreButtons appStoreUrl={stores.apple} playStoreUrl={stores.google} />
           </div>

@@ -33,3 +33,40 @@
 .essp-slide--paper .essp-script { color: #FFD9A8; }
 .essp-slide--paper .essp-btn.is-link { color: #fff; }
 .essp-slide--paper .essp-loc { color: rgba(255, 255, 255, .82) !important; }
+
+/* El segundo banner, «Vive del café con tu AeroPress», con el mismo gradiente que el primero
+   (pedido del usuario, 7 nov 2026); la foto de la barra ya no va de fondo. */
+.essp-slide--photo {
+  background:
+    radial-gradient(70% 60% at 15% 100%, rgba(255, 194, 60, .4), transparent 70%),
+    linear-gradient(180deg, var(--t-0) 0%, var(--t-1) 30%, var(--t-2) 62%, var(--t-3) 88%, var(--t-4) 100%);
+}
+.essp-slide--photo .essp-photo { display: none; }
+.essp-slide--photo .essp-script { color: #FFD9A8; }
+
+/* El panel de Micra en la portada: ya no es negro, va en el frío del gradiente (7 nov 2026),
+   con avisos de la app como notificaciones del celular alrededor */
+.micra-stage {
+  background:
+    radial-gradient(80% 60% at 50% 100%, rgba(222, 27, 27, .55), transparent 70%),
+    linear-gradient(180deg, var(--t-1) 0%, var(--t-2) 70%, var(--t-3) 100%) !important;
+}
+.micra-notices { list-style: none; margin: 0; padding: 0; pointer-events: none; } /* no tapan el celular, que se toca */
+.micra-notices li {
+  position: absolute; display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center;
+  width: 250px; padding: 9px 12px; border-radius: 16px; background: rgba(255, 255, 255, .96); color: var(--ink);
+  box-shadow: 0 14px 30px -10px rgba(13, 8, 32, .55); font: 500 11px/1.25 'Archivo', sans-serif;
+}
+.micra-notices img { width: 30px; height: 30px; border-radius: 9px; }
+.micra-notices b { display: block; font: 800 12px/1.2 'Archivo', sans-serif; }
+.micra-notices small { align-self: start; font: 500 9px 'JetBrains Mono', monospace; color: rgba(31, 36, 82, .6); }
+.micra-notices li:nth-child(1) { top: 26px; left: 4%; transform: rotate(-2deg); }
+.micra-notices li:nth-child(2) { top: 46%; right: 3%; transform: rotate(1.5deg); }
+.micra-notices li:nth-child(3) { bottom: 118px; left: 5%; transform: rotate(-1deg); }
+.micra-stats li:nth-child(1) { top: 150px; left: auto; right: 4%; }
+.micra-stats li:nth-child(2) { top: auto; bottom: 150px; right: 5%; }
+.micra-stats li:nth-child(3) { bottom: 230px; left: 5%; }
+@container (max-width: 980px) {
+  .micra-notices li { position: static; width: auto; transform: none; }
+  .micra-notices { display: grid; gap: 8px; width: 100%; max-width: 320px; }
+}
