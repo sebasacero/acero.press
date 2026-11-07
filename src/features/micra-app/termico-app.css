@@ -84,7 +84,7 @@
 .mapp.is-day .mapp-chips .on{background:var(--t-ink) !important;color:#fff !important;box-shadow:inset 0 -3px 0 var(--t-5)}
 /* Vender: la cuenta del día como lectura de temperatura */
 .mapp .mapp-sellhead *{color:#fff}
-.mapp .mapp-sellhead-n{background:linear-gradient(180deg,var(--t-7),var(--t-6) 45%,var(--t-5)) !important;-webkit-background-clip:text !important;background-clip:text !important;color:transparent !important}
+.mapp .mapp-sellhead-n{color:#fff !important} /* en blanco, sin gradiente en las letras (pedido del usuario, 7 nov 2026) */
 .mapp .mapp-sellhead-kpis > div{background:rgba(13,8,32,.45) !important;border:1px solid rgba(255,194,60,.35) !important;backdrop-filter:blur(4px)}
 .mapp .mapp-sellhead-bar{background:var(--t-ramp) !important}
 .mapp .mapp-sellbar{background:var(--t-ink) !important}
@@ -135,7 +135,7 @@
 /* La meta del día en la barra de arriba del barista (antes «Cliente / Barista») */
 .mapp-topgoal{display:flex;align-items:center;gap:8px;margin-left:auto;padding:4px 12px 4px 6px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;font:800 .95rem 'Archivo',sans-serif;min-height:44px;cursor:pointer}
 .mapp-topgoal svg{width:32px;height:32px;flex:none}
-.mapp-topgoal b{font:900 1.15rem 'Archivo',sans-serif;background:linear-gradient(180deg,var(--t-7),var(--t-6) 50%,var(--t-5));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapp-topgoal b{font:900 1.15rem 'Archivo',sans-serif;color:#fff}
 .mapp-topgoal small{font:600 .68rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.75);letter-spacing:.02em}
 .mapp-topgoal.is-met{background:var(--t-cta);border-color:transparent}
 .mapp:not(.is-redtop) .mapp-topgoal{background:var(--t-0)}
