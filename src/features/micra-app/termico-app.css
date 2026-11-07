@@ -467,3 +467,55 @@
 /* La fila de íconos se desliza dentro de la cabecera, sin ensanchar la página */
 .mapp-reto > *{min-width:0}
 .mapp .mapp-reto-head.is-grad{max-width:calc(100% + 32px);overflow:hidden}
+
+/* Retos básicos en tarjetas de carrusel (pedido del usuario, 7 nov 2026): se pasan
+   de lado con el dedo, la siguiente se asoma, cabecera en gradiente con el ícono. */
+.mapp-basics-list.is-carousel {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 4px 16px 10px; scroll-padding: 0 16px; scrollbar-width: none;
+}
+.mapp-basics-list.is-carousel::-webkit-scrollbar { display: none; }
+.mapp-basics-list.is-carousel li {
+  flex: 0 0 82%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 0;
+  padding: 0 0 14px; overflow: hidden; border-radius: 20px; min-height: 230px;
+  box-shadow: 0 10px 24px -16px rgba(31, 36, 82, .5);
+}
+.mapp-basics-list.is-carousel li:only-child { flex-basis: 100%; }
+.mapp-basics-top {
+  display: flex; align-items: center; gap: 10px; padding: 14px 14px 16px; margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--t-1, #22125A), var(--t-2, #5A1E9E) 55%, var(--t-3, #B0127A));
+  color: #fff;
+}
+.mapp-basics-list.is-carousel li.is-live .mapp-basics-top { background: var(--t-cta, #DE1B1B); }
+.mapp-basics-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(255, 255, 255, .14); }
+.mapp-basics-ic svg { width: 32px; height: 32px; }
+.mapp-basics-list.is-carousel .mapp-basics-n { width: auto; height: auto; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .16); margin-left: auto; }
+.mapp-basics-list.is-carousel li.is-live .mapp-basics-n { background: rgba(255, 255, 255, .2); }
+.mapp-basics-list.is-carousel .mapp-basics-now { margin-left: 0; background: #fff; color: var(--t-4, #DE1B1B); }
+.mapp-basics-list.is-carousel b, .mapp-basics-list.is-carousel p, .mapp-basics-list.is-carousel small { padding: 0 14px; }
+.mapp-basics-list.is-carousel b { font-size: 1.12rem; }
+.mapp-basics-list.is-carousel small { margin-top: auto; padding-top: 8px; }
+.mapp-basics-dots { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+.mapp-basics-dots i { width: 7px; height: 7px; border-radius: 999px; background: rgba(31, 36, 82, .2); transition: width .2s; }
+.mapp-basics-dots i.on { width: 20px; background: var(--t-4, #DE1B1B); }
+@media (prefers-reduced-motion: reduce) { .mapp-basics-dots i { transition: none; } }
+
+/* «Quiero un café» (pedido del usuario, 7 nov 2026): fijo abajo, al pulgar, encima de la
+   barra; el gradiente térmico como los llamados a la acción. Pegado (sticky) al final del
+   inicio: baja con la lista y nunca tapa lo último. */
+.mapp-want {
+  position: sticky; z-index: 5; bottom: calc(66px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+  margin: 18px -16px 0; padding: 18px 16px 10px; display: grid; gap: 6px; text-align: center;
+  background: linear-gradient(rgba(255, 255, 255, 0), var(--m-bg, #fff) 26%);
+}
+.mapp-want-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px;
+  border: 0; border-radius: 16px; cursor: pointer; color: #fff; font: 800 1.12rem 'Archivo', sans-serif;
+  background: var(--t-cta, #DE1B1B); box-shadow: var(--t-cta-glow, 0 12px 24px -12px rgba(176, 18, 122, .8));
+}
+.mapp-want-btn:disabled { opacity: .75; }
+.mapp-want-btn:focus-visible { outline: 3px solid var(--t-1, #22125A); outline-offset: 2px; }
+.mapp-want-note { margin: 0; font-size: .8rem; color: var(--m-ink-soft, #4a4f6a); }
+.mapp-want-ok { margin: 0; padding: 12px 14px; border-radius: 16px; display: grid; gap: 2px; text-align: left; background: #fff; border: 1px solid var(--t-4, #DE1B1B); box-shadow: 0 10px 24px -14px rgba(222, 27, 27, .5); }
+.mapp-want-ok b { font: 800 1.02rem 'Archivo', sans-serif; }
+.mapp-want-ok span { font-size: .86rem; color: var(--m-ink-soft, #4a4f6a); }

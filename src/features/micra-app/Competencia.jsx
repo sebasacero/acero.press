@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import * as api from './api.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
@@ -90,6 +90,16 @@ function Basics({ current, barista, sec, setSec }) {
   const here = sectionOf(current);
   const cur = sec ?? here?.id ?? BASIC_SECTIONS[0].id;
   const s = BASIC_SECTIONS.find((x) => x.id === cur) ?? BASIC_SECTIONS[0];
+  // Qué tarjeta está a la vista, para los puntos de abajo
+  const track = useRef(null);
+  const [at, setAt] = useState(0);
+  useEffect(() => { setAt(0); }, [cur]);
+  const onScroll = () => {
+    const el = track.current;
+    const first = el?.firstElementChild;
+    if (!first) return;
+    setAt(Math.round(el.scrollLeft / (first.offsetWidth + 12)));
+  };
   return (
     <section className="mapp-glass mapp-basics" id="mapp-basics" aria-labelledby="basics-h" data-testid="basics">
       <p className="mapp-cota" id="basics-h">Retos básicos del barismo</p>
@@ -102,21 +112,29 @@ function Basics({ current, barista, sec, setSec }) {
         ))}
       </div>
       <p className="mapp-basics-why">{s.why}</p>
-      <ol className="mapp-basics-list" role="tabpanel" aria-label={s.label}>
+      {/* Tarjetas en carrusel (pedido del usuario, 7 nov 2026): se pasan de lado con el dedo y la siguiente se asoma */}
+      <ol className="mapp-basics-list is-carousel" role="tabpanel" aria-label={s.label} ref={track} onScroll={onScroll} key={s.id}>
         {s.challenges.map((c, i) => {
           const live = current && current.title === c.title;
           return (
-            <li key={c.title} className={live ? 'is-live' : ''}>
-              <span className="mapp-basics-n" aria-hidden="true">{i + 1}</span>
-              <div>
-                <b>{shortTitle(c.title)}{live && <em className="mapp-basics-now">Reto de esta semana</em>}</b>
-                <p>{c.brief}</p>
-                <small>{c.kind === 'arte_latte' ? '🏅 ' : '✓ '}{c.how}</small>
+            <li key={c.title} className={live ? 'is-live' : ''} aria-label={`${i + 1} de ${s.challenges.length}`}>
+              <div className="mapp-basics-top">
+                <span className="mapp-basics-ic" aria-hidden="true"><SchoolIcon id={SECTION_ICON[s.id] ?? 'cafe'} /></span>
+                <span className="mapp-basics-n" aria-hidden="true">{i + 1}/{s.challenges.length}</span>
+                {live && <em className="mapp-basics-now">Reto de esta semana</em>}
               </div>
+              <b>{shortTitle(c.title)}</b>
+              <p>{c.brief}</p>
+              <small>{c.kind === 'arte_latte' ? '🏅 ' : '✓ '}{c.how}</small>
             </li>
           );
         })}
       </ol>
+      {s.challenges.length > 1 && (
+        <div className="mapp-basics-dots" aria-hidden="true">
+          {s.challenges.map((c, i) => <i key={c.title} className={i === at ? 'on' : ''} />)}
+        </div>
+      )}
     </section>
   );
 }

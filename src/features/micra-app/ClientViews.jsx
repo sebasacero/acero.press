@@ -9,7 +9,7 @@ import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron, IconTrophy } from './icons.jsx';
+import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron, IconTrophy, IconCup } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
@@ -27,6 +27,42 @@ const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const GustosIntro = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosIntro })));
 const GustosHead = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosHead })));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
+// «Quiero un café» es un sí explícito a compartir la zona: quita el «No mostrar mi zona» antes de avisar
+const wantCoffee = (pos, drink) => import('./seek.js').then((m) => { m.setSeekOff(false); return m.seekCoffee(pos, drink); }).catch(() => null);
+
+/**
+ * «Quiero un café» (pedido del usuario, 7 nov 2026): un solo botón fijo abajo, al pulgar,
+ * que solo dice «aquí quieren café». No aparta a ningún barista ni se paga nada: manda la
+ * misma señal anónima del «busco café» (la zona de ~440 m y la bebida, se borra a los 60 min).
+ */
+function WantCoffee({ me, ask, drink }) {
+  const [state, setState] = useState('idle'); // idle · asking · done · nogps
+  const tap = async () => {
+    setState('asking');
+    const p = me ?? await ask();
+    if (!p) { setState('nogps'); return; }
+    await wantCoffee(p, drink);
+    setState('done');
+  };
+  return (
+    <div className={`mapp-want ${state === 'done' ? 'is-done' : ''}`} data-testid="want-coffee">
+      {state === 'done' ? (
+        <p className="mapp-want-ok" role="status" data-testid="want-ok">
+          <b>¡Listo! Tu zona quiere café.</b>
+          <span>Los baristas cerca lo ven por una hora. No apartaste nada ni pagas nada.</span>
+        </p>
+      ) : (
+        <>
+          {state === 'nogps' && <p className="mapp-want-note" role="alert">Para avisar, Micra necesita saber tu zona: permite la ubicación e inténtalo de nuevo.</p>}
+          <button type="button" className="mapp-want-btn" onClick={tap} disabled={state === 'asking'} data-testid="want-btn">
+            <IconCup /> {state === 'asking' ? 'Avisando…' : 'Quiero un café'}
+          </button>
+          <small className="mapp-want-note">Avisa a los baristas de tu zona (~400 m). Sin apartar ni pagar.</small>
+        </>
+      )}
+    </div>
+  );
+}
 
 
 function useBaristas() {
@@ -328,6 +364,8 @@ export function ClientHome({ go }) {
       )}
 
       {!searching && <StampsCard />}
+      {/* Al final del inicio y pegado abajo mientras se baja: siempre al alcance del pulgar */}
+      {!searching && <WantCoffee me={me} ask={ask} drink={drink} />}
 
       {/* La publicidad de ACERO.press salió del inicio (pedido del usuario, 6 nov 2026): queda en Mi perfil › Otros */}
       {!searching && <section className="mapp-join">

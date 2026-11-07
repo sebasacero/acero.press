@@ -147,6 +147,28 @@ test('cliente: «Cerca de mí» manda una sola señal con la celda, sin su punto
   expect(errors).toEqual([]);
 });
 
+test('cliente: «Quiero un café» manda solo la zona y la bebida, sin apartar, aunque antes dijo «No mostrar mi zona»', async ({ browser }) => {
+  const { page, api, errors, seeks } = await open(browser, { gps: true });
+  await page.addInitScript(() => { localStorage.setItem('micra_seek_off_v1', 'true'); });
+  await page.goto('/micra', { waitUntil: 'load' });
+  const want = page.getByTestId('want-coffee');
+  await expect(want.getByTestId('want-btn')).toBeVisible();
+  expect(seeks()).toHaveLength(0);
+  await page.getByTestId('drink-perico').click();
+  expect(seeks()).toHaveLength(0);
+  await want.getByTestId('want-btn').click();
+  await expect(want.getByTestId('want-ok')).toContainText('¡Listo! Tu zona quiere café.');
+  await expect.poll(() => seeks().length).toBe(1);
+  const sent = seeks()[0].data;
+  expect(sent).toMatchObject({ p_cell_lat: 4.646, p_cell_lng: -74.062, p_drink: 'perico' });
+  expect(JSON.stringify(sent)).not.toContain('4.6451');
+  // Un sí explícito: el «No mostrar mi zona» de antes queda quitado
+  expect(await page.evaluate(() => localStorage.getItem('micra_seek_off_v1'))).toBe('false');
+  // No apartó nada
+  expect(api.calls.filter((c) => c.p.endsWith('/rpc/micra_hold'))).toHaveLength(0);
+  expect(errors).toEqual([]);
+});
+
 test('equipo: ve el mismo mapa en vivo con todos los que salieron y las zonas', async ({ browser }) => {
   const { page, errors } = await open(browser, { who: 'team' });
   await page.goto('/micra/equipo', { waitUntil: 'load' });
