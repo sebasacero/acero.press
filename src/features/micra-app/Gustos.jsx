@@ -127,7 +127,7 @@ export function GustosHead({ waiting = 0 }) {
       </dl>
       {profile && <p className="mapp-gustos-tip">☕ {profile.tip}</p>}
       <button type="button" className="mapp-gustos-edit" onClick={() => setOpen(true)} data-testid="gustos-edit">
-        {profile ? 'Cambiar mis gustos' : 'Contar mis gustos · 30 s'}
+        {profile ? 'Cambiar mis gustos' : 'Completar mi perfil'}
       </button>
       {open && <GustosQuiz answers={answers} onDone={save} onClose={() => setOpen(false)} />}
     </section>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
 import platform from './platform.js';
-import { CATEGORIES, itemsOf, bumpInsumo, orderLines, orderCount, insumosText, readLastOrder, writeLastOrder } from './insumos.js';
+import { CATEGORIES, itemsOf, iconOf, bumpInsumo, orderLines, orderCount, insumosText, readLastOrder, writeLastOrder } from './insumos.js';
 
 // Insumos en Mi perfil del barista (6 nov 2026, pedido del usuario): una sección con las
 // categorías y una hoja para armar el pedido; sale por WhatsApp al equipo. Lo puro en insumos.js.
@@ -68,17 +68,22 @@ export function InsumosSheet({ name, where, cat = 'cafe', cart: startCart = null
             );
           })}
         </div>
-        <ul className="mapp-insumos-list">
+        {/* Como una góndola de las apps de domicilios (pedido del usuario, 7 nov 2026): el
+            producto en su repisa, el «+» encima y, al agregar, el contador en su lugar */}
+        <ul className="mapp-gondola">
           {itemsOf(tab).map((i) => {
             const q = cart[i.id] || 0;
             return (
               <li key={i.id} className={q ? 'on' : ''}>
-                <span><b>{i.label}</b><small>{i.unit}{i.note ? ` · ${i.note}` : ''}</small></span>
-                <span className="mapp-insumos-step">
-                  <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, -1))} disabled={!q} aria-label={`Quitar ${i.label}`}>−</button>
-                  <output aria-live="polite" data-testid={`insumo-${i.id}`}>{q}</output>
+                <span className="mapp-gondola-shelf" aria-hidden="true"><span>{iconOf(i)}</span></span>
+                <span className={`mapp-gondola-add ${q ? 'is-open' : ''}`}>
+                  {q > 0 && <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, -1))} aria-label={`Quitar ${i.label}`}>−</button>}
+                  {q > 0 && <output aria-live="polite" data-testid={`insumo-${i.id}`}>{q}</output>}
                   <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, 1))} aria-label={`Agregar ${i.label}`}>+</button>
                 </span>
+                <b>{i.label}</b>
+                <small>{i.unit}</small>
+                {i.note && <small className="mapp-gondola-note">{i.note}</small>}
               </li>
             );
           })}
@@ -92,10 +97,13 @@ export function InsumosSheet({ name, where, cat = 'cafe', cart: startCart = null
             Tu pedido: {lines.map((l) => l.text).join(' · ')}
           </p>
         )}
-        <button type="button" className="mapp-btn is-cta" onClick={send} disabled={!ready} data-testid="insumos-send">
-          {count ? `Pedir por WhatsApp · ${count} ${count === 1 ? 'cosa' : 'cosas'}` : 'Pedir por WhatsApp'}
-        </button>
         <p className="mapp-fine">El equipo te confirma el precio y cuándo te llega. Pagas al recibir.</p>
+        {/* La canasta abajo, siempre a la mano */}
+        <div className="mapp-gondola-cart">
+          <button type="button" className="mapp-btn is-cta" onClick={send} disabled={!ready} data-testid="insumos-send">
+            {count ? <><i aria-hidden="true">{count}</i>Pedir por WhatsApp</> : 'Pedir por WhatsApp'}
+          </button>
+        </div>
       </section>
     </div>
   );

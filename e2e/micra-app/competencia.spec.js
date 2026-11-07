@@ -84,7 +84,7 @@ test('barista: entra al reto con su foto, queda en revisión y no puede entrar d
 
 test('cliente: ve el podio, califica una entrada con granos (un voto por celular, se cambia) y los retos pasados', async ({ browser }) => {
   const { page, api, errors } = await open(browser, {
-    challenges: [RETO, { id: 'reto-0', title: 'Tu puesto al amanecer', kind: 'foto', starts_on: plus(-10), ends_on: plus(-3) }],
+    challenges: [RETO, { id: 'reto-0', title: 'Calle: tu puesto al amanecer', kind: 'foto', starts_on: plus(-10), ends_on: plus(-3) }],
     posts: [entry('e1', MARLENE), entry('e2', JAIRO), entry('e3', WILSON), entry('e0', JAIRO, { challenge_id: 'reto-0' })],
     // e1: 4,7 con 3 votos · e2: 4,0 con 4 · e3: sin votos · e0 ganó el reto pasado
     votes: { e1: { a: 5, b: 5, c: 4 }, e2: { a: 4, b: 4, c: 4, d: 4 }, e0: { a: 5, b: 4, c: 5 } },
@@ -116,6 +116,11 @@ test('cliente: ve el podio, califica una entrada con granos (un voto por celular
   await expect(reto.getByTestId('entries')).toContainText('Tu nota: 5');
   // Los retos pasados con su ganador
   await expect(reto.getByTestId('past')).toContainText('Ganó Jairo · 4,7 con 3 votos');
+  // El medallero de arriba: la medalla del reto que ya cerró se enciende; las otras siguen apagadas
+  // («Tu puesto al amanecer» cae en Servicio en la calle por su nombre)
+  const medals = reto.getByTestId('medals');
+  await expect(medals.getByRole('listitem').filter({ hasText: 'Servicio' })).toHaveClass(/is-on/);
+  await expect(medals.getByRole('listitem').filter({ hasText: 'Filtrados' })).not.toHaveClass(/is-on/);
   expect(errors).toEqual([]);
 });
 
