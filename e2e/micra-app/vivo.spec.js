@@ -44,6 +44,7 @@ const zonesOf = (page) => page.evaluate(() => {
 test('barista: sale a vender y ve a los otros baristas y dónde quieren café; la flecha de volver apaga el mapa en vivo', async ({ browser }) => {
   const seed = structuredClone(SEED);
   delete seed.baristas[0].live_until;
+  seed.sales = []; // sin ventas hoy: Vender es solo la meta y «Salí a vender»
   const { page, errors, liveCalls } = await open(browser, { who: 'barista', seed });
   await page.goto('/micra/barista', { waitUntil: 'load' });
 
@@ -51,6 +52,10 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; l
   const panel = page.getByTestId('live-panel');
   await expect(panel).toHaveAttribute('data-live', 'false');
   await expect(panel.getByTestId('live-nudge')).toHaveText('Sal a vender para ver quién busca café ahora');
+  // Antes de salir no hay nada debajo de la meta: lo que manda es «Salí a vender»
+  await expect(page.getByRole('region', { name: 'Meta de hoy' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Vendí un tinto' })).toHaveCount(0);
+  await expect(page.getByTestId('coffee-bar')).toHaveCount(0);
   await expect(panel).toContainText('2 baristas en la calle');
   await expect.poll(() => zonesOf(page)).toEqual({ demand: [], study: [3, 2] });
 
@@ -58,6 +63,7 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; l
   await page.getByTestId('go-out').click();
   await page.getByTestId('consent-location').check();
   await page.getByTestId('consent-accept').click();
+  await expect(page.getByRole('button', { name: 'Vendí un tinto' })).toBeVisible();
 
   // En línea: el mapa grande con los otros dos, la cuenta y lo suyo aparte
   await expect(panel).toHaveAttribute('data-live', 'true');

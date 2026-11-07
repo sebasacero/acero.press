@@ -876,6 +876,11 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         {menu.length === 0 ? <Prices day={day} asId={asId} onSaved={load} first /> : (
           <>
             {!live && <GoalCard board={board} goal={goal} onGoal={setGoal} week={day.week} />}
+            {/* Antes de salir, debajo de la meta no va nada más: lo que manda es «Salí a vender»
+                (pedido del usuario, 7 nov 2026). Las tazas, fiados y el café salen en la calle o
+                cuando ya vendió hoy (volvió con la flecha: el día sigue); si no, solo quedan los
+                clientes que ya apartaron y lo que falta por subir. */}
+            {live || board.cups > 0 || pending > 0 ? (<>
             <section className="mapp-count" aria-label="Contar ventas">
               {menu.map((m) => (
                 <div key={m.id} className="mapp-tile">
@@ -911,7 +916,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
               <span aria-hidden="true">☕</span><span><b>Tu café</b> · ¿se te está acabando?</span><u>Pedir</u>
             </button>
             {!asId && <WaNudge />}
-            <Waiting {...waitingProps} />
+            </>) : null}
+            {(live || board.cups > 0 || waiting.length > 0) && <Waiting {...waitingProps} />}
           </>
         )}
         {/* En la calle, el mapa en vivo (como al ponerse «en línea»), debajo de las tazas */}

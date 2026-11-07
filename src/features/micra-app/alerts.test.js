@@ -47,3 +47,22 @@ test('desliza para recargar: con resistencia y un punto para soltar', () => {
   assert.ok(pullProgress(100).offset > pullProgress(72).offset);
   assert.equal(pullProgress(-20).offset, 0);
 });
+
+test('outAlert: avisa una vez por barista por día, solo de los suyos en la calle, y se apaga', async () => {
+  const { outAlert, setOutAlertsOff } = await import('./alerts.js');
+  const mem = new Map();
+  const store = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  const marlene = { id: 'm', name: 'Marlene Rojas', referencia: 'Cl. 57 con Cra. 7', status: 'live' };
+  const jairo = { id: 'j', name: 'Jairo', localidad: 'Chapinero', status: 'usual' };
+  assert.equal(outAlert(store, [jairo], '2026-11-07'), null);
+  const a = outAlert(store, [marlene, jairo], '2026-11-07');
+  assert.deepEqual(a, { title: 'Marlene salió a vender', body: 'Cl. 57 con Cra. 7 · Apártale tu café.', kind: 'out', id: 'm' });
+  // Ya avisado hoy: no se repite
+  assert.equal(outAlert(store, [marlene], '2026-11-07'), null);
+  // Sale otro: avisa solo ese
+  assert.equal(outAlert(store, [marlene, { ...jairo, status: 'live' }], '2026-11-07').title, 'Jairo salió a vender');
+  // Al otro día vuelve a avisar; dos a la vez van en un solo globito
+  assert.equal(outAlert(store, [marlene, { ...jairo, status: 'live' }], '2026-11-08').title, 'Marlene salió a vender (y 1 más)');
+  setOutAlertsOff(store, true);
+  assert.equal(outAlert(store, [marlene], '2026-11-09'), null);
+});
