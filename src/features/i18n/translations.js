@@ -92,6 +92,7 @@ const translations = {
         { title: 'Certifícate', text: 'Un video de tu preparación para conseguir mejor trabajo.' },
       ],
       stats: { label: 'El estudio de calle hoy', cups: 'tazas en la calle', blocks: 'cuadras con venta', baristas: 'baristas' },
+      notices: { label: 'Avisos de Micra', now: 'ahora', items: [['Nuevo café en tu cuadra', 'Marlene abrió su puesto en la Cl. 85'], ['Café fresco', 'Jairo acaba de preparar un lote'], ['Ya salió a la ruta tu barista', 'Wilson pasa por tu cuadra en 10 min']] },
     },
     people: {
       tag: 'FIG. 02B — EN LA CALLE',
@@ -530,6 +531,7 @@ const translations = {
         { title: 'Get certified', text: 'A video of your brew to land a better job.' },
       ],
       stats: { label: 'The street study today', cups: 'cups on the street', blocks: 'blocks with sales', baristas: 'baristas' },
+      notices: { label: 'Micra notifications', now: 'now', items: [['New coffee on your block', 'Marlene opened her stand on Cl. 85'], ['Fresh coffee', 'Jairo just brewed a batch'], ['Your barista is on the way', 'Wilson passes your block in 10 min']] },
     },
     people: {
       tag: 'FIG. 02B — ON THE STREET',
@@ -967,6 +969,7 @@ const translations = {
         { title: '認定を受ける', text: '抽出の動画で、より良い仕事へ。' },
       ],
       stats: { label: '路上調査の現在', cups: '路上で売れた杯数', blocks: '売れたブロック', baristas: 'バリスタ' },
+      notices: { label: 'Micraの通知', now: '今', items: [['あなたの街区に新しいコーヒー', 'MarleneがCl. 85で開店'], ['淹れたてのコーヒー', 'Jairoが今一杯分を淹れました'], ['バリスタが出発しました', 'Wilsonが10分後に通ります']] },
     },
     people: {
       tag: 'FIG. 02B — 街角で',

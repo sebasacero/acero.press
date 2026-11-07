@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL, coffeeHead } from './feed.js';
+import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, priceRows, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL, coffeeHead } from './feed.js';
 import { money, baristaPath, sortBaristas, bogota } from './micraApp.js';
 import { figureFor } from './motivation.js';
 import * as api from './api.js';
@@ -25,7 +25,7 @@ import { IconTrophy } from './icons.jsx';
 // puestos, café de Colombia, recetas y videos, sin logros ni ideas de foto; su
 // «Publicar» le manda al equipo una receta, un café o un barista por WhatsApp.
 
-const PRICE_KEYS = ['micra_precio_carga', 'micra_precio_ny', 'micra_precio_fecha', 'micra_muro'];
+const PRICE_KEYS = ['micra_precio_carga', 'micra_precio_ny', 'micra_precio_fecha', 'micra_precio_carga_ant', 'micra_precio_ny_ant', 'micra_muro'];
 const dayLabel = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 
 function PriceCard({ item, admin, onEdit }) {
@@ -43,6 +43,14 @@ function PriceCard({ item, admin, onEdit }) {
   );
 }
 
+const TREND = { up: ['▲', 'subió'], down: ['▼', 'bajó'], flat: ['=', 'igual que'] };
+/** La flechita de si el precio subió o bajó desde la actualización anterior (pedido del usuario, 7 nov 2026). */
+function Trend({ t }) {
+  if (!t) return null;
+  const [arrow, word] = TREND[t.dir];
+  return <span className={`mapp-trend is-${t.dir}`} aria-label={t.dir === 'flat' ? 'igual que antes' : `${word} ${t.pct}`} data-testid="trend"><b aria-hidden="true">{arrow}</b>{t.dir !== 'flat' && <small aria-hidden="true">{t.pct}</small>}</span>;
+}
+
 /** La cabecera de Hoy, como la de Vender: el café hoy en grande y sus datos debajo. */
 function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
   return (
@@ -54,10 +62,12 @@ function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
         </div>
         {onPublish && <button type="button" className="mapp-btn is-small mapp-coffeehead-pub" onClick={onPublish}>＋ Publicar</button>}
       </div>
-      <p className="mapp-coffeehead-big" data-testid="coffee-big">{head.big.value}</p>
+      <p className="mapp-coffeehead-big" data-testid="coffee-big">{head.big.value}<Trend t={head.big.trend} /></p>
       <p className="mapp-coffeehead-sub">{head.big.label}</p>
-      <dl className="mapp-coffeehead-kpis">
-        {head.kpis.map((k) => <div key={k.id} data-testid={`coffee-${k.id}`}><dd>{k.value}</dd><dt>{k.label}</dt></div>)}
+      {/* Los datos en carrusel (pedido del usuario, 7 nov 2026): se pasan de lado y el siguiente se asoma */}
+      {/* key: al llegar los precios se vuelve a montar al inicio (si no, el navegador se queda pegado al último dato) */}
+      <dl className="mapp-coffeehead-kpis is-carousel" key={head.kpis.length}>
+        {head.kpis.map((k) => <div key={k.id} data-testid={`coffee-${k.id}`}><dd>{k.value}<Trend t={k.trend} /></dd><dt>{k.label}</dt></div>)}
       </dl>
       <p className="mapp-coffeehead-fine">
         {head.date ? `Precios del ${dayLabel(head.date)} · ` : ''}
@@ -68,13 +78,13 @@ function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
   );
 }
 
-function PriceForm({ prices, onSaved, onCancel }) {
+function PriceForm({ prices, cfg = {}, onSaved, onCancel }) {
   const [v, setV] = useState({ carga: prices.carga ? String(prices.carga) : '', ny: prices.ny ? String(prices.ny) : '' });
   const [error, setError] = useState(null);
   const save = async (e) => {
     e.preventDefault();
     const date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
-    const rows = [['micra_precio_carga', v.carga], ['micra_precio_ny', v.ny], ['micra_precio_fecha', date]].map(([key, value]) => ({ key, value: String(value).trim() }));
+    const rows = priceRows(v, cfg, date);
     const { error: err } = await supabase.from('app_config').upsert(rows);
     if (err) { setError(`No se guardó: ${err.message}`); return; }
     onSaved();
@@ -488,7 +498,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
       </ul>
       {admin && !curating && chip === 'cafe' && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
-      {editing && <PriceForm prices={prices} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
+      {editing && <PriceForm prices={prices} cfg={cfg} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
       {canPost && mine.length > 0 && (
         <section className="mapp-glass mapp-mine" aria-label="Tus publicaciones" data-testid="my-posts">
           <p className="mapp-cota">Tus publicaciones</p>

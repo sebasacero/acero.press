@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, shortTitle, challengeDraft as draft } from './competencia.js';
+import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, challengeDraft, VOTE_REF_KEY, CHALLENGE_IDEAS, BASIC_SECTIONS, sectionOf, shortTitle, challengeDraft as draft, videoOf } from './competencia.js';
 
 const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
 
@@ -77,4 +77,26 @@ test('shortTitle: sin la sección y con mayúscula', () => {
   assert.equal(shortTitle('Espresso: la crema avellana'), 'La crema avellana');
   assert.equal(shortTitle('Corazón libre'), 'Corazón libre');
   assert.equal(shortTitle(null), '');
+});
+
+test('medallero: una medalla por sección, encendida cuando su reto cerró', async () => {
+  const { medalBoard } = await import('./competencia.js');
+  const b = medalBoard([
+    { title: 'Arte latte: tu mejor corazón', kind: 'arte_latte', winner: { name: 'Jairo' } },
+    { title: 'Tu puesto al amanecer', kind: 'foto', winner: null },
+  ]);
+  assert.equal(b.medals.length, BASIC_SECTIONS.length);
+  const arte = b.medals.find((m) => m.id === 'arte_latte');
+  assert.deepEqual([arte.done, arte.won], [1, 1]);
+  assert.ok(b.medals.filter((m) => m.id !== 'arte_latte').every((m) => m.done === 0 || m.id === 'calle'));
+  assert.equal(b.total, 2);
+  assert.equal(b.won, 1);
+  assert.deepEqual(medalBoard().medals.map((m) => m.done), BASIC_SECTIONS.map(() => 0));
+});
+
+test('el video del reto: solo rutas propias', () => {
+  assert.deepEqual(videoOf({ video: '/image/metodo/aeropress-metodo.mp4', poster: '/image/metodo/poster.webp' }), { src: '/image/metodo/aeropress-metodo.mp4', poster: '/image/metodo/poster.webp' });
+  assert.equal(videoOf({ video: 'https://youtube.com/x' }), null);
+  assert.equal(videoOf({}), null);
+  assert.equal(videoOf(BASIC_SECTIONS[0].challenges[0]).src, '/image/metodo/aeropress-metodo.mp4');
 });

@@ -39,7 +39,7 @@
 .mapp.is-redtop .mapp-chead::after, .mapp .mapp-sellhead::after{
   content:""; position:absolute; left:16px; right:16px; bottom:8px; height:4px; border-radius:4px; background:var(--t-ramp); opacity:.95;
 }
-.mapp .mapp-chead-txt small{color:var(--t-6) !important}
+.mapp .mapp-chead-txt small{color:#fff !important} /* en blanco, pedido del usuario (7 nov 2026) */
 .mapp .mapp-top .mapp-brand-word{color:#fff !important}
 .mapp .mapp-top .mapp-topicon, .mapp .mapp-top .mapp-topicon svg{color:#fff !important;stroke:#fff}
 .mapp.is-day .mapp-search{background:rgba(255,255,255,.96) !important;box-shadow:0 0 0 1.5px rgba(255,194,60,.55),0 8px 24px -10px rgba(13,8,32,.6) !important}
@@ -84,7 +84,7 @@
 .mapp.is-day .mapp-chips .on{background:var(--t-ink) !important;color:#fff !important;box-shadow:inset 0 -3px 0 var(--t-5)}
 /* Vender: la cuenta del día como lectura de temperatura */
 .mapp .mapp-sellhead *{color:#fff}
-.mapp .mapp-sellhead-n{background:linear-gradient(180deg,var(--t-7),var(--t-6) 45%,var(--t-5)) !important;-webkit-background-clip:text !important;background-clip:text !important;color:transparent !important}
+.mapp .mapp-sellhead-n, .mapp .mapp-sellhead-n small, .mapp .mapp-sellhead-sub, .mapp .mapp-sellhead-cota, .mapp .mapp-sellhead-hello, .mapp .mapp-sellhead-kpis dt, .mapp .mapp-sellhead-top > span:last-child{color:#fff !important;opacity:1 !important} /* letras en blanco, sin gradiente ni tintes (pedido del usuario, 7 nov 2026) */
 .mapp .mapp-sellhead-kpis > div{background:rgba(13,8,32,.45) !important;border:1px solid rgba(255,194,60,.35) !important;backdrop-filter:blur(4px)}
 .mapp .mapp-sellhead-bar{background:var(--t-ramp) !important}
 .mapp .mapp-sellbar{background:var(--t-ink) !important}
@@ -135,7 +135,7 @@
 /* La meta del día en la barra de arriba del barista (antes «Cliente / Barista») */
 .mapp-topgoal{display:flex;align-items:center;gap:8px;margin-left:auto;padding:4px 12px 4px 6px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;font:800 .95rem 'Archivo',sans-serif;min-height:44px;cursor:pointer}
 .mapp-topgoal svg{width:32px;height:32px;flex:none}
-.mapp-topgoal b{font:900 1.15rem 'Archivo',sans-serif;background:linear-gradient(180deg,var(--t-7),var(--t-6) 50%,var(--t-5));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapp-topgoal b{font:900 1.15rem 'Archivo',sans-serif;color:#fff}
 .mapp-topgoal small{font:600 .68rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.75);letter-spacing:.02em}
 .mapp-topgoal.is-met{background:var(--t-cta);border-color:transparent}
 .mapp:not(.is-redtop) .mapp-topgoal{background:var(--t-0)}
@@ -201,6 +201,20 @@
 .mapp-coffeehead-kpis div{padding:10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
 .mapp-coffeehead-kpis dd{margin:0;font:700 1.05rem/1.1 'JetBrains Mono',monospace;color:#fff}
 .mapp-coffeehead-kpis dt{margin-top:3px;font:500 .72rem/1.25 'Archivo',sans-serif;color:rgba(255,255,255,.8)}
+.mapp-coffeehead-big{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* Hoy: los datos del café en carrusel (7 nov 2026) */
+.mapp-coffeehead-kpis.is-carousel{display:flex;gap:8px;margin:14px -18px 0;padding:0 18px 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 18px;scrollbar-width:none}
+.mapp-coffeehead-kpis.is-carousel::-webkit-scrollbar{display:none}
+.mapp-coffeehead-kpis.is-carousel div{flex:0 0 40%;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:space-between;min-height:84px;padding:12px}
+.mapp-coffeehead-kpis.is-carousel dd{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:1.15rem}
+/* La flechita del precio: sube en caliente, baja en blanco frío */
+.mapp-trend{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font:700 .72rem/1 'JetBrains Mono',monospace;
+  -webkit-text-fill-color:currentColor;background-clip:border-box;-webkit-background-clip:border-box;letter-spacing:0;vertical-align:middle}
+.mapp-trend b{font-size:.8em}
+.mapp-trend.is-up{color:var(--t-1);background:linear-gradient(180deg,var(--t-7),var(--t-6))}
+.mapp-trend.is-down{color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4)}
+.mapp-trend.is-flat{color:rgba(255,255,255,.85);background:rgba(255,255,255,.1)}
+.mapp-coffeehead-big .mapp-trend{font-size:.9rem;padding:5px 10px}
 .mapp-coffeehead-fine{margin:12px 0 0;font:500 .72rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.8)}
 .mapp-coffeehead-fine a{color:#fff}
 
@@ -283,18 +297,19 @@
 
 /* Ficha del barista (6 nov 2026): una sola cabecera en gradiente con quién es y cuándo pasa */
 .mapp-bhead{margin:-18px -16px 14px;padding:12px 18px 18px;border-radius:0 0 28px 28px;color:#fff;
-  background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 34%,var(--t-2) 66%,var(--t-3) 92%,var(--t-4) 100%);box-shadow:var(--t-glow-cold)}
+  /* Naranja (pedido del usuario, 7 nov 2026): del rojo de la marca al naranja, la ficha es lo caliente */
+  background:linear-gradient(160deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%);box-shadow:0 14px 30px -14px rgba(242,84,45,.7)}
 .mapp-bhead .mapp-back{color:#fff}
 .mapp-bhead .mapp-card-head p{color:rgba(255,255,255,.8)}
 .mapp-bhead .mapp-card-name{color:#fff}
 .mapp-bhead .mapp-star{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.75)}
-.mapp-bhead .mapp-star.on{color:var(--t-6);border-color:var(--t-6)}
+.mapp-bhead .mapp-star.on{color:var(--t-7);border-color:var(--t-7)}
 .mapp-bhead-when{margin-top:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
-.mapp-bhead-when .mapp-cota{color:var(--t-6)}
+.mapp-bhead-when .mapp-cota{color:var(--t-7)}
 .mapp-bhead-when .mapp-big{color:#fff}
 .mapp-bhead-when .mapp-muted{color:rgba(255,255,255,.8);margin:4px 0 0}
 .mapp-bhead .mapp-hours span{background:rgba(255,255,255,.16)}
-.mapp-bhead .mapp-hours span.on{background:linear-gradient(180deg,var(--t-6),var(--t-5))}
+.mapp-bhead .mapp-hours span.on{background:linear-gradient(180deg,var(--t-7),var(--t-6))}
 .mapp-bhead .mapp-hours small{color:rgba(255,255,255,.7)}
 
 /* Hoy: los filtros como globitos de estados (6 nov 2026) */
@@ -378,6 +393,25 @@
 .mapp-insumos-step button:last-child{background:var(--t-cta,var(--t-4));color:#fff;border:0}
 .mapp-insumos-step button:disabled{opacity:.35}
 .mapp-insumos-step output{min-width:22px;text-align:center;font:700 1rem 'JetBrains Mono',monospace}
+.mapp-gondola{list-style:none;margin:0 0 14px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}
+.mapp-gondola li{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0}
+/* La repisa: el producto parado sobre una tabla, como la foto del producto en Rappi */
+.mapp-gondola-shelf{position:relative;display:grid;place-items:center;aspect-ratio:6/5;border-radius:18px;margin-bottom:6px;overflow:hidden;
+  background:linear-gradient(180deg,#FBF6EE 0%,#F4EBDD 76%,#E6D6BE 76%,#E6D6BE 82%,#F4EBDD 82%);border:1px solid rgba(13,8,32,.06)}
+.mapp-gondola-shelf span{font-size:3.2rem;line-height:1;transform:translateY(-6%);filter:drop-shadow(0 8px 6px rgba(13,8,32,.18))}
+.mapp-gondola li.on .mapp-gondola-shelf{border-color:var(--t-4);box-shadow:0 0 0 1px var(--t-4) inset}
+.mapp-gondola b{font:700 .9rem/1.2 'Archivo',sans-serif;color:var(--t-ink,#1F2452)}
+.mapp-gondola small{color:var(--m-soft);font:500 .72rem/1.3 'JetBrains Mono',monospace}
+.mapp-gondola-note{font-family:'Archivo',sans-serif !important}
+/* El «+» encima de la foto; con cantidad se abre en − n + */
+.mapp-gondola-add{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:2px;border-radius:999px;background:#fff;box-shadow:0 4px 12px -4px rgba(13,8,32,.35)}
+.mapp-gondola-add button{width:44px;height:44px;border-radius:50%;border:0;background:transparent;font:700 1.35rem/1 'Archivo',sans-serif;color:var(--t-ink,#1F2452);cursor:pointer}
+.mapp-gondola-add button:last-child{background:var(--t-cta,var(--t-4));color:#fff}
+.mapp-gondola-add output{min-width:20px;text-align:center;font:700 .95rem 'JetBrains Mono',monospace}
+.mapp-gondola-add.is-open{left:8px;justify-content:space-between}
+.mapp-gondola-cart{--pb:calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));position:sticky;bottom:calc(-1 * var(--pb));margin:10px -20px calc(-1 * var(--pb));padding:14px 20px var(--pb);background:linear-gradient(rgba(250,246,240,0),var(--m-bg,#FAF6F0) 22%)}
+.mapp-gondola-cart .mapp-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+.mapp-gondola-cart i{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font:700 .85rem 'JetBrains Mono',monospace;font-style:normal;background:#fff;color:var(--t-4)}
 .mapp-insumos-sum{margin:4px 0 10px;font-size:.85rem;color:var(--m-soft)}
 
 /* Gustos del cliente (6 nov 2026): cabecera de «Mis apartados», invitación en el inicio y preguntas */
@@ -458,12 +492,183 @@
 .mapp-reto-kpis div{display:flex;flex-direction:column-reverse;padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
 .mapp-reto-kpis dd{margin:0;font:700 1.2rem/1.1 'JetBrains Mono',monospace;color:#fff}
 .mapp-reto-kpis dt{margin-top:3px;font:500 .72rem 'Archivo',sans-serif;color:rgba(255,255,255,.8)}
-.mapp-reto-icons{list-style:none;display:flex;gap:6px;margin:14px -18px 0;padding:0 18px 2px;overflow-x:auto;scrollbar-width:none}
-.mapp-reto-icons::-webkit-scrollbar{display:none}
-.mapp-reto-icons button{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:62px;min-height:64px;padding:8px 6px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:600 .7rem 'Archivo',sans-serif;cursor:pointer}
-.mapp-reto-icons svg{width:28px;height:28px}
-.mapp-reto-icons button.on{background:#fff;color:var(--t-ink,#1F2452);border-color:#fff}
-.mapp-reto-icons button.is-now{box-shadow:0 0 0 2px #FFD9A8}
+/* El medallero: una medalla por sección; se enciende cuando su reto ya cerró (7 nov 2026) */
+.mapp-medals{list-style:none;display:flex;gap:8px;margin:14px -18px 0;padding:2px 18px 4px;overflow-x:auto;scrollbar-width:none}
+.mapp-medals::-webkit-scrollbar{display:none}
+.mapp-medals li{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:56px}
+.mapp-medal{position:relative;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:rgba(255,255,255,.45);
+  background:rgba(255,255,255,.06);border:2px dashed rgba(255,255,255,.28)}
+.mapp-medal svg{width:26px;height:26px}
+.mapp-medal i{position:absolute;right:-4px;bottom:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;font:700 .68rem/20px 'JetBrains Mono',monospace;font-style:normal;color:var(--t-1);background:var(--t-7)}
+.mapp-medals li.is-on .mapp-medal{color:var(--t-1);border:2px solid #FFF3B0;
+  background:radial-gradient(circle at 35% 30%,var(--t-7),var(--t-6) 45%,var(--t-5) 100%);box-shadow:0 6px 14px -6px rgba(242,84,45,.9)}
+.mapp-medals small{font:600 .68rem 'Archivo',sans-serif;color:rgba(255,255,255,.62)}
+.mapp-medals li.is-on small{color:#fff}
+/* Retos básicos: cabecera naranja con el título y los íconos de los métodos (7 nov 2026) */
+.mapp .mapp-basics{padding-top:0;overflow:hidden}
+.mapp-basics-head{margin:0 -16px 12px;padding:16px 16px 14px;color:#fff;
+  background:linear-gradient(120deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%)}
+.mapp-basics-head h2{margin:0;font:800 1.3rem/1.15 'Archivo',sans-serif;color:#fff}
+.mapp-basics-methods{display:flex;gap:6px;margin:12px -16px 0;padding:0 16px 2px;overflow-x:auto;scrollbar-width:none}
+.mapp-basics-methods::-webkit-scrollbar{display:none}
+.mapp-basics-methods button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:62px;min-height:64px;padding:8px 6px;border-radius:16px;
+  border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.14);color:#fff;font:600 .7rem 'Archivo',sans-serif;cursor:pointer}
+.mapp-basics-methods svg{width:28px;height:28px}
+.mapp-basics-methods button.on{background:#fff;color:var(--t-4);border-color:#fff}
+.mapp-basics-methods button.is-now{box-shadow:0 0 0 2px var(--t-7)}
 /* La fila de íconos se desliza dentro de la cabecera, sin ensanchar la página */
 .mapp-reto > *{min-width:0}
 .mapp .mapp-reto-head.is-grad{max-width:calc(100% + 32px);overflow:hidden}
+
+/* Retos básicos en tarjetas de carrusel (pedido del usuario, 7 nov 2026): se pasan
+   de lado con el dedo, la siguiente se asoma, cabecera en gradiente con el ícono. */
+.mapp-basics-list.is-carousel {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 4px 16px 10px; scroll-padding: 0 16px; scrollbar-width: none;
+}
+.mapp-basics-list.is-carousel::-webkit-scrollbar { display: none; }
+.mapp-basics-list.is-carousel li {
+  flex: 0 0 82%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 0;
+  padding: 0 0 14px; overflow: hidden; border-radius: 20px; min-height: 230px;
+  box-shadow: 0 10px 24px -16px rgba(31, 36, 82, .5);
+}
+.mapp-basics-list.is-carousel li:only-child { flex-basis: 100%; }
+.mapp-basics-top { position: relative;
+  display: flex; align-items: center; gap: 10px; padding: 14px 14px 16px; margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--t-1, #22125A), var(--t-2, #5A1E9E) 55%, var(--t-3, #B0127A));
+  color: #fff;
+}
+.mapp-basics-list.is-carousel li.is-live .mapp-basics-top { background: var(--t-cta, #DE1B1B); }
+.mapp-basics-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(255, 255, 255, .14); }
+.mapp-basics-ic svg { width: 32px; height: 32px; }
+.mapp-basics-list.is-carousel .mapp-basics-n { width: auto; height: auto; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .16); margin-left: auto; }
+.mapp-basics-list.is-carousel li.is-live .mapp-basics-n { background: rgba(255, 255, 255, .2); }
+.mapp-basics-list.is-carousel .mapp-basics-now { margin-left: 0; background: #fff; color: var(--t-4, #DE1B1B); }
+.mapp-basics-list.is-carousel b, .mapp-basics-list.is-carousel p, .mapp-basics-list.is-carousel small { padding: 0 14px; }
+.mapp-basics-list.is-carousel b { font-size: 1.12rem; }
+.mapp-basics-list.is-carousel small { margin-top: auto; padding-top: 8px; }
+.mapp-basics-open{display:flex;flex-direction:column;width:100%;height:100%;padding:0 0 12px;border:0;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;border-radius:inherit}
+/* El ícono grande del método llena la cabecera de la tarjeta */
+.mapp-basics-list.is-carousel .mapp-basics-top{min-height:150px;justify-content:center;align-items:center}
+.mapp-basics-list.is-carousel .mapp-basics-ic{width:96px;height:96px;border-radius:28px}
+.mapp-basics-list.is-carousel .mapp-basics-ic svg{width:64px;height:64px}
+.mapp-basics-list.is-carousel .mapp-basics-n{position:absolute;top:10px;right:10px;margin:0}
+.mapp-basics-list.is-carousel .mapp-basics-now{position:absolute;left:10px;bottom:10px;margin:0}
+.mapp-basics-list.is-carousel .mapp-basics-open small{margin-top:4px;padding:0 14px;color:var(--t-4);opacity:1;font-weight:700}
+.mapp-basics-sheet{display:flex;flex-direction:column;gap:12px}
+.mapp-basics-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:-10px -20px 0;padding:22px 20px 18px;border-radius:28px 28px 0 0;color:#fff;background:linear-gradient(160deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%)}
+.mapp-basics-hero .mapp-basics-ic{width:88px;height:88px;border-radius:26px;background:rgba(255,255,255,.18)}
+.mapp-basics-hero .mapp-basics-ic svg{width:58px;height:58px}
+.mapp-basics-hero .mapp-kicker, .mapp-basics-hero h2{color:#fff;margin:0}
+.mapp-basics-video{width:100%;aspect-ratio:16/9;border-radius:16px;background:#000;object-fit:cover}
+.mapp-basics-brief{margin:0;font-size:1rem;line-height:1.45}
+.mapp-basics-how{margin:0;padding:12px 14px;border-radius:14px;background:rgba(31,36,82,.06);font:500 .85rem/1.4 'JetBrains Mono',monospace}
+.mapp-basics-how b{display:block;font:700 .72rem 'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;color:var(--t-4)}
+.mapp-basics-dots { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+.mapp-basics-dots i { width: 7px; height: 7px; border-radius: 999px; background: rgba(31, 36, 82, .2); transition: width .2s; }
+.mapp-basics-dots i.on { width: 20px; background: var(--t-4, #DE1B1B); }
+@media (prefers-reduced-motion: reduce) { .mapp-basics-dots i { transition: none; } }
+
+/* «Quiero un café» (pedido del usuario, 7 nov 2026): fijo abajo, al pulgar, encima de la
+   barra; el gradiente térmico como los llamados a la acción. Pegado (sticky) al final del
+   inicio: baja con la lista y nunca tapa lo último. */
+.mapp-want {
+  position: sticky; z-index: 5; bottom: calc(66px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+  margin: 18px -16px 0; padding: 18px 16px 10px; display: grid; gap: 6px; text-align: center;
+  background: linear-gradient(rgba(255, 255, 255, 0), var(--m-bg, #fff) 26%);
+}
+.mapp-want-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px;
+  border: 0; border-radius: 16px; cursor: pointer; color: #fff; font: 800 1.12rem 'Archivo', sans-serif;
+  background: var(--t-cta, #DE1B1B); box-shadow: var(--t-cta-glow, 0 12px 24px -12px rgba(176, 18, 122, .8));
+}
+.mapp-want-btn:disabled { opacity: .75; }
+.mapp-want-btn:focus-visible { outline: 3px solid var(--t-1, #22125A); outline-offset: 2px; }
+.mapp-want-note { margin: 0; font-size: .8rem; color: var(--m-ink-soft, #4a4f6a); }
+.mapp-want-ok { margin: 0; padding: 12px 14px; border-radius: 16px; display: grid; gap: 2px; text-align: left; background: #fff; border: 1px solid var(--t-4, #DE1B1B); box-shadow: 0 10px 24px -14px rgba(222, 27, 27, .5); }
+.mapp-want-ok b { font: 800 1.02rem 'Archivo', sans-serif; }
+.mapp-want-ok span { font-size: .86rem; color: var(--m-ink-soft, #4a4f6a); }
+
+/* ---------- El café de origen: marcas y fincas, la tienda y la finca del caficultor (7 nov 2026) ---------- */
+.mapp-ohead{margin:-18px -16px 14px;padding:12px 18px 18px;border-radius:0 0 28px 28px;color:#fff;
+  background:linear-gradient(160deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%);box-shadow:0 14px 30px -14px rgba(242,84,45,.7)}
+.mapp-ohead.is-cold{background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 55%,#3B1A7A 100%);box-shadow:var(--t-glow-cold)}
+.mapp-ohead .mapp-back{color:#fff}
+.mapp-ohead-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:4px}
+.mapp-ohead-kicker{margin:0;font:600 .68rem 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.mapp-ohead-title{margin:2px 0 0;font:900 1.5rem/1.05 'Archivo',sans-serif;letter-spacing:-.02em;color:#fff}
+.mapp-ohead-pill{flex:none;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);font:700 .7rem 'JetBrains Mono',monospace;color:#fff;white-space:nowrap}
+.mapp-origen-chips{align-items:center}
+.mapp-origen-shop{margin-left:auto !important;background:var(--t-cta) !important;color:#fff !important;border-color:transparent !important;text-transform:none !important;font-family:'Archivo',sans-serif !important;font-weight:700 !important;letter-spacing:0 !important}
+.mapp-ogroup{padding:14px 14px 10px;margin-bottom:12px}
+.mapp-ogroup .mapp-kicker{margin:0 0 8px}
+.mapp-olist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mapp-orow{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:0;border-radius:14px;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:64px}
+.mapp-orow:hover,.mapp-orow:focus-visible{background:rgba(31,36,82,.05)}
+.mapp-orow.is-static{cursor:default;border:1px solid var(--m-line);margin-bottom:12px}
+.mapp-orow-txt{flex:1;min-width:0;display:grid;gap:2px}
+.mapp-orow-txt b{font:800 .95rem/1.2 'Archivo',sans-serif}
+.mapp-orow-txt small{font:500 .68rem/1.3 'JetBrains Mono',monospace;color:var(--m-soft);overflow:hidden;text-overflow:ellipsis}
+.mapp-orow-go{font:800 1.3rem 'Archivo',sans-serif;color:var(--m-soft)}
+.mapp-omark{flex:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font:900 .85rem 'Archivo',sans-serif;letter-spacing:-.02em;color:#fff;background:var(--t-1)}
+.mapp-omark.is-finca{background:#F4EBDD;font-size:1.5rem}
+.mapp-omark.is-ini{color:var(--t-4);font:800 1rem 'Archivo',sans-serif;border-radius:50%}
+.mapp-omark.is-big{width:88px;height:88px;border-radius:24px;font-size:1.6rem}
+.mapp-omark.is-finca.is-big{font-size:3rem}
+.mapp-oseal{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#EAF6EF;color:#1E6B3F;font:700 .75rem 'JetBrains Mono',monospace}
+.mapp-oseal.is-text{width:auto;height:auto;padding:3px 8px;border-radius:999px;font-size:.62rem;justify-self:start;margin-top:2px}
+.mapp-oseal.is-wait{background:#FFF3B0;color:#7A4E00}
+.mapp-ocover{position:relative;height:120px;margin:0 0 12px;border-radius:18px;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(135deg,var(--t-1),var(--o-color,var(--t-3)) 70%,var(--t-5))}
+.mapp-ocover.is-finca{background:linear-gradient(180deg,#9DD3A8 0%,#5E9E66 55%,#3E6B45 100%)}
+.mapp-ocover.is-finca::after{content:"";position:absolute;inset:auto 0 0;height:30px;background:repeating-linear-gradient(90deg,#365B3C 0 14px,#4E8356 14px 28px);opacity:.7}
+.mapp-ocover .mapp-omark{position:relative;z-index:1;box-shadow:0 10px 24px -10px rgba(13,8,32,.6)}
+.mapp-okv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 14px}
+.mapp-okv div{background:var(--m-glass);box-shadow:var(--m-shadow);border-radius:12px;padding:8px 10px}
+.mapp-okv dd{margin:0;font:800 1.1rem 'Archivo',sans-serif}
+.mapp-okv dt{font:500 .62rem 'JetBrains Mono',monospace;color:var(--m-soft);letter-spacing:.04em;text-transform:uppercase}
+.mapp-olots{list-style:none;margin:6px 0 10px;padding:0;display:grid;gap:8px}
+.mapp-olots li{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--m-glass);box-shadow:var(--m-shadow)}
+.mapp-obag{flex:none;width:52px;min-height:60px;padding:4px;border-radius:8px 8px 12px 12px;display:grid;place-items:center;text-align:center;background:linear-gradient(180deg,#3B2A22,#1C1410);color:var(--t-7);font:800 .58rem/1.3 'JetBrains Mono',monospace}
+.mapp-oroast{color:var(--t-5) !important}
+.mapp-oprice{flex:none;text-align:right;display:grid}
+.mapp-oprice b{font:800 1rem 'Archivo',sans-serif}
+.mapp-oprice small{font:500 .62rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-origen-finca{display:block;margin:14px auto 0}
+/* la góndola de la tienda */
+.mapp-shop{margin-top:4px}
+.mapp-gondola-shelf.is-btn{width:100%;border:0;padding:0;cursor:pointer;font:inherit}
+.mapp-gondola-shelf.is-wide{aspect-ratio:16/9;margin-bottom:10px}
+.mapp-gondola-shelf.is-wide span{font-size:4rem}
+.mapp-gondola-tag{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:999px;font:700 .56rem 'JetBrains Mono',monospace;font-style:normal;letter-spacing:.04em;background:#fff;color:var(--t-4);transform:none !important;filter:none !important}
+.mapp-gondola-add.is-inline{position:static;display:inline-flex;left:auto;justify-content:flex-start}
+.mapp-oproduct{display:flex;flex-direction:column;gap:10px}
+.mapp-oproduct .mapp-kicker,.mapp-oproduct h2{margin:0}
+.mapp-oproduct-notes{margin:0;font-size:.95rem;line-height:1.45;color:var(--m-soft)}
+.mapp-oproduct-add{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0}
+.mapp-oproduct .mapp-oprice{text-align:left}
+.mapp-odelivery{display:flex;flex-direction:column;gap:12px}
+.mapp-odelivery-opts{display:grid;gap:8px}
+.mapp-oopt{display:grid;gap:3px;padding:12px 14px;border-radius:16px;border:1.5px solid var(--m-line);background:var(--m-glass);text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:44px}
+.mapp-oopt.on{border-color:var(--t-4);box-shadow:0 0 0 1px var(--t-4) inset}
+.mapp-oopt b{font:800 .95rem 'Archivo',sans-serif}
+.mapp-oopt small{font-size:.8rem;line-height:1.35;color:var(--m-soft)}
+.mapp-oopt-now{font:700 .66rem 'JetBrains Mono',monospace;font-style:normal;color:#1E6B3F}
+.mapp-gondola-cart.is-shop{margin:10px -16px 0;position:sticky;bottom:calc(76px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom)))}
+.mapp-gondola-cart.is-shop .mapp-btn.is-off{opacity:.5}
+/* Insumos › Café: el café de origen primero */
+.mapp-insumos-origen{margin:0 0 8px}
+.mapp-gondola-coffee{margin-bottom:6px}
+.mapp-gondola-pick{margin-top:6px;min-height:36px;padding:6px 10px;border-radius:999px;border:1.5px solid var(--m-line);background:var(--m-glass);font:700 .74rem 'Archivo',sans-serif;color:var(--m-fg);cursor:pointer}
+.mapp-gondola-pick.on{background:var(--t-4);border-color:var(--t-4);color:#fff}
+/* La finca del caficultor */
+.mapp-fsteps{display:flex;gap:6px;margin-top:14px}
+.mapp-fsteps i{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.3)}
+.mapp-fsteps i.on{background:#fff}
+.mapp-fform{display:flex;flex-direction:column;gap:12px}
+.mapp-fform .mapp-kicker{margin:4px 0 0}
+.mapp-ffield-hint{font:500 .72rem/1.35 'Archivo',sans-serif;color:var(--m-soft);text-transform:none;letter-spacing:0}
+.mapp-fdone{padding:16px}
+.mapp-fdone p{margin:4px 0 0}
+.mapp-fsteps-list{margin:12px 0 0;padding-left:20px;display:grid;gap:6px;font-size:.9rem;line-height:1.4;color:var(--m-soft)}
+.mapp-finca .mapp-notice{margin:0}

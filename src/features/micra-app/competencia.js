@@ -16,7 +16,7 @@ export const BASIC_SECTIONS = [
   {
     id: 'filtrados', label: 'Filtrados', icon: '⏳', why: 'La base del café de la calle: receta medida, agua a la temperatura justa y un tiempo que se repite.',
     challenges: [
-      { kind: 'foto', title: 'Filtrados: tu receta de AeroPress', brief: 'La AeroPress lista con tu café. En el texto: gramos, agua, temperatura y tiempo.', how: 'Se ve el método y la receta está completa.' },
+      { kind: 'foto', title: 'Filtrados: tu receta de AeroPress', brief: 'La AeroPress lista con tu café. En el texto: gramos, agua, temperatura y tiempo.', how: 'Se ve el método y la receta está completa.', video: '/image/metodo/aeropress-metodo.mp4', poster: '/image/metodo/poster.webp' },
       { kind: 'foto', title: 'Filtrados: el tinto de colador', brief: 'El tinto de siempre en filtro de tela, hecho con medida. Muestra la taza y cuéntanos tu proporción.', how: 'Taza limpia, sin borra, y la proporción escrita.' },
       { kind: 'foto', title: 'Filtrados: cold brew de 12 horas', brief: 'Tu café en frío: el frasco al empezar y al terminar, con la hora.', how: 'Las dos fotos y la receta (gramos por litro).' },
     ],
@@ -70,6 +70,9 @@ export const BASIC_SECTIONS = [
 ];
 
 // Ideas para abrir un reto (el equipo las toca y las ajusta): todos los retos básicos
+/** El video del reto, si lo tiene (ruta propia en public/, nunca un reproductor externo). */
+export const videoOf = (c) => (typeof c?.video === 'string' && c.video.startsWith('/') ? { src: c.video, poster: c.poster ?? null } : null);
+
 export const CHALLENGE_IDEAS = BASIC_SECTIONS.flatMap((s) => s.challenges.map((c) => ({ ...c, section: s.id })));
 
 /** El nombre sin la sección, con mayúscula: «Espresso: la crema avellana» → «La crema avellana». */
@@ -144,4 +147,18 @@ export function challengeDraft(f, today) {
       starts_on: starts, ends_on: ends,
     },
   };
+}
+
+/**
+ * El medallero de la cabecera: una medalla por sección de retos básicos. Se
+ * enciende cuando un reto de esa sección ya cerró; «ganada» si tuvo ganador.
+ * Los retos que no caen en ninguna sección cuentan solo en el total.
+ */
+export function medalBoard(past = []) {
+  const closed = (past ?? []).filter(Boolean);
+  const medals = BASIC_SECTIONS.map((s) => {
+    const mine = closed.filter((p) => sectionOf(p)?.id === s.id);
+    return { id: s.id, label: s.label.split(' ')[0], done: mine.length, won: mine.filter((p) => p.winner).length };
+  });
+  return { medals, total: closed.length, won: closed.filter((p) => p.winner).length };
 }

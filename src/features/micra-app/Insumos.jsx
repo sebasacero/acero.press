@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
 import platform from './platform.js';
-import { CATEGORIES, itemsOf, bumpInsumo, orderLines, orderCount, insumosText, readLastOrder, writeLastOrder } from './insumos.js';
+import { CATEGORIES, itemsOf, iconOf, bumpInsumo, orderLines, orderCount, insumosText, readLastOrder, writeLastOrder } from './insumos.js';
+import { baristaCoffee, cupCost, readPreparaCon, writePreparaCon } from './origen.js';
+import { useOrigen } from './Origen.jsx';
+import { money } from './micraApp.js';
 
 // Insumos en Mi perfil del barista (6 nov 2026, pedido del usuario): una sección con las
 // categorías y una hoja para armar el pedido; sale por WhatsApp al equipo. Lo puro en insumos.js.
@@ -36,18 +39,23 @@ export function InsumosSheet({ name, where, cat = 'cafe', cart: startCart = null
   const [note, setNote] = useState('');
   const [number, setNumber] = useState(null);
   useEffect(() => { api.teamWhatsApp().then(setNumber).catch(() => setNumber('573152125327')); }, []);
+  // El café de origen (marcas y fincas de app_config micra_origen) va primero en la pestaña Café
+  const origen = useOrigen();
+  const coffee = origen ? baristaCoffee(origen) : [];
+  const [prepara, setPrepara] = useState(() => readPreparaCon());
+  const pick = (i) => { const v = prepara?.id === i.id ? null : { id: i.id, label: i.label, seller: i.seller }; writePreparaCon(v); setPrepara(v); };
   useEffect(() => {
     const esc = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
   }, [onClose]);
-  const lines = orderLines(cart);
-  const count = orderCount(cart);
+  const lines = orderLines(cart, coffee);
+  const count = orderCount(cart, coffee);
   const ready = number && (lines.length > 0 || note.trim());
   const send = () => {
     if (!ready) return;
     writeLastOrder(cart);
-    platform.openExternal(`https://wa.me/${number}?text=${encodeURIComponent(insumosText({ name, where, cart, note }))}`);
+    platform.openExternal(`https://wa.me/${number}?text=${encodeURIComponent(insumosText({ name, where, cart, note, coffee }))}`);
   };
   return (
     <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Pedir insumos" data-testid="insumos-sheet">
@@ -60,7 +68,7 @@ export function InsumosSheet({ name, where, cat = 'cafe', cart: startCart = null
         </header>
         <div className="mapp-insumos-tabs" role="tablist" aria-label="Categorías">
           {CATEGORIES.map((c) => {
-            const n = itemsOf(c.id).reduce((s, i) => s + (cart[i.id] || 0), 0);
+            const n = itemsOf(c.id).reduce((s, i) => s + (cart[i.id] || 0), 0) + (c.id === 'cafe' ? coffee.reduce((s, i) => s + (cart[i.id] || 0), 0) : 0);
             return (
               <button key={c.id} type="button" role="tab" aria-selected={tab === c.id} className={tab === c.id ? 'on' : ''} onClick={() => setTab(c.id)}>
                 <span aria-hidden="true">{c.icon}</span>{c.label}{n > 0 && <b>{n}</b>}
@@ -68,17 +76,48 @@ export function InsumosSheet({ name, where, cat = 'cafe', cart: startCart = null
             );
           })}
         </div>
-        <ul className="mapp-insumos-list">
+        {/* Como una góndola de las apps de domicilios (pedido del usuario, 7 nov 2026): el
+            producto en su repisa, el «+» encima y, al agregar, el contador en su lugar */}
+        {tab === 'cafe' && coffee.length > 0 && (
+          <>
+            <p className="mapp-kicker mapp-insumos-origen">Marcas y fincas · por kilo</p>
+            <ul className="mapp-gondola mapp-gondola-coffee" data-testid="insumos-coffee">
+              {coffee.map((i) => {
+                const q = cart[i.id] || 0;
+                const mine = prepara?.id === i.id;
+                return (
+                  <li key={i.id} className={q ? 'on' : ''}>
+                    <span className="mapp-gondola-shelf" aria-hidden="true"><em className="mapp-gondola-tag">{i.kind === 'finca' ? 'FINCA' : 'MARCA'}</em><span>{i.kind === 'finca' ? '🫘' : '☕'}</span></span>
+                    <span className={`mapp-gondola-add ${q ? 'is-open' : ''}`}>
+                      {q > 0 && <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, -1))} aria-label={`Quitar ${i.label}`}>−</button>}
+                      {q > 0 && <output aria-live="polite" data-testid={`insumo-${i.id}`}>{q}</output>}
+                      <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, 1))} aria-label={`Agregar ${i.label}`}>+</button>
+                    </span>
+                    <b>{i.label}</b>
+                    <small>{money(i.kilo)} / kilo · {money(cupCost(i.kilo))} por taza</small>
+                    <small className="mapp-gondola-note">{i.note}</small>
+                    <button type="button" className={`mapp-gondola-pick ${mine ? 'on' : ''}`} aria-pressed={mine} onClick={() => pick(i)} data-testid={`prepara-${i.id}`}>{mine ? '✓ Preparo con este' : 'Preparo con este'}</button>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mapp-fine">«Preparo con este» sale en tu ficha como «Prepara con {prepara?.seller ?? '…'}». Abajo, el café de la casa.</p>
+          </>
+        )}
+        <ul className="mapp-gondola">
           {itemsOf(tab).map((i) => {
             const q = cart[i.id] || 0;
             return (
               <li key={i.id} className={q ? 'on' : ''}>
-                <span><b>{i.label}</b><small>{i.unit}{i.note ? ` · ${i.note}` : ''}</small></span>
-                <span className="mapp-insumos-step">
-                  <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, -1))} disabled={!q} aria-label={`Quitar ${i.label}`}>−</button>
-                  <output aria-live="polite" data-testid={`insumo-${i.id}`}>{q}</output>
+                <span className="mapp-gondola-shelf" aria-hidden="true"><span>{iconOf(i)}</span></span>
+                <span className={`mapp-gondola-add ${q ? 'is-open' : ''}`}>
+                  {q > 0 && <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, -1))} aria-label={`Quitar ${i.label}`}>−</button>}
+                  {q > 0 && <output aria-live="polite" data-testid={`insumo-${i.id}`}>{q}</output>}
                   <button type="button" onClick={() => setCart((c) => bumpInsumo(c, i.id, 1))} aria-label={`Agregar ${i.label}`}>+</button>
                 </span>
+                <b>{i.label}</b>
+                <small>{i.unit}</small>
+                {i.note && <small className="mapp-gondola-note">{i.note}</small>}
               </li>
             );
           })}
@@ -92,10 +131,13 @@ export function InsumosSheet({ name, where, cat = 'cafe', cart: startCart = null
             Tu pedido: {lines.map((l) => l.text).join(' · ')}
           </p>
         )}
-        <button type="button" className="mapp-btn is-cta" onClick={send} disabled={!ready} data-testid="insumos-send">
-          {count ? `Pedir por WhatsApp · ${count} ${count === 1 ? 'cosa' : 'cosas'}` : 'Pedir por WhatsApp'}
-        </button>
         <p className="mapp-fine">El equipo te confirma el precio y cuándo te llega. Pagas al recibir.</p>
+        {/* La canasta abajo, siempre a la mano */}
+        <div className="mapp-gondola-cart">
+          <button type="button" className="mapp-btn is-cta" onClick={send} disabled={!ready} data-testid="insumos-send">
+            {count ? <><i aria-hidden="true">{count}</i>Pedir por WhatsApp</> : 'Pedir por WhatsApp'}
+          </button>
+        </div>
       </section>
     </div>
   );

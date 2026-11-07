@@ -42,3 +42,18 @@ test('insumos: el último pedido se guarda y se repite; lo vacío o dañado no',
   writeLastOrder({}, s);
   assert.equal(readLastOrder(s), null);
 });
+
+test('el café de origen entra al pedido por kilo, con su precio, antes de lo demás', () => {
+  const coffee = [{ id: 'lote:la-esperanza:castillo', label: 'Finca La Esperanza · Castillo lavado', kilo: 48000 }];
+  let cart = bumpInsumo({}, 'lote:la-esperanza:castillo', 1);
+  cart = bumpInsumo(cart, 'lote:la-esperanza:castillo', 1);
+  cart = bumpInsumo(cart, 'vaso-4', 1);
+  assert.equal(bumpInsumo(cart, 'otro:x', 1), cart);
+  const lines = orderLines(cart, coffee);
+  assert.equal(lines[0].text, '2 kilos · Finca La Esperanza · Castillo lavado ($96.000)');
+  assert.equal(lines[1].id, 'vaso-4');
+  assert.equal(orderCount(cart, coffee), 3);
+  assert.match(insumosText({ name: 'Marlene', cart, coffee }), /• 2 kilos · Finca La Esperanza · Castillo lavado \(\$96.000\)/);
+  // Sin la lista de cafés, los «lote:» no salen (el catálogo no los conoce)
+  assert.equal(orderLines(cart).length, 1);
+});

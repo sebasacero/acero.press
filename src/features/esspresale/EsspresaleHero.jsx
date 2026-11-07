@@ -165,7 +165,8 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <Navbar variant="sheet" tone={tone} navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
+      {/* Los dos banners van sobre fondo oscuro (el de pedir, en gradiente térmico): menú en claro */}
+      <Navbar variant="sheet" tone="photo" navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         <Slide kind="order" active={index === 0} onSelect={select} stores={stores} />
         <Slide kind="barista" active={index === 1} onSelect={select} whatsapp={whatsapp} stores={stores} />

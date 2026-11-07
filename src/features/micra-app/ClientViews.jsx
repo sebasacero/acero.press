@@ -9,12 +9,12 @@ import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
 import platform from './platform.js';
 import Figure from './Elenco.jsx';
-import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron, IconTrophy } from './icons.jsx';
+import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron, IconTrophy, IconCup } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
 import { useAds, AdStoryBubble, AdStoryView } from './Ads.jsx';
-import { stageAlert, POLL_MS } from './alerts.js';
+import { stageAlert, outAlert, POLL_MS } from './alerts.js';
 import Globito, { ping } from './Globito.jsx';
 
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
@@ -27,6 +27,55 @@ const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const GustosIntro = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosIntro })));
 const GustosHead = lazy(() => import('./Gustos.jsx').then((m) => ({ default: m.GustosHead })));
 const seek = (pos, drink) => import('./seek.js').then((m) => m.seekCoffee(pos, drink)).catch(() => null);
+// Los baristas del cliente (a quién le apartó), guardados solo en su celular
+const HIST_KEY = 'micra_mis_baristas_v1';
+const readHist = () => { try { return JSON.parse(localStorage.getItem(HIST_KEY) ?? '{}') || {}; } catch { return {}; } };
+const saveHist = (holds) => {
+  const prev = readHist();
+  const next = recordBaristaHistory(prev, holds ?? []);
+  if (next !== prev) { try { localStorage.setItem(HIST_KEY, JSON.stringify(next)); } catch { /* sin memoria */ } }
+  return next;
+};
+// Con baristas suyos, se mira cada minuto (con la app a la vista) si alguno salió a vender
+const OUT_POLL_MS = 60000;
+const today = () => new Date().toLocaleDateString('en-CA');
+
+// «Quiero un café» es un sí explícito a compartir la zona: quita el «No mostrar mi zona» antes de avisar
+const wantCoffee = (pos, drink) => import('./seek.js').then((m) => { m.setSeekOff(false); return m.seekCoffee(pos, drink); }).catch(() => null);
+
+/**
+ * «Quiero un café» (pedido del usuario, 7 nov 2026): un solo botón fijo abajo, al pulgar,
+ * que solo dice «aquí quieren café». No aparta a ningún barista ni se paga nada: manda la
+ * misma señal anónima del «busco café» (la zona de ~440 m y la bebida, se borra a los 60 min).
+ */
+function WantCoffee({ me, ask, drink }) {
+  const [state, setState] = useState('idle'); // idle · asking · done · nogps
+  const tap = async () => {
+    setState('asking');
+    const p = me ?? await ask();
+    if (!p) { setState('nogps'); return; }
+    await wantCoffee(p, drink);
+    setState('done');
+  };
+  return (
+    <div className={`mapp-want ${state === 'done' ? 'is-done' : ''}`} data-testid="want-coffee">
+      {state === 'done' ? (
+        <p className="mapp-want-ok" role="status" data-testid="want-ok">
+          <b>¡Listo! Tu zona quiere café.</b>
+          <span>Los baristas cerca lo ven por una hora. No apartaste nada ni pagas nada.</span>
+        </p>
+      ) : (
+        <>
+          {state === 'nogps' && <p className="mapp-want-note" role="alert">Para avisar, Micra necesita saber tu zona: permite la ubicación e inténtalo de nuevo.</p>}
+          <button type="button" className="mapp-want-btn" onClick={tap} disabled={state === 'asking'} data-testid="want-btn">
+            <IconCup /> {state === 'asking' ? 'Avisando…' : 'Quiero un café'}
+          </button>
+          <small className="mapp-want-note">Avisa a los baristas de tu zona (~400 m). Sin apartar ni pagar.</small>
+        </>
+      )}
+    </div>
+  );
+}
 
 
 function useBaristas() {
@@ -216,7 +265,7 @@ export function ClientHome({ go }) {
   const open = (id) => go(baristaPath(id));
   // Si ya apartó hoy, arriba va cómo va eso, no la bienvenida
   const [hold, setHold] = useState(null);
-  const loadHold = useCallback(() => api.myHolds().then((h) => setHold((h ?? []).find((x) => x.status === 'waiting' || x.status === 'served') ?? null)).catch(() => {}), []);
+  const loadHold = useCallback(() => api.myHolds().then((h) => { saveHist(h); setHold((h ?? []).find((x) => x.status === 'waiting' || x.status === 'served') ?? null); }).catch(() => {}), []);
   useEffect(() => { loadHold(); }, [loadHold]);
   // Con un apartado en curso, se mira cada 20 s (y al volver a la app) si el barista salió, llegó o entregó
   const waitingHold = hold?.status === 'waiting';
@@ -240,10 +289,28 @@ export function ClientHome({ go }) {
     if (n) { setNotice(n); ping(); }
   }, [hold?.id, stage, holdBarista?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // «Tu barista salió a vender»: el globito cuando sale uno de los suyos (♥ o le apartó), uno por día
+  const mineIds = useMemo(() => myBaristas(list ?? [], { favorites: favs, history: readHist() }), [list, favs]);
+  useEffect(() => {
+    if (!mineIds.length) return;
+    let store = null;
+    try { store = window.localStorage; } catch { /* sin memoria */ }
+    const n = outAlert(store, mineIds, today());
+    if (n) { setNotice(n); ping(); }
+  }, [mineIds]);
+  const hasMine = mineIds.length > 0;
+  useEffect(() => {
+    if (!hasMine || waitingHold) return undefined; // con un apartado en curso ya se mira cada 20 s
+    const tick = () => { if (document.visibilityState === 'visible') reload(); };
+    const id = setInterval(tick, OUT_POLL_MS);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
+  }, [hasMine, waitingHold, reload]);
+
   return (
     <div className="mapp-client">
       <h1 className="mapp-visually-hidden">¿Quién pasa con café cerca?</h1>
-      {notice && <Globito {...notice} onClose={() => setNotice(null)} onOpen={() => { setNotice(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
+      {notice && <Globito {...notice} onClose={() => setNotice(null)} onOpen={() => { setNotice(null); if (notice.kind === 'out') open(notice.id); else window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}
       {/* Arriba, como las apps de domicilios: dónde estás y el buscador */}
       <section className="mapp-chead" aria-label="Buscar café" data-testid="home-head">
         <button type="button" className="mapp-chead-loc" onClick={me ? undefined : askNear} disabled={asking} aria-label={me ? `Estás cerca de ${zone ?? 'tu cuadra'}` : '◎ Cerca de mí'} data-testid="home-loc">
@@ -328,6 +395,8 @@ export function ClientHome({ go }) {
       )}
 
       {!searching && <StampsCard />}
+      {/* Al final del inicio y pegado abajo mientras se baja: siempre al alcance del pulgar */}
+      {!searching && <WantCoffee me={me} ask={ask} drink={drink} />}
 
       {/* La publicidad de ACERO.press salió del inicio (pedido del usuario, 6 nov 2026): queda en Mi perfil › Otros */}
       {!searching && <section className="mapp-join">
@@ -501,7 +570,6 @@ export function BaristaPage({ id, go }) {
   );
 }
 
-const HIST_KEY = 'micra_mis_baristas_v1';
 
 export function MyHolds({ go }) {
   const [holds, setHolds] = useState(null);

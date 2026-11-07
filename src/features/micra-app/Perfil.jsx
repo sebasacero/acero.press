@@ -6,6 +6,7 @@ import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToClear, clearStored } from './perfil.js';
 import { seekOff, setSeekOff } from './seek.js';
+import { outAlertsOff, setOutAlertsOff } from './alerts.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
@@ -20,6 +21,8 @@ import {
   IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
   IconCamera, IconOut, IconTrophy, IconHome,
 } from './icons.jsx';
+import { IconBean } from './icons.jsx';
+import { readPreparaCon } from './origen.js';
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
 // cuenta: lo que guarda el celular) y el equipo. Como el perfil de las apps de
@@ -190,6 +193,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
   const [edit, setEdit] = useState(null); // dentro de la hoja: 'prices' | 'pay'
   const [promo, setPromo] = useState(false);
   const [insumos, setInsumos] = useState(null); // { cat, cart }: la hoja de pedir insumos
+  const preparaCon = readPreparaCon(); // el café de origen que escogió (origen.js), en este celular
   const [confirm, setConfirm] = useState(false);
   const [block, setBlock] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -301,6 +305,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         <Tile icon={IconQr} label="Mi QR" onClick={() => go('/micra/barista/qr')} testid="profile-qr" />
         <Tile icon={IconShare} label="Compartir enlace" onClick={share} />
         <Tile icon={IconEye} label="Ver como cliente" onClick={() => go(baristaPath(day.id))} />
+        <Tile icon={IconBean} label={preparaCon ? `Preparo con ${preparaCon.seller}` : 'Mi café'} dot={!preparaCon} onClick={() => setInsumos({ cat: 'cafe', cart: null })} testid="tile-prepara" />
       </Group>
 
       <InsumosSection onOpen={(cat, cart = null) => setInsumos({ cat, cart })} />
@@ -537,6 +542,10 @@ export function ClientProfile({ go, who }) {
     setFavs(next);
   };
   const toggleZone = () => { setSeekOff(!zoneOff); setZoneOff(!zoneOff); };
+  // El globito «salió a vender» de sus baristas (♥ o a quien le apartó): se apaga aquí
+  const lsStore = () => { try { return window.localStorage; } catch { return null; } };
+  const [outOff, setOutOff] = useState(() => outAlertsOff(lsStore()));
+  const toggleOut = () => { setOutAlertsOff(lsStore(), !outOff); setOutOff(!outOff); };
   const invite = () => platform.share({ title: 'Micra', text: 'Aparta tu tinto con los baristas de la calle y te lo tienen listo cuando pasan:', url: platform.siteUrl('/micra') });
   const wipe = async () => {
     setBusy(true);
@@ -577,7 +586,8 @@ export function ClientProfile({ go, who }) {
         <Tile icon={IconThermo} label="Sé barista" onClick={() => go('/micra/barista')} />
         <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
-        <Tile icon={IconBag} label="Tienda" href={platform.siteUrl('/#beans')} />
+        <Tile icon={IconBag} label="Tienda" onClick={() => go('/micra/tienda')} testid="tile-tienda" />
+        <Tile icon={IconBean} label="Marcas y fincas" onClick={() => go('/micra/origen')} testid="tile-origen" />
       </Group>
 
       {confirm ? (
@@ -614,6 +624,11 @@ export function ClientProfile({ go, who }) {
 
       {sheet === 'baristas' && (
         <Sheet title={`Mis baristas · ${favs.length}`} onClose={() => setSheet(null)} testid="profile-favs">
+          <label className="mapp-check">
+            <input type="checkbox" checked={!outOff} onChange={toggleOut} data-testid="out-toggle" />
+            <span>Avisarme cuando mis baristas salgan a vender</span>
+          </label>
+          <p className="mapp-fine">Con la app abierta, uno por barista al día: los que marcaste con ★ y a quienes les apartaste.</p>
           {favs.length === 0 && <p className="mapp-muted">Toca ★ en la página de un barista para tenerlo arriba en la lista.</p>}
           <ul className="mapp-holds">
             {favs.map((id) => (

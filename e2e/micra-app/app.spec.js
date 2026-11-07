@@ -205,6 +205,8 @@ test('equipo: ve el día de todos, genera el código de quien falta y actúa com
 
   // Jairo ya está activo y no está en la calle: no sale en el resumen, se busca
   await page.getByLabel('Buscar un barista').fill('jairo');
+  // Las tazas se cuentan ya en la calle (antes de salir, Vender es la meta y «Salí a vender»)
+  api.micra.baristas[1].live_until = '2099-01-01T00:00:00Z';
   await page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
   await expect(page.getByText('Actuando como')).toContainText('Jairo');
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Vender/ }).click();

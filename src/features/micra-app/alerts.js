@@ -71,3 +71,29 @@ export function pullProgress(dy, threshold = 72) {
   const offset = Math.round(Math.min(threshold * 1.6, d < threshold ? d * 0.6 : threshold * 0.6 + (d - threshold) * 0.25));
   return { offset, progress: Math.min(1, d / threshold), ready: d >= threshold };
 }
+
+/**
+ * «Tu barista salió a vender» (pedido del usuario, 7 nov 2026): al cliente, con la app abierta,
+ * cuando sale a la calle uno de sus baristas (a quien le apartó o marcó con ♥). Uno por barista
+ * por día; se apaga en Mi perfil. Solo usa lo que ya está en el celular: nada de seguir al cliente.
+ * `mine` son los de myBaristas() (traen `status`); devuelve el aviso o null y anota lo avisado.
+ */
+export const OUT_SEEN_KEY = 'micra_out_seen_v1';
+export const OUT_OFF_KEY = 'micra_out_off_v1';
+export const outAlertsOff = (store) => read(store, OUT_OFF_KEY) === true;
+export const setOutAlertsOff = (store, off) => write(store, OUT_OFF_KEY, !!off);
+
+export function outAlert(store, mine, day) {
+  if (outAlertsOff(store)) return null;
+  const live = (mine ?? []).filter((b) => b?.id && b.status === 'live');
+  if (!live.length) return null;
+  const prev = read(store, OUT_SEEN_KEY);
+  const seen = new Set(prev?.day === day ? prev.ids ?? [] : []);
+  const fresh = live.filter((b) => !seen.has(b.id));
+  if (!fresh.length) return null;
+  write(store, OUT_SEEN_KEY, { day, ids: [...seen, ...fresh.map((b) => b.id)].slice(-60) });
+  const b = fresh[0];
+  const where = b.referencia || b.localidad;
+  const more = fresh.length > 1 ? ` (y ${fresh.length - 1} más)` : '';
+  return { title: `${first(b.name)} salió a vender${more}`, body: `${where ? `${where} · ` : ''}Apártale tu café.`, kind: 'out', id: b.id };
+}

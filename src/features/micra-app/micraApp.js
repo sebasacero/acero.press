@@ -266,6 +266,13 @@ export function parseRoute(pathname) {
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
   if (p === '/micra/hoy') return { view: 'feed' };
+  // El café de origen: marcas y fincas, su perfil, la tienda con la góndola y la finca del caficultor
+  if (p === '/micra/origen') return { view: 'origen' };
+  const o = p.match(/^\/micra\/origen\/([a-z0-9-]{1,40})$/);
+  if (o) return { view: 'origen', id: o[1] };
+  if (p === '/micra/tienda') return { view: 'tienda' };
+  if (p === '/micra/finca') return { view: 'finca' };
+  if (p === '/micra/finca/perfil') return { view: 'finca', tab: 'perfil' };
   // Competencia: el reto de la semana, para el cliente (el barista lo tiene en /micra/barista/reto)
   if (p === '/micra/reto') return { view: 'reto' };
   if (p === '/micra/barista') return { view: 'barista' };
