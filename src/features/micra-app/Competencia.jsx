@@ -218,11 +218,9 @@ export default function Competencia({ go, audience = 'client', selfId = null, as
         </ul>
       </header>
 
-      {!ch && (
-        <section className="mapp-glass mapp-reto-empty">
-          <p>{data.missing ? 'La competencia abre muy pronto.' : 'El equipo abre un reto nuevo cada semana: filtrados, espresso, arte latte, leche, cata y la calle. Mira abajo los retos básicos y practica.'}</p>
-          {barista && !data.missing && <p className="mapp-muted">Mientras tanto, practica tu corazón en el perico: la Escuela tiene la lección de leche.</p>}
-        </section>
+      {/* Sin reto abierto no hay tarjeta de explicación (pedido del usuario, 7 nov 2026): van directo los retos básicos */}
+      {!ch && data.missing && (
+        <section className="mapp-glass mapp-reto-empty"><p>La competencia abre muy pronto.</p></section>
       )}
 
       {ch && (
