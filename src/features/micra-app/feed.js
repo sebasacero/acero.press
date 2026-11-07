@@ -106,7 +106,39 @@ export function readPrices(cfg = {}) {
     const n = /^\d+(\.\d+)?$/.test(t) ? Number(t) : NaN;
     return Number.isFinite(n) && n > 0 ? n : null;
   };
-  return { carga: num(cfg.micra_precio_carga), ny: num(cfg.micra_precio_ny), date: /^\d{4}-\d{2}-\d{2}$/.test(cfg.micra_precio_fecha ?? '') ? cfg.micra_precio_fecha : null };
+  const out = { carga: num(cfg.micra_precio_carga), ny: num(cfg.micra_precio_ny), date: /^\d{4}-\d{2}-\d{2}$/.test(cfg.micra_precio_fecha ?? '') ? cfg.micra_precio_fecha : null };
+  // El precio anterior, para la flechita de si subió o bajó (solo si existe)
+  const prevCarga = num(cfg.micra_precio_carga_ant);
+  const prevNy = num(cfg.micra_precio_ny_ant);
+  if (prevCarga) out.prevCarga = prevCarga;
+  if (prevNy) out.prevNy = prevNy;
+  return out;
+}
+
+/**
+ * ¿Subió o bajó? { dir: 'up' | 'down' | 'flat', pct: '1,8 %' } o null sin precio anterior.
+ * Menos de 0,05 % cuenta como igual.
+ */
+export function priceTrend(cur, prev) {
+  if (!(cur > 0) || !(prev > 0)) return null;
+  const change = ((cur - prev) / prev) * 100;
+  const dir = Math.abs(change) < 0.05 ? 'flat' : change > 0 ? 'up' : 'down';
+  return { dir, pct: `${Math.abs(change).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %` };
+}
+
+/**
+ * Lo que guarda «Actualizar» en app_config: el precio nuevo y, si cambia de día, el
+ * de antes pasa a ser el anterior (si corrige el mismo día, el anterior se queda).
+ */
+export function priceRows({ carga, ny }, cfg = {}, today) {
+  const sameDay = cfg.micra_precio_fecha === today;
+  const prevCarga = sameDay ? cfg.micra_precio_carga_ant : cfg.micra_precio_carga;
+  const prevNy = sameDay ? cfg.micra_precio_ny_ant : cfg.micra_precio_ny;
+  return [
+    ['micra_precio_carga', carga], ['micra_precio_ny', ny], ['micra_precio_fecha', today],
+    ['micra_precio_carga_ant', prevCarga], ['micra_precio_ny_ant', prevNy],
+  ].filter(([k, v]) => !k.endsWith('_ant') || String(v ?? '').trim())
+    .map(([key, value]) => ({ key, value: String(value ?? '').trim() }));
 }
 
 /** «$2,85 M» para la carga de 125 kg. */
@@ -220,13 +252,14 @@ export function coffeeHead({ prices = {}, baristas = [], study = STUDY_TINTO, no
   const kilo = prices.carga ? Math.round(prices.carga / 125) : null;
   const live = (baristas ?? []).filter((b) => status(b, now) === 'live').length;
   const peso = (n) => `$${Math.round(n).toLocaleString('es-CO')}`;
+  const cargaTrend = priceTrend(prices.carga, prices.prevCarga);
   const big = prices.carga
-    ? { value: millions(prices.carga), label: 'la carga de 125 kg · FNC' }
+    ? { value: millions(prices.carga), label: 'la carga de 125 kg · FNC', trend: cargaTrend }
     : { value: peso(study.value), label: `el tinto en la calle · mediana de ${study.n} puestos` };
   const kpis = [
-    prices.ny && { id: 'ny', value: `US$${prices.ny.toLocaleString('es-CO', { minimumFractionDigits: 2 })}`, label: 'libra en Nueva York' },
-    kilo && { id: 'kilo', value: peso(kilo), label: 'kilo en pergamino' },
-    kilo && { id: 'taza', value: peso(cupCost(kilo)), label: 'de café por taza (12 g)' },
+    prices.ny && { id: 'ny', value: `US$${prices.ny.toLocaleString('es-CO', { minimumFractionDigits: 2 })}`, label: 'libra en Nueva York', trend: priceTrend(prices.ny, prices.prevNy) },
+    kilo && { id: 'kilo', value: peso(kilo), label: 'kilo en pergamino', trend: cargaTrend },
+    kilo && { id: 'taza', value: peso(cupCost(kilo)), label: 'de café por taza (12 g)', trend: cargaTrend },
     prices.carga && { id: 'tinto', value: peso(study.value), label: 'tinto en la calle' },
     { id: 'live', value: String(live), label: live === 1 ? 'barista en la calle' : 'baristas en la calle' },
   ].filter(Boolean);

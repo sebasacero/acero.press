@@ -88,6 +88,31 @@ test('cliente: su apartado avanza y el globito le dice que el barista salió', a
   expect(errors).toEqual([]);
 });
 
+test('cliente: cuando sale a vender uno de sus baristas (★), el globito avisa una vez al día y lleva a su ficha', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  delete seed.baristas[0].live_until;
+  seed.holds = [];
+  const { page, api, errors } = await open(browser, { seed });
+  await page.addInitScript((id) => { localStorage.setItem('micra_favs_v1', JSON.stringify([id])); }, MARLENE);
+  await page.goto('/micra', { waitUntil: 'load' });
+  await expect(page.getByTestId('home-head')).toBeVisible();
+  const globito = page.getByTestId('globito');
+  await expect(globito).toHaveCount(0);
+  // Marlene sale a vender; al volver a la app, el aviso
+  api.micra.baristas[0].live_until = '2099-01-01T00:00:00Z';
+  await comeBack(page);
+  await expect(globito).toContainText('Marlene salió a vender');
+  await expect(globito).toContainText('Cl. 57 con Cra. 7');
+  await globito.click();
+  await expect(page).toHaveURL(new RegExp(`/micra/b/${MARLENE}`));
+  // El mismo día no se repite
+  await page.goto('/micra', { waitUntil: 'load' });
+  await expect(page.getByTestId('home-head')).toBeVisible();
+  await page.evaluate(() => new Promise((r) => { setTimeout(r, 600); }));
+  await expect(globito).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('desliza para recargar: arrastrar desde arriba muestra el termo y vuelve a leer', async ({ browser }) => {
   const { page, api, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });

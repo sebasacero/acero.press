@@ -39,7 +39,7 @@
 .mapp.is-redtop .mapp-chead::after, .mapp .mapp-sellhead::after{
   content:""; position:absolute; left:16px; right:16px; bottom:8px; height:4px; border-radius:4px; background:var(--t-ramp); opacity:.95;
 }
-.mapp .mapp-chead-txt small{color:var(--t-6) !important}
+.mapp .mapp-chead-txt small{color:#fff !important} /* en blanco, pedido del usuario (7 nov 2026) */
 .mapp .mapp-top .mapp-brand-word{color:#fff !important}
 .mapp .mapp-top .mapp-topicon, .mapp .mapp-top .mapp-topicon svg{color:#fff !important;stroke:#fff}
 .mapp.is-day .mapp-search{background:rgba(255,255,255,.96) !important;box-shadow:0 0 0 1.5px rgba(255,194,60,.55),0 8px 24px -10px rgba(13,8,32,.6) !important}
@@ -201,6 +201,20 @@
 .mapp-coffeehead-kpis div{padding:10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
 .mapp-coffeehead-kpis dd{margin:0;font:700 1.05rem/1.1 'JetBrains Mono',monospace;color:#fff}
 .mapp-coffeehead-kpis dt{margin-top:3px;font:500 .72rem/1.25 'Archivo',sans-serif;color:rgba(255,255,255,.8)}
+.mapp-coffeehead-big{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* Hoy: los datos del café en carrusel (7 nov 2026) */
+.mapp-coffeehead-kpis.is-carousel{display:flex;gap:8px;margin:14px -18px 0;padding:0 18px 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 18px;scrollbar-width:none}
+.mapp-coffeehead-kpis.is-carousel::-webkit-scrollbar{display:none}
+.mapp-coffeehead-kpis.is-carousel div{flex:0 0 40%;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:space-between;min-height:84px;padding:12px}
+.mapp-coffeehead-kpis.is-carousel dd{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:1.15rem}
+/* La flechita del precio: sube en caliente, baja en blanco frío */
+.mapp-trend{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font:700 .72rem/1 'JetBrains Mono',monospace;
+  -webkit-text-fill-color:currentColor;background-clip:border-box;-webkit-background-clip:border-box;letter-spacing:0;vertical-align:middle}
+.mapp-trend b{font-size:.8em}
+.mapp-trend.is-up{color:var(--t-1);background:linear-gradient(180deg,var(--t-7),var(--t-6))}
+.mapp-trend.is-down{color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4)}
+.mapp-trend.is-flat{color:rgba(255,255,255,.85);background:rgba(255,255,255,.1)}
+.mapp-coffeehead-big .mapp-trend{font-size:.9rem;padding:5px 10px}
 .mapp-coffeehead-fine{margin:12px 0 0;font:500 .72rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.8)}
 .mapp-coffeehead-fine a{color:#fff}
 
@@ -378,6 +392,25 @@
 .mapp-insumos-step button:last-child{background:var(--t-cta,var(--t-4));color:#fff;border:0}
 .mapp-insumos-step button:disabled{opacity:.35}
 .mapp-insumos-step output{min-width:22px;text-align:center;font:700 1rem 'JetBrains Mono',monospace}
+.mapp-gondola{list-style:none;margin:0 0 14px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}
+.mapp-gondola li{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0}
+/* La repisa: el producto parado sobre una tabla, como la foto del producto en Rappi */
+.mapp-gondola-shelf{position:relative;display:grid;place-items:center;aspect-ratio:6/5;border-radius:18px;margin-bottom:6px;overflow:hidden;
+  background:linear-gradient(180deg,#FBF6EE 0%,#F4EBDD 76%,#E6D6BE 76%,#E6D6BE 82%,#F4EBDD 82%);border:1px solid rgba(13,8,32,.06)}
+.mapp-gondola-shelf span{font-size:3.2rem;line-height:1;transform:translateY(-6%);filter:drop-shadow(0 8px 6px rgba(13,8,32,.18))}
+.mapp-gondola li.on .mapp-gondola-shelf{border-color:var(--t-4);box-shadow:0 0 0 1px var(--t-4) inset}
+.mapp-gondola b{font:700 .9rem/1.2 'Archivo',sans-serif;color:var(--t-ink,#1F2452)}
+.mapp-gondola small{color:var(--m-soft);font:500 .72rem/1.3 'JetBrains Mono',monospace}
+.mapp-gondola-note{font-family:'Archivo',sans-serif !important}
+/* El «+» encima de la foto; con cantidad se abre en − n + */
+.mapp-gondola-add{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:2px;border-radius:999px;background:#fff;box-shadow:0 4px 12px -4px rgba(13,8,32,.35)}
+.mapp-gondola-add button{width:44px;height:44px;border-radius:50%;border:0;background:transparent;font:700 1.35rem/1 'Archivo',sans-serif;color:var(--t-ink,#1F2452);cursor:pointer}
+.mapp-gondola-add button:last-child{background:var(--t-cta,var(--t-4));color:#fff}
+.mapp-gondola-add output{min-width:20px;text-align:center;font:700 .95rem 'JetBrains Mono',monospace}
+.mapp-gondola-add.is-open{left:8px;justify-content:space-between}
+.mapp-gondola-cart{--pb:calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));position:sticky;bottom:calc(-1 * var(--pb));margin:10px -20px calc(-1 * var(--pb));padding:14px 20px var(--pb);background:linear-gradient(rgba(250,246,240,0),var(--m-bg,#FAF6F0) 22%)}
+.mapp-gondola-cart .mapp-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+.mapp-gondola-cart i{min-width:26px;height:26px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font:700 .85rem 'JetBrains Mono',monospace;font-style:normal;background:#fff;color:var(--t-4)}
 .mapp-insumos-sum{margin:4px 0 10px;font-size:.85rem;color:var(--m-soft)}
 
 /* Gustos del cliente (6 nov 2026): cabecera de «Mis apartados», invitación en el inicio y preguntas */
@@ -458,12 +491,82 @@
 .mapp-reto-kpis div{display:flex;flex-direction:column-reverse;padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
 .mapp-reto-kpis dd{margin:0;font:700 1.2rem/1.1 'JetBrains Mono',monospace;color:#fff}
 .mapp-reto-kpis dt{margin-top:3px;font:500 .72rem 'Archivo',sans-serif;color:rgba(255,255,255,.8)}
-.mapp-reto-icons{list-style:none;display:flex;gap:6px;margin:14px -18px 0;padding:0 18px 2px;overflow-x:auto;scrollbar-width:none}
-.mapp-reto-icons::-webkit-scrollbar{display:none}
-.mapp-reto-icons button{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:62px;min-height:64px;padding:8px 6px;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:600 .7rem 'Archivo',sans-serif;cursor:pointer}
-.mapp-reto-icons svg{width:28px;height:28px}
-.mapp-reto-icons button.on{background:#fff;color:var(--t-ink,#1F2452);border-color:#fff}
-.mapp-reto-icons button.is-now{box-shadow:0 0 0 2px #FFD9A8}
+/* El medallero: una medalla por sección; se enciende cuando su reto ya cerró (7 nov 2026) */
+.mapp-medals{list-style:none;display:flex;gap:8px;margin:14px -18px 0;padding:2px 18px 4px;overflow-x:auto;scrollbar-width:none}
+.mapp-medals::-webkit-scrollbar{display:none}
+.mapp-medals li{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:56px}
+.mapp-medal{position:relative;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:rgba(255,255,255,.45);
+  background:rgba(255,255,255,.06);border:2px dashed rgba(255,255,255,.28)}
+.mapp-medal svg{width:26px;height:26px}
+.mapp-medal i{position:absolute;right:-4px;bottom:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;font:700 .68rem/20px 'JetBrains Mono',monospace;font-style:normal;color:var(--t-1);background:var(--t-7)}
+.mapp-medals li.is-on .mapp-medal{color:var(--t-1);border:2px solid #FFF3B0;
+  background:radial-gradient(circle at 35% 30%,var(--t-7),var(--t-6) 45%,var(--t-5) 100%);box-shadow:0 6px 14px -6px rgba(242,84,45,.9)}
+.mapp-medals small{font:600 .68rem 'Archivo',sans-serif;color:rgba(255,255,255,.62)}
+.mapp-medals li.is-on small{color:#fff}
+/* Retos básicos: cabecera naranja con el título y los íconos de los métodos (7 nov 2026) */
+.mapp .mapp-basics{padding-top:0;overflow:hidden}
+.mapp-basics-head{margin:0 -16px 12px;padding:16px 16px 14px;color:#fff;
+  background:linear-gradient(120deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%)}
+.mapp-basics-head h2{margin:0;font:800 1.3rem/1.15 'Archivo',sans-serif;color:#fff}
+.mapp-basics-methods{display:flex;gap:6px;margin:12px -16px 0;padding:0 16px 2px;overflow-x:auto;scrollbar-width:none}
+.mapp-basics-methods::-webkit-scrollbar{display:none}
+.mapp-basics-methods button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:62px;min-height:64px;padding:8px 6px;border-radius:16px;
+  border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.14);color:#fff;font:600 .7rem 'Archivo',sans-serif;cursor:pointer}
+.mapp-basics-methods svg{width:28px;height:28px}
+.mapp-basics-methods button.on{background:#fff;color:var(--t-4);border-color:#fff}
+.mapp-basics-methods button.is-now{box-shadow:0 0 0 2px var(--t-7)}
 /* La fila de íconos se desliza dentro de la cabecera, sin ensanchar la página */
 .mapp-reto > *{min-width:0}
 .mapp .mapp-reto-head.is-grad{max-width:calc(100% + 32px);overflow:hidden}
+
+/* Retos básicos en tarjetas de carrusel (pedido del usuario, 7 nov 2026): se pasan
+   de lado con el dedo, la siguiente se asoma, cabecera en gradiente con el ícono. */
+.mapp-basics-list.is-carousel {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 4px 16px 10px; scroll-padding: 0 16px; scrollbar-width: none;
+}
+.mapp-basics-list.is-carousel::-webkit-scrollbar { display: none; }
+.mapp-basics-list.is-carousel li {
+  flex: 0 0 82%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 0;
+  padding: 0 0 14px; overflow: hidden; border-radius: 20px; min-height: 230px;
+  box-shadow: 0 10px 24px -16px rgba(31, 36, 82, .5);
+}
+.mapp-basics-list.is-carousel li:only-child { flex-basis: 100%; }
+.mapp-basics-top {
+  display: flex; align-items: center; gap: 10px; padding: 14px 14px 16px; margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--t-1, #22125A), var(--t-2, #5A1E9E) 55%, var(--t-3, #B0127A));
+  color: #fff;
+}
+.mapp-basics-list.is-carousel li.is-live .mapp-basics-top { background: var(--t-cta, #DE1B1B); }
+.mapp-basics-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(255, 255, 255, .14); }
+.mapp-basics-ic svg { width: 32px; height: 32px; }
+.mapp-basics-list.is-carousel .mapp-basics-n { width: auto; height: auto; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .16); margin-left: auto; }
+.mapp-basics-list.is-carousel li.is-live .mapp-basics-n { background: rgba(255, 255, 255, .2); }
+.mapp-basics-list.is-carousel .mapp-basics-now { margin-left: 0; background: #fff; color: var(--t-4, #DE1B1B); }
+.mapp-basics-list.is-carousel b, .mapp-basics-list.is-carousel p, .mapp-basics-list.is-carousel small { padding: 0 14px; }
+.mapp-basics-list.is-carousel b { font-size: 1.12rem; }
+.mapp-basics-list.is-carousel small { margin-top: auto; padding-top: 8px; }
+.mapp-basics-dots { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+.mapp-basics-dots i { width: 7px; height: 7px; border-radius: 999px; background: rgba(31, 36, 82, .2); transition: width .2s; }
+.mapp-basics-dots i.on { width: 20px; background: var(--t-4, #DE1B1B); }
+@media (prefers-reduced-motion: reduce) { .mapp-basics-dots i { transition: none; } }
+
+/* «Quiero un café» (pedido del usuario, 7 nov 2026): fijo abajo, al pulgar, encima de la
+   barra; el gradiente térmico como los llamados a la acción. Pegado (sticky) al final del
+   inicio: baja con la lista y nunca tapa lo último. */
+.mapp-want {
+  position: sticky; z-index: 5; bottom: calc(66px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+  margin: 18px -16px 0; padding: 18px 16px 10px; display: grid; gap: 6px; text-align: center;
+  background: linear-gradient(rgba(255, 255, 255, 0), var(--m-bg, #fff) 26%);
+}
+.mapp-want-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px;
+  border: 0; border-radius: 16px; cursor: pointer; color: #fff; font: 800 1.12rem 'Archivo', sans-serif;
+  background: var(--t-cta, #DE1B1B); box-shadow: var(--t-cta-glow, 0 12px 24px -12px rgba(176, 18, 122, .8));
+}
+.mapp-want-btn:disabled { opacity: .75; }
+.mapp-want-btn:focus-visible { outline: 3px solid var(--t-1, #22125A); outline-offset: 2px; }
+.mapp-want-note { margin: 0; font-size: .8rem; color: var(--m-ink-soft, #4a4f6a); }
+.mapp-want-ok { margin: 0; padding: 12px 14px; border-radius: 16px; display: grid; gap: 2px; text-align: left; background: #fff; border: 1px solid var(--t-4, #DE1B1B); box-shadow: 0 10px 24px -14px rgba(222, 27, 27, .5); }
+.mapp-want-ok b { font: 800 1.02rem 'Archivo', sans-serif; }
+.mapp-want-ok span { font-size: .86rem; color: var(--m-ink-soft, #4a4f6a); }

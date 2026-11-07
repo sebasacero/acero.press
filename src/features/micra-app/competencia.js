@@ -145,3 +145,17 @@ export function challengeDraft(f, today) {
     },
   };
 }
+
+/**
+ * El medallero de la cabecera: una medalla por sección de retos básicos. Se
+ * enciende cuando un reto de esa sección ya cerró; «ganada» si tuvo ganador.
+ * Los retos que no caen en ninguna sección cuentan solo en el total.
+ */
+export function medalBoard(past = []) {
+  const closed = (past ?? []).filter(Boolean);
+  const medals = BASIC_SECTIONS.map((s) => {
+    const mine = closed.filter((p) => sectionOf(p)?.id === s.id);
+    return { id: s.id, label: s.label.split(' ')[0], done: mine.length, won: mine.filter((p) => p.winner).length };
+  });
+  return { medals, total: closed.length, won: closed.filter((p) => p.winner).length };
+}

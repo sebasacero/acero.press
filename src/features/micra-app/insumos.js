@@ -17,27 +17,29 @@ export const CATEGORIES = [
 
 /** Lo que se puede pedir. `unit` es cómo se cuenta (lo que el equipo entrega por cada 1). */
 export const INSUMOS = [
-  { id: 'cafe-molido', cat: 'cafe', label: 'Café molido para AeroPress', unit: 'kilo', units: 'kilos', note: 'Un kilo da unas 80 tazas' },
-  { id: 'cafe-grano', cat: 'cafe', label: 'Café en grano', unit: 'kilo', units: 'kilos' },
-  { id: 'vaso-4', cat: 'vasos', label: 'Vasos de 4 oz (tinto)', unit: 'paquete de 50', units: 'paquetes de 50' },
-  { id: 'vaso-7', cat: 'vasos', label: 'Vasos de 7 oz (perico)', unit: 'paquete de 50', units: 'paquetes de 50' },
-  { id: 'tapas', cat: 'vasos', label: 'Tapas', unit: 'paquete de 50', units: 'paquetes de 50' },
-  { id: 'mezcladores', cat: 'vasos', label: 'Mezcladores', unit: 'paquete de 100', units: 'paquetes de 100' },
-  { id: 'servilletas', cat: 'vasos', label: 'Servilletas', unit: 'paquete', units: 'paquetes' },
-  { id: 'chocolate', cat: 'bebidas', label: 'Chocolate de mesa', unit: 'libra', units: 'libras' },
-  { id: 'aromatica', cat: 'bebidas', label: 'Aromática', unit: 'caja de 20', units: 'cajas de 20' },
-  { id: 'azucar', cat: 'bebidas', label: 'Azúcar en sobres', unit: 'bolsa de 100', units: 'bolsas de 100' },
+  { id: 'cafe-molido', icon: '☕', cat: 'cafe', label: 'Café molido para AeroPress', unit: 'kilo', units: 'kilos', note: 'Un kilo da unas 80 tazas' },
+  { id: 'cafe-grano', icon: '🫘', cat: 'cafe', label: 'Café en grano', unit: 'kilo', units: 'kilos' },
+  { id: 'vaso-4', icon: '🥤', cat: 'vasos', label: 'Vasos de 4 oz (tinto)', unit: 'paquete de 50', units: 'paquetes de 50' },
+  { id: 'vaso-7', icon: '🥤', cat: 'vasos', label: 'Vasos de 7 oz (perico)', unit: 'paquete de 50', units: 'paquetes de 50' },
+  { id: 'tapas', icon: '🫙', cat: 'vasos', label: 'Tapas', unit: 'paquete de 50', units: 'paquetes de 50' },
+  { id: 'mezcladores', icon: '🥄', cat: 'vasos', label: 'Mezcladores', unit: 'paquete de 100', units: 'paquetes de 100' },
+  { id: 'servilletas', icon: '🧻', cat: 'vasos', label: 'Servilletas', unit: 'paquete', units: 'paquetes' },
+  { id: 'chocolate', icon: '🍫', cat: 'bebidas', label: 'Chocolate de mesa', unit: 'libra', units: 'libras' },
+  { id: 'aromatica', icon: '🍵', cat: 'bebidas', label: 'Aromática', unit: 'caja de 20', units: 'cajas de 20' },
+  { id: 'azucar', icon: '🍯', cat: 'bebidas', label: 'Azúcar en sobres', unit: 'bolsa de 100', units: 'bolsas de 100' },
   { id: 'panela', cat: 'bebidas', label: 'Panela', unit: 'kilo', units: 'kilos' },
-  { id: 'leche', cat: 'bebidas', label: 'Leche', unit: 'litro', units: 'litros' },
-  { id: 'cigarrillos', cat: 'cigarrillos', label: 'Cigarrillos', unit: 'cajetilla de 20', units: 'cajetillas de 20', note: 'Por cajetilla. Nunca a menores de edad' },
-  { id: 'dulces', cat: 'dulces', label: 'Dulces y chicles', unit: 'bolsa', units: 'bolsas' },
-  { id: 'galletas', cat: 'dulces', label: 'Galletas o ponqué', unit: 'paquete', units: 'paquetes' },
-  { id: 'filtros', cat: 'equipo', label: 'Filtros de papel AeroPress', unit: 'caja de 350', units: 'cajas de 350' },
-  { id: 'termo', cat: 'equipo', label: 'Termo', unit: 'unidad', units: 'unidades' },
+  { id: 'leche', icon: '🥛', cat: 'bebidas', label: 'Leche', unit: 'litro', units: 'litros' },
+  { id: 'cigarrillos', icon: '🚬', cat: 'cigarrillos', label: 'Cigarrillos', unit: 'cajetilla de 20', units: 'cajetillas de 20', note: 'Por cajetilla. Nunca a menores de edad' },
+  { id: 'dulces', icon: '🍬', cat: 'dulces', label: 'Dulces y chicles', unit: 'bolsa', units: 'bolsas' },
+  { id: 'galletas', icon: '🍪', cat: 'dulces', label: 'Galletas o ponqué', unit: 'paquete', units: 'paquetes' },
+  { id: 'filtros', icon: '📄', cat: 'equipo', label: 'Filtros de papel AeroPress', unit: 'caja de 350', units: 'cajas de 350' },
+  { id: 'termo', icon: '🧴', cat: 'equipo', label: 'Termo', unit: 'unidad', units: 'unidades' },
 ];
 
 export const insumoOf = (id) => INSUMOS.find((i) => i.id === id) ?? null;
 export const itemsOf = (cat) => INSUMOS.filter((i) => i.cat === cat);
+/** El dibujo del producto en la góndola: el suyo o el de su categoría. */
+export const iconOf = (item) => item?.icon ?? CATEGORIES.find((c) => c.id === item?.cat)?.icon ?? '📦';
 
 /** Suma o resta uno (entre 0 y 99); lo que queda en 0 sale del pedido. */
 export function bumpInsumo(cart = {}, id, delta) {

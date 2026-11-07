@@ -6,6 +6,7 @@ import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToClear, clearStored } from './perfil.js';
 import { seekOff, setSeekOff } from './seek.js';
+import { outAlertsOff, setOutAlertsOff } from './alerts.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
@@ -537,6 +538,10 @@ export function ClientProfile({ go, who }) {
     setFavs(next);
   };
   const toggleZone = () => { setSeekOff(!zoneOff); setZoneOff(!zoneOff); };
+  // El globito «salió a vender» de sus baristas (♥ o a quien le apartó): se apaga aquí
+  const lsStore = () => { try { return window.localStorage; } catch { return null; } };
+  const [outOff, setOutOff] = useState(() => outAlertsOff(lsStore()));
+  const toggleOut = () => { setOutAlertsOff(lsStore(), !outOff); setOutOff(!outOff); };
   const invite = () => platform.share({ title: 'Micra', text: 'Aparta tu tinto con los baristas de la calle y te lo tienen listo cuando pasan:', url: platform.siteUrl('/micra') });
   const wipe = async () => {
     setBusy(true);
@@ -614,6 +619,11 @@ export function ClientProfile({ go, who }) {
 
       {sheet === 'baristas' && (
         <Sheet title={`Mis baristas · ${favs.length}`} onClose={() => setSheet(null)} testid="profile-favs">
+          <label className="mapp-check">
+            <input type="checkbox" checked={!outOff} onChange={toggleOut} data-testid="out-toggle" />
+            <span>Avisarme cuando mis baristas salgan a vender</span>
+          </label>
+          <p className="mapp-fine">Con la app abierta, uno por barista al día: los que marcaste con ★ y a quienes les apartaste.</p>
           {favs.length === 0 && <p className="mapp-muted">Toca ★ en la página de un barista para tenerlo arriba en la lista.</p>}
           <ul className="mapp-holds">
             {favs.map((id) => (

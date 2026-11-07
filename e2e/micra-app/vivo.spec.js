@@ -44,6 +44,7 @@ const zonesOf = (page) => page.evaluate(() => {
 test('barista: sale a vender y ve a los otros baristas y dónde quieren café; la flecha de volver apaga el mapa en vivo', async ({ browser }) => {
   const seed = structuredClone(SEED);
   delete seed.baristas[0].live_until;
+  seed.sales = []; // sin ventas hoy: Vender es solo la meta y «Salí a vender»
   const { page, errors, liveCalls } = await open(browser, { who: 'barista', seed });
   await page.goto('/micra/barista', { waitUntil: 'load' });
 
@@ -51,6 +52,10 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; l
   const panel = page.getByTestId('live-panel');
   await expect(panel).toHaveAttribute('data-live', 'false');
   await expect(panel.getByTestId('live-nudge')).toHaveText('Sal a vender para ver quién busca café ahora');
+  // Antes de salir no hay nada debajo de la meta: lo que manda es «Salí a vender»
+  await expect(page.getByRole('region', { name: 'Meta de hoy' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Vendí un tinto' })).toHaveCount(0);
+  await expect(page.getByTestId('coffee-bar')).toHaveCount(0);
   await expect(panel).toContainText('2 baristas en la calle');
   await expect.poll(() => zonesOf(page)).toEqual({ demand: [], study: [3, 2] });
 
@@ -58,6 +63,7 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; l
   await page.getByTestId('go-out').click();
   await page.getByTestId('consent-location').check();
   await page.getByTestId('consent-accept').click();
+  await expect(page.getByRole('button', { name: 'Vendí un tinto' })).toBeVisible();
 
   // En línea: el mapa grande con los otros dos, la cuenta y lo suyo aparte
   await expect(panel).toHaveAttribute('data-live', 'true');
@@ -144,6 +150,28 @@ test('cliente: «Cerca de mí» manda una sola señal con la celda, sin su punto
   await expect(drinks.getByRole('button', { name: 'Aromática' })).toHaveAttribute('aria-pressed', 'true');
   await page.evaluate(() => new Promise((r) => { setTimeout(r, 500); }));
   expect(seeks()).toHaveLength(2);
+  expect(errors).toEqual([]);
+});
+
+test('cliente: «Quiero un café» manda solo la zona y la bebida, sin apartar, aunque antes dijo «No mostrar mi zona»', async ({ browser }) => {
+  const { page, api, errors, seeks } = await open(browser, { gps: true });
+  await page.addInitScript(() => { localStorage.setItem('micra_seek_off_v1', 'true'); });
+  await page.goto('/micra', { waitUntil: 'load' });
+  const want = page.getByTestId('want-coffee');
+  await expect(want.getByTestId('want-btn')).toBeVisible();
+  expect(seeks()).toHaveLength(0);
+  await page.getByTestId('drink-perico').click();
+  expect(seeks()).toHaveLength(0);
+  await want.getByTestId('want-btn').click();
+  await expect(want.getByTestId('want-ok')).toContainText('¡Listo! Tu zona quiere café.');
+  await expect.poll(() => seeks().length).toBe(1);
+  const sent = seeks()[0].data;
+  expect(sent).toMatchObject({ p_cell_lat: 4.646, p_cell_lng: -74.062, p_drink: 'perico' });
+  expect(JSON.stringify(sent)).not.toContain('4.6451');
+  // Un sí explícito: el «No mostrar mi zona» de antes queda quitado
+  expect(await page.evaluate(() => localStorage.getItem('micra_seek_off_v1'))).toBe('false');
+  // No apartó nada
+  expect(api.calls.filter((c) => c.p.endsWith('/rpc/micra_hold'))).toHaveLength(0);
   expect(errors).toEqual([]);
 });
 

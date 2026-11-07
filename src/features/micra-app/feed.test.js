@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildFeed, filterFeed, chipCounts, readPrices, millions, cupCost, coffeeOrderText, HOUSE, achievements, photoIdeas, readCurated, addCurated, CURATED, coffeeHead } from './feed.js';
+import { buildFeed, filterFeed, chipCounts, readPrices, millions, cupCost, coffeeOrderText, HOUSE, achievements, photoIdeas, readCurated, addCurated, CURATED, coffeeHead, priceTrend, priceRows } from './feed.js';
 
 const B = [
   { id: 'a', name: 'Marlene', referencia: 'Cl. 85 con Cra. 15', hora_inicio: 6, hora_fin: 11, prices: { tinto: 1500 }, status: 'usual' },
@@ -135,4 +135,26 @@ test('coffeeHead: la carga en grande y los datos del café; sin precio, el tinto
   const none = coffeeHead({ prices: {}, baristas: [], now });
   assert.match(none.big.label, /tinto en la calle/);
   assert.deepEqual(none.kpis.map((k) => k.id), ['live']);
+});
+
+test('la flechita del precio: subió, bajó o igual, y el anterior se guarda al cambiar de día', () => {
+  assert.equal(priceTrend(100, null), null);
+  assert.deepEqual(priceTrend(2900000, 2850000), { dir: 'up', pct: '1,8 %' });
+  assert.equal(priceTrend(3.7, 3.8).dir, 'down');
+  assert.equal(priceTrend(100, 100).dir, 'flat');
+  const p = readPrices({ micra_precio_carga: '2.900.000', micra_precio_carga_ant: '2.850.000', micra_precio_ny: '3,80' });
+  assert.equal(p.prevCarga, 2850000);
+  assert.equal(p.prevNy, undefined);
+  const h = coffeeHead({ prices: p, baristas: [] });
+  assert.equal(h.big.trend.dir, 'up');
+  assert.equal(h.kpis.find((k) => k.id === 'kilo').trend.dir, 'up');
+  assert.equal(h.kpis.find((k) => k.id === 'ny').trend, null);
+  // Cambia de día: el de antes pasa a ser el anterior
+  const cfg = { micra_precio_carga: '2.850.000', micra_precio_ny: '3,80', micra_precio_fecha: '2026-11-06' };
+  const rows = Object.fromEntries(priceRows({ carga: '2.900.000', ny: '3,70' }, cfg, '2026-11-07').map((r) => [r.key, r.value]));
+  assert.deepEqual(rows, { micra_precio_carga: '2.900.000', micra_precio_ny: '3,70', micra_precio_fecha: '2026-11-07', micra_precio_carga_ant: '2.850.000', micra_precio_ny_ant: '3,80' });
+  // Corrige el mismo día: el anterior no se pisa
+  const same = Object.fromEntries(priceRows({ carga: '2.910.000', ny: '3,70' }, { ...cfg, micra_precio_fecha: '2026-11-07', micra_precio_carga_ant: '2.800.000' }, '2026-11-07').map((r) => [r.key, r.value]));
+  assert.equal(same.micra_precio_carga_ant, '2.800.000');
+  assert.equal(same.micra_precio_ny_ant, undefined);
 });
