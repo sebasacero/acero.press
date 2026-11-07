@@ -288,3 +288,12 @@ test('Tus baristas: historial por apartado y primero los disponibles', async () 
   assert.deepEqual(myBaristas(list, { favorites: ['b'], history: h, now }).map((x) => [x.id, x.status, x.times]), [['b', 'live', 0], ['a', 'off', 2], ['c', 'off', 1]]);
   assert.deepEqual(myBaristas(null), []);
 });
+
+test('rutas del café de origen', () => {
+  assert.deepEqual(parseRoute('/micra/origen'), { view: 'origen' });
+  assert.deepEqual(parseRoute('/micra/origen/amor-perfecto'), { view: 'origen', id: 'amor-perfecto' });
+  assert.deepEqual(parseRoute('/micra/origen/Mal Id'), { view: 'home' });
+  assert.deepEqual(parseRoute('/micra/tienda'), { view: 'tienda' });
+  assert.deepEqual(parseRoute('/micra/finca'), { view: 'finca' });
+  assert.deepEqual(parseRoute('/micra/finca/perfil'), { view: 'finca', tab: 'perfil' });
+});

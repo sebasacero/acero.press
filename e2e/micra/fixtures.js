@@ -615,6 +615,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
 
     let body = [];
     if (p.includes('/admin_users')) body = micra.admin ? [{ id: 1, role: micra.adminRole ?? 'owner' }] : [];
+    // app_config de lectura pública (micra.config = { clave: valor }); vacío si no se pone
+    else if (p.endsWith('/app_config') && m === 'GET') {
+      const k = u.searchParams.get('key') ?? '';
+      const keys = k.startsWith('eq.') ? [k.slice(3)] : k.startsWith('in.(') ? k.slice(4, -1).split(',').map((x) => x.replace(/^"|"$/g, '')) : null;
+      body = Object.entries(micra.config ?? {}).filter(([key]) => !keys || keys.includes(key)).map(([key, value]) => ({ key, value: typeof value === 'string' ? value : JSON.stringify(value) }));
+    }
     else if (p.endsWith('/products')) body = ['eq.coffee_bag', null].includes(u.searchParams.get('category')) ? coffee : [];
     else if (p.endsWith('/inventory') && m === 'GET') {
       const eq = u.searchParams.get('variant_id');

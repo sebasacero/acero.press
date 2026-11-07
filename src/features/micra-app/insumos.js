@@ -41,29 +41,37 @@ export const itemsOf = (cat) => INSUMOS.filter((i) => i.cat === cat);
 /** El dibujo del producto en la góndola: el suyo o el de su categoría. */
 export const iconOf = (item) => item?.icon ?? CATEGORIES.find((c) => c.id === item?.cat)?.icon ?? '📦';
 
-/** Suma o resta uno (entre 0 y 99); lo que queda en 0 sale del pedido. */
+/** Suma o resta uno (entre 0 y 99); lo que queda en 0 sale del pedido. Los «lote:…» son café de origen. */
 export function bumpInsumo(cart = {}, id, delta) {
-  if (!insumoOf(id)) return cart;
+  if (!insumoOf(id) && !String(id).startsWith('lote:')) return cart;
   const n = Math.max(0, Math.min(MAX_QTY, (Number(cart[id]) || 0) + delta));
   const next = { ...cart };
   if (n === 0) delete next[id]; else next[id] = n;
   return next;
 }
 
-/** Las líneas del pedido en el orden del catálogo, sin lo que no existe o está en 0. */
-export function orderLines(cart = {}) {
-  return INSUMOS.filter((i) => (Number(cart?.[i.id]) || 0) > 0).map((i) => {
+/**
+ * Las líneas del pedido en el orden del catálogo, sin lo que no existe o está en 0.
+ * `coffee` son los cafés de origen (origen.js `baristaCoffee`), que van primero con su precio.
+ */
+export function orderLines(cart = {}, coffee = []) {
+  const beans = coffee.filter((i) => (Number(cart?.[i.id]) || 0) > 0).map((i) => {
+    const qty = Math.min(MAX_QTY, Math.floor(Number(cart[i.id])));
+    return { id: i.id, qty, text: `${qty} ${qty === 1 ? 'kilo' : 'kilos'} · ${i.label} ($${(i.kilo * qty).toLocaleString('es-CO')})` };
+  });
+  const rest = INSUMOS.filter((i) => (Number(cart?.[i.id]) || 0) > 0).map((i) => {
     const qty = Math.min(MAX_QTY, Math.floor(Number(cart[i.id])));
     return { id: i.id, qty, text: `${qty} ${qty === 1 ? i.unit : i.units} · ${i.label}` };
   });
+  return [...beans, ...rest];
 }
 
-export const orderCount = (cart) => orderLines(cart).reduce((n, l) => n + l.qty, 0);
+export const orderCount = (cart, coffee = []) => orderLines(cart, coffee).reduce((n, l) => n + l.qty, 0);
 
 /** El mensaje de WhatsApp al equipo, con cada insumo en su línea. */
-export function insumosText({ name, where, cart, note = '' }) {
+export function insumosText({ name, where, cart, note = '', coffee = [] }) {
   const first = String(name || '').trim().split(/\s+/)[0] || 'barista';
-  const lines = orderLines(cart).map((l) => `• ${l.text}`);
+  const lines = orderLines(cart, coffee).map((l) => `• ${l.text}`);
   const extra = String(note || '').trim().slice(0, 200);
   return [
     `Hola, soy ${first} de Micra. Quiero pedir insumos${where ? ` para ${where}` : ''}:`,

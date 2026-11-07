@@ -588,3 +588,87 @@
 .mapp-want-ok { margin: 0; padding: 12px 14px; border-radius: 16px; display: grid; gap: 2px; text-align: left; background: #fff; border: 1px solid var(--t-4, #DE1B1B); box-shadow: 0 10px 24px -14px rgba(222, 27, 27, .5); }
 .mapp-want-ok b { font: 800 1.02rem 'Archivo', sans-serif; }
 .mapp-want-ok span { font-size: .86rem; color: var(--m-ink-soft, #4a4f6a); }
+
+/* ---------- El café de origen: marcas y fincas, la tienda y la finca del caficultor (7 nov 2026) ---------- */
+.mapp-ohead{margin:-18px -16px 14px;padding:12px 18px 18px;border-radius:0 0 28px 28px;color:#fff;
+  background:linear-gradient(160deg,var(--t-4) 0%,var(--t-5) 55%,#FF8A3D 100%);box-shadow:0 14px 30px -14px rgba(242,84,45,.7)}
+.mapp-ohead.is-cold{background:linear-gradient(180deg,var(--t-0) 0%,var(--t-1) 55%,#3B1A7A 100%);box-shadow:var(--t-glow-cold)}
+.mapp-ohead .mapp-back{color:#fff}
+.mapp-ohead-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:4px}
+.mapp-ohead-kicker{margin:0;font:600 .68rem 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.mapp-ohead-title{margin:2px 0 0;font:900 1.5rem/1.05 'Archivo',sans-serif;letter-spacing:-.02em;color:#fff}
+.mapp-ohead-pill{flex:none;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);font:700 .7rem 'JetBrains Mono',monospace;color:#fff;white-space:nowrap}
+.mapp-origen-chips{align-items:center}
+.mapp-origen-shop{margin-left:auto !important;background:var(--t-cta) !important;color:#fff !important;border-color:transparent !important;text-transform:none !important;font-family:'Archivo',sans-serif !important;font-weight:700 !important;letter-spacing:0 !important}
+.mapp-ogroup{padding:14px 14px 10px;margin-bottom:12px}
+.mapp-ogroup .mapp-kicker{margin:0 0 8px}
+.mapp-olist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mapp-orow{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:0;border-radius:14px;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:64px}
+.mapp-orow:hover,.mapp-orow:focus-visible{background:rgba(31,36,82,.05)}
+.mapp-orow.is-static{cursor:default;border:1px solid var(--m-line);margin-bottom:12px}
+.mapp-orow-txt{flex:1;min-width:0;display:grid;gap:2px}
+.mapp-orow-txt b{font:800 .95rem/1.2 'Archivo',sans-serif}
+.mapp-orow-txt small{font:500 .68rem/1.3 'JetBrains Mono',monospace;color:var(--m-soft);overflow:hidden;text-overflow:ellipsis}
+.mapp-orow-go{font:800 1.3rem 'Archivo',sans-serif;color:var(--m-soft)}
+.mapp-omark{flex:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font:900 .85rem 'Archivo',sans-serif;letter-spacing:-.02em;color:#fff;background:var(--t-1)}
+.mapp-omark.is-finca{background:#F4EBDD;font-size:1.5rem}
+.mapp-omark.is-ini{color:var(--t-4);font:800 1rem 'Archivo',sans-serif;border-radius:50%}
+.mapp-omark.is-big{width:88px;height:88px;border-radius:24px;font-size:1.6rem}
+.mapp-omark.is-finca.is-big{font-size:3rem}
+.mapp-oseal{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#EAF6EF;color:#1E6B3F;font:700 .75rem 'JetBrains Mono',monospace}
+.mapp-oseal.is-text{width:auto;height:auto;padding:3px 8px;border-radius:999px;font-size:.62rem;justify-self:start;margin-top:2px}
+.mapp-oseal.is-wait{background:#FFF3B0;color:#7A4E00}
+.mapp-ocover{position:relative;height:120px;margin:0 0 12px;border-radius:18px;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(135deg,var(--t-1),var(--o-color,var(--t-3)) 70%,var(--t-5))}
+.mapp-ocover.is-finca{background:linear-gradient(180deg,#9DD3A8 0%,#5E9E66 55%,#3E6B45 100%)}
+.mapp-ocover.is-finca::after{content:"";position:absolute;inset:auto 0 0;height:30px;background:repeating-linear-gradient(90deg,#365B3C 0 14px,#4E8356 14px 28px);opacity:.7}
+.mapp-ocover .mapp-omark{position:relative;z-index:1;box-shadow:0 10px 24px -10px rgba(13,8,32,.6)}
+.mapp-okv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 14px}
+.mapp-okv div{background:var(--m-glass);box-shadow:var(--m-shadow);border-radius:12px;padding:8px 10px}
+.mapp-okv dd{margin:0;font:800 1.1rem 'Archivo',sans-serif}
+.mapp-okv dt{font:500 .62rem 'JetBrains Mono',monospace;color:var(--m-soft);letter-spacing:.04em;text-transform:uppercase}
+.mapp-olots{list-style:none;margin:6px 0 10px;padding:0;display:grid;gap:8px}
+.mapp-olots li{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--m-glass);box-shadow:var(--m-shadow)}
+.mapp-obag{flex:none;width:52px;min-height:60px;padding:4px;border-radius:8px 8px 12px 12px;display:grid;place-items:center;text-align:center;background:linear-gradient(180deg,#3B2A22,#1C1410);color:var(--t-7);font:800 .58rem/1.3 'JetBrains Mono',monospace}
+.mapp-oroast{color:var(--t-5) !important}
+.mapp-oprice{flex:none;text-align:right;display:grid}
+.mapp-oprice b{font:800 1rem 'Archivo',sans-serif}
+.mapp-oprice small{font:500 .62rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-origen-finca{display:block;margin:14px auto 0}
+/* la góndola de la tienda */
+.mapp-shop{margin-top:4px}
+.mapp-gondola-shelf.is-btn{width:100%;border:0;padding:0;cursor:pointer;font:inherit}
+.mapp-gondola-shelf.is-wide{aspect-ratio:16/9;margin-bottom:10px}
+.mapp-gondola-shelf.is-wide span{font-size:4rem}
+.mapp-gondola-tag{position:absolute;top:8px;left:8px;padding:3px 7px;border-radius:999px;font:700 .56rem 'JetBrains Mono',monospace;font-style:normal;letter-spacing:.04em;background:#fff;color:var(--t-4);transform:none !important;filter:none !important}
+.mapp-gondola-add.is-inline{position:static;display:inline-flex;left:auto;justify-content:flex-start}
+.mapp-oproduct{display:flex;flex-direction:column;gap:10px}
+.mapp-oproduct .mapp-kicker,.mapp-oproduct h2{margin:0}
+.mapp-oproduct-notes{margin:0;font-size:.95rem;line-height:1.45;color:var(--m-soft)}
+.mapp-oproduct-add{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0}
+.mapp-oproduct .mapp-oprice{text-align:left}
+.mapp-odelivery{display:flex;flex-direction:column;gap:12px}
+.mapp-odelivery-opts{display:grid;gap:8px}
+.mapp-oopt{display:grid;gap:3px;padding:12px 14px;border-radius:16px;border:1.5px solid var(--m-line);background:var(--m-glass);text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:44px}
+.mapp-oopt.on{border-color:var(--t-4);box-shadow:0 0 0 1px var(--t-4) inset}
+.mapp-oopt b{font:800 .95rem 'Archivo',sans-serif}
+.mapp-oopt small{font-size:.8rem;line-height:1.35;color:var(--m-soft)}
+.mapp-oopt-now{font:700 .66rem 'JetBrains Mono',monospace;font-style:normal;color:#1E6B3F}
+.mapp-gondola-cart.is-shop{margin:10px -16px 0;position:sticky;bottom:calc(76px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom)))}
+.mapp-gondola-cart.is-shop .mapp-btn.is-off{opacity:.5}
+/* Insumos › Café: el café de origen primero */
+.mapp-insumos-origen{margin:0 0 8px}
+.mapp-gondola-coffee{margin-bottom:6px}
+.mapp-gondola-pick{margin-top:6px;min-height:36px;padding:6px 10px;border-radius:999px;border:1.5px solid var(--m-line);background:var(--m-glass);font:700 .74rem 'Archivo',sans-serif;color:var(--m-fg);cursor:pointer}
+.mapp-gondola-pick.on{background:var(--t-4);border-color:var(--t-4);color:#fff}
+/* La finca del caficultor */
+.mapp-fsteps{display:flex;gap:6px;margin-top:14px}
+.mapp-fsteps i{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.3)}
+.mapp-fsteps i.on{background:#fff}
+.mapp-fform{display:flex;flex-direction:column;gap:12px}
+.mapp-fform .mapp-kicker{margin:4px 0 0}
+.mapp-ffield-hint{font:500 .72rem/1.35 'Archivo',sans-serif;color:var(--m-soft);text-transform:none;letter-spacing:0}
+.mapp-fdone{padding:16px}
+.mapp-fdone p{margin:4px 0 0}
+.mapp-fsteps-list{margin:12px 0 0;padding-left:20px;display:grid;gap:6px;font-size:.9rem;line-height:1.4;color:var(--m-soft)}
+.mapp-finca .mapp-notice{margin:0}

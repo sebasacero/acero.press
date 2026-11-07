@@ -29,6 +29,11 @@ const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
 const ClientPublish = lazy(() => import('./HoyFeed.jsx').then((m) => ({ default: m.ClientPublish })));
 // Competencia: el reto de la semana (el cliente califica; el barista lo tiene en su modo)
 const Competencia = lazy(() => import('./Competencia.jsx'));
+const OrigenDirectory = lazy(() => import('./Origen.jsx'));
+const SellerPage = lazy(() => import('./Origen.jsx').then((m) => ({ default: m.SellerPage })));
+const Tienda = lazy(() => import('./Origen.jsx').then((m) => ({ default: m.Tienda })));
+const FincaWizard = lazy(() => import('./Finca.jsx'));
+const FincaPreview = lazy(() => import('./Finca.jsx').then((m) => ({ default: m.FincaPreview })));
 
 /** El avión de papel de arriba (como los mensajes de Instagram): el WhatsApp del equipo. */
 function TeamChat() {
@@ -223,6 +228,9 @@ export default function MicraApp() {
   else if (route.view === 'holds') body = <MyHolds go={go} />;
   else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" /></Suspense>;
   else if (route.view === 'reto') body = <Suspense fallback={<Cargando />}><Competencia go={go} audience="client" /></Suspense>;
+  else if (route.view === 'origen') body = <Suspense fallback={<Cargando />}>{route.id ? <SellerPage id={route.id} go={go} /> : <OrigenDirectory go={go} />}</Suspense>;
+  else if (route.view === 'tienda') body = <Suspense fallback={<Cargando />}><Tienda go={go} /></Suspense>;
+  else if (route.view === 'finca') body = <Suspense fallback={<Cargando />}>{route.tab === 'perfil' ? <FincaPreview go={go} /> : <FincaWizard go={go} />}</Suspense>;
   else if (route.view === 'me') body = who.loading ? <Cargando /> : <Suspense fallback={<Cargando />}><ClientProfile go={go} who={who} /></Suspense>;
   else if (route.view === 'barista') {
     if (who.loading) body = <Cargando />;

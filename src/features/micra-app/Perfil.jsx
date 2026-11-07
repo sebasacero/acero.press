@@ -21,6 +21,8 @@ import {
   IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
   IconCamera, IconOut, IconTrophy, IconHome,
 } from './icons.jsx';
+import { IconBean } from './icons.jsx';
+import { readPreparaCon } from './origen.js';
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
 // cuenta: lo que guarda el celular) y el equipo. Como el perfil de las apps de
@@ -191,6 +193,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
   const [edit, setEdit] = useState(null); // dentro de la hoja: 'prices' | 'pay'
   const [promo, setPromo] = useState(false);
   const [insumos, setInsumos] = useState(null); // { cat, cart }: la hoja de pedir insumos
+  const preparaCon = readPreparaCon(); // el café de origen que escogió (origen.js), en este celular
   const [confirm, setConfirm] = useState(false);
   const [block, setBlock] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -302,6 +305,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         <Tile icon={IconQr} label="Mi QR" onClick={() => go('/micra/barista/qr')} testid="profile-qr" />
         <Tile icon={IconShare} label="Compartir enlace" onClick={share} />
         <Tile icon={IconEye} label="Ver como cliente" onClick={() => go(baristaPath(day.id))} />
+        <Tile icon={IconBean} label={preparaCon ? `Preparo con ${preparaCon.seller}` : 'Mi café'} dot={!preparaCon} onClick={() => setInsumos({ cat: 'cafe', cart: null })} testid="tile-prepara" />
       </Group>
 
       <InsumosSection onOpen={(cat, cart = null) => setInsumos({ cat, cart })} />
@@ -582,7 +586,8 @@ export function ClientProfile({ go, who }) {
         <Tile icon={IconThermo} label="Sé barista" onClick={() => go('/micra/barista')} />
         <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
         <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
-        <Tile icon={IconBag} label="Tienda" href={platform.siteUrl('/#beans')} />
+        <Tile icon={IconBag} label="Tienda" onClick={() => go('/micra/tienda')} testid="tile-tienda" />
+        <Tile icon={IconBean} label="Marcas y fincas" onClick={() => go('/micra/origen')} testid="tile-origen" />
       </Group>
 
       {confirm ? (
