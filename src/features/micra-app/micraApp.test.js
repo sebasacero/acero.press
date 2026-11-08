@@ -297,3 +297,16 @@ test('rutas del café de origen', () => {
   assert.deepEqual(parseRoute('/micra/finca'), { view: 'finca' });
   assert.deepEqual(parseRoute('/micra/finca/perfil'), { view: 'finca', tab: 'perfil' });
 });
+
+test('la lista del cliente va de a 12 y dice cuántos faltan', async () => {
+  const { listPage, LIST_PAGE } = await import('./micraApp.js');
+  const list = Array.from({ length: 30 }, (_, i) => ({ id: `b${i}` }));
+  assert.equal(LIST_PAGE, 12);
+  assert.deepEqual(listPage(list).items.map((b) => b.id), list.slice(0, 12).map((b) => b.id));
+  assert.equal(listPage(list).rest, 18);
+  assert.equal(listPage(list, 2).items.length, 24);
+  assert.equal(listPage(list, 3).rest, 0);
+  assert.equal(listPage(list, 9).items.length, 30);
+  assert.deepEqual(listPage(null), { items: [], rest: 0 });
+  assert.equal(listPage(list, 0).items.length, 12, 'nunca menos de una página');
+});

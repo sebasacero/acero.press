@@ -188,6 +188,19 @@ export function sortBaristas(list, { me = null, now = new Date(), favorites = []
       || String(a.name).localeCompare(String(b.name), 'es'));
 }
 
+// Con muchos baristas la lista del cliente se pinta de a 12 (los de arriba ya vienen
+// ordenados: favoritos, en la calle, más cerca) y las historias muestran 20: con 150
+// baristas el inicio medía 92 pantallas y un celular lento se trababa 2 s cada minuto
+export const LIST_PAGE = 12;
+export const STORIES_MAX = 20;
+
+/** Las primeras `pages` páginas de la lista y cuántos quedan para «Ver más». */
+export function listPage(list, pages = 1, size = LIST_PAGE) {
+  const all = list ?? [];
+  const n = Math.max(1, Math.floor(pages) || 1) * size;
+  return { items: all.slice(0, n), rest: Math.max(0, all.length - n) };
+}
+
 export function filterBaristas(list, filter) {
   if (!filter || filter === 'all') return list;
   if (filter === 'live') return list.filter((b) => b.status === 'live' || b.status === 'usual');

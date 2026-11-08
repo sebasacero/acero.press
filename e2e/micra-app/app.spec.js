@@ -852,3 +852,23 @@ test('barista: la meta arriba, las monedas del +1 y la foto de la venta con su l
   await expect(page.getByTestId('tile-mode-client')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('cliente: con muchos baristas la lista va de a 12 y «Ver más» trae los demás', async ({ browser }) => {
+  const t = SEED.baristas[0];
+  const many = Array.from({ length: 30 }, (_, k) => ({ ...t, id: `muchos-${k}`, name: `Barista${k}`, mine: false }));
+  const { page, errors } = await open(browser, { seed: { ...SEED, holds: [], baristas: many } });
+  await page.goto('/micra', { waitUntil: 'load' });
+  const rows = page.getByRole('list', { name: 'Baristas' }).getByRole('listitem');
+  await expect(rows).toHaveCount(12);
+  const more = page.getByTestId('list-more');
+  await expect(more).toHaveText('Ver más baristas (18)');
+  await more.click();
+  await expect(rows).toHaveCount(24);
+  await more.click();
+  await expect(rows).toHaveCount(30);
+  await expect(more).toHaveCount(0);
+  // Buscar vuelve a la primera página
+  await page.getByTestId('home-search').fill('Barista');
+  await expect(rows).toHaveCount(12);
+  expect(errors).toEqual([]);
+});
