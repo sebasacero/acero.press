@@ -198,6 +198,9 @@ export function photoIdeas(dayKey = '', mode = null) {
   return [a, b].filter((x, i, all) => all.indexOf(x) === i).map((x) => ({ ...x, id: `idea-${x.id}`, kind: 'publicar' }));
 }
 
+/** Cuántos puestos van en el muro (con 150 baristas medía 90 pantallas). */
+export const FEED_PUESTOS = 12;
+
 /**
  * El muro: el precio arriba (siempre hay uno, el del estudio), luego los logros
  * del barista, dos ideas para publicar, lo que publicaron los baristas (ya
@@ -216,8 +219,9 @@ export function buildFeed({ baristas = [], selfId = null, me = null, prices = {}
     title: b.referencia || b.localidad, text: windowLabel(b.hora_inicio, b.hora_fin) ? `Suele pasar ${windowLabel(b.hora_inicio, b.hora_fin)}` : null,
     price: b.prices?.tinto ?? null,
   }));
-  // En la calle primero
+  // En la calle primero, y solo los primeros: la lista completa está en el inicio, con «Ver más»
   puestos.sort((a, b) => Number(b.live) - Number(a.live));
+  puestos.splice(FEED_PUESTOS);
   // Lo fechado del más nuevo al más viejo; lo curado sin fecha, al final
   const dated = [...house, ...curated].sort((a, b) => String(b.date ?? '').localeCompare(String(a.date ?? '')));
   return [...items, ...puestos, ...dated];

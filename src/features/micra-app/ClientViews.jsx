@@ -4,6 +4,7 @@ import {
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
   searchBaristas, drinkFromQuery, nearZone,
   recordBaristaHistory, myBaristas,
+  listPage, STORIES_MAX,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
@@ -87,9 +88,12 @@ function useBaristas() {
   }, []);
   useEffect(() => {
     load();
-    // Quién salió cambia durante la mañana: se refresca cada minuto con la app abierta
-    const id = setInterval(load, 60000);
-    return () => clearInterval(id);
+    // Quién salió cambia durante la mañana: se refresca cada minuto con la app a la vista
+    // (escondida no gasta datos; al volver se refresca enseguida)
+    const tick = () => { if (document.visibilityState !== 'hidden') load(); };
+    const id = setInterval(tick, 60000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', tick); };
   }, [load]);
   return [state, load];
 }
@@ -215,7 +219,7 @@ function Stories({ baristas, go, ads = [], onAd, reto = null }) {
         </li>
       )}
       {ads.map((ad) => <AdStoryBubble key={ad.id} ad={ad} onOpen={onAd} />)}
-      {baristas.map((b) => {
+      {baristas.slice(0, STORIES_MAX).map((b) => {
         const live = b.status === 'live';
         const first = String(b.name ?? '').split(' ')[0];
         return (
@@ -260,6 +264,10 @@ export function ClientHome({ go }) {
   const searching = q.trim().length > 0;
   const qDrink = drinkFromQuery(q);
   const shown = searchBaristas(pickBaristas(sorted, { drink: qDrink ?? drink, now: nowOnly }), qDrink ? '' : q);
+  // De a 12; cambiar el filtro o la búsqueda vuelve a la primera página
+  const [pages, setPages] = useState(1);
+  useEffect(() => { setPages(1); }, [q, drink, nowOnly]);
+  const page = listPage(shown, pages);
   const zone = nearZone(sorted, me);
   const live = sorted.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
@@ -374,8 +382,13 @@ export function ClientHome({ go }) {
       )}
       {list && shown.length > 0 && (
         <ul className="mapp-list is-cards" aria-label="Baristas">
-          {shown.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
+          {page.items.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
         </ul>
+      )}
+      {list && page.rest > 0 && (
+        <button type="button" className="mapp-btn is-ghost mapp-more" onClick={() => setPages((n) => n + 1)} data-testid="list-more">
+          Ver más baristas ({page.rest})
+        </button>
       )}
       {list && !error && shown.length === 0 && (
         <div className="mapp-empty">

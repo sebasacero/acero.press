@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from './supabaseClient.js';
+import { loadConfigKeys } from './appConfig.js';
 import { useLanguage } from '../../features/i18n/LanguageContext.jsx';
 
 /**
@@ -14,11 +14,12 @@ export function useEditableTexts(keys) {
 
   const reload = useCallback(async () => {
     const wanted = list.split('|').map((k) => `${k}_${lang}`);
-    const { data, error } = await supabase.from('app_config').select('key, value').in('key', wanted);
+    // Junto con las demás secciones que piden app_config al abrir (appConfig.js)
+    const { error, values } = await loadConfigKeys(wanted);
     if (error) return;
     const next = {};
-    (data ?? []).forEach((row) => {
-      if (row.value) next[row.key.slice(0, -(lang.length + 1))] = row.value;
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) next[key.slice(0, -(lang.length + 1))] = value;
     });
     setValues(next);
   }, [list, lang]);

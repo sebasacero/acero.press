@@ -158,3 +158,11 @@ test('la flechita del precio: subió, bajó o igual, y el anterior se guarda al 
   assert.equal(same.micra_precio_carga_ant, '2.800.000');
   assert.equal(same.micra_precio_ny_ant, undefined);
 });
+
+test('el muro lleva a lo más 12 puestos, los de la calle primero', async () => {
+  const { FEED_PUESTOS } = await import('./feed.js');
+  const baristas = Array.from({ length: 40 }, (_, i) => ({ id: `b${i}`, name: `B${i}`, referencia: `Cra. ${i}`, status: i === 39 ? 'live' : 'off' }));
+  const puestos = buildFeed({ baristas }).filter((i) => i.kind === 'puestos');
+  assert.equal(puestos.length, FEED_PUESTOS);
+  assert.equal(puestos[0].by, 'B39');
+});

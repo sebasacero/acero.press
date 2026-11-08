@@ -16,8 +16,11 @@ export function useLiveBaristas() {
     let alive = true;
     const load = () => supabase.rpc('micra_baristas').then(({ data, error }) => { if (alive) setList(error ? [] : sortBaristas(data ?? [])); }, () => alive && setList([]));
     load();
-    const id = setInterval(load, 60000);
-    return () => { alive = false; clearInterval(id); };
+    // Cada minuto con la pestaña a la vista; escondida no consulta
+    const tick = () => { if (document.visibilityState !== 'hidden') load(); };
+    const id = setInterval(tick, 60000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { alive = false; clearInterval(id); document.removeEventListener('visibilitychange', tick); };
   }, []);
   return list;
 }

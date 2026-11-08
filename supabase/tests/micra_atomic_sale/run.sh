@@ -43,6 +43,11 @@ trap 'rm -rf "$TMP"; "${ADMIN[@]}" -c "drop database if exists $DB" >/dev/null 2
 "${T[@]}" -f "$HERE/test_activation.sql"
 "${T[@]}" -f "$ROOT/supabase/migrations/20261031130000_micra_barista_flow.sql"
 "${T[@]}" -f "$HERE/test_flow.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261031160000_micra_barista_posts.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261031190000_micra_ads.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261101120000_micra_competencia.sql"
+"${T[@]}" -f "$ROOT/supabase/migrations/20261108120000_micra_net_brake.sql"
+"${T[@]}" -f "$HERE/test_net_brake.sql"
 "${T[@]}" -f "$HERE/seed.sql"
 "${T[@]}" -f "$HERE/test.sql"
 
