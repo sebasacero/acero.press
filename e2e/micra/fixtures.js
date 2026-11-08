@@ -15,6 +15,13 @@ export const ONE_COFFEE = coffees([['Castillo', 'castillo', [['250 g', 32000]]]]
 /** 3 de cada presentación, menos Geisha 500 g (agotada). */
 export const DEFAULT_STOCK = (coffee) => coffee.flatMap((c) => c.product_variants.map((v) => ({ variant_id: v.id, stock_qty: v.id === 'c1-500' ? 0 : 3, low_stock_threshold: 2 })));
 
+// Horas relativas en los datos de prueba: «now-90m» o «now+60m» se vuelven ISO al servirlos
+const relTimes = (v) => {
+  if (typeof v === 'string') { const m = v.match(/^now([+-]\d+)m$/); return m ? new Date(Date.now() + Number(m[1]) * 60000).toISOString() : v; }
+  if (Array.isArray(v)) return v.map(relTimes);
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, relTimes(x)]));
+  return v;
+};
 const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 // Un estilo chico con capas que se llaman como las de Liberty (fondo, agua, una
 // autopista y su borde), dibujadas desde GeoJSON: sin teselas ni fuentes
@@ -130,7 +137,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   await page.route('**/api/v1/bi/piloto**', (route) => {
     if (!(route.request().headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
     const empty = { generatedAt: new Date().toISOString(), days: 90, week: { from: '2026-10-16', to: '2026-10-22', cur: { cups: 0, sales: 0, income: 0, blocks: 0, zones: [], kg: 0 }, prev: { cups: 0, sales: 0, income: 0, blocks: 0, zones: [], kg: 0 } }, sales: [], tinteros: [], study: { surveyed: 0, with_photo: 0, consented: 0, tinto_price_avg: null, cups_per_hour_avg: null, zones: [] } };
-    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(opts.piloto ?? empty) });
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(relTimes(opts.piloto ?? empty)) });
   });
   // API de BI: la ficha de campo de un tintero (como POST /api/v1/bi/tinteros)
   const tinteros = [];
@@ -581,6 +588,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       }
       if (rpc === 'tintero_route_delete') { const n = r.routes.length; r.routes = r.routes.filter((x) => x.id !== data.p_route_id); return json(200, r.routes.length < n); }
       if (rpc === 'tintero_invite') { r.code = 'K7M2QX'; return json(200, { code: r.code, expires_at: new Date(Date.now() + 7 * 864e5).toISOString() }); }
+    }
+    // Los puntos de las rutas en curso (el panel del mapa del equipo; RLS: solo is_admin())
+    if (p.endsWith('/tintero_route_points') && m === 'GET') {
+      const ids = (u.searchParams.get('route_id') ?? '').replace(/^in\.\(|\)$/g, '').split(',').map((x) => x.replace(/"/g, ''));
+      const rows = relTimes(opts.piloto?.routePoints ?? []).filter((x) => ids.includes(x.route_id));
+      return json(200, rows.sort((a, b) => b.recorded_at.localeCompare(a.recorded_at)).slice(0, 1000));
     }
     if (p.endsWith('/tintero_routes') && m === 'GET') return json(200, ruta.routes.filter((x) => x.ended_at).sort((a, b) => b.started_at.localeCompare(a.started_at)));
     if (p.endsWith('/rpc/micra_street_map')) return json(200, opts.streetMap ?? { days: 90, sales: [], tinteros: [] });

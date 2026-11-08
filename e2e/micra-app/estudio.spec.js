@@ -96,10 +96,10 @@ test('equipo: el botón de GPS marca al pasar un puesto (ficha sin nombre) y a a
   expect(api.find('/api/v1/bi/tinteros', 'POST').data).toMatchObject({ notes: 'Marcado al pasar', lat: 4.6577, gps_accuracy_m: 9 });
   expect(api.find('/api/v1/bi/tinteros', 'POST').data.name).toMatch(/^Puesto · /);
 
-  // El mapa de la barra abre el mismo estudio, con el mapa a la vista
+  // El mapa de la barra abre el panel del mapa (personas, rutas y estudio)
   await page.getByTestId('tab-map').click();
   await expect(page).toHaveURL(/\/micra\/mapa$/);
-  await expect(page.getByTestId('study-head')).toBeVisible();
+  await expect(page.getByTestId('map-panel')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

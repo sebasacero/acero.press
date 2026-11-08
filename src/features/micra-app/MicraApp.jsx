@@ -17,6 +17,8 @@ import { Cargando } from './Animado.jsx';
 
 // Lo del equipo en la calle se descarga solo al abrirlo: quien busca café no lo paga
 const StudyView = lazy(() => import('./StudyView.jsx'));
+// El panel del mapa del equipo (/micra/mapa): personas conectadas, rutas y estudio en un mapa
+const MapaPanel = lazy(() => import('./MapaPanel.jsx'));
 // La cámara de Micra del panel (filtros, tarjetas, venta y ficha del estudio), la misma pieza
 const MicraStudio = lazy(() => import('../admin/micra/MicraStudio.jsx'));
 // La ficha rápida del estudio (mapear primero), también aparte
@@ -251,6 +253,7 @@ export default function MicraApp() {
     if (who.loading) body = <Cargando />;
     else if (!who.admin) body = <BaristaJoin session={who.session} onLinked={reloadWho} team />;
     else if (route.view === 'ficha') body = <Suspense fallback={<Cargando fig="caminando" />}><FichaFlow go={go} /></Suspense>;
+    else if (route.view === 'study' && route.tab === 'mapa') body = <Suspense fallback={<Cargando fig="caminando">Abriendo el mapa…</Cargando>}><MapaPanel go={go} /></Suspense>;
     else if (route.view === 'study' || route.view === 'camera') body = <Suspense fallback={<Cargando fig="caminando" />}><StudyView go={go} focus={route.tab} /></Suspense>;
     else if (route.tab === 'perfil') body = <Suspense fallback={<Cargando />}><OwnerProfile go={go} onSignedOut={() => setActAs(null)} /></Suspense>;
     else body = <OwnerView go={go} onActAs={(id) => { setActAs(id); switchMode('barista'); }} />;
@@ -284,7 +287,7 @@ export default function MicraApp() {
   })();
 
   return (
-    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs || joinTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}`}>
+    <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs || joinTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}${route.view === 'study' && route.tab === 'mapa' ? ' is-wide' : ''}`}>
       <ThermalDefs />
       <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
         {/* El termo del icono en su baldosa crema (se ve igual sobre blanco, noche o rojo) y la palabra */}
