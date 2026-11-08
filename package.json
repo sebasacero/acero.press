@@ -14,6 +14,7 @@
     "e2e": "playwright test",
     "shot": "node e2e/shot.mjs",
     "test:sql": "bash supabase/tests/micra_atomic_sale/run.sh",
+    "test:api": "python3 -m unittest api._acero.test_collect",
     "micra:build": "vite build --config vite.micra.config.js && cap sync",
     "micra:ios": "npm run micra:build && cap run ios",
     "micra:android": "npm run micra:build && cap run android",
