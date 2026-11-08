@@ -88,7 +88,10 @@ test('la finca: qué falta en cada paso, la vista previa y el mensaje al equipo'
   assert.deepEqual(fincaMissing(d, 2), ['los kilos', 'el precio por kilo']);
   Object.assign(d, { kg: '40', kilo: '48.000', notes: 'Panela, naranja' });
   assert.deepEqual(fincaMissing(d, 2), []);
+  assert.deepEqual(fincaMissing(d, 3), ['qué tiene tu finca en internet', 'a quién le vendes', 'si te interesa vender a baristas']);
+  d.presencia = { ...d.presencia, canales: ['whatsapp', 'facebook'], venta: 'cooperativa', interes: 'si' };
   assert.deepEqual(fincaMissing(d, 3), []);
+  assert.deepEqual(fincaMissing(d, 4), []);
   const p = fincaPreview(d);
   assert.equal(p.id, 'la-esperanza');
   assert.equal(p.altitude, 1750);
@@ -99,8 +102,14 @@ test('la finca: qué falta en cada paso, la vista previa y el mensaje al equipo'
   assert.match(t, /Rosalba Quintero de la finca La Esperanza \(Pitalito, Huila\)/);
   assert.match(t, /1.750 m · 3,5 ha · desde 2009/);
   assert.match(t, /Lote: Castillo lavado · 40 kg · \$48.000 el kilo · Panela, naranja/);
+  assert.match(t, /En internet: whatsapp en mi celular, página de facebook de la finca/);
+  assert.match(t, /Hoy vendo: a la cooperativa o la fnc/);
   const s = mem();
   assert.equal(readFinca(s), null);
   writeFinca(d, s);
   assert.equal(readFinca(s).name, 'La Esperanza');
+  assert.deepEqual(readFinca(s).presencia.canales, ['whatsapp', 'facebook']);
+  // Un borrador de antes de este paso abre con la presencia vacía
+  s.setItem('micra_finca_v1', JSON.stringify({ name: 'Vieja' }));
+  assert.deepEqual(readFinca(s).presencia.canales, []);
 });

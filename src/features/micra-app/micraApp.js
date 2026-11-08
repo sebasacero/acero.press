@@ -284,6 +284,8 @@ export function parseRoute(pathname) {
   const o = p.match(/^\/micra\/origen\/([a-z0-9-]{1,40})$/);
   if (o) return { view: 'origen', id: o[1] };
   if (p === '/micra/tienda') return { view: 'tienda' };
+  // La oferta para caficultores (presencia.js): de aquí sale «Crear mi finca»
+  if (p === '/micra/fincas') return { view: 'fincas' };
   if (p === '/micra/finca') return { view: 'finca' };
   if (p === '/micra/finca/perfil') return { view: 'finca', tab: 'perfil' };
   // Competencia: el reto de la semana, para el cliente (el barista lo tiene en /micra/barista/reto)

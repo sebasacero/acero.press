@@ -6,11 +6,48 @@ import { FINCA_STEPS, VARIEDADES, PROCESOS, emptyFinca, fincaMissing, fincaPrevi
 import { readPrices } from './feed.js';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { SellerMark } from './Origen.jsx';
+import { CANALES, VENTAS, INTERES, toggleCanal, presenciaPayload, readRef, readRefParams, rememberRef } from './presencia.js';
 
 // El caficultor crea su finca (7 nov 2026, pedido del usuario): cuatro pasos cortos (quién,
 // la finca, el primer lote, listo). El borrador se queda en el celular y al final sale por
 // WhatsApp al equipo, que prueba una muestra antes de publicar: sin tabla ni cuenta todavía.
 // /micra/finca/perfil muestra cómo se vería su perfil público.
+// El paso «Tu finca en internet» (9 nov 2026) mide la presencia digital de las fincas:
+// con su permiso, las respuestas (sin nombres) van a micra_finca_presencia_add.
+
+/** Las respuestas de «Tu finca en internet»; el permiso del estudio es aparte y opcional. */
+function PresenciaStep({ p, set }) {
+  const upd = (k) => (v) => set({ ...p, [k]: v });
+  const show = p.canales.includes('instagram') || p.canales.includes('web') || p.canales.includes('tienda');
+  return (
+    <div className="mapp-fform" data-testid="finca-internet">
+      <p className="mapp-kicker" id="f-canales">¿Qué tiene tu finca en internet? Marca todo lo que tengas.</p>
+      <div className="mapp-chips is-wrap" role="group" aria-labelledby="f-canales">
+        {CANALES.map((c) => (
+          <button key={c.id} type="button" aria-pressed={p.canales.includes(c.id)} className={p.canales.includes(c.id) ? 'on' : ''} onClick={() => upd('canales')(toggleCanal(p.canales, c.id))}>{c.label}</button>
+        ))}
+      </div>
+      {show && (
+        <>
+          <Field id="f-ig" label="Usuario de Instagram (opcional)" value={p.ig} onChange={upd('ig')} hint="Como @fincalaesperanza" />
+          <Field id="f-web" label="Página web (opcional)" value={p.web} onChange={upd('web')} inputMode="url" />
+        </>
+      )}
+      <p className="mapp-kicker">¿A quién le vendes hoy la mayor parte?</p>
+      <div className="mapp-chips is-wrap" role="radiogroup" aria-label="A quién le vendes">
+        {VENTAS.map((v) => <button key={v.id} type="button" role="radio" aria-checked={p.venta === v.id} className={p.venta === v.id ? 'on' : ''} onClick={() => upd('venta')(v.id)}>{v.label}</button>)}
+      </div>
+      <p className="mapp-kicker">¿Te gustaría que baristas de Bogotá te compren directo?</p>
+      <div className="mapp-chips" role="radiogroup" aria-label="Vender a baristas">
+        {INTERES.map((v) => <button key={v.id} type="button" role="radio" aria-checked={p.interes === v.id} className={p.interes === v.id ? 'on' : ''} onClick={() => upd('interes')(v.id)}>{v.label}</button>)}
+      </div>
+      <label className="mapp-check" htmlFor="f-consent">
+        <input id="f-consent" type="checkbox" checked={p.consent} onChange={(e) => upd('consent')(e.target.checked)} />
+        <span>Acepto que Micra guarde estas respuestas, sin mi nombre ni el de la finca, para el estudio de fincas cafeteras (Ley 1581). Puedo pedir que las borren por WhatsApp.</span>
+      </label>
+    </div>
+  );
+}
 
 function Field({ id, label, value, onChange, hint, type = 'text', inputMode }) {
   return (
@@ -28,6 +65,10 @@ export function FincaWizard({ go }) {
   const [tried, setTried] = useState(false);
   const [team, setTeam] = useState(null);
   const [carga, setCarga] = useState(null);
+  const [saved, setSaved] = useState(null);
+  const last = FINCA_STEPS.length - 1;
+  // El enlace de invitación (/micra/finca?ref=…) también vale aquí
+  useEffect(() => { const r = readRefParams(window.location.search); if (r) rememberRef(r); }, []);
   useEffect(() => { api.teamWhatsApp().then(setTeam).catch(() => setTeam('573152125327')); }, []);
   useEffect(() => {
     supabase.from('app_config').select('key, value').in('key', ['micra_precio_carga']).then(({ data }) => setCarga(readPrices(Object.fromEntries((data ?? []).map((r) => [r.key, r.value]))).carga)).catch(() => {});
@@ -38,6 +79,14 @@ export function FincaWizard({ go }) {
   const s = FINCA_STEPS[step];
   const next = () => { if (missing.length) { setTried(true); return; } setTried(false); setStep((n) => Math.min(FINCA_STEPS.length - 1, n + 1)); };
   const back = () => (step === 0 ? go('/micra/origen') : setStep((n) => n - 1));
+  // Al llegar al final, con permiso, las respuestas van al estudio (una vez por visita; la base no repite la finca)
+  useEffect(() => {
+    if (step !== last || saved || !d.presencia?.consent) return;
+    setSaved('enviando');
+    api.fincaPresenciaAdd(presenciaPayload(d, d.presencia, readRef()))
+      .then((r) => setSaved(r?.saved ? 'ok' : 'no'))
+      .catch((e) => setSaved(e.missing ? 'no' : 'error'));
+  }, [step, last, saved, d]);
   const pergamino = pergaminoKilo(carga);
   const send = `https://wa.me/${team}?text=${encodeURIComponent(fincaText(d))}`;
   return (
@@ -81,7 +130,8 @@ export function FincaWizard({ go }) {
           <button type="button" className="mapp-btn is-ghost" onClick={() => go('/micra/camara')}>📷 Foto del lote y del empaque</button>
         </div>
       )}
-      {step === 3 && (
+      {step === 3 && <PresenciaStep p={d.presencia} set={set('presencia')} />}
+      {step === last && (
         <div className="mapp-fform">
           <section className="mapp-glass mapp-fdone">
             <p className="mapp-kicker">Así queda</p>
@@ -94,11 +144,12 @@ export function FincaWizard({ go }) {
               <li>Con el sello «Probado por el equipo», tu finca sale en Micra y los baristas te piden por kilo.</li>
             </ol>
           </section>
+          {saved === 'ok' && <p className="mapp-fine" data-testid="finca-study-ok">Tus respuestas quedaron en el estudio de fincas, sin tu nombre. Gracias.</p>}
           <a className="mapp-btn is-cta" href={send} target="_blank" rel="noopener noreferrer" data-testid="finca-send">Mandar mi finca por WhatsApp</a>
           <button type="button" className="mapp-btn is-ghost" onClick={() => go('/micra/finca/perfil')} data-testid="finca-preview">Ver cómo se vería mi perfil</button>
         </div>
       )}
-      {step < 3 && (
+      {step < last && (
         <>
           {tried && missing.length > 0 && <p className="mapp-notice" role="alert" data-testid="finca-missing">Falta {missing.join(', ')}.</p>}
           <button type="button" className="mapp-btn is-cta" onClick={next} data-testid="finca-next">Siguiente →</button>
