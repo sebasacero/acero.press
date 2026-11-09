@@ -12,7 +12,8 @@ export async function biApi(path, { method = 'GET', body } = {}) {
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const detail = data?.detail;
-    throw new Error(Array.isArray(detail) ? detail.map((d) => d.msg).join(' · ') : detail || 'La API de Acero no respondió.');
+    // El estado va con el error: quien encola sin señal distingue un rechazo (422) de una sesión vencida (401)
+    throw Object.assign(new Error(Array.isArray(detail) ? detail.map((d) => d.msg).join(' · ') : detail || 'La API de Acero no respondió.'), { status: res.status });
   }
   return data;
 }

@@ -5,7 +5,8 @@ import { photoPath, TINTERO_OPTIONS, START_HOURS, END_HOURS, hourLabel } from '.
 import { LOCALIDADES, LOCALIDAD_GROUPS } from '../admin/micra/place.js';
 import { Choice, Multi } from '../admin/survey/SurveyForm.jsx';
 import { newRef } from './micraApp.js';
-import { EMPTY_FICHA, EXTRAS, quickBody, gpsFields, gpsBadge, savedSummary, enqueue, dequeue, readQueue, isOffline } from './fichaFlow.js';
+import { EMPTY_FICHA, EXTRAS, quickBody, gpsFields, gpsBadge, savedSummary, enqueue, isOffline } from './fichaFlow.js';
+import { syncNow } from './studySyncNow.js';
 import platform from './platform.js';
 import Viewfinder from './Viewfinder.jsx';
 
@@ -30,15 +31,6 @@ async function uploadPhoto(photo, name) {
   const { error } = await supabase.storage.from(BUCKET).upload(path, photo.file, { contentType: photo.file.type || 'image/jpeg' });
   if (error) throw new Error(`La foto no subió: ${error.message}`);
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-}
-
-/** Sube lo que quedó en cola sin señal (sin foto: esa se perdió al cerrar la app). */
-export async function flushQueue() {
-  let sent = 0;
-  for (const item of readQueue(localStorage)) {
-    try { await biApi('/tinteros', { method: 'POST', body: item.body }); dequeue(localStorage, item.ref); sent += 1; } catch (e) { if (!isOffline(e)) dequeue(localStorage, item.ref); } // eslint-disable-line no-await-in-loop
-  }
-  return sent;
 }
 
 function Top({ onBack, step, right }) {
@@ -71,7 +63,7 @@ export default function FichaFlow({ go }) {
     setGps((cur) => (fix.error && cur && !cur.error ? cur : fix));
     setSearching(false);
   };
-  useEffect(() => { locate(); flushQueue().catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { locate(); syncNow().catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (screen === 'quien') setTimeout(() => nameRef.current?.focus(), 350); }, [screen]);
 
   const reset = () => {
@@ -97,7 +89,7 @@ export default function FichaFlow({ go }) {
     } catch (err) {
       if (isOffline(err)) {
         enqueue(localStorage, { ref, body });
-        setSaved({ id: null, name: body.name, queued: true, summary: ['Sin señal: la ficha quedó guardada en el celular y sube sola', ...savedSummary(body, { photo: !!photo, uploaded })] });
+        setSaved({ id: null, ref, name: body.name, queued: true, summary: ['Sin señal: la ficha quedó guardada en el celular y sube sola', ...savedSummary(body, { photo: !!photo, uploaded })] });
         setScreen('extras');
       } else setError(err.message);
     } finally { setBusy(false); }
@@ -223,7 +215,7 @@ export default function FichaFlow({ go }) {
     return (
       <div className="mff">
         <Suspense fallback={null}>
-          <SurveyWizard tintero={saved} onClose={() => setScreen('extras')} onSaved={({ answered }) => { setDone((d) => ({ ...d, encuesta: answered })); setScreen('extras'); }} />
+          <SurveyWizard tintero={saved} onClose={() => setScreen('extras')} onSaved={({ answered, queued }) => { setDone((d) => ({ ...d, encuesta: answered, encuestaQueued: !!queued })); setScreen('extras'); if (!queued) syncNow().catch(() => {}); }} />
         </Suspense>
       </div>
     );
@@ -243,9 +235,9 @@ export default function FichaFlow({ go }) {
             const blocked = x.needsConsent && !canCard;
             const run = x.id === 'encuesta' ? () => setScreen('encuesta') : x.id === 'recorrido' ? () => setScreen('recorrido') : x.id === 'ticket' ? () => openCamera('sale') : () => openCamera(x.id === 'video' ? 'video' : 'photo');
             return (
-              <button key={x.id} type="button" className={`mff-extra ${did ? 'is-done' : ''}`} disabled={(!saved.id && x.id !== 'ticket') || blocked} onClick={run} data-testid={`extra-${x.id}`}>
+              <button key={x.id} type="button" className={`mff-extra ${did ? 'is-done' : ''}`} disabled={(!saved.id && x.id !== 'ticket' && x.id !== 'encuesta') || blocked} onClick={run} data-testid={`extra-${x.id}`}>
                 <b>{did ? '✓ ' : ''}{x.label}</b>
-                <small>{blocked ? (saved.id ? 'necesita su permiso de publicidad' : 'cuando suba la ficha') : did ? (x.id === 'encuesta' ? `${did} respuestas` : x.id === 'recorrido' ? `${(did / 1000).toFixed(1).replace('.', ',')} km` : 'hecho') : x.sub}</small>
+                <small>{blocked ? (saved.id ? 'necesita su permiso de publicidad' : 'cuando suba la ficha') : !saved.id && x.id === 'recorrido' ? 'cuando suba la ficha' : did ? (x.id === 'encuesta' ? `${did} respuestas${done.encuestaQueued ? ' · en el celular, sube sola' : ''}` : x.id === 'recorrido' ? `${(did / 1000).toFixed(1).replace('.', ',')} km` : 'hecho') : x.sub}</small>
               </button>
             );
           })}

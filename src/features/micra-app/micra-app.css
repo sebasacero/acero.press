@@ -1626,3 +1626,10 @@
 .mapp-cancel { border: 0; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .mapp-cancel legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
 .mapp-cancel .mapp-chip { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: inherit; font: inherit; cursor: pointer; }
+/* Estudio: lo que espera en el celular y la barra de «Cerca de mí» y filtros */
+.mapp-study-wait { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--m-line); background: var(--m-glass); border-radius: 12px; padding: 10px 12px; margin: 12px 0 0; font-weight: 600; }
+.mapp-study-wait > span { flex: 1 1 200px; }
+.mapp-study-bar { flex-wrap: nowrap; margin: 8px 0 10px; }
+.mapp-study-bar .mapp-near[aria-pressed="true"] { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
+.srv-resumed { margin: 0; padding: 0 16px; }
+.srv-resumed .mapp-link { color: inherit; text-decoration: underline; min-height: 44px; }
