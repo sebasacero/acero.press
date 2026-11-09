@@ -86,8 +86,11 @@ test('sin datos: lo dice claro y explica cómo se llena', async ({ browser }) =>
   await page.context().close();
 });
 
-test('si OpenFreeMap no responde, el mapa usa OpenStreetMap y sigue mostrando los datos', async ({ browser }) => {
+test('si OpenFreeMap no responde, el mapa usa Bogotá servida por el sitio y sigue mostrando los datos', async ({ browser }) => {
   const { page, api, errors } = await openPage(browser, { context: { viewport: { width: 1440, height: 900 } }, session: { coach: true } });
+  // El respaldo lee el archivo del sitio por rangos (PMTiles), nunca teselas de openstreetmap.org
+  const backup = [];
+  page.on('request', (r) => { if (/\/mapa\/bogota\.pmtiles$/.test(r.url())) backup.push(r.headers().range); if (/tile\.openstreetmap\.org/.test(r.url())) backup.push('osm'); });
   api.opts.piloto = FILLED;
   api.opts.styleDown = true;
   await openPiloto(page);
@@ -95,6 +98,8 @@ test('si OpenFreeMap no responde, el mapa usa OpenStreetMap y sigue mostrando lo
   await expect(geo).toHaveAttribute('data-style', 'osm');
   await expect(geo).toHaveAttribute('data-state', 'ready');
   await expect(geo.locator('.piloto-pin')).toHaveCount(2);
+  await expect.poll(() => backup.filter((r) => /^bytes=/.test(r ?? '')).length).toBeGreaterThan(0);
+  expect(backup).not.toContain('osm');
   // El único error aceptado es el del estilo caído, que es lo que se simula
   expect(errors.filter((e) => !/AJAXError|503/.test(e))).toEqual([]);
   await page.context().close();

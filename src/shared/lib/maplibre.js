@@ -6,26 +6,26 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // chunk: Vite no lo copia. `?worker&url` lo empaqueta entero y da su URL.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
+import { Protocol } from 'pmtiles';
+import { layers, namedFlavor } from '@protomaps/basemaps';
+import { backupStyle } from './mapBackup.js';
+import { apiUrl } from './apiBase.js';
+
 maplibregl.setWorkerUrl(workerUrl);
 
 export default maplibregl;
 
 // Teselas: OpenFreeMap (vector, sin clave ni cuenta). Si no responde, el mapa
-// cae a las teselas raster de OpenStreetMap para no quedarse en blanco.
+// cae a Bogotá servida por el propio sitio (Protomaps en un archivo PMTiles):
+// las teselas de openstreetmap.org bloquean sin aviso a las apps comerciales.
 export const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-export const OSM_STYLE = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-};
+
+maplibregl.addProtocol('pmtiles', new Protocol().tile);
+
+// En el navegador, el mismo sitio; en la app instalada, el sitio público (apiBase)
+const origin = apiUrl('') || (typeof location !== 'undefined' ? location.origin : '');
+// El nombre se queda (OSM_STYLE) para no tocar cada mapa: sigue siendo OpenStreetMap
+export const OSM_STYLE = backupStyle(layers('protomaps', namedFlavor('light'), { lang: 'es' }), origin);
 
 /** ¿Puede este navegador dibujar MapLibre? (sin WebGL se usa el mapa ilustrado) */
 export function hasWebGL() {

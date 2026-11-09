@@ -23,7 +23,14 @@ export const THEMES = {
 const OURS = /^(ventas|zonas)-/;
 const has = (id, ...words) => words.some((w) => id.includes(w));
 
-function roadColor(id, T) {
+function roadColor(id, T, src) {
+  // Protomaps (el respaldo) nombra las vías por jerarquía: roads_highway, roads_major…
+  if (src === 'roads' && !has(id, 'rail')) {
+    if (has(id, '_highway')) return T.hw;
+    if (has(id, '_major')) return T.major;
+    if (has(id, '_link')) return T.road;
+    return T.minor;
+  }
   if (has(id, 'motorway', 'trunk')) return T.hw;
   if (has(id, 'primary')) return T.major;
   if (has(id, 'secondary', 'tertiary')) return T.road;
@@ -64,10 +71,10 @@ export function themeLayer(layer, theme) {
       return hide; // edificios en 3D no van en un plano
     case 'line': {
       if (src === 'waterway' || has(id, 'waterway', 'river', 'stream', 'canal')) return { paint: { 'line-color': T.water }, layout: {} };
-      if (src === 'boundary' || has(id, 'boundary', 'admin')) return { paint: { 'line-color': T.boundary }, layout: {} };
+      if (src === 'boundary' || src === 'boundaries' || has(id, 'boundary', 'admin')) return { paint: { 'line-color': T.boundary }, layout: {} };
       // Los bordes («casing») de las vías se apagan: en el plano cada vía es un solo trazo
       if (has(id, 'casing', 'outline')) return { paint: { 'line-opacity': 0 }, layout: {} };
-      const paint = { 'line-color': roadColor(id, T) };
+      const paint = { 'line-color': roadColor(id, T, src) };
       if (layer.paint && 'line-pattern' in layer.paint) paint['line-pattern'] = undefined;
       return { paint, layout: {} };
     }
