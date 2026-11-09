@@ -425,3 +425,23 @@ where created_at > now() - interval '7 days' group by status;
 `sent` (enviado), `skipped_app_open` (tenía Micra abierta), `skipped_throttled`
 (ya tuvo uno hace menos de 10 min), `skipped_no_optin` (no los activó),
 `skipped_no_phone`, `failed` (el detalle trae el error de Meta).
+
+---
+
+## 11. Jefe de turno: el agente del equipo (API de Claude + MCP)
+
+En Vercel no hay nada nuevo: `api/micra-agent.js` usa `ANTHROPIC_API_KEY`,
+`VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`, las mismas del agente de
+crecimiento. Solo responde al owner.
+
+Para correr el servidor MCP o el agente en tu computador (`npm run mcp`,
+`npm run agente -- "pregunta"`, o Claude Code con `.mcp.json`), opcionales:
+
+| Variable | Para qué |
+|---|---|
+| `MICRA_TOKEN` | el `access_token` de tu sesión de owner; sin ella se usan los datos de demostración |
+| `MICRA_MCP_DATA` | otro JSON con las cuatro respuestas, en vez de `mcp/micra/demo.json` |
+| `MICRA_API_BASE` | dónde está la API de Acero; por defecto `https://www.aceropress.com` |
+
+`MICRA_TOKEN` vence en una hora y es tu sesión: no la pegues en chats ni la
+guardes en el repo. Detalles en `mcp/README.md`.
