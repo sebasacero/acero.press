@@ -38,9 +38,10 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
   // En público se dice «baristas»; sin nombres
   await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
-  // Los banners principales van arriba: el primero muestra quién está en la calle (micra_baristas) y lleva a la app
+  // Los dos banners de siempre van bajo el de 24 horas: el primero muestra quién está en la calle (micra_baristas) y lleva a la app
   const hero = page.locator('#baristas');
-  await expect(hero.getByRole('heading', { level: 1 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
+  await hero.scrollIntoViewIfNeeded();
+  await expect(hero.getByRole('heading', { level: 2 }).first()).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
   await expect(hero.getByTestId('hero-live').first()).toBeVisible();
   await expect(hero.getByRole('link', { name: 'Ver quién pasa cerca' }).first()).toHaveAttribute('href', '/micra');
   // Sin enlace a las tiendas, el banner no muestra sus botones
@@ -82,11 +83,13 @@ test('los enlaces viejos a /#tinteros y /#baristas abren el banner «Ser barista
   await page.context().close();
 });
 
-test('los banners del principio van en carrusel, sin tabla ni botones de control', async ({ browser }) => {
+test('los dos banners de siempre van en carrusel, sin tabla ni botones de control', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.clock.install();
   await page.goto('/', { waitUntil: 'load' });
   const hero = page.locator('#baristas');
+  // Fuera de pantalla no corre su turno: va bajo el banner de 24 horas
+  await hero.scrollIntoViewIfNeeded();
   await expect(hero).toHaveAttribute('aria-roledescription', 'carousel');
   await expect(hero.getByText(/^(ZONA|HORA|FECHA|PREPARA)$/)).toHaveCount(0);
   await expect(hero.getByRole('tab')).toHaveCount(0);
@@ -100,7 +103,7 @@ test('los banners del principio van en carrusel, sin tabla ni botones de control
   await page.clock.runFor(8500);
   await expect(order).toHaveAttribute('aria-hidden', 'false');
   // Con el cursor encima se queda quieto
-  await page.mouse.move(700, 400);
+  await hero.hover();
   await page.clock.runFor(20000);
   await expect(order).toHaveAttribute('aria-hidden', 'false');
   expect(errors).toEqual([]);

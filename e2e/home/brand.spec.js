@@ -10,11 +10,11 @@ test('escritorio: la foto del local con el banner original de las recetas en la 
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.clock.install();
   await page.goto('/', { waitUntil: 'load' });
-  // Un solo h1, el de los banners principales (los de la web en línea); luego Micra y la tienda
+  // Un solo h1, el del banner de 24 horas; luego los dos banners de siempre, Micra y la tienda
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
-  const order = await page.locator('#baristas, #micra, #publicaciones, #beans, #visitanos, #recetas, #escuela, #metodo').evaluateAll((els) => els.map((e) => e.id));
-  expect(order).toEqual(['baristas', 'micra', 'publicaciones', 'beans', 'visitanos', 'recetas', 'escuela', 'metodo']);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(/Vive del café\s*con tu AeroPress/);
+  const order = await page.locator('#dia, #baristas, #micra, #publicaciones, #beans, #visitanos, #recetas, #escuela, #metodo').evaluateAll((els) => els.map((e) => e.id));
+  expect(order).toEqual(['dia', 'baristas', 'micra', 'publicaciones', 'beans', 'visitanos', 'recetas', 'escuela', 'metodo']);
   // «Café de especialidad para todos» ya no está
   await expect(page.getByRole('heading', { name: /para todos/i })).toHaveCount(0);
   // Sin el botón flotante de la meta de ventas
