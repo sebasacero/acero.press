@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { initials, menuOf, windowLabel, baristaPath, cupsLabel, status as baristaStatus } from './micraApp.js';
 import MiniQr, { useQr } from './MiniQr.jsx';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
+import { ratingLabel } from './rating.js';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import { maskPhone, signInMethod, METHOD_LABEL, signOutBlock, blockText, keysToClear, clearStored } from './perfil.js';
@@ -211,6 +212,10 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
     setAlertsBusy(false);
   };
   const help = useHelp(`Hola, equipo de Micra. Soy ${day.name.split(' ')[0]}, barista. Necesito ayuda con `);
+  // Sus granos de los últimos 30 días (solo el promedio; sin la migración, no sale)
+  const [rating, setRating] = useState(null);
+  useEffect(() => { api.baristaRating(asId).then(setRating).catch(() => setRating(null)); }, [asId]);
+  const granos = ratingLabel(rating);
 
   useEffect(() => {
     let alive = true;
@@ -297,7 +302,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
       <Featured
         testid="profile-camino" mark={LEVELS[0].id}
         title={`Barista de calle · ${LEVELS[0].name}`}
-        text={`🔥 ${streak.count > 0 ? streakLabel(streak) : 'Empieza tu racha hoy'} · ${path.done} de ${path.total} lecciones`}
+        text={`🔥 ${streak.count > 0 ? streakLabel(streak) : 'Empieza tu racha hoy'} · ${path.done} de ${path.total} lecciones${granos ? ` · ☕ ${granos}` : ''}`}
         action="Aprender" onAction={() => go('/micra/barista/aprende')}
       />
 
@@ -401,6 +406,7 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         <Sheet title="Mi meta" onClose={closeSheet} testid="sheet-meta">
           <dl className="mapp-plist">
             <Row label="Meta del día">{goal} tazas · hoy llevas {cupsLabel(board.cups)}</Row>
+            {granos && <Row label="Tus granos" testid="profile-rating">{granos} (30 días)</Row>}
             <Row label="Racha" testid="profile-streak">{streak.count > 0 ? streakLabel(streak) : 'Empieza hoy'}</Row>
             <Row label="Nivel">{LEVELS[0].id} · {LEVELS[0].name} ({path.done} de {path.total} lecciones)</Row>
           </dl>

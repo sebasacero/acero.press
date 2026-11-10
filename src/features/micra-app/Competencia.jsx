@@ -4,7 +4,8 @@ import * as api from './api.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
 import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf, shortTitle, medalBoard, videoOf } from './competencia.js';
-import { IconTrophy, IconBean } from './icons.jsx';
+import { IconTrophy } from './icons.jsx';
+import Beans from './Beans.jsx';
 import Figure from './Elenco.jsx';
 import { Cargando } from './Animado.jsx';
 import { JudgeBadge, JudgeBars } from './Juez.jsx';
@@ -23,17 +24,6 @@ const PostComposer = lazy(() => import('./PostComposer.jsx'));
 
 const store = () => { try { return window.localStorage; } catch { return null; } };
 const fecha = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-
-/** Los cinco granos: para calificar (onPick) o solo para ver (sin onPick). */
-function Beans({ value = 0, onPick, size = 'big', label = 'Califica' }) {
-  return (
-    <span className={`mapp-beans is-${size}`} role={onPick ? 'radiogroup' : undefined} aria-label={onPick ? label : `${value} de 5`}>
-      {[1, 2, 3, 4, 5].map((n) => (onPick
-        ? <button key={n} type="button" role="radio" aria-checked={value === n} aria-label={`${n} ${n === 1 ? 'grano' : 'granos'}`} className={n <= value ? 'on' : ''} onClick={() => onPick(n)}><IconBean filled={n <= value} /></button>
-        : <i key={n} className={n <= Math.round(value) ? 'on' : ''} aria-hidden="true"><IconBean filled={n <= Math.round(value)} /></i>))}
-    </span>
-  );
-}
 
 /** Una entrada abierta: la foto grande, quién, su nota y los granos para calificar. */
 function EntryView({ entry, url, challenge, onVote, onClose, voting, error }) {

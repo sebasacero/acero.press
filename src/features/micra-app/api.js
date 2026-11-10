@@ -55,6 +55,8 @@ export const listBaristas = () => call('micra_baristas');
 export const hold = (tinteroId, name, items) => call('micra_hold', { p_tintero_id: tinteroId, p_client_ref: deviceRef(), p_name: name, p_items: items });
 export const myHolds = () => call('micra_my_holds', { p_client_ref: deviceRef() });
 export const cancelHold = (id) => call('micra_hold_cancel', { p_client_ref: deviceRef(), p_hold_id: id });
+// «¿Cómo te fue?»: granos y lo pagado de un apartado entregado
+export const rateHold = (id, rating, paid) => call('micra_hold_rate', { p_client_ref: deviceRef(), p_hold_id: id, p_rating: rating, p_paid: paid ?? null });
 
 // Barista
 const as = (id) => (id ? { p_tintero_id: id } : {});
@@ -64,6 +66,8 @@ export const setPrices = (p, asId) => call('micra_barista_prices', { p_tinto: p.
 export const sell = (ref, product, qty, fiado, asId) => call('micra_barista_sale', { p_client_ref: ref, p_product: product, p_qty: qty, p_fiado_name: fiado || null, ...as(asId) });
 export const undoSale = (id, asId) => call('micra_barista_undo', { p_sale_id: id, ...as(asId) });
 export const closeHold = (id, served, asId) => call('micra_hold_close', { p_hold_id: id, p_served: served, ...as(asId) });
+export const baristaRating = (asId) => call('micra_barista_rating', as(asId));
+export const holdRatings = () => call('micra_hold_ratings');
 // Sellos (cada 10 tazas entregadas, un tinto gratis) y cómo pagarle al barista
 export const myStamps = () => call('micra_my_stamps', { p_client_ref: deviceRef() });
 export const holdRewards = (asId) => call('micra_hold_rewards', as(asId));
