@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as api from './api.js';
+import platform from './platform.js';
 import { initials } from './micraApp.js';
 import { figureFor } from './motivation.js';
 import { daysLeftLabel, scoreLabel, rankEntries, voteRef, canVote, ENTRY_STATUS, MIN_VOTES, BASIC_SECTIONS, sectionOf, shortTitle, medalBoard, videoOf } from './competencia.js';
@@ -97,7 +98,7 @@ function BasicSheet({ c, section, live, onClose }) {
           <h2 className="mapp-title is-small">{shortTitle(c.title)}</h2>
         </div>
         {video && (
-          <video className="mapp-basics-video" src={video.src} poster={video.poster ?? undefined} controls playsInline preload="none" aria-label={`Video: ${shortTitle(c.title)}`} />
+          <video className="mapp-basics-video" src={platform.siteUrl(video.src)} poster={video.poster ? platform.siteUrl(video.poster) : undefined} controls playsInline preload="none" aria-label={`Video: ${shortTitle(c.title)}`} />
         )}
         <p className="mapp-basics-brief">{c.brief}</p>
         <p className="mapp-basics-how"><b>{c.kind === 'arte_latte' ? '🏅 Cómo se califica' : '✓ Qué se mira'}</b>{c.how}</p>

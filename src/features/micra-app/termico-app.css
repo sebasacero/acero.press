@@ -714,15 +714,15 @@
 .mapp .mapp-sellhead-count .mapp-fiado, .mapp .mapp-sellhead-count .mapp-fiado *{color:var(--t-ink)}
 .mapp-sellhead-count .mapp-sync{margin:6px 0 0;font-size:.74rem}
 .mapp .mapp-sellhead-count .mapp-sync .mapp-link{color:var(--t-6)}
-.mapp-reto{grid-area:reto;display:flex;align-items:center;gap:10px;margin:0;padding:9px 12px;border-radius:16px;background:rgba(13,8,32,.45);border:1px solid rgba(255,255,255,.16)}
-.mapp-reto>span:first-child{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--t-cta);font-weight:900}
-.mapp-reto>span:nth-child(2){flex:1;min-width:0;display:grid;line-height:1.2}
-.mapp-reto b{font-size:.86rem}
-.mapp-reto small{font-size:.72rem;opacity:.85}
-.mapp-reto-dots{display:flex;gap:5px}
-.mapp-reto-dots i{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.45)}
-.mapp-reto-dots i.on{background:var(--t-6);border-color:var(--t-7);box-shadow:0 0 10px rgba(255,194,60,.9)}
-.mapp-reto.is-done{border-color:var(--t-6);background:rgba(255,194,60,.16)}
+.mapp-dayreto{grid-area:reto;display:flex;align-items:center;gap:10px;margin:0;padding:9px 12px;border-radius:16px;background:rgba(13,8,32,.45);border:1px solid rgba(255,255,255,.16)}
+.mapp-dayreto>span:first-child{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--t-cta);font-weight:900}
+.mapp-dayreto>span:nth-child(2){flex:1;min-width:0;display:grid;line-height:1.2}
+.mapp-dayreto b{font-size:.86rem}
+.mapp-dayreto small{font-size:.72rem;opacity:.85}
+.mapp-dayreto-dots{display:flex;gap:5px}
+.mapp-dayreto-dots i{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.45)}
+.mapp-dayreto-dots i.on{background:var(--t-6);border-color:var(--t-7);box-shadow:0 0 10px rgba(255,194,60,.9)}
+.mapp-dayreto.is-done{border-color:var(--t-6);background:rgba(255,194,60,.16)}
 .mapp-sellhead-kpi{appearance:none;border:0;background:transparent;padding:0;margin:0;min-height:44px;min-width:44px;font:inherit;text-align:left;cursor:pointer}
 
 /* ── La barra con nombres y el muro corto del inicio, 10 nov 2026 ──────────────

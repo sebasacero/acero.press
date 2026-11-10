@@ -106,7 +106,7 @@ function JoinHead() {
   return (
     <section className="mapp-joinhead" aria-labelledby="mapp-join-t" data-testid="join-head">
       {/* El chico que empuja el carrito (pedido del usuario, 6 nov 2026), sobre la hoja crema de la calle */}
-      <span className="mapp-joinhead-art" aria-hidden="true"><img src="/image/personas/ruta.webp" alt="" width="618" height="900" decoding="async" /></span>
+      <span className="mapp-joinhead-art" aria-hidden="true"><img src={platform.siteUrl('/image/personas/ruta.webp')} alt="" width="618" height="900" decoding="async" /></span>
       <p className="mapp-kicker">Para baristas</p>
       <h1 className="mapp-title" id="mapp-join-t">Vende más en <span className="mapp-script">tu misma ruta.</span></h1>
       <ul className="mapp-joinhead-perks">
@@ -801,10 +801,10 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </div>
         )}
         {menu.length > 0 && <div className="mapp-sellhead-count">{counter}</div>}
-        <p className={`mapp-reto ${reto.done ? 'is-done' : ''}`} data-testid="day-reto">
+        <p className={`mapp-dayreto ${reto.done ? 'is-done' : ''}`} data-testid="day-reto">
           <span aria-hidden="true">★</span>
           <span><b>{reto.done ? 'Reto de hoy cumplido' : 'Reto de hoy: entrega 3 apartados'}</b><small>{reto.done ? 'Tres clientes recibieron su café contigo.' : 'Solo cuentan los apartados que entregas.'}</small></span>
-          <span className="mapp-reto-dots" role="img" aria-label={`${reto.served} de ${reto.target}`}>{Array.from({ length: reto.target }, (_, i) => <i key={i} className={i < reto.served ? 'on' : ''} />)}</span>
+          <span className="mapp-dayreto-dots" role="img" aria-label={`${reto.served} de ${reto.target}`}>{Array.from({ length: reto.target }, (_, i) => <i key={i} className={i < reto.served ? 'on' : ''} />)}</span>
         </p>
         {trip.recording && (
           <p className="mapp-sellhead-cota mapp-trip" role="status" data-testid="trip-recording">
