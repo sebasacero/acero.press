@@ -672,3 +672,83 @@
 .mapp-fdone p{margin:4px 0 0}
 .mapp-fsteps-list{margin:12px 0 0;padding-left:20px;display:grid;gap:6px;font-size:.9rem;line-height:1.4;color:var(--m-soft)}
 .mapp-finca .mapp-notice{margin:0}
+
+/* ── «Salir a vender» y Vender, 10 nov 2026 (pedido del usuario) ───────────────
+   Antes de salir manda lo que motiva: quién ya apartó. Salir es un gesto.
+   En la calle los +1 viven en la cabecera, con el camino del día y el reto. */
+.mapp-gowait{margin:0 0 10px;padding:12px 14px;border-radius:18px;color:#fff;background:linear-gradient(120deg,var(--t-1),var(--t-2) 55%,var(--t-3));box-shadow:0 12px 24px -16px rgba(34,18,90,.9);display:grid;gap:2px}
+.mapp-gowait b{font:900 1.25rem/1.1 'Archivo',sans-serif;letter-spacing:-.01em;color:var(--t-6)}
+.mapp-gowait span{font-size:.86rem;color:rgba(255,255,255,.9)}
+.mapp-slide{position:relative;height:64px;margin-top:10px;border-radius:20px;background:var(--t-cta);box-shadow:0 14px 26px -14px rgba(222,27,27,.85);overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.mapp-slide-fill{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.24)}
+.mapp-slide-label{position:absolute;inset:0;display:grid;place-items:center;padding:0 12px 0 64px;color:#fff;font:800 1.02rem 'Archivo',sans-serif;text-align:center;pointer-events:none}
+.mapp .mapp-slide-thumb{appearance:none;position:absolute;left:6px;top:6px;width:52px;height:52px;border:0;border-radius:16px;background:#fff !important;color:var(--red) !important;font:900 1.4rem 'Archivo',sans-serif;display:grid;place-items:center;box-shadow:0 6px 14px -4px rgba(13,8,32,.5);cursor:grab;touch-action:none;transition:transform .25s cubic-bezier(.2,1,.3,1)}
+.mapp-slide.is-dragging .mapp-slide-thumb{transition:none;cursor:grabbing}
+.mapp .mapp-slide-thumb span{color:var(--red) !important}
+.mapp-slide-thumb:focus-visible{outline:3px solid var(--t-6);outline-offset:2px}
+.mapp-slide.is-busy{opacity:.75}
+@media (prefers-reduced-motion:no-preference){.mapp-slide:not(.is-busy):not(.is-dragging) .mapp-slide-thumb span{animation:mapp-nudge 1.6s ease-in-out infinite}}
+@keyframes mapp-nudge{50%{transform:translateX(4px)}}
+
+.mapp .mapp-sellhead{grid-template-areas:'top top' 'hello hello' 'cup copy' 'trail trail' 'count count' 'reto reto' 'kpis kpis' 'time time' 'trip trip'}
+.mapp-trail{grid-area:trail;min-width:0}
+.mapp-trail-line{position:relative;display:block;height:26px;margin:0 13px}
+.mapp-trail-line::before,.mapp-trail-line>i{content:"";position:absolute;left:-13px;top:11px;height:5px;border-radius:4px}
+.mapp-trail-line::before{right:-13px;background:rgba(255,255,255,.2)}
+.mapp-trail-line>i{background:var(--t-ramp);max-width:calc(100% + 26px);transition:width .6s cubic-bezier(.2,1,.3,1)}
+.mapp-trail-line>b{position:absolute;top:0;width:26px;height:26px;margin-left:-13px;border-radius:50%;display:grid;place-items:center;font:700 .66rem 'JetBrains Mono',monospace;background:var(--t-1);border:2px solid rgba(255,255,255,.35);transition:background .4s,box-shadow .4s}
+.mapp-trail-line>b.on{background:var(--t-cta);border-color:var(--t-7);box-shadow:0 0 0 4px rgba(255,194,60,.25),0 0 16px rgba(242,84,45,.8)}
+.mapp-trail p{margin:6px 0 0;font-size:.84rem}
+.mapp .mapp-trail p b{color:var(--t-6)}
+.mapp-sellhead-count{grid-area:count;min-width:0}
+.mapp-sellhead-count .mapp-count{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.mapp .mapp-sellhead-count .mapp-tile:not(.is-mini):not(.mapp-addtile){grid-template-columns:1fr;grid-template-areas:'name' 'n' 'plus' 'fiado';gap:2px;padding:8px 8px 2px;border-radius:18px;background:rgba(255,255,255,.12) !important;border:1px solid rgba(255,255,255,.26) !important;box-shadow:none !important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);min-width:0}
+.mapp-sellhead-count .mapp-tile-name{font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapp-sellhead-count .mapp-tile-n,.mapp-sellhead-count .mapp-tile-n b{font-size:.68rem;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapp-sellhead-count .mapp-tile .mapp-plus{min-height:56px;border-radius:14px;font-size:1.5rem}
+.mapp.is-day .mapp-sellhead-count .mapp-tile .mapp-tile-fiado{background:transparent !important;box-shadow:none !important;color:#fff !important;min-height:44px;min-width:0;font-size:.82rem;opacity:.9}
+.mapp.is-day .mapp-sellhead-count .mapp-addtile,.mapp .mapp-sellhead-count .mapp-addtile{grid-column:1/-1;min-height:48px;padding:4px 8px;background:rgba(255,255,255,.1) !important;border:1px dashed rgba(255,255,255,.4) !important;box-shadow:none !important;border-radius:14px}
+.mapp-sellhead-count .mapp-addtile .mapp-addtile-plus{width:36px;height:36px;font-size:1.3rem;border-radius:10px}
+.mapp-sellhead-count .mapp-addtile span:last-child{flex-direction:row;gap:8px;align-items:baseline}
+.mapp-sellhead-count .mapp-fiado{margin-top:8px}
+.mapp .mapp-sellhead-count .mapp-fiado, .mapp .mapp-sellhead-count .mapp-fiado *{color:var(--t-ink)}
+.mapp-sellhead-count .mapp-sync{margin:6px 0 0;font-size:.74rem}
+.mapp .mapp-sellhead-count .mapp-sync .mapp-link{color:var(--t-6)}
+.mapp-dayreto{grid-area:reto;display:flex;align-items:center;gap:10px;margin:0;padding:9px 12px;border-radius:16px;background:rgba(13,8,32,.45);border:1px solid rgba(255,255,255,.16)}
+.mapp-dayreto>span:first-child{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--t-cta);font-weight:900}
+.mapp-dayreto>span:nth-child(2){flex:1;min-width:0;display:grid;line-height:1.2}
+.mapp-dayreto b{font-size:.86rem}
+.mapp-dayreto small{font-size:.72rem;opacity:.85}
+.mapp-dayreto-dots{display:flex;gap:5px}
+.mapp-dayreto-dots i{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.45)}
+.mapp-dayreto-dots i.on{background:var(--t-6);border-color:var(--t-7);box-shadow:0 0 10px rgba(255,194,60,.9)}
+.mapp-dayreto.is-done{border-color:var(--t-6);background:rgba(255,194,60,.16)}
+.mapp-sellhead-kpi{appearance:none;border:0;background:transparent;padding:0;margin:0;min-height:44px;min-width:44px;font:inherit;text-align:left;cursor:pointer}
+
+/* ── La barra con nombres y el muro corto del inicio, 10 nov 2026 ──────────────
+   Los íconos solos no decían a dónde llevan (la brújula y el calendario eran «Hoy»). */
+.mapp .mapp-tabs.is-ig button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:54px}
+.mapp-tabs-l{font:600 .62rem/1.1 'Archivo',sans-serif;letter-spacing:.01em;white-space:nowrap}
+.mapp .mapp-tabs.is-ig svg{width:24px;height:24px}
+.mapp .mapp-tabs.is-ig .mapp-tab-av{width:26px;height:26px}
+.mapp .mapp-tabs .mapp-tabs-badge{top:2px}
+.mapp-feed-more{display:flex;width:calc(100% - 32px);margin:14px 16px 0;justify-content:center}
+
+/* «¿Cómo te fue?»: granos y lo pagado después de la entrega */
+.mapp-rate { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--m-line); display: grid; gap: 8px; justify-items: start; }
+.mapp-rate-q { margin: 0; }
+.mapp-rate-paid { display: flex; flex-wrap: wrap; gap: 8px; }
+.mapp-rate-paid button { min-height: 44px; min-width: 64px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--m-line); background: var(--m-bg); color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.mapp-rate-paid button.on { border-color: var(--t-4); background: color-mix(in srgb, var(--t-4) 10%, var(--m-bg)); color: var(--t-4); }
+.mapp-rate-other { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.mapp-rate-other input { width: 120px; min-height: 44px; border-radius: 12px; border: 1px solid var(--m-line); padding: 0 10px; font: inherit; }
+.mapp-rate-done { margin: 12px 0 0; font-weight: 600; color: var(--t-4); }
+.mapp-rating { display: inline-flex; align-items: center; gap: 6px; }
+.mapp-ratings { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.mapp-ratings li { line-height: 1.5; }
+.mapp-ratings small { color: var(--m-soft); }
+/* Dentro de la tarjeta roja del apartado, «¿Cómo te fue?» va en su hoja blanca para que se lea */
+.mapp-now .mapp-rate { background: #fff; color: var(--m-ink); border: 0; border-radius: 18px; padding: 14px; margin-top: 14px; }
+.mapp-now .mapp-rate .mapp-fine { color: var(--m-soft); }
+.mapp-now .mapp-rate .mapp-beans button { color: color-mix(in srgb, var(--m-ink) 35%, #fff); }
+.mapp-now .mapp-rate .mapp-beans .on { color: var(--t-4); }

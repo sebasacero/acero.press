@@ -46,7 +46,8 @@ test('cliente: ve quién está en la calle, aparta 2 tintos y 1 perico y lo canc
   await rows.first().getByRole('button').click();
   await expect(page).toHaveURL(new RegExp(`/micra/b/${MARLENE}$`));
   await expect(page.getByRole('heading', { name: 'Marlene' })).toBeVisible();
-  await page.getByRole('button', { name: 'Sumar un tinto' }).click();
+  // Arranca con 1 tinto ya puesto: basta sumar el otro
+  await expect(page.getByRole('button', { name: 'Apartar 1 taza · $1.500' })).toBeVisible();
   await page.getByRole('button', { name: 'Sumar un tinto' }).click();
   await page.getByRole('button', { name: 'Sumar un perico' }).click();
   await page.getByLabel('Tu nombre (así te llama)').fill('Sebas · 302');
@@ -66,8 +67,12 @@ test('cliente: ve quién está en la calle, aparta 2 tintos y 1 perico y lo canc
   await page.getByRole('listitem').filter({ hasText: 'Marlene' }).first().getByRole('button').click();
   await expect(page.getByLabel('Tu nombre (así te llama)')).toHaveValue('Sebas · 302');
   await page.getByRole('button', { name: 'Ya no lo necesito' }).click();
+  // Antes de cancelar, el motivo (se guarda para el panel del equipo)
+  await page.getByTestId('cancel-reasons').getByRole('button', { name: 'Se demoró' }).click();
   await expect(page.getByRole('button', { name: 'Apartar', exact: true })).toBeVisible();
-  expect(api.micra.holds.find((h) => h.name === 'Sebas · 302').status).toBe('cancelled');
+  const gone = api.micra.holds.find((h) => h.name === 'Sebas · 302');
+  expect(gone.status).toBe('cancelled');
+  expect(gone.cancel_reason).toBe('tarde');
   expect(errors).toEqual([]);
 });
 
@@ -335,6 +340,32 @@ test('cliente con apartado: arriba va «Tu apartado» con sus etapas; las tarjet
   expect(errors).toEqual([]);
 });
 
+test('cliente: después de la entrega califica con granos y dice cuánto pagó; el equipo lo ve', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.holds.push({ id: 'apartado-mio', tintero_id: MARLENE, client_ref: 'MI-CEL', name: 'Sebas', items: [{ product: 'tinto', qty: 2, unit_price: 1500 }], cups: 2, total: 3000, status: 'served' });
+  const { page, api, errors } = await open(browser, { seed });
+  await page.addInitScript(() => { localStorage.setItem('micra_device_v1', JSON.stringify('MI-CEL')); localStorage.setItem('micra_name_v1', JSON.stringify('Sebas · oficina 302')); });
+  await page.goto('/micra', { waitUntil: 'load' });
+
+  const rate = page.getByRole('region', { name: 'Tu apartado de hoy' }).getByTestId('rate-hold');
+  await expect(rate).toContainText('¿Cómo te fue con Marlene?');
+  await rate.getByRole('radio', { name: '4 granos' }).click();
+  // Lo apartado va primero; se puede decir otro valor o «No sé»
+  await expect(rate.getByRole('radiogroup', { name: 'Cuánto pagaste' }).getByRole('radio')).toHaveText([/3\.000/, /2\.000/, /4\.000/, 'Otro', 'No sé']);
+  await rate.getByRole('radio', { name: /2\.000/ }).click();
+  await rate.getByRole('button', { name: 'Enviar' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Le diste 4 granos a Marlene' })).toBeVisible();
+  const h = api.micra.holds.find((x) => x.id === 'apartado-mio');
+  expect([h.rating, h.paid_total]).toEqual([4, 2000]);
+  expect(errors).toEqual([]);
+
+  // El equipo ve el promedio y lo pagado por taza frente a lo que pide
+  const team = await open(browser, { who: 'team', seed: { ...seed, holds: [{ ...seed.holds.at(-1), rating: 4, paid_total: 2000 }] } });
+  await team.page.goto('/micra/equipo', { waitUntil: 'load' });
+  await expect(team.page.getByTestId('owner-ratings')).toContainText(/Marlene.*4,0 \(1\).*pagan \$\s?1\.000 por taza \(pide \$\s?1\.500/);
+  expect(team.errors).toEqual([]);
+});
+
 test('barista: la cabecera roja de Vender lleva su punto y «Mi QR», sin buscador', async ({ browser }) => {
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista', { waitUntil: 'load' });
@@ -499,6 +530,8 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   const feed = page.getByTestId('home-feed');
   await expect(feed.getByRole('heading', { level: 2, name: 'Hoy en el café' })).toBeVisible();
   await expect(feed.getByTestId('price-card')).toContainText('$1.300');
+  // El muro del inicio va corto: lo demás se abre con «Ver todo lo de hoy»
+  await page.getByTestId('feed-more').click();
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana

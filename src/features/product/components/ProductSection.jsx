@@ -4,6 +4,10 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { fetchCoffeeVarieties, fetchAeropressProducts } from '../../../shared/lib/catalog.js';
 import SectionEditButton from '../../admin/SectionEditButton.jsx';
 import KitBuilder from './KitBuilder.jsx';
+import { fetchSection } from '../../../shared/lib/pageSections.js';
+import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
+import { FALLBACK_WHATSAPP_NUMBER } from '../../../shared/layout/WhatsAppButton.jsx';
+import { coldBrewPrice, canText } from '../../micra-app/promo.js';
 
 const FALLBACK_IMG = '/image/bagsbeans.png';
 const sizeName = (s, t) => (s === '18G' ? t('shop.sachet') : s);
@@ -43,6 +47,16 @@ export default function ProductSection() {
     return () => {
       active = false;
     };
+  }, []);
+
+  // La lata de cold brew al pie de la tienda: precio de page_sections 'cold_brew', pedido por WhatsApp
+  const [can, setCan] = useState({ price: null, number: FALLBACK_WHATSAPP_NUMBER });
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetchSection('cold_brew'), fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER)]).then(([sec, n]) => {
+      if (active) setCan({ price: coldBrewPrice(sec?.content), number: n || FALLBACK_WHATSAPP_NUMBER });
+    });
+    return () => { active = false; };
   }, []);
 
   const all = [...coffee, ...gear];
@@ -113,7 +127,7 @@ export default function ProductSection() {
     setTimeout(() => setAddedId((id) => (id === p.id ? null : id)), 1000);
   };
 
-  const card = (p) => {
+  const card = (p, big = false) => {
     const size = sizeOf(p);
     const price = p.prices[size];
     const isSel = p.id === selectedId;
@@ -121,7 +135,7 @@ export default function ProductSection() {
     return (
       <article
         key={p.id}
-        className={`shop-card ${isSel ? 'is-selected' : ''}`}
+        className={`shop-card ${isSel ? 'is-selected' : ''}${big === true ? ' is-big' : ''}`}
         onClick={() => choose(p)}
       >
         <div className="shop-card-media">
@@ -131,6 +145,7 @@ export default function ProductSection() {
             loading="lazy"
             onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }}
           />
+          {big === true && <span className="shop-card-week">{t('page.shop.week')}</span>}
         </div>
         {(p.brand || p.region) && (
           <span className="shop-card-brand">{[p.brand, p.region].filter(Boolean).join(' · ')}</span>
@@ -138,6 +153,8 @@ export default function ProductSection() {
         <h3 className="shop-card-name" title={p.description ?? undefined}>
           {p.name}{showSizes || size ? <span> ({sizeName(size, t)})</span> : null}
         </h3>
+        {big === true && p.description && <p className="shop-card-desc">{p.description}</p>}
+        {big === true && p.variety && <p className="shop-card-notes"><i>{p.variety}</i>{p.region && <i>{p.region}</i>}</p>}
         <p className={`shop-card-price ${price == null ? 'is-na' : ''}`}>{money(price) ?? t('shop.unavailable')}</p>
 
         {showSizes && (
@@ -174,10 +191,8 @@ export default function ProductSection() {
       <SectionEditButton section="Catálogo de café" toolId="catalog" />
 
       <div className="shop-inner">
-        <div className="shop-rule" aria-hidden="true"><span /></div>
-        <p className="shop-kicker">{t('shop.kicker')}</p>
-
-        <h2 className="shop-title">{tab === 'gear' ? t('shop.gearTitle') : tab === 'kit' ? t('shop.kitTitle') : t('shop.coffeeTitle')}</h2>
+        <span className="pg-brand"><img src="/image/logo-acero.png" alt="ACERO" width="150" height="48" /><em>.press</em></span>
+        <h2 className="shop-title">{tab === 'gear' ? t('shop.gearTitle') : tab === 'kit' ? t('shop.kitTitle') : <>{t('page.shop.title')[0]} <em>{t('page.shop.title')[1]}</em></>}</h2>
 
         <div className="shop-tabs" role="tablist" aria-label={t('shop.coffeeTitle')}>
           {[['coffee', t('shop.tabCoffee'), coffee.length], ['gear', t('shop.tabGear'), gear.length], ['kit', t('shop.tabKit'), null]].map(([id, label, n]) => (
@@ -241,17 +256,21 @@ export default function ProductSection() {
             )}
           </p>
         ) : (
+          <>
+          {/* El primero manda en una tarjeta ancha; los demás siguen en la fila */}
+          {tab === 'coffee' && shown.length > 1 && card(shown[0], true)}
           <div className={`shop-carousel ${edges.start && edges.end ? 'is-static' : ''}`}>
             <button type="button" className="shop-arrow prev" aria-label={t('shop.prev')} disabled={edges.start} onClick={() => slide(-1)}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             <div className="shop-track" id="shop-track" ref={trackRef} onScroll={updateEdges}>
-              {shown.map(card)}
+              {(tab === 'coffee' && shown.length > 1 ? shown.slice(1) : shown).map((p) => card(p))}
             </div>
             <button type="button" className="shop-arrow next" aria-label={t('shop.next')} disabled={edges.end} onClick={() => slide(1)}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
+          </>
         )}
 
         {/* Barra de compra del producto seleccionado: los mismos botones de siempre. */}
@@ -294,6 +313,12 @@ export default function ProductSection() {
         )}
 
         <p className="payment-worldwide-note">{t('payment.subtitle')}</p>
+
+        <div className="pg-lata">
+          <img src="/image/coldbrew/lata-acero.webp" alt={t('page.shop.canAlt')} loading="lazy" />
+          <div><h3>{t('page.shop.canTitle')}</h3><p>{t('page.shop.canText')}{can.price ? ` ${money(can.price)}.` : ''}</p></div>
+          <a className="pg-btn" href={`https://wa.me/${can.number}?text=${encodeURIComponent(canText())}`} target="_blank" rel="noopener noreferrer">{t('page.shop.canCta')}</a>
+        </div>
       </div>
     </section>
   );

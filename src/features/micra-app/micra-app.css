@@ -1621,3 +1621,8 @@
 
 /* «Ver más baristas»: la lista del cliente va de a 12 */
 .mapp-more { display: block; width: calc(100% - 32px); margin: 4px 16px 20px; min-height: 44px; }
+
+/* Motivo al cancelar un apartado: cuatro botones de 44 px y «sin decir» */
+.mapp-cancel { border: 0; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.mapp-cancel legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
+.mapp-cancel .mapp-chip { min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: inherit; font: inherit; cursor: pointer; }

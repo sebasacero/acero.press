@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import * as api from './api.js';
 import platform from './platform.js';
 import { money } from './micraApp.js';
@@ -25,6 +25,46 @@ export function ModePicker({ mode, onPick, disabled = false }) {
       </div>
       {mode && <p className="mapp-outmodes-gps" data-testid="mode-gps"><span aria-hidden="true">📍</span> {OUT_MODES.find((m) => m.id === mode)?.gps}</p>}
     </section>
+  );
+}
+
+/**
+ * «Salí a vender» como un gesto: se desliza la flecha hasta el final (o se toca,
+ * para quien usa teclado o lector). Salir enciende la ubicación y lo pone en el
+ * mapa: un gesto evita salidas por error, que dejan puntos falsos en el estudio.
+ */
+export function SlideToGo({ label, hint, busy = false, onGo }) {
+  const track = useRef(null);
+  const drag = useRef(null);
+  const [dx, setDx] = useState(0);
+  const max = () => Math.max(0, (track.current?.clientWidth ?? 0) - 64);
+  const down = (e) => { if (busy) return; drag.current = { x: e.clientX, moved: false }; e.currentTarget.setPointerCapture?.(e.pointerId); };
+  const move = (e) => {
+    if (!drag.current) return;
+    const d = Math.min(max(), Math.max(0, e.clientX - drag.current.x));
+    if (d > 6) drag.current.moved = true;
+    setDx(d);
+  };
+  const up = () => {
+    if (!drag.current) return;
+    const { moved } = drag.current;
+    const far = dx > max() * 0.7;
+    // El clic que sigue a un arrastre no cuenta como toque
+    drag.current = moved ? { done: true } : null;
+    setDx(0);
+    if (moved && far) onGo();
+  };
+  const click = () => { if (drag.current?.done) { drag.current = null; return; } onGo(); };
+  return (
+    <div className={`mapp-slide ${busy ? 'is-busy' : ''} ${dx ? 'is-dragging' : ''}`} ref={track}>
+      <i className="mapp-slide-fill" style={{ width: dx ? dx + 48 : 0 }} aria-hidden="true" />
+      <span className="mapp-slide-label" aria-hidden="true">{busy ? 'Avisando…' : hint}</span>
+      <button
+        type="button" className="mapp-slide-thumb" style={{ transform: `translateX(${dx}px)` }} disabled={busy}
+        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}
+        aria-label={label} data-testid="go-out"
+      ><span aria-hidden="true">»</span></button>
+    </div>
   );
 }
 

@@ -67,8 +67,8 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await page.getByRole('link', { name: 'ACERO.press' }).click();
   await expect(page).toHaveURL(/\/#home$/);
   await expect(menu(page).getByRole('link', { name: 'Aprende' })).not.toHaveAttribute('aria-current', 'page');
-  // Cambiar de página corta el contador de ventas que iba en camino («Failed to fetch»): eso no es un error de la página
-  expect(errors.filter((e) => !/de ventas: TypeError: Failed to fetch/.test(e))).toEqual([]);
+  // Cambiar de página corta lo que iba en camino («Failed to fetch»): eso no es un error de la página
+  expect(errors.filter((e) => !/TypeError: Failed to fetch/.test(e))).toEqual([]);
   await page.context().close();
 });
 
@@ -103,9 +103,20 @@ test('celular: el menú de tres rayas tiene los mismos enlaces, funcionan y se m
   // Cerrado está fuera de la pantalla: no debe recibir el foco
   expect(await drawer.evaluate((el) => el.inert)).toBe(true);
 
+  // Arriba quedan solo el carrito y las tres rayas: el idioma y la cuenta van en el menú lateral
+  await expect(page.locator('.navbar .lang-btn')).toBeHidden();
+  await expect(page.locator('.navbar').getByRole('link', { name: 'Cuenta de usuario' })).toBeHidden();
+  await expect(page.locator('.navbar').getByRole('link', { name: 'Carrito de compras' })).toBeVisible();
+
   await burger.click();
   await expect(drawer).toHaveClass(/\bopen\b/);
   await expect(links).toHaveText(LINKS_ES);
+  await expect(drawer.locator('.lang-btn')).toBeVisible();
+  await drawer.getByRole('button', { name: 'Mi cuenta' }).click();
+  await expect(drawer).not.toHaveClass(/\bopen\b/);
+  await expect(page.locator('.account-drawer')).toHaveClass(/\bopen\b/);
+  await page.locator('.account-drawer .cart-close-btn').click();
+  await burger.click();
   await expect(links.first()).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(drawer).not.toHaveClass(/\bopen\b/);

@@ -65,7 +65,7 @@ function pin(b, onPick, named = false) {
  * zonas del mapa en vivo; `named` pone el nombre junto al pin; `label` es el
  * nombre del mapa para los lectores de pantalla.
  */
-export default function MicraMap({ baristas, me, theme, onPick, big = false, zones = null, named = false, label = 'Mapa de los baristas', testId = 'micra-map' }) {
+export default function MicraMap({ baristas, me, theme, onPick, big = false, zones = null, named = false, label = 'Mapa de los baristas', testId = 'micra-map', focus = null }) {
   const box = useRef(null);
   const mapRef = useRef(null);
   const libRef = useRef(null);
@@ -161,6 +161,14 @@ export default function MicraMap({ baristas, me, theme, onPick, big = false, zon
     // Los baristas se refrescan cada 30 s: solo se reencuadra si cambió quién está, no a cada vuelta
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frameKey(baristas, me), zonesKey, state, big]);
+
+  // `focus` ({ lat, lng }): el centro de control vuela hasta el barista escogido en la lista
+  const focusKey = focus ? `${focus.lat},${focus.lng},${focus.at ?? ''}` : '';
+  useEffect(() => {
+    if (state !== 'ready' || !focus || !mapRef.current) return;
+    mapRef.current.flyTo({ center: [Number(focus.lng), Number(focus.lat)], zoom: 15.5, duration: 900 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusKey, state]);
 
   if (state === 'off') return null;
   return <div className={`mapp-map${big ? ' is-big' : ''}`} ref={box} data-testid={testId} aria-label={label} role="region" />;

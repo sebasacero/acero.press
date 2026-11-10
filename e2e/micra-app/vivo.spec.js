@@ -59,11 +59,17 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; l
   await expect(panel).toContainText('2 baristas en la calle');
   await expect.poll(() => zonesOf(page)).toEqual({ demand: [], study: [3, 2] });
 
+  // Antes de salir, lo que motiva va primero: quién ya apartó
+  await expect(page.getByTestId('go-wait')).toContainText('2 clientes ya te apartaron');
   await page.getByTestId('mode-fijo').click();
   await page.getByTestId('go-out').click();
   await page.getByTestId('consent-location').check();
   await page.getByTestId('consent-accept').click();
   await expect(page.getByRole('button', { name: 'Vendí un tinto' })).toBeVisible();
+  // En la calle los +1 van en la cabecera, con el camino del día y el reto de entregar apartados
+  await expect(page.getByTestId('sellhead').getByRole('button', { name: 'Vendí un tinto' })).toBeVisible();
+  await expect(page.getByTestId('day-trail')).toBeVisible();
+  await expect(page.getByTestId('day-reto')).toContainText('entrega 3 apartados');
 
   // En línea: el mapa grande con los otros dos, la cuenta y lo suyo aparte
   await expect(panel).toHaveAttribute('data-live', 'true');

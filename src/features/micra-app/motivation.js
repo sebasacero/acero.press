@@ -107,3 +107,29 @@ export const STREAK_BADGES = [
   [14, 'Dos semanas', 'Quien pasa todos los días, se vuelve el café de la cuadra.'],
   [30, 'Un mes en la calle', 'Treinta días. Eres de los que no fallan.'],
 ];
+
+/**
+ * El camino del día en Vender: una marca cada 5 tazas (a lo más tres antes de
+ * la meta) y la meta al final. Dice cuál sigue y cuánto falta. Sale de las
+ * tazas del día, que ya existen: no guarda nada.
+ */
+export function dayTrail(cups, goal) {
+  const n = Math.max(0, Math.floor(Number(cups) || 0));
+  const g = Math.max(0, Math.floor(Number(goal) || 0));
+  const steps = [];
+  for (let at = 5; at < g && steps.length < 3; at += Math.max(5, Math.ceil((g - 5) / 3 / 5) * 5)) steps.push(at);
+  const marks = [...steps, ...(g > 0 ? [g] : [])].map((at) => ({ at, isGoal: at === g, done: n >= at }));
+  const next = marks.find((m) => !m.done) ?? null;
+  return { marks, next: next && { at: next.at, isGoal: next.isGoal, left: next.at - n }, pct: g > 0 ? Math.min(1, n / g) : 0 };
+}
+
+/**
+ * El reto del día: entregar apartados. Solo avanza con apartados entregados
+ * (los cierra el barista con el cliente al frente), nunca con +1 sueltos: un
+ * reto que se gana tocando rápido infla el estudio.
+ */
+export const CHALLENGE_TARGET = 3;
+export function dayChallenge(holds, target = CHALLENGE_TARGET) {
+  const served = (holds ?? []).filter((h) => h.status === 'served').length;
+  return { target, served: Math.min(served, target), done: served >= target };
+}

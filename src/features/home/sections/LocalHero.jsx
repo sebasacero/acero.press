@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
-import { SheetFrame } from '../../esspresale/parts.jsx';
 import ColdBrewCarouselEditor from '../../admin/ColdBrewCarouselEditor.jsx';
 import { fetchSection } from '../../../shared/lib/pageSections.js';
 import { wrapIndex } from '../lib/houseRecipes.js';
-import MapCanvas from '../../esspresale/MapCanvas.jsx';
+import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
+import { FALLBACK_WHATSAPP_NUMBER } from '../../../shared/layout/WhatsAppButton.jsx';
 import '../../esspresale/esspresale.css';
 import './home.css';
 
-// Después de la tienda: «Visítanos» (pin gigante sobre el plano de Bogotá, dibujado aquí sin servicio
-// de mapas ni cookies; el toque abre Google Maps) junto a la foto de la barra con las recetas. Las recetas de la casa
-// se ven como el banner de la barra (video y cuadro de la receta) dentro del vidrio de la vitrina. Se cambian con las pestañas o deslizando, nunca
+// Visítanos y las recetas de la casa en una sola pieza (rediseño del 10 nov 2026): la foto de la
+// barra de fondo, con la dirección grande y dos botones (Google Maps y WhatsApp); al lado, las
+// recetas de la casa como el banner de la barra (video y cuadro de la receta). Se cambian con las pestañas o deslizando, nunca
 // solas (un carrusel que avanza solo se ignora). El contenido lo edita el owner con el lápiz
 // (page_sections 'cold_brew', el mismo de la vieja barra); esto es solo el respaldo.
 
@@ -179,91 +179,58 @@ export default function LocalHero() {
 
   const address = t('brand.address');
   const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`ACERO.press, ${address}`)}`;
+  const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
+  useEffect(() => { fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setNumber(n || FALLBACK_WHATSAPP_NUMBER)); }, []);
+  const v = t('page.visit');
 
   const go = (i) => setIndex(wrapIndex(i, slides.length));
   const slide = slides[wrapIndex(index, slides.length)];
 
   return (
-    <section className="lh" aria-labelledby="lh-title">
-      <SheetFrame />
-      <div className="lh-in">
-        <div className="visit-copy" id="visitanos">
-          <div className="essp-tag">{t('brand.visitTag')}</div>
-          {/* El logo de Visítanos: el plano de Bogotá acostado como piso, el pin parado encima y el
-              nombre con nuestras dos letras (Archivo y Permanent Marker). Todo abre Google Maps. */}
-          <a className="visit-logo" href={maps} target="_blank" rel="noopener noreferrer" aria-label={`${address} · ${t('brand.mapsCta')}`}>
-            <span className="visit-stage" aria-hidden="true">
-              <span className="visit-floor">
-                <MapCanvas className="visit-floor-map" view={(w) => ({ style: 'blanco', c: 13, k: 85, ax: 0.5, ay: 0.5, s: w < 360 ? 13 : 17, heat: 0 })} />
-              </span>
-              <span className="visit-shadow" />
-              {/* El pin de Google Maps con su gradiente de colores (pedido del usuario: aquí sí se sale
-                  del rojo único, porque el pin dice «esto es Google Maps») */}
-              <svg className="visit-pin" viewBox="0 0 64 88">
-                <defs>
-                  <linearGradient id="visit-gmaps" x1="0.85" y1="0.05" x2="0.25" y2="0.95">
-                    <stop offset="0" stopColor="#EA4335" />
-                    <stop offset="0.42" stopColor="#FBBC04" />
-                    <stop offset="0.78" stopColor="#34A853" />
-                  </linearGradient>
-                  <linearGradient id="visit-gmaps-blue" x1="0" y1="0.2" x2="0.55" y2="0.45">
-                    <stop offset="0" stopColor="#4285F4" />
-                    <stop offset="1" stopColor="#4285F4" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path d="M32 2C15.4 2 2 15.2 2 31.6 2 53.8 32 84 32 84s30-30.2 30-52.4C62 15.2 48.6 2 32 2Z" fill="url(#visit-gmaps)" stroke="#fff" strokeWidth="3" />
-                <path d="M32 3.5C16.2 3.5 3.5 16 3.5 31.6c0 9 5 19.6 11 29.2" fill="url(#visit-gmaps-blue)" />
-                <path d="M14 22c3-8 10-13 18-13" fill="none" stroke="rgba(255,255,255,.45)" strokeWidth="4" strokeLinecap="round" />
-                <circle cx="32" cy="31" r="11" fill="#fff" />
-              </svg>
-            </span>
-            <span className="visit-word">
-              <h2 className="visit-title" id="lh-title">{t('brand.title')}</h2>
-              <span className="visit-script">{t('brand.visitScript')}</span>
-            </span>
-          </a>
-          <div className="essp-loc">{t('brand.loc')}</div>
-          <p className="visit-address">{address}</p>
-          <div className="essp-ctas">
-            <a className="essp-btn" href={maps} target="_blank" rel="noopener noreferrer">{t('brand.mapsCta')}</a>
-            <a className="essp-btn is-ghost" href="#beans">{t('brand.cta')}</a>
+    <section className="pg-visit" aria-labelledby="lh-title">
+      <div className="pg-w">
+        <div className="pg-visit-card">
+          <div className="pg-visit-copy" id="visitanos">
+            <span className="pg-brand"><img src="/image/logo-acero.png" alt="ACERO" width="150" height="48" /><em>.press</em><b>· {v.label}</b></span>
+            <h2 id="lh-title">{v.title}</h2>
+            <p className="pg-addr">{v.addr}</p>
+            <p>{v.text}</p>
+            <div className="pg-acts">
+              <a className="pg-btn pg-btn--hot" href={maps} target="_blank" rel="noopener noreferrer" aria-label={`${address} · ${t('brand.mapsCta')}`}>{t('brand.mapsCta')}</a>
+              <a className="pg-btn pg-btn--wa" href={`https://wa.me/${number}?text=${encodeURIComponent(v.waMsg)}`} target="_blank" rel="noopener noreferrer">{v.wa}</a>
+            </div>
           </div>
-        </div>
 
-        <figure className="lh-store" id="recetas" aria-roledescription="carousel" aria-label={t('brand.recipes')}>
-          <ColdBrewCarouselEditor slides={slides} activeIndex={index} onSaved={load} />
-          <div className="lh-kicker">{t('brand.recipes')}</div>
-          <div
-            className="lh-stage"
-            onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
-            onTouchEnd={(e) => {
-              if (touchX.current === null) return;
-              const dx = e.changedTouches[0].clientX - touchX.current;
-              touchX.current = null;
-              if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1));
-            }}
-          >
-            <div className="lh-photo">
-              <img src="/image/local.webp" alt={t('brand.photoAlt')} width="907" height="893" loading="lazy" />
-              {/* El banner va en el vidrio de la vitrina grande (coordenadas de la foto) */}
+          <figure className="lh-store" id="recetas" aria-roledescription="carousel" aria-label={t('brand.recipes')}>
+            <ColdBrewCarouselEditor slides={slides} activeIndex={index} onSaved={load} />
+            <div className="lh-kicker">{t('brand.recipes')}</div>
+            <div
+              className="lh-stage"
+              onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (touchX.current === null) return;
+                const dx = e.changedTouches[0].clientX - touchX.current;
+                touchX.current = null;
+                if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1));
+              }}
+            >
               <div className="lh-window" aria-live="polite">
                 {slide && <WindowBanner key={wrapIndex(index, slides.length)} slide={slide} index={wrapIndex(index, slides.length)} total={slides.length} lang={lang} t={t} />}
               </div>
             </div>
-          </div>
-          <div className="lh-tabs">
-            <button type="button" className="lh-arrow" onClick={() => go(index - 1)} aria-label={p.prev}>‹</button>
-            <div className="lh-tablist" role="tablist" aria-label={t('brand.recipes')}>
-              {slides.map((s, i) => (
-                <button key={i} type="button" role="tab" aria-selected={i === wrapIndex(index, slides.length)} onClick={() => go(i)}>
-                  {String(s.title1?.[lang] ?? s.title1?.es ?? '').replace(/\.\s*$/, '')}
-                </button>
-              ))}
+            <div className="lh-tabs">
+              <button type="button" className="lh-arrow" onClick={() => go(index - 1)} aria-label={p.prev}>‹</button>
+              <div className="lh-tablist" role="tablist" aria-label={t('brand.recipes')}>
+                {slides.map((s, i) => (
+                  <button key={i} type="button" role="tab" aria-selected={i === wrapIndex(index, slides.length)} onClick={() => go(i)}>
+                    {String(s.title1?.[lang] ?? s.title1?.es ?? '').replace(/\.\s*$/, '')}
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="lh-arrow" onClick={() => go(index + 1)} aria-label={p.next}>›</button>
             </div>
-            <button type="button" className="lh-arrow" onClick={() => go(index + 1)} aria-label={p.next}>›</button>
-          </div>
-          <figcaption className="lh-caption">{t('brand.caption')}</figcaption>
-        </figure>
+          </figure>
+        </div>
       </div>
     </section>
   );
