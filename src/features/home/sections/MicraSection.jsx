@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
-import SellPhone from '../../esspresale/SellPhone.jsx';
+import ControlPanel from './ControlPanel.jsx';
 import { PEOPLE, personaSrc } from './StreetPeople.jsx';
 import { useSeen } from './Doors.jsx';
 import { useStreetMap } from '../../../shared/lib/useStreetMap.js';
@@ -9,9 +9,9 @@ import '../../esspresale/esspresale.css';
 import './home.css';
 
 // Micra, la calle: en térmico, como la app (rediseño del 10 nov 2026). A la izquierda qué es y
-// sus tres pasos, que caen como notificaciones al llegar; a la derecha el celular vivo con Vender
-// (se toca +1 y la taza sube; se toca solo mientras nadie lo use) y las cifras reales del estudio
-// de calle, que entran contando. Abajo las personas de la calle sobre el andén. Textos en micra.*.
+// sus tres pasos, que caen como notificaciones al llegar; a la derecha el centro de control de la
+// operación en tiempo real (pedido del usuario, 10 nov 2026: no la app, el panel) y las cifras
+// reales del estudio de calle, que entran contando. Abajo las personas de la calle sobre el andén. Textos en micra.*.
 
 /** Cuenta de 0 a `n` cuando `on` pasa a verdadero. Con «menos movimiento», el número de una. */
 function Count({ n, on, wait = 0 }) {
@@ -93,8 +93,8 @@ export default function MicraSection() {
             <Stores urls={stores} />
           </div>
           <div ref={stage} className={`pg-stage${stageOn ? ' is-on' : ''}`}>
-            {/* Vender, como lo ve el barista: se toca +1 y la taza se llena */}
-            <SellPhone className="pg-phone" demo />
+            {/* La operación en vivo: lo público para todos, el día completo y los controles para el dueño */}
+            <ControlPanel on={stageOn} />
             {/* Las cifras del estudio de calle solo cuando hay (nada de ceros) */}
             {(street?.tinteros > 0 || street?.cups > 0) && (
               <ul className="pg-figs" aria-label={stats.label}>
