@@ -3,7 +3,7 @@ import {
   PRODUCTS, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
   baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota, joinStats,
 } from './micraApp.js';
-import { streakOf, streakLabel, goalOf, milestone, stepText, lessonPath, figureFor, fillOf, GOAL_CHOICES } from './motivation.js';
+import { streakOf, streakLabel, goalOf, milestone, stepText, lessonPath, figureFor, fillOf, GOAL_CHOICES, dayTrail, dayChallenge } from './motivation.js';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen } from '../school/progress.js';
 import * as api from './api.js';
@@ -14,7 +14,7 @@ import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
 import { km } from '../ruta/track.js';
 import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel, outPoint, FIXED_KEY } from './flow.js';
-import { ModePicker, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
+import { ModePicker, SlideToGo, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
 import { seenHolds, rememberHolds, hasHoldMemory, newHolds, holdAlert, POLL_MS } from './alerts.js';
@@ -713,6 +713,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     setBusy(null);
   };
   const waiting = day.holds.filter((h) => h.status === 'waiting');
+  const waitingTotal = waiting.reduce((a, h) => a + (Number(h.total) || 0), 0);
   const bars = weekBars(day.week);
   const recent = recentFiados(day);
   const waitingProps = { waiting, sum, rewards, busy, onClose: closeHold, onRedeem: redeem };
@@ -720,6 +721,47 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const errorBox = error && <p className="mapp-error" role="alert">{error} <button type="button" className="mapp-link" onClick={() => setError(null)}>Cerrar</button></p>;
   const dayTrip = dayTripOf(trip.view, readDayTrip(), bogota().day);
   const storyData = { name: first, cups: board.cups, total: board.total, streak: streak.count, goal, fig, mode, km: dayTrip.distance, stops: dayTrip.stops, path: dayTrip.path, url: platform.siteUrl(baristaPath(day.id)) };
+
+  // Contar ventas: en la calle va dentro de la cabecera, junto a la meta (pedido del usuario, 10 nov 2026)
+  const counter = (
+    <>
+      <section className="mapp-count" aria-label="Contar ventas">
+        {menu.map((m) => (
+          <div key={m.id} className="mapp-tile">
+            <span className="mapp-tile-name">{m.label}</span>
+            <span className="mapp-tile-n">{money(m.price)} · <b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
+            <button type="button" className="mapp-plus" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`}>+1</button>
+            {pop?.product === m.id && <CoinPop pop={pop} />}
+            <button type="button" className="mapp-tile-fiado" onClick={() => setFiadoFor(m.id)} aria-label={`Fié un ${m.one}`}>Fiado</button>
+          </div>
+        ))}
+        <AddProductTile asId={asId} count={ownProducts.length} onAdded={loadExtras} />
+      </section>
+      {fiadoFor && (
+        <form className="mapp-glass mapp-fiado" onSubmit={(e) => { e.preventDefault(); if (fiadoName.trim()) plusOne(fiadoFor, fiadoName.trim()); }}>
+          <p className="mapp-cota">¿A quién le fiaste {menu.find((x) => x.id === fiadoFor)?.one ?? 'eso'}?</p>
+          {recent.length > 0 && (
+            <div className="mapp-chips">
+              {recent.map((n) => <button key={n} type="button" onClick={() => plusOne(fiadoFor, n)}>{n}</button>)}
+            </div>
+          )}
+          <input value={fiadoName} onChange={(e) => setFiadoName(e.target.value.slice(0, 40))} placeholder="Ej.: Portero Ed. Alcalá" aria-label="Nombre de quien te debe" autoFocus />
+          <span className="mapp-row-btns">
+            <button type="submit" className="mapp-btn is-small" disabled={!fiadoName.trim()}>Anotar fiado</button>
+            <button type="button" className="mapp-link" onClick={() => setFiadoFor(null)}>Cancelar</button>
+          </span>
+        </form>
+      )}
+      <p className="mapp-sync" role="status">
+        {pending ? `${pending} sin subir: se suben solas cuando haya señal` : 'Todo guardado'}
+        {last && <> · <button type="button" className="mapp-link" onClick={undo} disabled={busy === 'undo'}>Deshacer el último</button></>}
+      </p>
+    </>
+  );
+  // El camino del día (cada 5 tazas y la meta) y el reto de entregar apartados
+  const trail = dayTrail(board.cups, goal);
+  const reto = dayChallenge(day.holds);
+  const toWaiting = () => document.getElementById('mapp-wait')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
   // En la calle: la taza que se llena hacia la meta, arriba de todo
   const left = Math.max(0, goal - board.cups);
@@ -741,13 +783,28 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           <p className="mapp-sellhead-cota">{left > 0 ? `${left} más y cumples tu meta` : '¡Meta cumplida! Lo demás es ganancia'}</p>
         </div>
         <dl className="mapp-sellhead-kpis">
-          <div><dd>{sum.waitingCups}</dd><dt>te esperan</dt></div>
+          <div><dd><button type="button" className="mapp-sellhead-kpi" onClick={toWaiting} data-testid="kpi-wait" aria-label={`${sum.waitingCups} te esperan: ver quién`}>{sum.waitingCups} <span aria-hidden="true">↓</span></button></dd><dt>te esperan</dt></div>
           <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
         </dl>
         <div className="mapp-sellhead-time">
           <span className="mapp-sellhead-bar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida"><i style={{ width: `${prog.pct * 100}%` }} /></span>
           <small>quedan {prog.leftLabel}</small>
         </div>
+        {trail.marks.length > 0 && (
+          <div className="mapp-trail" data-testid="day-trail">
+            <span className="mapp-trail-line" role="img" aria-label={`Logros de hoy: ${trail.marks.filter((m) => m.done).length} de ${trail.marks.length}`}>
+              <i style={{ width: `${trail.pct * 100}%` }} />
+              {trail.marks.map((m) => <b key={m.at} className={m.done ? 'on' : ''} style={{ left: `${Math.min(100, (m.at / goal) * 100)}%` }}>{m.isGoal ? '★' : m.at}</b>)}
+            </span>
+            <p>{trail.next ? <>Te {trail.next.left === 1 ? 'falta' : 'faltan'} <b>{cupsLabel(trail.next.left)}</b> para {trail.next.isGoal ? 'tu meta' : `el logro de ${trail.next.at}`}</> : <b>Todos los logros de hoy. Lo demás es ganancia.</b>}</p>
+          </div>
+        )}
+        {menu.length > 0 && <div className="mapp-sellhead-count">{counter}</div>}
+        <p className={`mapp-reto ${reto.done ? 'is-done' : ''}`} data-testid="day-reto">
+          <span aria-hidden="true">★</span>
+          <span><b>{reto.done ? 'Reto de hoy cumplido' : 'Reto de hoy: entrega 3 apartados'}</b><small>{reto.done ? 'Tres clientes recibieron su café contigo.' : 'Solo cuentan los apartados que entregas.'}</small></span>
+          <span className="mapp-reto-dots" role="img" aria-label={`${reto.served} de ${reto.target}`}>{Array.from({ length: reto.target }, (_, i) => <i key={i} className={i < reto.served ? 'on' : ''} />)}</span>
+        </p>
         {trip.recording && (
           <p className="mapp-sellhead-cota mapp-trip" role="status" data-testid="trip-recording">
             📍 Grabando tu ruta · {km(trip.view.distance)} · {trip.view.stops === 1 ? '1 parada' : `${trip.view.stops} paradas`}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
@@ -862,17 +919,32 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             {/* «Salí a vender» abajo, al alcance del pulgar (el termo va en la otra mano), con cómo
                 sale justo encima: la opción B que eligió el usuario, 6 nov 2026 (DoorDash, Rappi) */}
             <section className="mapp-gosheet" aria-label="Salir a vender" data-testid="go-sheet">
+              {/* Lo que motiva a salir va primero y en grande: quién ya apartó (10 nov 2026) */}
+              {waiting.length > 0 && (
+                <p className="mapp-gowait" data-testid="go-wait">
+                  <b>{waiting.length === 1 ? '1 cliente ya te apartó' : `${waiting.length} clientes ya te apartaron`}</b>
+                  <span>{cupsLabel(sum.waitingCups)} y {money(waitingTotal)} te esperan en tu punto</span>
+                </p>
+              )}
               <ModePicker mode={mode} onPick={(m) => { pickMode(m); setError(null); }} disabled={busy === 'out'} />
-              <button type="button" className="mapp-btn is-cta is-big is-go" onClick={() => out(true)} disabled={busy === 'out'} data-testid="go-out">
-                {busy === 'out' ? 'Avisando…' : mode ? `Salí a vender · ${modeOf(mode).label.toLowerCase()}` : 'Salí a vender'}
-              </button>
-              <p className="mapp-gosheet-meta">{waiting.length ? <span><b>{waiting.length === 1 ? '1 cliente' : `${waiting.length} clientes`}</b> ya te apartaron</span> : <span>{isPublic ? 'Se apaga solo en 4 horas' : 'Te pedimos la ubicación al salir'}</span>}<span>meta <b>{goal} tazas</b></span></p>
+              <SlideToGo
+                label={mode ? `Salí a vender · ${modeOf(mode).label.toLowerCase()}` : 'Salí a vender'}
+                hint={mode ? `Desliza para salir · ${modeOf(mode).label.toLowerCase()}` : 'Desliza para salir'}
+                busy={busy === 'out'} onGo={() => out(true)}
+              />
+              <p className="mapp-gosheet-meta">
+                <span>{!streak.todayDone && streak.ifToday > 1 ? <>Vende hoy y tu racha llega a <b>{streak.ifToday} días</b></> : isPublic ? 'Se apaga solo en 4 horas' : 'Te pedimos la ubicación al salir'}</span>
+                <span>meta <b>{goal} tazas</b></span>
+              </p>
             </section>
             {consent}
             {trip.pendingEnd && <p className="mapp-fine">Tu último recorrido no ha subido: se envía solo cuando haya señal.</p>}
           </>
         )}
         {errorBox}
+        {/* En la calle, quién espera y el mapa en vivo van justo debajo de la cabecera: es lo urgente */}
+        {live && menu.length > 0 && <Waiting {...waitingProps} />}
+        {live && <Suspense fallback={null}><LivePanel live selfId={day.id} night={night} go={go} /></Suspense>}
         {menu.length === 0 ? <Prices day={day} asId={asId} onSaved={load} first /> : (
           <>
             {!live && <GoalCard board={board} goal={goal} onGoal={setGoal} week={day.week} />}
@@ -881,47 +953,15 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
                 cuando ya vendió hoy (volvió con la flecha: el día sigue); si no, solo quedan los
                 clientes que ya apartaron y lo que falta por subir. */}
             {live || board.cups > 0 || pending > 0 ? (<>
-            <section className="mapp-count" aria-label="Contar ventas">
-              {menu.map((m) => (
-                <div key={m.id} className="mapp-tile">
-                  <span className="mapp-tile-name">{m.label}</span>
-                  <span className="mapp-tile-n">{money(m.price)} · <b data-testid={`micra-count-${m.id}`}>{counts[m.id] || 0}</b> hoy</span>
-                  <button type="button" className="mapp-plus" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`}>+1</button>
-                  {pop?.product === m.id && <CoinPop pop={pop} />}
-                  <button type="button" className="mapp-tile-fiado" onClick={() => setFiadoFor(m.id)} aria-label={`Fié un ${m.one}`}>Fiado</button>
-                </div>
-              ))}
-              <AddProductTile asId={asId} count={ownProducts.length} onAdded={loadExtras} />
-            </section>
-            {fiadoFor && (
-              <form className="mapp-glass mapp-fiado" onSubmit={(e) => { e.preventDefault(); if (fiadoName.trim()) plusOne(fiadoFor, fiadoName.trim()); }}>
-                <p className="mapp-cota">¿A quién le fiaste {menu.find((x) => x.id === fiadoFor)?.one ?? 'eso'}?</p>
-                {recent.length > 0 && (
-                  <div className="mapp-chips">
-                    {recent.map((n) => <button key={n} type="button" onClick={() => plusOne(fiadoFor, n)}>{n}</button>)}
-                  </div>
-                )}
-                <input value={fiadoName} onChange={(e) => setFiadoName(e.target.value.slice(0, 40))} placeholder="Ej.: Portero Ed. Alcalá" aria-label="Nombre de quien te debe" autoFocus />
-                <span className="mapp-row-btns">
-                  <button type="submit" className="mapp-btn is-small" disabled={!fiadoName.trim()}>Anotar fiado</button>
-                  <button type="button" className="mapp-link" onClick={() => setFiadoFor(null)}>Cancelar</button>
-                </span>
-              </form>
-            )}
-            <p className="mapp-sync" role="status">
-              {pending ? `${pending} sin subir: se suben solas cuando haya señal` : 'Todo guardado'}
-              {last && <> · <button type="button" className="mapp-link" onClick={undo} disabled={busy === 'undo'}>Deshacer el último</button></>}
-            </p>
+            {!live && counter}
             <button type="button" className="mapp-coffeebar" onClick={() => setOrdering(true)} data-testid="coffee-bar">
               <span aria-hidden="true">☕</span><span><b>Tu café</b> · ¿se te está acabando?</span><u>Pedir</u>
             </button>
             {!asId && <WaNudge />}
             </>) : null}
-            {(live || board.cups > 0 || waiting.length > 0) && <Waiting {...waitingProps} />}
+            {!live && (board.cups > 0 || waiting.length > 0) && <Waiting {...waitingProps} />}
           </>
         )}
-        {/* En la calle, el mapa en vivo (como al ponerse «en línea»), debajo de las tazas */}
-        {live && <Suspense fallback={null}><LivePanel live selfId={day.id} night={night} go={go} /></Suspense>}
       </>
     );
   }
