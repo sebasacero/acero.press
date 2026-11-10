@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { CartProvider } from './features/cart/context/CartContext.jsx';
 import { AuthProvider } from './features/account/AuthContext.jsx';
-import { LanguageProvider } from './features/i18n/LanguageContext.jsx';
+import { LanguageProvider, useLanguage } from './features/i18n/LanguageContext.jsx';
 import { AdminUIProvider } from './features/admin/AdminUIContext.jsx';
 import AdminDock from './features/admin/AdminDock.jsx';
 import AdminOverlayHost from './features/admin/AdminOverlayHost.jsx';
@@ -14,16 +14,20 @@ import AccountDrawer from './features/account/AccountDrawer.jsx';
 import ProductSection from './features/product/components/ProductSection.jsx';
 import RecipeArchive from './features/recipes/components/RecipeArchive.jsx';
 import LocalHero from './features/home/sections/LocalHero.jsx';
-import EsspresaleHero from './features/esspresale/EsspresaleHero.jsx';
+import Doors from './features/home/sections/Doors.jsx';
+import DaySection, { DayPage } from './features/home/sections/DaySection.jsx';
+import SocialBanners from './features/home/sections/SocialBanners.jsx';
 import DayBanner from './features/home/sections/DayBanner.jsx';
 import MicraSection from './features/home/sections/MicraSection.jsx';
-import BrewGuide from './features/home/sections/BrewGuide.jsx';
+import LearnCard from './features/home/sections/LearnCard.jsx';
 import { useHashLanding } from './shared/layout/useHashLanding.js';
 import ConsentBanner from './shared/layout/ConsentBanner.jsx';
 import { trackWhatsAppClicks } from './shared/lib/analytics.js';
 // La piel de la app Micra sobre toda la web: va después de las hojas de cada sección
 import './shared/styles/estilo-app.css';
 import './shared/styles/termico-web.css';
+// La página que sigue el día: va de última, encima de las pieles anteriores
+import './features/home/sections/pagina-dia.css';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda la receta oficial en cinco pasos (BrewGuide), que lleva a ella.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
@@ -32,6 +36,36 @@ const isSchoolRoute = () => /^\/escuela\/?$/.test(window.location.pathname);
 // Privacidad (/privacidad): la enlaza el permiso de ubicación de Micra
 const PrivacyPage = lazy(() => import('./features/legal/PrivacyPage.jsx'));
 const isPrivacyRoute = () => /^\/privacidad\/?$/.test(window.location.pathname);
+
+// La portada: el banner de 24 horas y, debajo, la página que sigue ese mismo día: cada sección es
+// unas horas más tarde y lleva su cielo (DaySection). Papel = ACERO.press, térmico = Micra.
+function Home({ navOpen, onOpenNavDrawer }) {
+  const { t } = useLanguage();
+  const n = t('page.names');
+  return (
+    <DayPage>
+      {/* El banner principal: 24 horas con un barista, a la hora de Bogotá; lleva el menú y el h1 */}
+      <DayBanner navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
+      {/* Los dos banners de siempre (pedir café, ser barista), como dos puertas a la vez */}
+      <DaySection off={1} next={3} name={n[0]}><Doors /></DaySection>
+      <DaySection off={3} next={6} name={n[1]}><MicraSection /></DaySection>
+      <DaySection off={6} next={9} name={n[2]}><ProductSection /></DaySection>
+      <DaySection off={9} next={12} name={n[3]}><LearnCard /></DaySection>
+      <DaySection off={12} next={15} name={n[4]}><LocalHero /></DaySection>
+      <DaySection off={15} next={18} name={n[5]}><RecipeArchive /></DaySection>
+      {/* Las fichas de redes bajan al final, junto al pie */}
+      <DaySection off={18} next={21} name={n[6]}>
+        <section className="pg-social" aria-labelledby="pg-social-title">
+          <div className="pg-w">
+            <p className="pg-hand">{t('page.social.hand')}</p>
+            <h2 id="pg-social-title">{t('page.social.title')}</h2>
+            <SocialBanners />
+          </div>
+        </section>
+      </DaySection>
+    </DayPage>
+  );
+}
 
 export default function App() {
   const [navOpen, setNavOpen] = useState(false);
@@ -58,21 +92,7 @@ export default function App() {
               </Suspense>
             ) : (
               <>
-                {/* Primero la app (con el menú), luego la tienda y la barra de Chapinero con las
-                    recetas en la vitrina; al final la Escuela, los campeones; las redes van arriba, en Micra, y Visítanos junto a la foto */}
-                {/* El banner principal: 24 horas con un barista, a la hora de Bogotá; lleva el menú y el h1 */}
-                <DayBanner navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
-                {/* Los dos banners de siempre (pedir café, ser barista), ya sin menú ni h1 */}
-                <EsspresaleHero />
-                <MicraSection />
-
-                <ProductSection />
-
-                <LocalHero />
-
-                <BrewGuide />
-
-                <RecipeArchive />
+                <Home navOpen={navOpen} onOpenNavDrawer={() => setNavOpen(true)} />
               </>
             )}
 

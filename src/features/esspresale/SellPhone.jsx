@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useClock } from './parts.jsx';
 
 // Vender, la pantalla del barista en Micra, dentro del celular de la portada (pedido del usuario,
@@ -36,7 +36,7 @@ function Cup({ pct }) {
   );
 }
 
-export default function SellPhone({ className = '' }) {
+export default function SellPhone({ className = '', demo = false }) {
   const { time } = useClock();
   const [sold, setSold] = useState({ tinto: 2, perico: 1, aromatica: 1, leche: 0 });
   const [pops, setPops] = useState([]);
@@ -54,8 +54,26 @@ export default function SellPhone({ className = '' }) {
     setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1100);
   };
 
+  // Demostración (portada): mientras nadie lo toque y esté a la vista, se toca solo; al cumplir
+  // la meta vuelve a empezar. Nunca con «menos movimiento».
+  const root = useRef(null), touched = useRef(0), turn = useRef(0);
+  const addRef = useRef(add); addRef.current = add;
+  const [tap, setTap] = useState(null);
+  useEffect(() => {
+    if (!demo || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const id = setInterval(() => {
+      const r = root.current?.getBoundingClientRect();
+      if (!r || document.hidden || Date.now() - touched.current < 6000 || r.bottom < 0 || r.top > window.innerHeight) return;
+      const d = DRINKS[turn.current++ % 3 === 2 ? 1 : 0];
+      setTap(d.id); setTimeout(() => setTap(null), 180);
+      setSold((s) => (Object.values(s).reduce((a, b) => a + b, 0) >= GOAL ? { tinto: 0, perico: 0, aromatica: 0, leche: 0 } : s));
+      addRef.current(d);
+    }, 1700);
+    return () => clearInterval(id);
+  }, [demo]);
+
   return (
-    <div className={`essp-phone sellp ${className}`} role="group" aria-label="Ejemplo de Micra: el panel de vender del barista. Toca +1.">
+    <div ref={root} onPointerDown={() => { touched.current = Date.now(); }} className={`essp-phone sellp ${className}`} role="group" aria-label="Ejemplo de Micra: el panel de vender del barista. Toca +1.">
       <div className="sellp-top">
         <div className="essp-phone-status"><span>{time}</span><span>5G ▮▮▮</span></div>
         <div className="sellp-where">
@@ -77,7 +95,7 @@ export default function SellPhone({ className = '' }) {
           <div className="sellp-card" key={d.id}>
             <b>{d.name}</b>
             <small>{money(d.price)} · {sold[d.id]} hoy</small>
-            <button type="button" className="sellp-plus" onClick={() => add(d)} aria-label={`Vendí un ${d.name.toLowerCase()}`}>+1</button>
+            <button type="button" className={`sellp-plus${tap === d.id ? ' is-tap' : ''}`} onClick={() => add(d)} aria-label={`Vendí un ${d.name.toLowerCase()}`}>+1</button>
             {pops.filter((p) => p.drink === d.id).map((p) => (
               <span className="sellp-pop" key={p.id} aria-hidden="true">
                 <em>{p.label}</em>

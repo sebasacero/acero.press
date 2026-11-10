@@ -67,8 +67,8 @@ test('escritorio: cada enlace del menú lleva a su sección, en la portada y des
   await page.getByRole('link', { name: 'ACERO.press' }).click();
   await expect(page).toHaveURL(/\/#home$/);
   await expect(menu(page).getByRole('link', { name: 'Aprende' })).not.toHaveAttribute('aria-current', 'page');
-  // Cambiar de página corta el contador de ventas que iba en camino («Failed to fetch»): eso no es un error de la página
-  expect(errors.filter((e) => !/de ventas: TypeError: Failed to fetch/.test(e))).toEqual([]);
+  // Cambiar de página corta lo que iba en camino («Failed to fetch»): eso no es un error de la página
+  expect(errors.filter((e) => !/TypeError: Failed to fetch/.test(e))).toEqual([]);
   await page.context().close();
 });
 

@@ -74,6 +74,23 @@ const translations = {
         panelText: 'Abres Mi ruta en tu celular, sales a vender como siempre y al final del día ves tu recorrido. Sin pedidos, sin calificaciones.',
       },
     },
+    // La portada que sigue el día (DaySection): etiquetas de hora y textos de las secciones nuevas
+    page: {
+      moments: ['Madrugada', 'Amanece', 'La mañana', 'Mediodía', 'La tarde', 'Atardece', 'La noche'],
+      names: ['las dos puertas', 'Micra', 'la tienda', 'aprende', 'visítanos', 'recetas campeonas', 'redes'],
+      doors: {
+        title: ['¿Tomas café', 'o lo vendes?'],
+        text: 'Elige tu puerta. Es la misma app para los dos lados de la calle.',
+        order: { world: 'Quiero café', lede: '¡Conoce quién está más cerca para pedir tu café especial!', cta: 'Abrir Micra', notes: ['Pagas al barista al recibir'] },
+        barista: { world: 'Vendo café', lede: 'Aprende, sal a vender y certifícate para crecer.', cta: 'Soy barista', notes: ['Entras con tu celular', 'Gratis para baristas de calle'] },
+      },
+      micra: { world: 'Micra · la calle', title: ['El mejor café lo vende', 'alguien cerca de ti.'] },
+      shop: { title: ['Llévate el café', 'a tu casa.'], week: 'El de esta semana', canTitle: 'Cold brew en lata', canText: 'Hecho en AeroPress. Lo pides por WhatsApp.', canCta: 'Pídela ahora', canAlt: 'Lata de cold brew ACERO.press' },
+      learn: { label: 'Escuela', title: 'Diez pasos y sale un café.', lead: 'La hoja oficial de la AeroPress Go, paso a paso. Caliente o cold brew.', chips: ['80 °C', 'hasta el ③', '10 s'], chipsLabel: 'La receta de un vistazo' },
+      visit: { label: 'Tienda', title: 'Ven a conocer nuestra tienda.', addr: 'Cra. 13 #85-32 · Bogotá', text: 'Aquí empezó todo. Prueba nuestras recetas.', wa: 'Escribir por WhatsApp', waMsg: '¡Hola! Quiero visitar la tienda de ACERO.press.' },
+      champ: { kicker: 'Recetas campeonas · 2008 a 2025', text: 'Prepara en tu casa la receta de un campeón del mundo.' },
+      social: { hand: 'Mañana el día vuelve a empezar.', title: 'Síguenos de cerca.' },
+    },
     day: {
       label: 'Un día de un barista de calle con Micra',
       live: 'Micra · ahora en Bogotá',
@@ -543,6 +560,22 @@ const translations = {
         specs: ['ROUTE', 'STOPS', 'CUPS'],
         panelText: 'Open Mi ruta on your phone, go sell as always and see your route at the end of the day. No orders, no ratings.',
       },
+    },
+    page: {
+      moments: ['Before dawn', 'Sunrise', 'Morning', 'Noon', 'Afternoon', 'Sunset', 'Night'],
+      names: ['the two doors', 'Micra', 'the shop', 'learn', 'visit us', 'champion recipes', 'socials'],
+      doors: {
+        title: ['Do you drink coffee', 'or sell it?'],
+        text: 'Pick your door. It is the same app for both sides of the street.',
+        order: { world: 'I want coffee', lede: 'See who is closest and order your specialty coffee!', cta: 'Open Micra', notes: ['You pay the barista on delivery'] },
+        barista: { world: 'I sell coffee', lede: 'Learn, go out and sell, and get certified to grow.', cta: "I'm a barista", notes: ['Sign in with your phone', 'Free for street baristas'] },
+      },
+      micra: { world: 'Micra · the street', title: ['The best coffee is sold by', 'someone near you.'] },
+      shop: { title: ['Take the coffee', 'home.'], week: "This week's pick", canTitle: 'Canned cold brew', canText: 'Made with AeroPress. Order it on WhatsApp.', canCta: 'Order now', canAlt: 'ACERO.press cold brew can' },
+      learn: { label: 'School', title: 'Ten steps to a cup.', lead: 'The official AeroPress Go sheet, step by step. Hot or cold brew.', chips: ['80 °C', 'up to ③', '10 s'], chipsLabel: 'The recipe at a glance' },
+      visit: { label: 'Shop', title: 'Come visit our shop.', addr: 'Cra. 13 #85-32 · Bogotá', text: 'This is where it all began. Try our recipes.', wa: 'Message us on WhatsApp', waMsg: 'Hi! I would like to visit the ACERO.press shop.' },
+      champ: { kicker: 'Champion recipes · 2008 to 2025', text: 'Brew a world champion recipe at home.' },
+      social: { hand: 'Tomorrow the day starts again.', title: 'Follow along.' },
     },
     day: {
       label: 'A day in the life of a street barista with Micra',
