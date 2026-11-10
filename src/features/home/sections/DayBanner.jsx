@@ -12,7 +12,7 @@ import './day-banner.css';
 // se mueve y el mundo cambia encima: la ciudad gira bajo los pies del barista,
 // el cielo es el de la hora de Bogotá en que se abre la página y el celular
 // muestra lo que él hace en Micra a esa hora. El reloj no se queda en esa hora: corre (el día
-// entero en dos minutos, `useDayClock`) y el cielo, la ciudad y el celular cambian con él. Sin la línea de horas de abajo
+// entero en un minuto, de hora en hora, `useDayClock`) y el cielo, la ciudad y el celular cambian con él. Sin la línea de horas de abajo
 // (pedido del usuario, 10 nov 2026): el día sigue en el resto de la página.
 // Lleva el menú y el único h1 de la portada.
 

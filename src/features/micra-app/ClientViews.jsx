@@ -20,6 +20,9 @@ import { useAds, AdStoryBubble, AdStoryView } from './Ads.jsx';
 import { stageAlert, outAlert, POLL_MS } from './alerts.js';
 import Globito, { ping } from './Globito.jsx';
 
+// Los motivos de cancelar (los mismos que acepta micra_hold_cancel)
+const CANCEL_REASONS = [['tarde', 'Se demoró'], ['no_llego', 'No llegó'], ['cambie', 'Ya no quiero'], ['otro', 'Otro motivo']];
+
 // Modo cliente: quién pasa con café cerca, su ficha y «apártame». Sin cuenta:
 // el celular guarda su identificador, el nombre y los favoritos.
 
@@ -536,6 +539,9 @@ export function BaristaPage({ id, go }) {
     if (!mine) setCart((c) => (Object.keys(c).length ? c : { [first]: 1 }));
   }, [checked, first]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // El motivo al cancelar se pregunta en la misma tarjeta
+  const [askWhy, setAskWhy] = useState(false);
+
   if (list === null) return <Cargando fig="caminando" />;
   if (!b) {
     return (
@@ -564,9 +570,10 @@ export function BaristaPage({ id, go }) {
     }
     setBusy(false);
   };
-  const cancel = async () => {
+  // Antes de cancelar, por qué (como Rappi): sirve para saber qué falló, y se puede saltar
+  const cancel = async (reason) => {
     setBusy(true);
-    try { await api.cancelHold(mine.id); setMine(null); setCart({}); } catch (err) { setError(err.message); }
+    try { await api.cancelHold(mine.id, reason); setMine(null); setCart({}); setAskWhy(false); } catch (err) { setError(err.message); }
     setBusy(false);
   };
   const editing = mine?.status === 'waiting' && cartItems(cart).length && (cups !== mine.cups || total !== Number(mine.total));
@@ -638,7 +645,16 @@ export function BaristaPage({ id, go }) {
             </button>
           )}
           <p className="mapp-fine">No es domicilio: {b.name} sigue su ruta y te entrega cuando pase. Pagas al recibir{pays.length ? `: ${pays.join(', ')}` : ''}.</p>
-          {mine && <button type="button" className="mapp-link" onClick={cancel} disabled={busy}>Ya no lo necesito</button>}
+          {mine && !askWhy && <button type="button" className="mapp-link" onClick={() => setAskWhy(true)} disabled={busy}>Ya no lo necesito</button>}
+          {mine && askWhy && (
+            <fieldset className="mapp-cancel" data-testid="cancel-reasons">
+              <legend>¿Por qué lo cancelas?</legend>
+              {CANCEL_REASONS.map(([key, label]) => (
+                <button key={key} type="button" className="mapp-chip" onClick={() => cancel(key)} disabled={busy}>{label}</button>
+              ))}
+              <button type="button" className="mapp-link" onClick={() => cancel()} disabled={busy}>Cancelar sin decir</button>
+            </fieldset>
+          )}
         </form>
       )}
 

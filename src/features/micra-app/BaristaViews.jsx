@@ -536,6 +536,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     const fresh = newHolds(day.holds, seen);
     rememberHolds(store, scope, [...seen, ...day.holds.filter((h) => h.status === 'waiting').map((h) => h.id)]);
     if (fresh.length && known) { setNotice(holdAlert(fresh)); ping(); }
+    // Cuánto tarda el barista en ver un apartado: solo él, no el equipo actuando como él
+    if (fresh.length && !asId) api.markHoldsSeen(fresh.map((h) => h.id).slice(0, 50)).catch(() => {});
   }, [day]);
   // La barra de arriba (MicraApp) se pinta de rojo mientras está en la calle
   const liveNow = !!day && !!outProgress(day.live_until, new Date(), OUT_MINUTES);
