@@ -54,3 +54,12 @@ test('cómo sale: el puesto fijo guarda su punto y lo reusa; la sombrilla y cami
   assert.deepEqual(outPoint('caminando', null, casa), { pos: null, save: null });
   assert.ok(OUT_MODES.every((m) => m.gps));
 });
+
+test('«Hasta las»: 4 horas siempre y las horas en punto que caben en 6 h', async () => {
+  const { untilChoices } = await import('./flow.js');
+  assert.deepEqual(untilChoices(6, 42).map((c) => c.label), ['4 horas', '12 m.']);
+  assert.equal(untilChoices(6, 42)[1].minutes, 318);
+  assert.deepEqual(untilChoices(11, 45).map((c) => c.id), ['d', 'h15']); // faltan 15 min para las 12: no se ofrece
+  assert.deepEqual(untilChoices(14, 0).map((c) => c.id), ['d', 'h15', 'h19']);
+  assert.deepEqual(untilChoices(20, 0).map((c) => c.id), ['d']);
+});

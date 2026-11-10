@@ -18,6 +18,9 @@ import { needsRating, paidChoices, ratePayload } from './rating.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
 import { useAds, AdStoryBubble, AdStoryView } from './Ads.jsx';
 import { stageAlert, outAlert, POLL_MS } from './alerts.js';
+import Radar from './Radar.jsx';
+import { WANT_AT_KEY } from './pill.js';
+import { takeWant } from './want.js';
 import Globito, { ping } from './Globito.jsx';
 
 // Los motivos de cancelar (los mismos que acepta micra_hold_cancel)
@@ -61,8 +64,20 @@ function WantCoffee({ me, ask, drink }) {
     const p = me ?? await ask();
     if (!p) { setState('nogps'); return; }
     await wantCoffee(p, drink);
+    // La pastilla de la barra lo recuerda en todas las pestañas mientras dure la señal
+    try { localStorage.setItem(WANT_AT_KEY, String(Date.now())); } catch { /* sin memoria */ }
+    window.dispatchEvent(new Event('micra:pill'));
     setState('done');
   };
+  // El botón del centro de la barra hace lo mismo desde cualquier pestaña
+  const tapRef = useRef(tap);
+  tapRef.current = tap;
+  useEffect(() => {
+    const run = () => { takeWant(); document.querySelector('[data-testid="want-coffee"]')?.scrollIntoView({ block: 'center' }); tapRef.current(); };
+    if (takeWant()) run();
+    window.addEventListener('micra:want', run);
+    return () => window.removeEventListener('micra:want', run);
+  }, []);
   return (
     <div className={`mapp-want ${state === 'done' ? 'is-done' : ''}`} data-testid="want-coffee">
       {state === 'done' ? (
@@ -225,29 +240,25 @@ function inviteText() {
   return `¿Vendes café en la calle? Con Micra tus clientes te apartan los tintos antes de que llegues. Escríbele al equipo: ${url}`;
 }
 
-/** Cada barista en su tarjeta: su personaje, si está en la calle, dónde y su tinto. */
+/** Cada barista en una fila (10 nov 2026): quién, dónde, a cuántas cuadras, su tinto y Apartar. */
 function BaristaRow({ b, onOpen, i = 0 }) {
   const menu = menuOf(b);
+  const where = b.referencia || b.localidad || 'En la calle';
+  const facts = [b.distance != null ? distanceLabel(b.distance).replace(/^a /, '') : windowLabel(b.hora_inicio, b.hora_fin), menu[0] ? `${menu[0].label.toLowerCase()} ${money(menu[0].price)}` : null].filter(Boolean);
   return (
     <li style={{ '--i': i }} className={`is-${b.status}`}>
-      <button type="button" className="mapp-row mapp-bcard" onClick={() => onOpen(b.id)}>
-        <span className="mapp-bcard-top">
-          <StatusBadge s={b.status} />
+      <button type="button" className="mapp-row mapp-brow" onClick={() => onOpen(b.id)}>
+        <span className="mapp-brow-av">
           <Avatar b={b} />
+          {b.status === 'live' && <i className="mapp-brow-now">AHORA</i>}
         </span>
-        <Figure name={figureFor(b.id)} className="is-card" />
         <span className="mapp-row-main">
           <b>{b.name}{b.favorite && <span className="mapp-fav" aria-label="Tu barista"> ★</span>}</b>
-          <span>{b.referencia || b.localidad || 'En la calle'}{b.distance != null ? ` · ${distanceLabel(b.distance)}` : ''}</span>
-          <span className="mapp-row-meta">
-            {windowLabel(b.hora_inicio, b.hora_fin) && <em>{windowLabel(b.hora_inicio, b.hora_fin)}</em>}
-          </span>
-        </span>
-        <span className="mapp-row-side">
-          {menu[0] && <span className="mapp-price"><small>{menu[0].label}</small>{money(menu[0].price)}</span>}
+          <span>{where}</span>
+          <span className="mapp-brow-facts">{facts.join(' · ')}{b.status !== 'live' ? `${facts.length ? ' · ' : ''}${STATUS_TEXT[b.status].toLowerCase()}` : ''}</span>
           {b.waiting > 0 && <span className="mapp-waiting">{b.waiting} lo esperan</span>}
         </span>
-        <span className={`mapp-bcard-cta ${b.takes_holds ? '' : 'is-ghost'}`} aria-hidden="true">{b.takes_holds ? 'Apártame' : 'Ver dónde está'}</span>
+        <span className={`mapp-brow-cta ${b.takes_holds ? '' : 'is-ghost'}`} aria-hidden="true">{b.takes_holds ? 'Apartar' : 'Ver'}</span>
       </button>
     </li>
   );
@@ -392,7 +403,11 @@ export function ClientHome({ go }) {
           <input type="search" value={q} onChange={(e) => setQ(e.target.value.slice(0, 40))} placeholder="Busca tinto, perico o tu barista" aria-label="Buscar baristas o bebidas" enterKeyHint="search" data-testid="home-search" />
           {searching && <button type="button" className="mapp-search-x" onClick={() => setQ('')} aria-label="Borrar búsqueda">×</button>}
         </label>
+        {/* El radar: quién está en la calle cerca y un toque para apartarle */}
+        {!searching && list && <Radar list={sorted} me={me} onOpen={open} onNear={askNear} asking={asking} />}
       </section>
+      {/* «Quiero un café» justo bajo el radar; el botón del centro de la barra hace lo mismo */}
+      {!searching && <WantCoffee me={me} ask={ask} drink={drink} />}
       {/* Y como una red social: las historias de los baristas (al buscar, solo los resultados) */}
       {!searching && <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} reto={reto} />}
       {adStory && <AdStoryView ad={adStory} onClose={() => setAdStory(null)} />}
@@ -405,7 +420,7 @@ export function ClientHome({ go }) {
       ) : (
         <p className="mapp-feedline" data-testid="home-line">
           <b>{greeting()}{name ? `, ${name.split(/[ ·,]/)[0]}` : ''}.</b>{' '}
-          {live > 0 ? `${live === 1 ? '1 barista está' : `${live} baristas están`} en la calle ahora: apártale y recoge cuando pase.` : 'Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.'}
+          Aparta tus tintos con el barista de tu cuadra y recógelos cuando pase.
         </p>
       )}
 
@@ -426,20 +441,20 @@ export function ClientHome({ go }) {
       <Suspense fallback={null}><GustosIntro /></Suspense>
 
       <div className="mapp-bar">
+        <h2 className="mapp-near-h">Cerca de ti <small>Pagas al recibir</small></h2>
         <div className="mapp-chips" role="group" aria-label="Filtrar">
           <button type="button" className={nowOnly ? 'on' : ''} aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)}>
             Ahora{live > 0 ? ` · ${live}` : ''}
           </button>
         </div>
       </div>
-      <Suspense fallback={null}><SeekNote /></Suspense>
 
       {list === null && <Skeleton />}
       {error && (
         <p className="mapp-error" role="alert">No se pudo cargar la lista. <button type="button" className="mapp-link" onClick={reload}>Reintentar</button></p>
       )}
       {list && shown.length > 0 && (
-        <ul className="mapp-list is-cards" aria-label="Baristas">
+        <ul className="mapp-list is-rows" aria-label="Baristas">
           {page.items.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
         </ul>
       )}
@@ -465,9 +480,8 @@ export function ClientHome({ go }) {
         </a>
       )}
 
+      <Suspense fallback={null}><SeekNote /></Suspense>
       {!searching && <StampsCard />}
-      {/* Al final del inicio y pegado abajo mientras se baja: siempre al alcance del pulgar */}
-      {!searching && <WantCoffee me={me} ask={ask} drink={drink} />}
 
       {/* La publicidad de ACERO.press salió del inicio (pedido del usuario, 6 nov 2026): queda en Mi perfil › Otros */}
       {!searching && <section className="mapp-join">

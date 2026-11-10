@@ -118,3 +118,10 @@ export function topDrink(cell) {
 
 /** ¿Se refresca ahora? Solo con la pantalla a la vista y el mapa encendido. */
 export const shouldPoll = ({ enabled, visible }) => !!enabled && visible !== false;
+
+/** Antes de salir: cuánta gente busca café cerca es la razón para salir; sin nadie, la invitación de siempre. */
+export function seekNudge(seeking) {
+  const n = Number(seeking) || 0;
+  if (n <= 0) return 'Sal a vender para ver quién busca café ahora';
+  return `${n === 1 ? '1 persona busca' : `${n} personas buscan`} café cerca. Sal para ver dónde.`;
+}

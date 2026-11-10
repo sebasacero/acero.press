@@ -269,3 +269,27 @@ export function coffeeHead({ prices = {}, baristas = [], study = STUDY_TINTO, no
   ].filter(Boolean);
   return { big, kpis, date: prices.date ?? null };
 }
+
+// Hoy en tres pestañas (10 nov 2026): lo que pasa ahora, las noticias en filas y las recetas.
+export const HOY_TABS = [['ahora', 'Ahora'], ['noticias', 'Noticias'], ['recetas', 'Recetas']];
+const TAB_OF = { cafe: 'noticias', noticias: 'noticias', videos: 'noticias', recetas: 'recetas' };
+export const hoyTab = (kind) => TAB_OF[kind] ?? 'ahora';
+/** Lo de una pestaña; los logros no van como publicación, van como medallas. */
+export const tabFeed = (items, tab) => (items ?? []).filter((i) => hoyTab(i.kind) === tab && i.kind !== 'logros');
+/** Los logros como medallas en fila: la cifra (o un ✓), el título y una línea. */
+export function medalsOf(items) {
+  return (items ?? []).filter((i) => i.kind === 'logros').map((i) => ({
+    id: i.id,
+    mark: i.count != null ? String(i.count) : i.done != null && i.total ? `${i.done}/${i.total}` : '✓',
+    title: i.badge === 'racha' ? (i.count === 1 ? 'Día de racha' : 'Días de racha') : i.badge === 'hito' ? 'Días seguidos' : i.title,
+    sub: i.badge === 'racha' || i.badge === 'hito' ? i.title : i.text ?? '',
+    cta: i.cta ?? null,
+  }));
+}
+/** Las letras de la miniatura de una noticia: la sigla de quien publica. */
+export function newsMark(i) {
+  if (i.kind === 'videos') return '▶';
+  const who = String(i.org || i.by || 'M').replace(/[^A-Za-zÁÉÍÓÚÑ ]/g, ' ').trim();
+  if (/^[A-ZÁÉÍÓÚÑ]{2,4}$/.test(who)) return who; // una sigla ya es la marca
+  return who.split(' ').filter(Boolean).map((w) => w[0]).join('').slice(0, 3).toUpperCase() || 'M';
+}

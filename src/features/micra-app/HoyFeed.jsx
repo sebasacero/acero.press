@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, priceRows, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL, coffeeHead } from './feed.js';
+import { CHIPS, buildFeed, filterFeed, chipCounts, readPrices, priceRows, millions, readCurated, addCurated, CURATED, CAFE_ORGS, FNC_PRICE_URL, coffeeHead, HOY_TABS, tabFeed, medalsOf, newsMark } from './feed.js';
 import { money, baristaPath, sortBaristas, bogota } from './micraApp.js';
 import { figureFor } from './motivation.js';
 import * as api from './api.js';
@@ -408,6 +408,8 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   const baristas = list ?? fetched;
   const [cfg, setCfg] = useState({});
   const [chip, setChip] = useState('todo');
+  const [tab, setTab] = useState('ahora'); // Hoy entero va en tres pestañas
+  const [openNews, setOpenNews] = useState(null);
   const [editing, setEditing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [curating, setCurating] = useState(false);
@@ -458,7 +460,11 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   const { feed: adFeed } = useAds(client ? 'client' : 'barista', ads);
   const counts = chipCounts(withDay);
   const listed = embedded ? withDay : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
-  const shown = chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip);
+  // En el inicio el muro sigue con sus globitos; Hoy entero va en Ahora / Noticias / Recetas
+  const shown = embedded
+    ? (chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip))
+    : tab === 'ahora' ? withAds(tabFeed(listed, 'ahora'), adFeed) : tabFeed(listed, tab);
+  const medals = embedded ? [] : medalsOf(withDay);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
   // En el inicio del cliente el muro va corto (10 nov 2026): pesaba tres cuartas partes de la
   // pantalla y tapaba lo que vino a hacer. Lo primero queda a la vista; lo demás, con un toque.
@@ -482,8 +488,13 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
       )}
       {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
           Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
-      <ul className="mapp-hists is-feed" role="tablist" aria-label="Qué ver" data-testid="feed-bubbles">
-        {CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
+      {!embedded && (
+        <div className="mapp-hoytabs" role="tablist" aria-label="Sección de Hoy" data-testid="hoy-tabs">
+          {HOY_TABS.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}
+        </div>
+      )}
+      <ul className="mapp-hists is-feed" role={embedded ? 'tablist' : undefined} aria-label={embedded ? 'Qué ver' : 'En la calle ahora'} data-testid="feed-bubbles" style={!embedded && tab !== 'ahora' ? { display: 'none' } : undefined}>
+        {embedded && CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
           <li key={id} role="presentation">
             <button type="button" role="tab" aria-selected={chip === id} aria-label={label} className={`mapp-hist is-topic ${chip === id ? 'on' : ''}`} onClick={() => setChip(id)}>
               <span className="mapp-hist-ring"><span className="mapp-hist-av" aria-hidden="true">{CHIP_ICON[id] ?? '☕'}</span></span>
@@ -506,7 +517,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           );
         })}
       </ul>
-      {admin && !curating && chip === 'cafe' && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
+      {admin && !curating && (embedded ? chip === 'cafe' : tab === 'noticias') && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
       {editing && <PriceForm prices={prices} cfg={cfg} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
       {canPost && mine.length > 0 && (
@@ -524,13 +535,43 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           {mine.some((m) => m.status === 'pending') && <p className="mapp-fine">El equipo revisa lo que envías antes de que salga en Hoy.</p>}
         </section>
       )}
+      {tab === 'ahora' && medals.length > 0 && (
+        <section className="mapp-medals" aria-label="Tus logros" data-testid="medals">
+          <p className="mapp-cota">Tus logros</p>
+          <ul>
+            {medals.map((m) => (
+              <li key={m.id}><i aria-hidden="true">{m.mark}</i><span><b>{m.title}</b><small>{m.sub}</small></span></li>
+            ))}
+          </ul>
+          {medals.some((m) => m.cta === 'out')
+            ? <button type="button" className="mapp-link" onClick={() => go('/micra/barista')}>Salir a vender ›</button>
+            : canShareDay ? <button type="button" className="mapp-link" onClick={onShareDay}>Compartir mi día ›</button> : null}
+        </section>
+      )}
+      {!embedded && tab === 'noticias' ? (
+        // Las noticias en filas de una línea: caben cuatro donde antes una; un toque abre la entera
+        <ul className="mapp-news" data-testid="feed">
+          {visible.length === 0 && <li className="mapp-muted">Hoy no hay noticias nuevas.</li>}
+          {visible.map((item) => (
+            <li key={item.id}>
+              <button type="button" className="mapp-nrow" aria-expanded={openNews === item.id} onClick={() => setOpenNews(openNews === item.id ? null : item.id)}>
+                <i aria-hidden="true">{newsMark(item)}</i>
+                <span><b>{item.title}</b><small>{[item.kind === 'videos' ? 'Video' : null, item.org === 'FNC' ? 'Federación de Cafeteros' : item.by, ago(item.date)].filter(Boolean).join(' · ')}</small></span>
+              </button>
+              {openNews === item.id && <Post item={item} go={go} me={me} selfId={selfId} client={client} />}
+            </li>
+          ))}
+        </ul>
+      ) : (
       <div className="mapp-posts" data-testid="feed">
+        {!embedded && visible.length === 0 && <p className="mapp-muted">Nada por aquí todavía.</p>}
         {visible.map((item) => (item.kind === 'precios'
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
           : item.kind === 'patrocinado'
             ? <AdPost key={item.id} ad={item} />
             : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} onPhoto={canPost ? () => setComposing(true) : null} />))}
       </div>
+      )}
       {short && hidden > 0 && (
         <button type="button" className="mapp-btn is-ghost mapp-feed-more" onClick={() => setAll(true)} data-testid="feed-more">
           Ver todo lo de hoy · {hidden} más

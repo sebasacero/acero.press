@@ -38,7 +38,7 @@ test('cliente: ve quién está en la calle, aparta 2 tintos y 1 perico y lo canc
   await expect(rows).toHaveCount(3);
   // Primero la que avisó que salió
   await expect(rows.first()).toContainText('Marlene');
-  await expect(rows.first()).toContainText('En la calle');
+  await expect(rows.first()).toContainText('AHORA');
   await expect(rows.first()).toContainText('2 lo esperan');
   // Sin el modo barista ni el del equipo
   await expect(page.getByRole('tablist', { name: 'Ver Micra como' })).toHaveCount(0);
@@ -499,18 +499,22 @@ test('barista: aprende en un camino de lecciones; lo visto queda marcado y Hoy l
   await expect(page.getByTestId('level')).toContainText('1 de 6 lecciones');
   await expect(page.getByRole('button', { name: /Lección 1: Conoce tu AeroPress \(vista\)/ })).toBeVisible();
   await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Hoy/ }).click();
-  await expect(page.getByTestId('feed-logro-escuela')).toContainText('1 de 6 lecciones');
+  await expect(page.getByTestId('medals')).toContainText('1 de 6 lecciones');
   expect(errors).toEqual([]);
 });
 
-test('cliente: los baristas en tarjetas con su personaje y la tarjeta de 10 tazas', async ({ browser }) => {
+test('cliente: los baristas en filas con Apartar y la tarjeta de 10 tazas', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
   const cards = page.getByRole('list', { name: 'Baristas' }).getByRole('listitem');
-  await expect(cards.first().locator('.mapp-fig svg')).toBeVisible();
-  await expect(cards.first()).toContainText('Apártame');
-  // Wilson aún no recibe apartados: su tarjeta no promete apartar
-  await expect(cards.filter({ hasText: 'Wilson' })).toContainText('Ver dónde está');
+  await expect(cards.first()).toContainText('Apartar');
+  await expect(cards.first()).toContainText(/tinto \$1\.\d00/);
+  // Wilson aún no recibe apartados: su fila no promete apartar
+  await expect(cards.filter({ hasText: 'Wilson' })).not.toContainText('Apartar');
+  // El radar: cuántos hay en la calle y un punto por cada uno, que abre su página
+  const radar = page.getByTestId('radar');
+  await expect(radar).toBeVisible();
+  await expect(page.getByTestId('radar-count')).toContainText(/barista/);
   await expect(page.getByTestId('stamps')).toContainText('7 de 10');
   await expect(page.getByTestId('stamps')).toContainText('Te faltan 3');
   expect(errors).toEqual([]);
@@ -552,10 +556,9 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   const nav = page.getByRole('navigation', { name: 'Micra' });
   await expect(nav.getByRole('button')).toHaveCount(5);
   await expect(nav.getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page');
-  // El «+» abre la hoja de publicar del muro (receta, café o barista, por WhatsApp)
-  await nav.getByRole('button', { name: 'Publicar' }).click();
-  await expect(page.getByTestId('publish').getByRole('link')).toHaveCount(3);
-  await page.getByTestId('publish').getByRole('button', { name: 'Cerrar' }).click({ force: true });
+  // El centro de la barra es «Quiero un café» (publicar queda en el «＋ Publicar» de Hoy)
+  await expect(nav.getByRole('button', { name: 'Quiero un café' })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Publicar' })).toHaveCount(0);
   // Una historia abre la página del barista
   await stories.getByRole('button', { name: /en la calle ahora/ }).first().click();
   await expect(page).toHaveURL(/\/micra\/b\//);
@@ -576,15 +579,20 @@ test('cliente: Hoy es el muro del café, sin logros ni ideas de foto; publicar l
   await expect(page.getByTestId('coffee-live')).toContainText(/baristas? en la calle/);
   await expect(page.getByTestId('price-card')).toHaveCount(0);
   const feed = page.getByTestId('feed');
+  // Hoy en tres pestañas: las noticias van en filas y un toque abre la entera
+  await expect(page.getByTestId('hoy-tabs').getByRole('tab')).toHaveText(['Ahora', 'Noticias', 'Recetas']);
+  await expect(page.locator('[data-testid="medals"], [data-testid="feed-idea"]')).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Noticias' }).click();
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await feed.getByRole('button', { name: /Federación de Cafeteros/ }).first().click();
   await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
-  await expect(page.locator('[data-testid^="feed-logro"], [data-testid="feed-idea"]')).toHaveCount(0);
-  await expect(page.getByRole('tab', { name: 'Logros' })).toHaveCount(0);
   // El video lleva a la Escuela del sitio, no a Aprende del barista
-  await page.getByRole('tab', { name: 'Videos' }).click();
+  await feed.getByRole('button', { name: /Una AeroPress en un minuto/ }).click();
   await expect(feed.getByRole('link', { name: 'Aprender en la Escuela ›' })).toHaveAttribute('href', /\/escuela$/);
+  await page.getByRole('tab', { name: 'Recetas' }).click();
+  await expect(feed).toContainText('La receta oficial de AeroPress');
   // Un puesto abre su tarjeta para apartar
-  await page.getByRole('tab', { name: 'Puestos' }).click();
+  await page.getByRole('tab', { name: 'Ahora' }).click();
   await feed.getByRole('button', { name: 'Ver en el mapa ›' }).first().click();
   await expect(page).toHaveURL(/\/micra\/b\//);
   await page.goto('/micra/hoy', { waitUntil: 'load' });
@@ -603,10 +611,11 @@ test('barista: Hoy es el muro del barismo (precio, puestos, recetas, noticia) y 
   await expect(page.getByRole('heading', { name: 'Hoy en la calle' })).toBeVisible();
   await expect(page.getByTestId('coffee-head')).toContainText('$1.300');
   const feed = page.getByTestId('feed');
-  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
-  // Los chips filtran: en «Puestos» solo quedan los puestos de otros baristas
-  await page.getByRole('tab', { name: 'Puestos' }).click();
+  // En «Ahora» los puestos de otros baristas; la noticia va en su pestaña
   await expect(feed).not.toContainText('World of Coffee');
+  await page.getByRole('tab', { name: 'Noticias' }).click();
+  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await page.getByRole('tab', { name: 'Ahora' }).click();
   await expect(feed.getByRole('button', { name: 'Ver en el mapa ›' }).first()).toBeVisible();
   // Publicar lleva a lo que ya existe
   await page.getByRole('button', { name: '＋ Publicar' }).click();
@@ -740,12 +749,15 @@ test('barista: Hoy celebra la racha y sugiere qué publicar; no publica cuántas
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista/hoy', { waitUntil: 'load' });
   await expect(page.getByTestId('coffee-head')).toContainText('Precio del día en la FNC');
-  await expect(page.getByTestId('feed-logro-racha')).toContainText('4 días en racha');
+  // Los logros son medallas en fila, no una pantalla cada uno
+  await expect(page.getByTestId('medals')).toContainText('Días de racha');
+  await expect(page.getByTestId('feed-logro-racha')).toHaveCount(0);
   await expect(page.getByTestId('feed-idea')).toHaveCount(2);
   await expect(page.getByTestId('feed-myday')).toHaveCount(0);
-  await page.getByRole('tab', { name: 'Café de Colombia' }).click();
+  await page.getByRole('tab', { name: 'Noticias' }).click();
+  await page.getByTestId('feed').getByRole('button', { name: /Federación de Cafeteros/ }).first().click();
   await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
-  await page.getByRole('tab', { name: 'Para publicar' }).click();
+  await page.getByRole('tab', { name: 'Ahora' }).click();
   // La idea abre la misma foto de «En Micra» (va a revisión), no la cámara del equipo
   await page.getByTestId('feed-idea').first().getByRole('button', { name: /Tomar la foto/ }).click();
   await expect(page.getByTestId('post-composer')).toBeVisible();
@@ -865,8 +877,12 @@ test('barista: la meta arriba, las monedas del +1 y la foto de la venta con su l
   await expect(page.locator('.mapp-coinpop em')).toContainText('+$');
   await expect.poll(async () => Number((await goal.getAttribute('aria-label')).match(/: (\d+) de/)[1])).toBe(before + 1);
 
-  // La cámara al centro de la barra: foto del cliente con su vasito, con la cuadra donde se vendió
-  await page.getByTestId('tab-camera').click();
+  // El centro de la barra es «+1 Venta»: la hoja anota desde cualquier pestaña y lleva a la foto
+  await page.getByTestId('tab-sale').click();
+  const quick = page.getByTestId('quick-sale');
+  await quick.getByTestId('quick-tinto').click();
+  await expect.poll(async () => Number((await goal.getAttribute('aria-label')).match(/: (\d+) de/)[1])).toBe(before + 2);
+  await quick.getByTestId('tab-camera').click();
   const sheet = page.getByRole('dialog', { name: 'Foto de la venta' });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByTestId('sale-place')).toContainText('Guardamos la cuadra');

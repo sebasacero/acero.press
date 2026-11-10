@@ -51,7 +51,7 @@ test('barista: sale a vender y ve a los otros baristas y dónde quieren café; l
   // Sin salir: la vista previa con la invitación, sin demanda
   const panel = page.getByTestId('live-panel');
   await expect(panel).toHaveAttribute('data-live', 'false');
-  await expect(panel.getByTestId('live-nudge')).toHaveText('Sal a vender para ver quién busca café ahora');
+  await expect(panel.getByTestId('live-nudge')).toHaveText('5 personas buscan café cerca. Sal para ver dónde.');
   // Antes de salir no hay nada debajo de la meta: lo que manda es «Salí a vender»
   await expect(page.getByRole('region', { name: 'Meta de hoy' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Vendí un tinto' })).toHaveCount(0);
@@ -171,6 +171,8 @@ test('cliente: «Quiero un café» manda solo la zona y la bebida, sin apartar, 
   await want.getByTestId('want-btn').click();
   await expect(want.getByTestId('want-ok')).toContainText('¡Listo! Tu zona quiere café.');
   await expect.poll(() => seeks().length).toBe(1);
+  // La pastilla viva lo recuerda sobre la barra, también en las otras pestañas
+  await expect(page.getByTestId('live-pill')).toContainText('Tu zona quiere café');
   const sent = seeks()[0].data;
   expect(sent).toMatchObject({ p_cell_lat: 4.646, p_cell_lng: -74.062, p_drink: 'perico' });
   expect(JSON.stringify(sent)).not.toContain('4.6451');

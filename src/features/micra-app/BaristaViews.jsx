@@ -13,7 +13,7 @@ import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
 import { km } from '../ruta/track.js';
-import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel, outPoint, FIXED_KEY } from './flow.js';
+import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel, outPoint, FIXED_KEY, untilChoices } from './flow.js';
 import { ModePicker, SlideToGo, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
@@ -351,17 +351,40 @@ function WaNudge() {
   );
 }
 
+/** Un apartado que se entrega deslizando a la derecha (o con su botón «Entregado»). */
+function SwipeHold({ children, onServe, disabled }) {
+  const drag = useRef(null);
+  const [dx, setDx] = useState(0);
+  const down = (e) => { if (disabled || e.target.closest('button')) return; drag.current = { x: e.clientX, y: e.clientY, on: false }; };
+  const move = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    const mx = e.clientX - d.x;
+    // Solo si el gesto es horizontal: subir y bajar la página sigue igual
+    if (!d.on) { if (Math.abs(e.clientY - d.y) > 12) { drag.current = null; return; } if (mx < 12) return; d.on = true; e.currentTarget.setPointerCapture?.(e.pointerId); }
+    setDx(Math.max(0, Math.min(mx, 220)));
+  };
+  const up = () => { const far = dx > 110; drag.current = null; setDx(0); if (far) onServe(); };
+  return (
+    <li className={`mapp-swipe ${dx ? 'is-dragging' : ''}`} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} data-testid="hold-row">
+      <i className="mapp-swipe-bg" aria-hidden="true" style={{ opacity: Math.min(1, dx / 110) }}>✓ Entregado</i>
+      <div className="mapp-swipe-card" style={dx ? { transform: `translateX(${dx}px)` } : undefined}>{children}</div>
+    </li>
+  );
+}
+
 function Waiting({ waiting, sum, rewards, busy, onClose, onRedeem, compact = false }) {
   return (
     <section className={`mapp-glass ${compact ? 'is-compact' : ''}`} aria-labelledby="mapp-wait">
+      {waiting.length > 0 && <p className="mapp-hold-hint">Desliza la tarjeta a la derecha para entregar</p>}
       <p className="mapp-cota" id="mapp-wait">{compact ? 'Te esperan' : 'Solicitudes cerca · Te esperan'} · {waiting.length ? `${sum.waitingCups} ${sum.waitingCups === 1 ? 'taza' : 'tazas'}` : 'nadie todavía'}</p>
       {waiting.length === 0 && !compact && (
         <p className="mapp-muted">Cuando un cliente te aparte, sale aquí. Comparte tu enlace para que te encuentren.</p>
       )}
       <ul className="mapp-holds">
-        {waiting.map((h) => (
-          <li key={h.id}>
-            <span className="mapp-av" aria-hidden="true">{initials(h.name)}</span>
+        {waiting.map((h, i) => (
+          <SwipeHold key={h.id} onServe={() => onClose(h, true)} disabled={busy === h.id}>
+            <span className="mapp-av mapp-hold-n" aria-hidden="true">{i + 1}</span>
             <div>
               <b>{h.name}</b><span>{itemsLabel(h.items)} · {money(h.total)}</span>
               {rewards[h.id] > 0 && <span className="mapp-reward">🎁 Tiene un tinto gratis <button type="button" className="mapp-link" onClick={() => onRedeem(h)} disabled={busy === `r-${h.id}`}>Canjear</button></span>}
@@ -371,7 +394,7 @@ function Waiting({ waiting, sum, rewards, busy, onClose, onRedeem, compact = fal
               <button type="button" className="mapp-btn is-small" onClick={() => onClose(h, true)} disabled={busy === h.id}>Entregado</button>
               <button type="button" className="mapp-link" onClick={() => onClose(h, false)} disabled={busy === h.id}>No vino</button>
             </span>
-          </li>
+          </SwipeHold>
         ))}
       </ul>
     </section>
@@ -413,7 +436,7 @@ const TABS = [
 
 /** La barra del barista: sus cuatro pestañas y, al centro, la cámara para la foto de la venta.
  *  Mismo diseño que la del cliente (pedido del usuario, 6 nov 2026): solo íconos, el centro en rojo. */
-function BaristaTabs({ tab, go, waiting, onCamera }) {
+function BaristaTabs({ tab, go, waiting, onQuick }) {
   const btn = ([id, label, Icon, path]) => (
     <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(path)} aria-label={label} title={label}>
       <Icon />
@@ -424,8 +447,10 @@ function BaristaTabs({ tab, go, waiting, onCamera }) {
   return (
     <nav className="mapp-tabs is-ig" aria-label="Barista">
       {TABS.slice(0, 2).map(btn)}
-      <button type="button" className="mapp-tabs-cam" onClick={onCamera} aria-label="Foto de la venta" title="Foto de la venta" data-testid="tab-camera">
-        <IconCamera />
+      {/* El centro es lo que el barista vino a hacer: anotar una venta desde cualquier pestaña.
+          La foto de la venta queda dentro de esa hoja */}
+      <button type="button" className="mapp-tabs-cam is-plus" onClick={onQuick} aria-label="Anotar una venta" title="Anotar una venta" data-testid="tab-sale">
+        <b aria-hidden="true">+1</b>
       </button>
       {TABS.slice(2).map(btn)}
     </nav>
@@ -489,6 +514,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [fiadoName, setFiadoName] = useState('');
   const [last, setLast] = useState(null); // la última venta, para deshacer
   const [pop, setPop] = useState(null); // las monedas del último +1
+  const [untilId, setUntilId] = useState('d'); // «Hasta las»: 4 horas si no escoge
+  const [quick, setQuick] = useState(false); // la hoja «+1 Venta» del centro de la barra
   const [shooting, setShooting] = useState(false); // la cámara de la barra: foto de la venta
   const [busy, setBusy] = useState(null);
   const [showPrices, setShowPrices] = useState(false);
@@ -659,6 +686,10 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   };
   // Salir siempre se puede: lo que falta (mapa público, ubicación) se pide en la misma hoja
   const needs = consentNeeds({ isPublic, consented: !trip.ready || trip.consented, own: !asId });
+  // «Hasta las»: a qué hora se apaga sola la salida (4 horas si no escoge)
+  const nowBog = bogota();
+  const untils = untilChoices(nowBog.hour, nowBog.minute);
+  const outMinutes = (untils.find((u) => u.id === untilId) ?? untils[0]).minutes;
   const out = async (on, { asked = false } = {}) => {
     if (on && !mode) { setError('Escoge primero cómo sales hoy: puesto fijo, sombrilla o caminando.'); return; }
     if (on && needs.ask && !asked) { setAsking(true); return; }
@@ -670,7 +701,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       // Antes de cerrar el recorrido se guarda lo de hoy para «Mi día en la calle»
       const before = !on ? { ...dayTripOf(trip.view, readDayTrip(), bogota().day), day: bogota().day } : null;
       if (before && before.path.length > 1) writeDayTrip(before);
-      await api.goOut(on ? OUT_MINUTES : 0, pos, asId);
+      await api.goOut(on ? outMinutes : 0, pos, asId);
       if (on && recordsTrip(mode) && trip.ready && trip.consented && !trip.recording) await trip.start();
       if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();
@@ -694,7 +725,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
     setBusy('out');
     try {
       const pos = await outPosition(mode);
-      await api.goOut(OUT_MINUTES, pos, asId);
+      await api.goOut(outMinutes, pos, asId);
       if (recordsTrip(mode) && trip.ready && !trip.recording) await trip.start();
       await load();
     } catch (e) { setError(e.message); }
@@ -935,8 +966,14 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
                 hint={mode ? `Desliza para salir · ${modeOf(mode).label.toLowerCase()}` : 'Desliza para salir'}
                 busy={busy === 'out'} onGo={() => out(true)}
               />
+              {untils.length > 1 && (
+                <div className="mapp-until" role="group" aria-label="Hasta qué hora sales" data-testid="until">
+                  <span>Hasta</span>
+                  {untils.map((u) => <button key={u.id} type="button" className={untilId === u.id ? 'on' : ''} aria-pressed={untilId === u.id} onClick={() => setUntilId(u.id)}>{u.id === 'd' ? u.label : `las ${u.label}`}</button>)}
+                </div>
+              )}
               <p className="mapp-gosheet-meta">
-                <span>{!streak.todayDone && streak.ifToday > 1 ? <>Vende hoy y tu racha llega a <b>{streak.ifToday} días</b></> : isPublic ? 'Se apaga solo en 4 horas' : 'Te pedimos la ubicación al salir'}</span>
+                <span>{!streak.todayDone && streak.ifToday > 1 ? <>Vende hoy y tu racha llega a <b>{streak.ifToday} días</b></> : isPublic ? 'Sales del mapa sola a esa hora' : 'Te pedimos la ubicación al salir'}</span>
                 <span>meta <b>{goal} tazas</b></span>
               </p>
             </section>
@@ -1010,7 +1047,32 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           <PostComposer sale selfId={day.id} asId={asId} onClose={() => setShooting(false)} />
         </Suspense>
       )}
-      <BaristaTabs tab={tab} go={go} waiting={waiting.length} onCamera={() => setShooting(true)} />
+      {quick && (
+        <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Anotar una venta" data-testid="quick-sale">
+          <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" onClick={() => setQuick(false)} />
+          <section className="mapp-sheet">
+            <i className="mapp-sheet-handle" aria-hidden="true" />
+            <p className="mapp-cota">Venta rápida</p>
+            <h2 className="mapp-title is-small">¿Qué vendiste?</h2>
+            {menu.length === 0 ? <p className="mapp-muted">Pon primero tus precios en Vender.</p> : (
+              <div className="mapp-quick">
+                {menu.map((m) => (
+                  <button key={m.id} type="button" onClick={() => plusOne(m.id)} aria-label={`Vendí un ${m.one}`} data-testid={`quick-${m.id}`}>
+                    <b>+1</b><span>{m.label}<small>{money(m.price)} · {counts[m.id] || 0} hoy</small></span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <p className="mapp-sync" role="status">{pending ? `${pending} sin subir: se suben solas cuando haya señal` : 'Todo guardado'}{last && <> · <button type="button" className="mapp-link" onClick={undo} disabled={busy === 'undo'}>Deshacer el último</button></>}</p>
+            <p className="mapp-fine">La hoja se queda abierta para la siguiente taza.</p>
+            <span className="mapp-row-btns">
+              <button type="button" className="mapp-btn is-ghost is-small" onClick={() => { setQuick(false); setShooting(true); }} data-testid="tab-camera"><IconCamera /> Foto de la venta</button>
+              <button type="button" className="mapp-btn is-small" onClick={() => setQuick(false)}>Listo</button>
+            </span>
+          </section>
+        </div>
+      )}
+      <BaristaTabs tab={tab} go={go} waiting={waiting.length} onQuick={() => setQuick(true)} />
     </div>
   );
 }

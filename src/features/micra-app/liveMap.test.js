@@ -101,3 +101,10 @@ test('lo más pedido de una zona y cuándo refrescar', () => {
   assert.equal(shouldPoll({ enabled: true, visible: false }), false);
   assert.equal(shouldPoll({ enabled: false, visible: true }), false);
 });
+
+test('antes de salir, el mapa dice cuánta gente busca café cerca', async () => {
+  const { seekNudge } = await import('./liveMap.js');
+  assert.equal(seekNudge(0), 'Sal a vender para ver quién busca café ahora');
+  assert.equal(seekNudge(1), '1 persona busca café cerca. Sal para ver dónde.');
+  assert.equal(seekNudge(5), '5 personas buscan café cerca. Sal para ver dónde.');
+});

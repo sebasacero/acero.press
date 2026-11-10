@@ -74,3 +74,17 @@ export function menuWith(day, extras = []) {
     .map((x) => ({ id: x.id, label: x.label, one: x.label.toLowerCase(), many: x.label.toLowerCase(), price: Number(x.price), custom: true }));
   return [...menuOf(day), ...own];
 }
+
+/**
+ * «Hasta las»: a qué hora se apaga sola la salida (maqueta del 10 nov 2026).
+ * Las opciones son 4 horas (lo de siempre) y las horas en punto 12 m., 3 p. m. y
+ * 7 p. m. que quedan a más de 30 min y a no más de 6 h (el tope de la base).
+ * `hour` y `minute` son la hora de Bogotá.
+ */
+export function untilChoices(hour, minute = 0) {
+  const nowMin = hour * 60 + minute;
+  const fixed = [[12, '12 m.'], [15, '3 p. m.'], [19, '7 p. m.']]
+    .map(([h, label]) => ({ id: `h${h}`, label, minutes: h * 60 - nowMin }))
+    .filter((c) => c.minutes > 30 && c.minutes <= 360);
+  return [{ id: 'd', label: '4 horas', minutes: 240 }, ...fixed];
+}
