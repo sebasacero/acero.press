@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
-import Navbar from '../../shared/layout/Navbar.jsx';
 import StoreButtons from './StoreButtons.jsx';
 import LiveCard, { DayCard } from './LiveCard.jsx';
 import SectionEditButton from '../admin/SectionEditButton.jsx';
@@ -36,8 +35,8 @@ function Slide({ kind, active, onSelect, whatsapp, stores }) {
   const base = (key) => t(`essp.${kind}.${key}`);
   const k = (key) => text(`essp_${kind}_${key}`, base(key));
   const isOrder = kind === 'order';
-  // Un solo h1 en la portada: el de la primera diapositiva; la otra es un h2
-  const Title = isOrder ? 'h1' : 'h2';
+  // El h1 de la portada es el del banner de 24 horas (DayBanner): aquí los dos son h2
+  const Title = 'h2';
   const title = [text(`essp_${kind}_title1`, base('title')[0]), text(`essp_${kind}_title2`, base('title')[1])];
   // La diapositiva oculta no debe recibir foco ni lectores de pantalla.
   useEffect(() => {
@@ -99,7 +98,7 @@ function Slide({ kind, active, onSelect, whatsapp, stores }) {
 
 const BARISTA_HASHES = ['#baristas', '#tinteros'];
 
-export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
+export default function EsspresaleHero() {
   const { t } = useLanguage();
   // #baristas (el menú, un enlace compartido) abre «Para baristas»; #tinteros sigue sirviendo para enlaces viejos
   const [index, setIndex] = useState(() => (BARISTA_HASHES.includes(window.location.hash) ? 1 : 0));
@@ -153,7 +152,7 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
   const tone = index === 0 ? 'paper' : 'photo';
 
   return (
-    <header
+    <section
       ref={root}
       className={`essp-hero essp-hero--${tone}`}
       id="baristas"
@@ -165,12 +164,10 @@ export default function EsspresaleHero({ navOpen, onOpenNavDrawer }) {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Los dos banners van sobre fondo oscuro (el de pedir, en gradiente térmico): menú en claro */}
-      <Navbar variant="sheet" tone="photo" navOpen={navOpen} onOpenNavDrawer={onOpenNavDrawer} />
       <div className="essp-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         <Slide kind="order" active={index === 0} onSelect={select} stores={stores} />
         <Slide kind="barista" active={index === 1} onSelect={select} whatsapp={whatsapp} stores={stores} />
       </div>
-    </header>
+    </section>
   );
 }
