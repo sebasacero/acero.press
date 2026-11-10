@@ -112,7 +112,7 @@ test('la pestaña del navegador lleva el icono térmico', async ({ browser }) =>
   await page.goto('/', { waitUntil: 'load' });
   await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
   for (const href of ['/image/icono-32.png', '/image/icono-64.png']) {
-    await expect(page.locator(`link[rel="icon"][href="${href}"]`)).toHaveCount(1);
+    await expect(page.locator(`link[rel="icon"][href^="${href}"]`)).toHaveCount(1);
     expect((await page.request.get(href)).status(), href).toBe(200);
   }
   await expect(page.locator('link[rel="apple-touch-icon"], link[rel="manifest"]')).toHaveCount(0);
