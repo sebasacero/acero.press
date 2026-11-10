@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "micra": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["mcp/micra/stdio.js"],
+      "env": {
+        "MICRA_MCP_DATA": "${MICRA_MCP_DATA:-}",
+        "MICRA_TOKEN": "${MICRA_TOKEN:-}",
+        "MICRA_API_BASE": "${MICRA_API_BASE:-https://www.aceropress.com}",
+        "VITE_SUPABASE_URL": "${VITE_SUPABASE_URL:-}",
+        "VITE_SUPABASE_ANON_KEY": "${VITE_SUPABASE_ANON_KEY:-}"
+      }
+    }
+  }
+}

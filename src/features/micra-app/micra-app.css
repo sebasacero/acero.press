@@ -1633,3 +1633,11 @@
 .mapp-study-bar .mapp-near[aria-pressed="true"] { background: var(--m-fg); color: var(--m-bg); border-color: var(--m-fg); }
 .srv-resumed { margin: 0; padding: 0 16px; }
 .srv-resumed .mapp-link { color: inherit; text-decoration: underline; min-height: 44px; }
+
+/* «Jefe de turno» (Equipo › Hoy): el dueño le pregunta al agente */
+.mapp-jefe { display: grid; gap: 10px; }
+.mapp-jefe-turn { display: grid; gap: 4px; padding-top: 8px; border-top: 1px solid rgba(0, 0, 0, .08); }
+.mapp-jefe-q { margin: 0; font-weight: 700; }
+.mapp-jefe-a { margin: 0; white-space: pre-wrap; line-height: 1.45; }
+.mapp-jefe-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.mapp-jefe-form .mapp-btn { min-height: 44px; }

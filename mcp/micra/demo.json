@@ -1,0 +1,457 @@
+{
+  "piloto": {
+    "generatedAt": "2026-10-22T15:00:00-05:00",
+    "days": 90,
+    "surveysReady": true,
+    "scenarioReady": true,
+    "scenario": {
+      "partner": "Distribuidora de prueba",
+      "kitCost": 300000,
+      "distributorPriceKg": 100000
+    },
+    "week": {
+      "from": "2026-10-16",
+      "to": "2026-10-22",
+      "cur": {
+        "cups": 12,
+        "sales": 8,
+        "income": 42000,
+        "blocks": 2,
+        "zones": [
+          "Chapinero"
+        ],
+        "kg": 0.22
+      },
+      "prev": {
+        "cups": 8,
+        "sales": 5,
+        "income": 28000,
+        "blocks": 1,
+        "zones": [
+          "Chapinero"
+        ],
+        "kg": 0.14
+      }
+    },
+    "waitlist": {
+      "cliente": 3,
+      "barista": 1
+    },
+    "sales": [
+      {
+        "id": "s1",
+        "at": "2026-10-22T13:10:00Z",
+        "total": 7000,
+        "cups": 2,
+        "what": "Castillo taza",
+        "carrera": 13,
+        "calle": 85,
+        "zone": "Zona T"
+      },
+      {
+        "id": "s2",
+        "at": "2026-10-21T12:00:00Z",
+        "total": 3500,
+        "cups": 1,
+        "what": "Geisha taza",
+        "carrera": 13,
+        "calle": 72,
+        "zone": "Chapinero"
+      }
+    ],
+    "tinteros": [
+      {
+        "id": "t1",
+        "name": "Doña Rosa",
+        "stage": "prospecto",
+        "carrera": 13,
+        "calle": 60,
+        "zone": "Chapinero",
+        "tinto_price": 1500,
+        "cups_per_hour": 20,
+        "photo_consent": false,
+        "photo_url": null
+      },
+      {
+        "id": "t2",
+        "name": "Don Pedro",
+        "stage": "activo",
+        "carrera": 13,
+        "calle": 63,
+        "zone": "Chapinero",
+        "tinto_price": 1500,
+        "cups_per_hour": 21,
+        "photo_consent": false,
+        "photo_url": null
+      },
+      {
+        "id": "t3",
+        "name": "Carrito de la 63",
+        "stage": "prospecto",
+        "carrera": 13,
+        "calle": 83,
+        "zone": "Zona T",
+        "tinto_price": 2000,
+        "cups_per_hour": 22,
+        "photo_consent": false,
+        "photo_url": null
+      },
+      {
+        "id": "t4",
+        "name": "Doña Marta",
+        "stage": "prospecto",
+        "carrera": 12,
+        "calle": 85,
+        "zone": "Zona T",
+        "tinto_price": 1800,
+        "cups_per_hour": 23,
+        "photo_consent": false,
+        "photo_url": null
+      },
+      {
+        "id": "t5",
+        "name": "Don Luis",
+        "stage": "prospecto",
+        "carrera": 11,
+        "calle": 66,
+        "zone": "Chapinero",
+        "tinto_price": 1200,
+        "cups_per_hour": 24,
+        "photo_consent": false,
+        "photo_url": null
+      },
+      {
+        "id": "t6",
+        "name": "Don Ernesto",
+        "stage": "prospecto",
+        "carrera": 6,
+        "calle": 119,
+        "zone": "Usaquén",
+        "tinto_price": 1000,
+        "cups_per_hour": 25,
+        "photo_consent": false,
+        "photo_url": null
+      }
+    ],
+    "surveys": [
+      {
+        "id": "e0",
+        "tintero_id": "t1",
+        "surveyed_at": "2026-10-20T10:00:00Z",
+        "consent": true,
+        "cups_per_day": 80,
+        "days_per_week": 6,
+        "hours_per_day": 6,
+        "coffee_g_week": 1500,
+        "coffee_price_kg": 40000,
+        "coffee_brand": "Águila Roja",
+        "buys_where": "tienda",
+        "would_sell_specialty": "si",
+        "specialty_price": 4000,
+        "kit_interest": "si",
+        "kit_payment": "cuotas",
+        "has_smartphone": true,
+        "payments": [
+          "efectivo",
+          "nequi"
+        ],
+        "gender": "mujer",
+        "age_range": "45_54",
+        "main_income": "si",
+        "notes": "NOTA PRIVADA"
+      },
+      {
+        "id": "e1",
+        "tintero_id": "t2",
+        "surveyed_at": "2026-10-21T10:00:00Z",
+        "consent": true,
+        "cups_per_day": 80,
+        "days_per_week": 6,
+        "hours_per_day": 6,
+        "coffee_g_week": 1500,
+        "coffee_price_kg": 40000,
+        "coffee_brand": "Águila Roja",
+        "buys_where": "tienda",
+        "would_sell_specialty": "si",
+        "specialty_price": 4000,
+        "kit_interest": "si",
+        "kit_payment": "cuotas",
+        "has_smartphone": true,
+        "payments": [
+          "efectivo",
+          "nequi"
+        ],
+        "gender": "mujer",
+        "age_range": "45_54",
+        "main_income": "si",
+        "notes": "NOTA PRIVADA"
+      },
+      {
+        "id": "e2",
+        "tintero_id": "t3",
+        "surveyed_at": "2026-10-22T10:00:00Z",
+        "consent": true,
+        "cups_per_day": 80,
+        "days_per_week": 6,
+        "hours_per_day": 6,
+        "coffee_g_week": 1500,
+        "coffee_price_kg": 40000,
+        "coffee_brand": "Águila Roja",
+        "buys_where": "tienda",
+        "would_sell_specialty": "tal_vez",
+        "specialty_price": 4000,
+        "kit_interest": "si",
+        "kit_payment": "cuotas",
+        "has_smartphone": true,
+        "payments": [
+          "efectivo",
+          "nequi"
+        ],
+        "gender": "mujer",
+        "age_range": "45_54",
+        "main_income": "si",
+        "notes": "NOTA PRIVADA"
+      },
+      {
+        "id": "e3",
+        "tintero_id": "t4",
+        "surveyed_at": "2026-10-23T10:00:00Z",
+        "consent": true,
+        "cups_per_day": 80,
+        "days_per_week": 6,
+        "hours_per_day": 6,
+        "coffee_g_week": 1500,
+        "coffee_price_kg": 40000,
+        "coffee_brand": "Sello Rojo",
+        "buys_where": "tienda",
+        "would_sell_specialty": "tal_vez",
+        "specialty_price": 4000,
+        "kit_interest": "si",
+        "kit_payment": "cuotas",
+        "has_smartphone": true,
+        "payments": [
+          "efectivo",
+          "nequi"
+        ],
+        "gender": "mujer",
+        "age_range": "45_54",
+        "main_income": "si",
+        "notes": "NOTA PRIVADA"
+      },
+      {
+        "id": "e4",
+        "tintero_id": "t5",
+        "surveyed_at": "2026-10-24T10:00:00Z",
+        "consent": true,
+        "cups_per_day": 80,
+        "days_per_week": 6,
+        "hours_per_day": 6,
+        "coffee_g_week": 1500,
+        "coffee_price_kg": 40000,
+        "coffee_brand": "Sello Rojo",
+        "buys_where": "tienda",
+        "would_sell_specialty": "tal_vez",
+        "specialty_price": 4000,
+        "kit_interest": "si",
+        "kit_payment": "cuotas",
+        "has_smartphone": false,
+        "payments": [
+          "efectivo",
+          "nequi"
+        ],
+        "gender": "hombre",
+        "age_range": "45_54",
+        "main_income": "si",
+        "notes": "NOTA PRIVADA"
+      }
+    ],
+    "study": {
+      "surveyed": 6,
+      "with_photo": 0,
+      "consented": 0,
+      "tinto_price_avg": 1500,
+      "cups_per_hour_avg": 22.5,
+      "zones": [
+        "Chapinero",
+        "Usaquén",
+        "Zona T"
+      ]
+    }
+  },
+  "liveMap": {
+    "minutes": 45,
+    "cell_deg": 0.004,
+    "min_count": 2,
+    "baristas": [
+      {
+        "id": "60000000-0000-0000-0000-000000000001",
+        "name": "Marlene",
+        "referencia": "Cl. 57 con Cra. 7",
+        "lat": 4.643,
+        "lng": -74.064,
+        "live_until": "2099-01-01T00:00:00Z",
+        "me": false
+      },
+      {
+        "id": "60000000-0000-0000-0000-000000000002",
+        "name": "Wilson",
+        "referencia": "Cra. 13 con Cl. 63",
+        "lat": 4.6475,
+        "lng": -74.0645,
+        "live_until": "2099-01-01T00:00:00Z",
+        "me": false
+      }
+    ],
+    "demand": [
+      {
+        "lat": 4.646,
+        "lng": -74.062,
+        "pings": 3,
+        "holds": 1,
+        "drinks": {
+          "tinto": 2,
+          "perico": 1,
+          "aromatica": 0,
+          "all": 1
+        },
+        "n": 4
+      },
+      {
+        "lat": 4.642,
+        "lng": -74.07,
+        "pings": 2,
+        "holds": 0,
+        "drinks": {
+          "tinto": 0,
+          "perico": 0,
+          "aromatica": 1,
+          "all": 1
+        },
+        "n": 2
+      }
+    ],
+    "study": [
+      {
+        "lat": 4.642,
+        "lng": -74.062,
+        "n": 3
+      },
+      {
+        "lat": 4.654,
+        "lng": -74.062,
+        "n": 2
+      }
+    ],
+    "waiting_cups": 0
+  },
+  "ownerDay": {
+    "day": "2026-11-09",
+    "baristas": [
+      {
+        "id": "60000000-0000-0000-0000-000000000001",
+        "name": "Marlene Rojas",
+        "stage": "piloto",
+        "localidad": "Chapinero",
+        "referencia": "Cl. 57 con Cra. 7",
+        "linked": true,
+        "live_until": "2099-01-01T00:00:00Z",
+        "cups": 14,
+        "total": 21000,
+        "fiado": 3000,
+        "waiting": 1,
+        "served": 2
+      },
+      {
+        "id": "60000000-0000-0000-0000-000000000002",
+        "name": "Wilson Pérez",
+        "stage": "piloto",
+        "localidad": "Chapinero",
+        "referencia": "Cra. 13 con Cl. 63",
+        "linked": true,
+        "live_until": "2099-01-01T00:00:00Z",
+        "cups": 9,
+        "total": 13500,
+        "fiado": 0,
+        "waiting": 0,
+        "served": 1
+      },
+      {
+        "id": "60000000-0000-0000-0000-000000000003",
+        "name": "Gloria Castro",
+        "stage": "prospecto",
+        "localidad": "Kennedy",
+        "referencia": "Portal de las Américas",
+        "linked": false,
+        "live_until": null,
+        "cups": 0,
+        "total": 0,
+        "fiado": 0,
+        "waiting": 0,
+        "served": 0
+      }
+    ],
+    "week": [
+      {
+        "day": "2026-11-03",
+        "cups": 12
+      },
+      {
+        "day": "2026-11-04",
+        "cups": 18
+      },
+      {
+        "day": "2026-11-05",
+        "cups": 9
+      },
+      {
+        "day": "2026-11-06",
+        "cups": 22
+      },
+      {
+        "day": "2026-11-07",
+        "cups": 15
+      },
+      {
+        "day": "2026-11-08",
+        "cups": 0
+      },
+      {
+        "day": "2026-11-09",
+        "cups": 23
+      }
+    ]
+  },
+  "pulse": {
+    "updatedAt": "2026-11-09T12:00:00-05:00",
+    "market": {
+      "fnc": {
+        "value": 2850000,
+        "prev": 2810000,
+        "date": "2026-11-08"
+      },
+      "ny": {
+        "value": 305.6,
+        "prev": 310.2,
+        "date": "2026-11-07"
+      },
+      "trm": {
+        "value": 4120.5,
+        "prev": 4098.3,
+        "date": "2026-11-09"
+      }
+    },
+    "bogota": {
+      "tempC": 14,
+      "code": 61,
+      "max": 19,
+      "min": 9,
+      "rainProb": 70
+    },
+    "status": {
+      "fnc": "ok",
+      "ny": "ok",
+      "trm": "ok",
+      "clima": "ok"
+    }
+  }
+}
