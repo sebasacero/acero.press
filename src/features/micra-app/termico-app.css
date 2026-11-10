@@ -747,3 +747,8 @@
 .mapp-ratings { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .mapp-ratings li { line-height: 1.5; }
 .mapp-ratings small { color: var(--m-soft); }
+/* Dentro de la tarjeta roja del apartado, «¿Cómo te fue?» va en su hoja blanca para que se lea */
+.mapp-now .mapp-rate { background: #fff; color: var(--m-ink); border: 0; border-radius: 18px; padding: 14px; margin-top: 14px; }
+.mapp-now .mapp-rate .mapp-fine { color: var(--m-soft); }
+.mapp-now .mapp-rate .mapp-beans button { color: color-mix(in srgb, var(--m-ink) 35%, #fff); }
+.mapp-now .mapp-rate .mapp-beans .on { color: var(--t-4); }
