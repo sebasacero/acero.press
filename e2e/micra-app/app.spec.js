@@ -46,7 +46,8 @@ test('cliente: ve quién está en la calle, aparta 2 tintos y 1 perico y lo canc
   await rows.first().getByRole('button').click();
   await expect(page).toHaveURL(new RegExp(`/micra/b/${MARLENE}$`));
   await expect(page.getByRole('heading', { name: 'Marlene' })).toBeVisible();
-  await page.getByRole('button', { name: 'Sumar un tinto' }).click();
+  // Arranca con 1 tinto ya puesto: basta sumar el otro
+  await expect(page.getByRole('button', { name: 'Apartar 1 taza · $1.500' })).toBeVisible();
   await page.getByRole('button', { name: 'Sumar un tinto' }).click();
   await page.getByRole('button', { name: 'Sumar un perico' }).click();
   await page.getByLabel('Tu nombre (así te llama)').fill('Sebas · 302');
@@ -499,6 +500,8 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   const feed = page.getByTestId('home-feed');
   await expect(feed.getByRole('heading', { level: 2, name: 'Hoy en el café' })).toBeVisible();
   await expect(feed.getByTestId('price-card')).toContainText('$1.300');
+  // El muro del inicio va corto: lo demás se abre con «Ver todo lo de hoy»
+  await page.getByTestId('feed-more').click();
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana

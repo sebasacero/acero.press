@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   sortBaristas, pickBaristas, menuOf, extrasOf, paymentsOf, cartTotal, bump, cartItems, itemsLabel, cupsLabel,
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
@@ -460,6 +460,8 @@ export function BaristaPage({ id, go }) {
   const [name, setName] = useState(api.savedName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [checked, setChecked] = useState(false); // ya se leyó si tenía un apartado hoy
+  const preset = useRef(false);
 
   // Si ya apartó hoy con este barista, se ve su apartado (y puede cambiarlo)
   useEffect(() => {
@@ -467,8 +469,17 @@ export function BaristaPage({ id, go }) {
       const x = (h ?? []).find((y) => y.tintero_id === id && y.status !== 'cancelled');
       setMine(x ?? null);
       if (x?.status === 'waiting') setCart(Object.fromEntries(x.items.map((i) => [i.product, i.qty])));
-    }).catch(() => {});
+      setChecked(true);
+    }).catch(() => setChecked(true));
   }, [id]);
+  // Apartar arranca con una taza de lo primero del menú (10 nov 2026): antes arrancaba en
+  // cero y el botón quedaba gris. Solo la primera vez: si la quita o cancela, no vuelve sola.
+  const first = b?.takes_holds ? menuOf(b)[0]?.id : null;
+  useEffect(() => {
+    if (!checked || !first || preset.current) return;
+    preset.current = true;
+    if (!mine) setCart((c) => (Object.keys(c).length ? c : { [first]: 1 }));
+  }, [checked, first]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (list === null) return <Cargando fig="caminando" />;
   if (!b) {

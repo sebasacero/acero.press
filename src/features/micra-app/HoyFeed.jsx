@@ -397,9 +397,12 @@ function CuratedForm({ current, onSaved, onCancel }) {
  * que ya está en el «＋» de abajo. `list`: los baristas que ya trajo el inicio.
  */
 // El dibujo de cada globito del muro
+// Cuántas publicaciones muestra el muro del inicio del cliente antes de «Ver todo»
+const HOME_FEED = 3;
 const CHIP_ICON = { todo: '☕', publicaciones: '📸', logros: '🔥', publicar: '✨', cafe: '🌱', precios: '💲', puestos: '📍', recetas: '📝', videos: '▶' };
 
 export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null, challenge }) {
+  const [all, setAll] = useState(false); // el muro corto del inicio, abierto
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
   const baristas = list ?? fetched;
@@ -457,6 +460,13 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   const listed = embedded ? withDay : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
   const shown = chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
+  // En el inicio del cliente el muro va corto (10 nov 2026): pesaba tres cuartas partes de la
+  // pantalla y tapaba lo que vino a hacer. Lo primero queda a la vista; lo demás, con un toque.
+  const short = embedded && !all && chip === 'todo' && shown.length > HOME_FEED;
+  // El primer anuncio vendido no se esconde: si no cae en el tramo corto, va al final de él
+  const firstAd = shown.findIndex((i) => i.kind === 'patrocinado');
+  const visible = short ? [...shown.slice(0, HOME_FEED), ...(firstAd >= HOME_FEED ? [shown[firstAd]] : [])] : shown;
+  const hidden = shown.length - visible.length;
 
   return (
     <div className={`mapp-feed ${embedded ? 'is-embedded' : ''}`} data-testid={embedded ? 'home-feed' : undefined}>
@@ -515,12 +525,17 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
         </section>
       )}
       <div className="mapp-posts" data-testid="feed">
-        {shown.map((item) => (item.kind === 'precios'
+        {visible.map((item) => (item.kind === 'precios'
           ? <PriceCard key={item.id} item={item} admin={admin} onEdit={() => setEditing(true)} />
           : item.kind === 'patrocinado'
             ? <AdPost key={item.id} ad={item} />
             : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} onPhoto={canPost ? () => setComposing(true) : null} />))}
       </div>
+      {short && hidden > 0 && (
+        <button type="button" className="mapp-btn is-ghost mapp-feed-more" onClick={() => setAll(true)} data-testid="feed-more">
+          Ver todo lo de hoy · {hidden} más
+        </button>
+      )}
       {publishing && <PublishSheet go={go} canShareDay={canShareDay} onShareDay={onShareDay} onClose={() => setPublishing(false)} client={client} onCompose={canPost ? () => setComposing(true) : null} />}
       {composing && <PostComposer selfId={selfId} asId={asId} onClose={() => setComposing(false)} onSent={loadMine} />}
     </div>
