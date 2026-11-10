@@ -386,3 +386,82 @@ a.pg-store:hover { transform: translateY(-3px); }
 .pg-ctl-notes span { font-size: 12.5px; line-height: 1.4; }
 .pg-ctl-notes em, .pg-ctl-notes time { font: 600 10.5px 'JetBrains Mono', monospace; font-style: normal; text-transform: uppercase; letter-spacing: .05em; }
 .pg-fleet .pg-ctl-empty { list-style: none; margin: 0; line-height: 1.4; }
+
+/* La flota: cada barista es un botón (el mapa vuela hasta él) */
+.pg-fleet-units li { display: block; padding: 0; }
+.pg-fleet-units button { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 4px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.pg-fleet-units button:hover, .pg-fleet-units li.is-picked button { background: var(--fl-bg); }
+.pg-panel-bar nav button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; background: none; color: var(--fl-ink); font: 600 14px 'Archivo', sans-serif; border: 1px solid var(--fl-line); cursor: pointer; }
+
+/* Vista HUD (pedido del usuario, 10 nov 2026: «algo que Tony Stark usaría»): otra excepción
+   pedida al rojo único. Cian holográfico sobre negro azulado; ámbar para lo que está encendido;
+   el rojo sigue siendo solo para lo que pide atención. Todo lo que gira se detiene con
+   «menos movimiento». */
+.pg-panel-page.is-hud { --fl-bg: rgba(95,225,255,.08); --fl-card: rgba(6,18,30,.72); --fl-line: rgba(95,225,255,.22); --fl-ink: #D9F7FF; --fl-mute: #6FA9BC; --fl-ok: #FFC23C; --hud: #5FE1FF;
+  background: radial-gradient(120% 90% at 50% 0%, #0B2236 0, #050D16 55%, #02060B 100%); }
+.is-hud .pg-panel-bar { background: rgba(4,12,20,.85); backdrop-filter: blur(8px); }
+.is-hud .pg-panel-bar h1 { font: 600 12px 'JetBrains Mono', monospace; letter-spacing: .22em; text-transform: uppercase; color: var(--hud); }
+.is-hud .pg-panel-bar nav a, .is-hud .pg-panel-bar nav button { border-radius: 2px; font: 600 12px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); background: rgba(95,225,255,.07); }
+.is-hud .pg-panel-bar nav a:hover, .is-hud .pg-panel-bar nav button:hover { background: rgba(95,225,255,.2); }
+.pg-fleet.is-hud { grid-template-rows: auto minmax(0, 1fr); }
+.is-hud .pg-fleet-kpis { align-items: center; background: rgba(4,12,20,.6); }
+.is-hud .pg-fleet-kpis > div { border-right-color: rgba(95,225,255,.12); }
+.is-hud .pg-fleet-kpis dt { letter-spacing: .16em; }
+.is-hud .pg-fleet-kpis dd b { font: 500 30px/1.1 'JetBrains Mono', monospace; color: var(--hud); text-shadow: 0 0 14px rgba(95,225,255,.55); }
+.pg-hud-reactor { padding: 6px 16px !important; }
+.pg-hud-ring { display: block; filter: drop-shadow(0 0 8px rgba(95,225,255,.55)); }
+.pg-hud-ring circle { fill: none; }
+.pg-hud-ring .is-spin { stroke: var(--hud); stroke-width: 1.5; stroke-dasharray: 3 9; opacity: .7; transform-origin: 48px 48px; animation: pg-hud-spin 18s linear infinite; }
+.pg-hud-ring .is-track { stroke: rgba(95,225,255,.18); stroke-width: 7; }
+.pg-hud-ring .is-value { stroke: var(--fl-ok); stroke-width: 7; stroke-linecap: butt; transition: stroke-dasharray .8s ease; }
+.pg-hud-ring .is-core { fill: rgba(95,225,255,.16); stroke: var(--hud); stroke-width: 1; animation: pg-hud-pulse 2.6s ease-in-out infinite; }
+.pg-hud-clock { display: block; font: 500 26px/1 'JetBrains Mono', monospace !important; color: var(--hud) !important; text-shadow: 0 0 14px rgba(95,225,255,.55); letter-spacing: .06em; }
+.is-hud .pg-fleet-clock dd { display: block; }
+.is-hud .pg-fleet-body { grid-template-rows: minmax(0, 1fr) auto; }
+.is-hud .pg-fleet-side, .is-hud .pg-fleet-feed { backdrop-filter: blur(6px); scrollbar-color: rgba(95,225,255,.3) transparent; }
+.is-hud .pg-fleet-side h2, .is-hud .pg-fleet-feed h2 { color: var(--hud); letter-spacing: .2em; padding-bottom: 6px; border-bottom: 1px solid var(--fl-line); }
+.is-hud .pg-fleet-side h2::before, .is-hud .pg-fleet-feed h2::before { content: '//'; margin-right: 6px; opacity: .6; }
+.is-hud .pg-fleet-side h2 { justify-content: flex-start; }
+.is-hud .pg-fleet-side h2 small { margin-left: auto; }
+.is-hud .pg-fleet-units li { border-bottom-color: rgba(95,225,255,.1); }
+.is-hud .pg-fleet-units i { background: rgba(95,225,255,.25); border-radius: 1px; transform: rotate(45deg); }
+.is-hud .pg-fleet-units li.is-live i { background: var(--fl-ok); box-shadow: 0 0 10px var(--fl-ok); }
+.is-hud .pg-fleet-units li.is-picked button { box-shadow: inset 2px 0 0 var(--hud); }
+.is-hud .pg-fleet-units em { color: var(--fl-ok); }
+.is-hud .pg-fleet-actions a, .is-hud .pg-fleet-enter { border-radius: 2px; font: 600 12px 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; background: rgba(95,225,255,.05); }
+.is-hud .pg-fleet-actions a:hover, .is-hud .pg-fleet-enter:hover { background: rgba(95,225,255,.18); box-shadow: 0 0 14px rgba(95,225,255,.25); }
+.is-hud .pg-fleet-alerts a { border-bottom-color: rgba(95,225,255,.1); }
+.is-hud .pg-fleet-map { overflow: hidden; }
+.is-hud .pg-fleet-map .mapp-map { background: #06121C; }
+.is-hud .pg-fleet-map .pg-ctl-legend, .is-hud .pg-fleet-map .pg-ctl-fine { background: rgba(4,12,20,.82); border: 1px solid var(--fl-line); border-radius: 2px; color: var(--fl-ink); box-shadow: none; font-family: 'JetBrains Mono', monospace; }
+.is-hud .pg-fleet-map .pg-ctl-fine { color: var(--fl-mute); }
+.is-hud .pg-fleet-map .pg-ctl-legend .is-study { background: #EDE6D3; }
+.is-hud .pg-fleet-map .mapp-pin { background: #24485A; border-color: var(--hud); border-width: 1.5px; }
+.is-hud .pg-fleet-map .mapp-pin.is-live { background: var(--fl-ok); color: #1A1200; border-color: #fff; box-shadow: 0 0 0 5px rgba(255,194,60,.22), 0 0 18px rgba(255,194,60,.8); animation: pg-hud-ping 2s ease-out infinite; }
+.is-hud .pg-fleet-map .mapp-pin-name { background: rgba(4,12,20,.9); color: var(--hud); border: 1px solid var(--fl-line); border-radius: 2px; font: 600 10.5px/1.5 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; box-shadow: none; }
+/* El barrido del radar, la retícula y las esquinas: encima del mapa, sin estorbar el toque */
+.pg-hud-scan { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(rgba(95,225,255,.07) 1px, transparent 1px) 0 0 / 100% 56px, linear-gradient(90deg, rgba(95,225,255,.07) 1px, transparent 1px) 0 0 / 56px 100%, radial-gradient(circle at 50% 50%, transparent 0 55%, rgba(2,6,11,.6) 100%); }
+.pg-hud-scan i { position: absolute; left: 50%; top: 50%; width: 150vmax; height: 150vmax; margin: -75vmax 0 0 -75vmax; border-radius: 50%; background: conic-gradient(from 0deg, rgba(95,225,255,.22), transparent 14%, transparent); animation: pg-hud-spin 7s linear infinite; }
+.pg-hud-scan b { position: absolute; width: 26px; height: 26px; border: 2px solid var(--hud); opacity: .9; }
+.pg-hud-scan b:nth-of-type(1) { left: 10px; top: 10px; border-right: 0; border-bottom: 0; }
+.pg-hud-scan b:nth-of-type(2) { right: 10px; top: 10px; border-left: 0; border-bottom: 0; }
+.pg-hud-scan b:nth-of-type(3) { left: 10px; bottom: 10px; border-right: 0; border-top: 0; }
+.pg-hud-scan b:nth-of-type(4) { right: 10px; bottom: 10px; border-left: 0; border-top: 0; }
+.is-hud .pg-fleet-map .pg-ctl-legend { top: 22px; left: 22px; }
+.is-hud .pg-fleet-map .pg-ctl-fine { left: 22px; bottom: 22px; }
+.is-hud .pg-fleet-feed .pg-ctl-notes li:not(.pg-ctl-empty) { border-bottom-color: rgba(95,225,255,.1); }
+.is-hud .pg-fleet-feed .pg-ctl-notes li.is-alta { box-shadow: inset 2px 0 0 var(--red); padding-left: 10px; background: linear-gradient(90deg, rgba(222,27,27,.16), transparent 70%); }
+.is-hud .pg-fleet-feed .pg-ctl-notes li.is-media b::before { background: var(--fl-ok); }
+.is-hud .pg-fleet-feed .pg-ctl-notes em { color: var(--hud); }
+.pg-hud-brief { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 4px 20px; background: rgba(4,12,20,.9); border-top: 1px solid var(--fl-line); }
+.pg-hud-brief span { font: 600 11px 'JetBrains Mono', monospace; letter-spacing: .2em; text-transform: uppercase; color: #02060B; background: var(--hud); padding: 3px 8px; }
+.pg-hud-brief p { flex: 1; margin: 0; font: 500 14px/1.4 'JetBrains Mono', monospace; color: var(--fl-ink); }
+.pg-hud-brief p i { display: inline-block; width: 8px; height: 15px; margin-left: 3px; vertical-align: -2px; background: var(--hud); animation: pg-hud-blink 1s steps(2) infinite; }
+.pg-hud-brief button { min-height: 44px; padding: 0 16px; border: 1px solid var(--hud); border-radius: 2px; background: rgba(95,225,255,.08); color: var(--hud); font: 600 12px 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+.pg-hud-brief button:hover { background: rgba(95,225,255,.22); }
+@keyframes pg-hud-spin { to { transform: rotate(360deg); } }
+@keyframes pg-hud-pulse { 50% { opacity: .45; } }
+@keyframes pg-hud-blink { 50% { opacity: 0; } }
+@keyframes pg-hud-ping { 0% { box-shadow: 0 0 0 0 rgba(255,194,60,.55), 0 0 18px rgba(255,194,60,.8); } 100% { box-shadow: 0 0 0 16px rgba(255,194,60,0), 0 0 18px rgba(255,194,60,.8); } }
+@media (prefers-reduced-motion: reduce) { .pg-hud-ring .is-spin, .pg-hud-ring .is-core, .pg-hud-scan i, .pg-hud-brief p i, .is-hud .pg-fleet-map .mapp-pin.is-live { animation: none; } .pg-hud-scan i { display: none; } }

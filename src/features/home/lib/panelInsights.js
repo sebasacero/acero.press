@@ -162,5 +162,20 @@ export function diffEvents(prev, next, { now = Date.now(), places = [] } = {}) {
   return out;
 }
 
+/**
+ * El parte: dos o tres frases con lo de ahora y la primera prioridad, para leerlo o escucharlo
+ * (vista HUD). Sin dueño, solo lo público.
+ */
+export function briefing({ state = null, notes = [] } = {}) {
+  const k = state?.kpis;
+  if (!k) return 'Leyendo la calle…';
+  const parts = [k.live === 0 ? 'Nadie en la calle' : `${k.live} de ${plural(k.baristas, 'barista', 'baristas')} en la calle`];
+  if (k.waiting > 0) parts.push(plural(k.waiting, 'taza apartada', 'tazas apartadas'));
+  if (state.owner) parts.push(`${plural(k.cups ?? 0, 'taza', 'tazas')} hoy, ${money(k.total ?? 0)}`);
+  const top = notes.find((n) => n.level === 'alta') ?? notes.find((n) => n.level === 'media');
+  const tail = !state.owner ? '' : top ? ` Prioridad: ${top.title[0].toLowerCase()}${top.title.slice(1)}.` : ' Sin alertas.';
+  return `${parts.join('. ')}.${tail}`;
+}
+
 /** La bitácora: lo nuevo arriba, sin pasar de `max`. */
 export const pushLog = (log, events, max = 20) => [...[...events].reverse(), ...log].slice(0, max);

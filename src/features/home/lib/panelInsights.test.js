@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { insights, diffEvents, snapshot, pushLog, placeName, meters } from './panelInsights.js';
+import { insights, diffEvents, snapshot, pushLog, placeName, meters, briefing } from './panelInsights.js';
 
 const row = (o) => ({ id: 'a', name: 'Marlene', where: 'Cl. 57', live: false, waiting: 0, cups: 0, linked: true, prices: true, ...o });
 const cell = (lat, lng, n, drinks = {}) => ({ lat, lng, n, drinks });
@@ -61,6 +61,15 @@ test('tiempo real: lo que cambió entre dos lecturas', () => {
   ]);
   assert.ok(ev.every((e) => e.at === 1000 && e.kind === 'evento'));
   assert.equal(ev[4].text, 'De 2 a 5 personas.');
+});
+
+test('el parte: lo de ahora y la primera prioridad; sin dueño, solo lo público', () => {
+  assert.equal(briefing({}), 'Leyendo la calle…');
+  const kpis = { live: 2, baristas: 5, waiting: 1, cups: 12, total: 18000 };
+  assert.equal(briefing({ state: { owner: false, kpis } }), '2 de 5 baristas en la calle. 1 taza apartada.');
+  const notes = [{ level: 'info', title: 'Lo más buscado' }, { level: 'media', title: 'Hoy va en 26 % de un día promedio' }];
+  assert.equal(briefing({ state: { owner: true, kpis }, notes }), '2 de 5 baristas en la calle. 1 taza apartada. 12 tazas hoy, $18.000. Prioridad: hoy va en 26 % de un día promedio.');
+  assert.match(briefing({ state: { owner: true, kpis: { ...kpis, live: 0, waiting: 0 } } }), /^Nadie en la calle\. 12 tazas hoy.* Sin alertas\.$/);
 });
 
 test('la bitácora deja lo nuevo arriba y no crece sin fin', () => {

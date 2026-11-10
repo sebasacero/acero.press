@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { ago } from '../lib/controlPanel.js';
-import { diffEvents, insights, pushLog, snapshot } from '../lib/panelInsights.js';
+import { briefing, diffEvents, insights, pushLog, snapshot } from '../lib/panelInsights.js';
 import { zonesGeoJSON } from '../../micra-app/liveMap.js';
 
 // El centro de control avanzado (pedido del usuario, 10 nov 2026: «con mapa y… notificaciones en
@@ -12,7 +12,28 @@ const MicraMap = lazy(() => import('../../micra-app/MicraMap.jsx'));
 
 const rpc = (fn, args) => supabase.rpc(fn, args).then(({ data, error }) => (error ? null : data), () => null);
 
-export default function ControlRoom({ state, places, at, p }) {
+// El parte se escribe letra a letra (vista HUD); con «menos movimiento», de una vez
+function useTyped(text) {
+  const [n, setN] = useState(text.length);
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setN(text.length); return undefined; }
+    setN(0);
+    const id = setInterval(() => setN((v) => { if (v >= text.length) { clearInterval(id); return v; } return v + 2; }), 24);
+    return () => clearInterval(id);
+  }, [text]);
+  return text.slice(0, n);
+}
+
+const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const u = new window.SpeechSynthesisUtterance(text);
+  u.lang = 'es-CO';
+  u.rate = 1.02;
+  window.speechSynthesis.speak(u);
+}
+
+export default function ControlRoom({ state, places, at, p, hud = false, picked = null }) {
   const [extra, setExtra] = useState({ live: null, ratings: null });
   const [log, setLog] = useState([]);
   const snap = useRef(null);
@@ -47,6 +68,14 @@ export default function ControlRoom({ state, places, at, p }) {
       .map((b) => ({ ...b, status: b.live_until && Date.parse(b.live_until) > Date.now() ? 'live' : 'off' }));
     return [...live, ...rest];
   }, [extra.live, places]);
+  const brief = useMemo(() => briefing({ state, notes }), [state, notes]);
+  const typed = useTyped(brief);
+  // El escogido en la lista: su punto en el mapa, si lo tiene
+  const focus = useMemo(() => {
+    const b = picked && pins.find((x) => x.id === picked.id);
+    return b ? { lat: b.lat, lng: b.lng, at: picked.at } : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picked]);
   const demandN = (zones?.demand.features ?? []).reduce((a, f) => a + f.properties.n, 0);
 
   return (
@@ -59,9 +88,10 @@ export default function ControlRoom({ state, places, at, p }) {
           {state.owner && <li><i className="is-study" />{p.map.study}</li>}
         </ul>
         <Suspense fallback={<div className="mapp-map is-big" aria-hidden="true" />}>
-          <MicraMap baristas={pins} me={null} theme="plano" onPick={(id) => window.location.assign(`/micra/b/${id}`)} zones={zones} big named label={p.map.title} testId="ctl-map-canvas" />
+          <MicraMap baristas={pins} me={null} theme={hud ? 'noche' : 'plano'} focus={focus} onPick={(id) => window.location.assign(`/micra/b/${id}`)} zones={zones} big named label={p.map.title} testId="ctl-map-canvas" />
         </Suspense>
         <p className="pg-ctl-fine">{state.owner ? p.map.fine : p.map.finePublic}</p>
+        {hud && <div className="pg-hud-scan" aria-hidden="true"><i /><b /><b /><b /><b /></div>}
       </div>
       <div className="pg-fleet-feed">
         <h2>{p.feed.now}</h2>
@@ -87,6 +117,13 @@ export default function ControlRoom({ state, places, at, p }) {
           </>
         ) : <p className="pg-ctl-empty">{p.feed.locked}</p>}
       </div>
+      {hud && (
+        <footer className="pg-hud-brief" data-testid="ctl-brief">
+          <span aria-hidden="true">{p.hud.brief}</span>
+          <p aria-label={brief}>{typed}<i aria-hidden="true" /></p>
+          {canSpeak() && <button type="button" onClick={() => speak(brief)}>{p.hud.speak}</button>}
+        </footer>
+      )}
     </>
   );
 }

@@ -51,6 +51,14 @@ test('computador: el mapa en vivo, las mejoras y lo que cambia mientras se mira'
   await expect(panel.getByTestId('ctl-events')).toContainText('Jairo salió a vender');
   await expect(panel.getByTestId('ctl-live')).toHaveText('2');
   await expect(panel).not.toContainText(/tintero|Rojas|Peña/i);
+  // Arranca en la vista HUD, con el parte; la sobria queda a un botón y se recuerda
+  await expect(page.locator('.pg-panel-page')).toHaveAttribute('data-skin', 'hud');
+  await expect(panel.getByTestId('ctl-brief').locator('p')).toHaveAttribute('aria-label', /2 de 2 baristas en la calle.*Prioridad: quieren café/);
+  await page.getByRole('button', { name: 'Vista sobria' }).click();
+  await expect(page.locator('.pg-panel-page')).toHaveAttribute('data-skin', 'sobria');
+  await expect(panel.getByTestId('ctl-brief')).toHaveCount(0);
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByRole('button', { name: 'Vista HUD' })).toBeVisible();
   expect(errors.filter((e) => !/Failed to fetch|WebGL|maplibre/i.test(e))).toEqual([]);
   await page.context().close();
 });

@@ -23,7 +23,28 @@ async function rpc(fn, args) {
   return data;
 }
 
-export default function ControlPanel({ on, wide = false }) {
+// La hora de Bogotá, segundo a segundo (vista HUD)
+function BogotaClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
+  return <time className="pg-hud-clock">{now.toLocaleTimeString('es-CO', { hour12: false, timeZone: 'America/Bogota' })}</time>;
+}
+
+// El anillo de la flota: qué parte de los baristas está en la calle
+function FleetRing({ live, total }) {
+  const pct = total > 0 ? live / total : 0;
+  const C = 2 * Math.PI * 34;
+  return (
+    <svg className="pg-hud-ring" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+      <circle className="is-spin" cx="48" cy="48" r="44" />
+      <circle className="is-track" cx="48" cy="48" r="34" />
+      <circle className="is-value" cx="48" cy="48" r="34" strokeDasharray={`${C * pct} ${C}`} transform="rotate(-90 48 48)" />
+      <circle className="is-core" cx="48" cy="48" r="22" />
+    </svg>
+  );
+}
+
+export default function ControlPanel({ on, wide = false, hud = false }) {
   const { t } = useLanguage();
   const p = t('page.panel');
   const isOwner = useIsOwner();
@@ -33,6 +54,8 @@ export default function ControlPanel({ on, wide = false }) {
   const busy = useRef(false);
   // Lo que leyó la última vez, para el panel ancho (el mapa y los avisos lo completan)
   const [places, setPlaces] = useState([]);
+  // El barista escogido en la lista: el mapa vuela hasta él
+  const [picked, setPicked] = useState(null);
 
   const load = useCallback(async () => {
     if (busy.current) return;
@@ -76,20 +99,23 @@ export default function ControlPanel({ on, wide = false }) {
     const live = (s?.rows ?? []).filter((r) => r.live);
     const off = (s?.rows ?? []).filter((r) => !r.live);
     const unit = (r) => (
-      <li key={r.id} className={r.live ? 'is-live' : ''}>
-        <i aria-hidden="true" />
-        <div><b>{r.name}</b><span>{r.where || '—'}</span></div>
-        <em>{r.waiting > 0 && <>{r.waiting} {p.waitingN}</>}{r.cups > 0 && <>{r.waiting > 0 ? ' · ' : ''}{r.cups} {p.cupsN}</>}</em>
+      <li key={r.id} className={`${r.live ? 'is-live' : ''}${picked?.id === r.id ? ' is-picked' : ''}`}>
+        <button type="button" onClick={() => setPicked({ id: r.id, at: Date.now() })} aria-pressed={picked?.id === r.id}>
+          <i aria-hidden="true" />
+          <div><b>{r.name}</b><span>{r.where || '—'}</span></div>
+          <em>{r.waiting > 0 && <>{r.waiting} {p.waitingN}</>}{r.cups > 0 && <>{r.waiting > 0 ? ' · ' : ''}{r.cups} {p.cupsN}</>}</em>
+        </button>
       </li>
     );
     return (
-      <section className={`pg-fleet${s?.owner ? ' is-owner' : ''}`} aria-label={p.label} data-testid="control-panel">
+      <section className={`pg-fleet${s?.owner ? ' is-owner' : ''}${hud ? ' is-hud' : ''}`} aria-label={p.label} data-testid="control-panel">
         <dl className="pg-fleet-kpis">
+          {hud && <div className="pg-hud-reactor"><FleetRing live={k?.live ?? 0} total={k?.baristas ?? 0} /></div>}
           <div><dt>{p.kpis.live}</dt><dd><b data-testid="ctl-live">{k ? k.live : '–'}</b><small>/ {k?.baristas ?? '–'}</small></dd></div>
           <div><dt>{p.kpis.waiting}</dt><dd><b data-testid="ctl-waiting">{k ? k.waiting : '–'}</b></dd></div>
           {s?.owner && <div><dt>{p.kpis.cups}</dt><dd><b data-testid="ctl-cups">{k.cups}</b><small>{k.served} {p.kpis.served}</small></dd></div>}
           {s?.owner && <div><dt>{p.kpis.total}</dt><dd><b>{money(k.total)}</b></dd></div>}
-          <div className="pg-fleet-clock"><dt>{s?.owner ? p.team : p.public}</dt><dd><time aria-live="polite">{failed ? p.error : `${p.updated} ${clock}`}</time></dd></div>
+          <div className="pg-fleet-clock"><dt>{s?.owner ? p.team : p.public}</dt><dd>{hud && <BogotaClock />}<time aria-live="polite">{failed ? p.error : `${p.updated} ${clock}`}</time></dd></div>
         </dl>
         <div className="pg-fleet-body">
           <aside className="pg-fleet-side">
@@ -112,7 +138,7 @@ export default function ControlPanel({ on, wide = false }) {
               <><p className="pg-ctl-empty">{p.locked}</p><a className="pg-fleet-enter" href="/micra/equipo">{p.enter}</a></>
             )}
           </aside>
-          {s && <Suspense fallback={<div className="pg-fleet-map" />}><ControlRoom state={s} places={places} at={at} p={p} /></Suspense>}
+          {s && <Suspense fallback={<div className="pg-fleet-map" />}><ControlRoom state={s} places={places} at={at} p={p} hud={hud} picked={picked} /></Suspense>}
         </div>
       </section>
     );
