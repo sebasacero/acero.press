@@ -18,7 +18,7 @@ async function rpc(fn, args) {
   return data;
 }
 
-export default function ControlPanel({ on }) {
+export default function ControlPanel({ on, wide = false }) {
   const { t } = useLanguage();
   const p = t('page.panel');
   const isOwner = useIsOwner();
@@ -61,7 +61,7 @@ export default function ControlPanel({ on }) {
   const clock = at ? at.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone: 'America/Bogota' }) : '…';
 
   return (
-    <section className={`pg-ctl${s?.owner ? ' is-owner' : ''}`} aria-label={p.label} data-testid="control-panel">
+    <section className={`pg-ctl${s?.owner ? ' is-owner' : ''}${wide ? ' is-wide' : ''}`} aria-label={p.label} data-testid="control-panel">
       <header className="pg-ctl-top">
         <p className="pg-ctl-kicker"><i className="is-live" />{p.kicker}</p>
         <span className="pg-ctl-who">{s?.owner ? p.team : p.public}</span>
@@ -80,7 +80,7 @@ export default function ControlPanel({ on }) {
           <h3>{p.street}</h3>
           {s && s.rows.filter((r) => r.live).length === 0 && <p className="pg-ctl-empty">{p.empty}</p>}
           <ul className="pg-ctl-list">
-            {(s?.rows ?? []).slice(0, 6).map((r) => (
+            {(s?.rows ?? []).slice(0, wide ? 40 : 6).map((r) => (
               <li key={r.id} className={r.live ? 'is-live' : ''}>
                 <i aria-hidden="true" />
                 <div><b>{r.name}</b><span>{r.where || '—'}</span></div>
