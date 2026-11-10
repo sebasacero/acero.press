@@ -36,6 +36,8 @@ const SellerPage = lazy(() => import('./Origen.jsx').then((m) => ({ default: m.S
 const Tienda = lazy(() => import('./Origen.jsx').then((m) => ({ default: m.Tienda })));
 const FincaWizard = lazy(() => import('./Finca.jsx'));
 const Fincas = lazy(() => import('./Fincas.jsx'));
+const CafeDrawer = lazy(() => import('./CafeDrawer.jsx'));
+const AceroAd = lazy(() => import('./AceroAd.jsx'));
 const FincaPreview = lazy(() => import('./Finca.jsx').then((m) => ({ default: m.FincaPreview })));
 
 /** El avión de papel de arriba (como los mensajes de Instagram): el WhatsApp del equipo. */
@@ -173,6 +175,10 @@ export default function MicraApp() {
   // La meta del día (la avisa BaristaHome): en la barra de arriba, en vez de «Cliente / Barista»
   const [board, setBoard] = useState(null);
   const [publishing, setPublishing] = useState(false);
+  // El menú del café (el logo de arriba) y la publicidad de ACERO.press que se abre desde él
+  const [drawer, setDrawer] = useState(false);
+  const [acero, setAcero] = useState(false);
+  const closeDrawer = useCallback(() => setDrawer(false), []);
   // «Desliza para recargar»: el cliente y el equipo vuelven a montar la pantalla; el barista
   // relee su día sin desmontarse (lleva el GPS de la salida y la cola de ventas)
   const [refreshKey, setRefreshKey] = useState(0);
@@ -292,8 +298,9 @@ export default function MicraApp() {
     <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs || joinTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}${route.view === 'study' && route.tab === 'mapa' ? ' is-wide' : ''}`}>
       <ThermalDefs />
       <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
-        {/* El termo del icono en su baldosa crema (se ve igual sobre blanco, noche o rojo) y la palabra */}
-        <button type="button" className="mapp-brand" onClick={() => go(viewMode === 'client' ? '/micra' : viewMode === 'owner' ? '/micra/equipo' : '/micra/barista')} aria-label="Micra, inicio">
+        {/* El termo del icono en su baldosa crema y la palabra: abre el menú del café (el inicio está en la barra de abajo) */}
+        <button type="button" className="mapp-brand" onClick={() => setDrawer(true)} aria-label="Abrir el menú del café" aria-haspopup="dialog" aria-expanded={drawer} data-testid="brand-menu">
+          <span className="mapp-brand-burger" aria-hidden="true"><i /><i /><i /></span>
           <span className="mapp-brand-mark"><Termo /></span>
           <span className="mapp-brand-word">micra<i>.</i></span>
         </button>
@@ -375,6 +382,12 @@ export default function MicraApp() {
         </Suspense>
       )}
       {publishing && clientTabs && <Suspense fallback={null}><ClientPublish onClose={() => setPublishing(false)} /></Suspense>}
+      {drawer && (
+        <Suspense fallback={null}>
+          <CafeDrawer mode={viewMode === 'barista' && (who.barista || acting) ? 'barista' : 'client'} go={go} onClose={closeDrawer} onAcero={() => setAcero(true)} pathname={window.location.pathname} />
+        </Suspense>
+      )}
+      {acero && <Suspense fallback={null}><AceroAd onClose={() => setAcero(false)} /></Suspense>}
       {platform.native && <Splash />}
     </div>
   );

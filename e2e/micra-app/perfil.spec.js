@@ -252,19 +252,19 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
   expect(errors).toEqual([]);
 });
 
-test('cliente: la publicidad de ACERO.press ya no está en el inicio; se abre desde Mi perfil (video de la lata y luego las latas)', async ({ browser }) => {
+test('cliente: la publicidad de ACERO.press ya no está en el inicio; se abre desde el menú del café (video de la lata y luego las latas)', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
   await expect(page.getByTestId('micra-splash')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: /Qué te gustaría probar/ })).toBeVisible();
   await expect(page.getByTestId('acero-ad')).toHaveCount(0);
 
-  // En Mi perfil no sale sola; se abre desde «Otros › ACERO.press» y se cierra con Escape
-  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: 'Mi perfil' }).click();
-  await expect(page.getByTestId('client-profile')).toBeVisible();
+  // No sale sola; se abre desde el menú del café (el logo de arriba) y se cierra con Escape
   const promo = page.getByTestId('promo-acero');
   await expect(promo).toHaveCount(0);
-  await page.getByTestId('tile-coldbrew').click();
+  await page.getByTestId('brand-menu').click();
+  await page.getByTestId('drawer-acero').click();
+  await expect(page.getByTestId('cafe-drawer')).toHaveCount(0);
   await expect(promo).toBeVisible();
   await expect(promo).toContainText('Recetas de la casa');
   const skip = page.getByTestId('acero-skip');
@@ -388,5 +388,47 @@ test('cliente: «Mis apartados» muestra sus baristas (favoritos y a quién le h
   await expect(mine).not.toContainText('Wilson');
   await page.getByTestId(`my-barista-${JAIRO}`).click();
   await expect(page).toHaveURL(new RegExp(`/micra/b/${JAIRO}`));
+  expect(errors).toEqual([]);
+});
+
+test('el logo abre el menú del café: lo del café sale de la izquierda y Mi perfil queda para la cuenta', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra', { waitUntil: 'load' });
+  await expect(page.getByTestId('micra-splash')).toHaveCount(0);
+  const logo = page.getByTestId('brand-menu');
+  await expect(logo).toHaveAttribute('aria-expanded', 'false');
+  await logo.click();
+  const drawer = page.getByRole('dialog', { name: 'El café en Micra' });
+  await expect(drawer).toBeVisible();
+  await expect(logo).toHaveAttribute('aria-expanded', 'true');
+  for (const name of ['Tienda', 'Marcas y fincas', 'Hoy en el café', 'Competencia', 'Escuela', 'ACERO.press', 'Sé barista', 'Soy caficultor']) {
+    await expect(drawer.getByText(name, { exact: true })).toBeVisible();
+  }
+  await expect(drawer).not.toContainText('Equipo');
+  // Escape lo cierra y el foco vuelve al logo
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  await expect(logo).toBeFocused();
+  // Una entrada lleva a su pantalla y cierra el menú
+  await logo.click();
+  await page.getByTestId('drawer-tienda').click();
+  await expect(page).toHaveURL(/\/micra\/tienda$/);
+  await expect(page.getByTestId('cafe-drawer')).toHaveCount(0);
+  // Mi perfil ya no repite lo del café
+  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: 'Mi perfil' }).click();
+  await expect(page.getByTestId('client-profile')).toBeVisible();
+  for (const id of ['tile-coldbrew', 'tile-tienda', 'tile-origen', 'tile-reto']) await expect(page.getByTestId(id)).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('barista: el menú del café lleva a su Hoy, su reto y Aprende', async ({ browser }) => {
+  const { page, errors } = await open(browser, { who: 'barista' });
+  await page.goto('/micra/barista', { waitUntil: 'load' });
+  await page.getByTestId('brand-menu').click();
+  const drawer = page.getByRole('dialog', { name: 'El café en Micra' });
+  await expect(drawer.getByText('Aprende', { exact: true })).toBeVisible();
+  await expect(drawer.getByText('Sé barista', { exact: true })).toHaveCount(0);
+  await page.getByTestId('drawer-reto').click();
+  await expect(page).toHaveURL(/\/micra\/barista\/reto$/);
   expect(errors).toEqual([]);
 });

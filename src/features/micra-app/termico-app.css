@@ -783,3 +783,5 @@
 .mapp-fp-list{margin:8px 0 0;padding-left:22px;display:grid;gap:4px;font-size:.85rem}
 .mapp-fp-list li span{margin-right:8px}
 .mapp-fp-url{margin:0 0 8px;font:500 .74rem 'JetBrains Mono',monospace;word-break:break-all}
+/* Las tres rayas del menú del café: blancas sobre la barra fría de arriba */
+.mapp .mapp-top .mapp-brand-burger i{background:#fff !important}
