@@ -22,9 +22,13 @@ export function bogotaHour(date = new Date()) {
 }
 
 /** El momento que corre a esa hora: el último que ya empezó; de madrugada sigue el descanso. */
-// Apenas se abre la página el reloj corre: el día entero pasa en dos minutos (pedido del usuario,
+// Apenas se abre la página el reloj corre: el día entero pasa en un minuto, de hora en hora (pedido del usuario,
 // 10 nov 2026: «la idea es mostrar que es 24 horas»). Arranca en la hora real de Bogotá.
-export const DAY_SECONDS = 120;
+export const DAY_SECONDS = 60;
+/** Segundos que se queda cada hora antes de saltar a la siguiente (pedido del usuario, 10 nov 2026). */
+export const HOUR_SECONDS = DAY_SECONDS / 24;
+/** El reloj de hora en hora: arranca en la hora en punto de la visita y salta una hora entera cada HOUR_SECONDS. */
+export const stepHour = (start, seconds, day = DAY_SECONDS) => (Math.floor(start) + Math.floor((seconds * 24) / day)) % 24;
 /** La hora que marca el reloj `seconds` segundos después de abrir en `start`. */
 export const runHour = (start, seconds, day = DAY_SECONDS) => (((start + (seconds * 24) / day) % 24) + 24) % 24;
 

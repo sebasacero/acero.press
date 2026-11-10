@@ -1,23 +1,24 @@
 import { createContext, useContext, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
-import { bogotaHour, runHour } from '../lib/dayBanner.js';
+import { bogotaHour, stepHour } from '../lib/dayBanner.js';
 import { sectionSky, dayPart, sectionClock } from '../lib/daySky.js';
 
 // La portada sigue el día del banner (rediseño del 10 nov 2026, pedido del usuario): cada sección
 // es unas horas más tarde que la anterior y lleva el cielo de esa hora; el texto pasa de tinta a
 // claro según el cielo. El reloj arranca en la hora de Bogotá de la visita y corre: el día entero
-// pasa en dos minutos, y el banner y todas las secciones cambian de color con él.
+// pasa en un minuto, de hora en hora (pedido del usuario, 10 nov 2026: el cambio se ve más rápido que
+// minuto a minuto); el banner pasa al salto suave y las secciones con el CSS.
 const TICK_MS = 200;   // cinco veces por segundo alcanza: el color entre un paso y otro lo suaviza el CSS
 
 function makeClock() {
   const subs = new Set();
   let start = bogotaHour(), secs = 0;
   const c = {
-    hour: start,
+    hour: Math.floor(start),
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     get: () => c.hour,
     /** Avanza `dt` segundos de página a la vista. */
-    tick(dt) { secs += dt; c.hour = runHour(start, secs); subs.forEach((fn) => fn()); },
+    tick(dt) { secs += dt; const h = stepHour(start, secs); if (h !== c.hour) { c.hour = h; subs.forEach((fn) => fn()); } },
     /** Sin correr («menos movimiento»): la hora real. */
     real() { start = bogotaHour(); secs = 0; if (c.hour !== start) { c.hour = start; subs.forEach((fn) => fn()); } },
   };

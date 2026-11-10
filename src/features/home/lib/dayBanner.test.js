@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MOMENTS, bogotaHour, momentAt, clockOf, paletteAt, orbsAt, hourLerp, layoutOf, mix, rng, runHour, DAY_SECONDS } from './dayBanner.js';
+import { MOMENTS, bogotaHour, momentAt, clockOf, paletteAt, orbsAt, hourLerp, layoutOf, mix, rng, runHour, stepHour, DAY_SECONDS, HOUR_SECONDS } from './dayBanner.js';
 
 test('bogotaHour: UTC menos cinco, sin horario de verano', () => {
   assert.equal(bogotaHour(new Date('2026-11-09T10:30:00Z')), 5.5);
@@ -74,6 +74,14 @@ test('mix y rng: deterministas', () => {
   assert.equal(mix('rgba(0,0,0,0)', '#ffffff', 1), 'rgba(255,255,255,1)');
   const a = rng(5), b = rng(5);
   assert.deepEqual([a(), a(), a()], [b(), b(), b()]);
+});
+
+test('stepHour: salta de hora en hora, en punto, y da la vuelta', () => {
+  assert.equal(stepHour(6.5, 0), 6);
+  assert.equal(stepHour(6.5, HOUR_SECONDS * 0.99), 6);
+  assert.equal(stepHour(6.5, HOUR_SECONDS), 7);
+  assert.equal(stepHour(23.9, HOUR_SECONDS * 2), 1);
+  assert.equal(DAY_SECONDS, 60);
 });
 
 test('runHour: el día corre desde la hora de la visita y da la vuelta', () => {
