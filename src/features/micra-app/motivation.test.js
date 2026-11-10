@@ -80,3 +80,25 @@ test('compartir mi día y la taza que se llena', () => {
   assert.equal(fillOf(30, 20), 1);
   assert.equal(fillOf(3, 0), 0);
 });
+
+test('el camino del día: marcas cada 5, la meta al final y cuál sigue', async () => {
+  const { dayTrail } = await import('./motivation.js');
+  const t = dayTrail(4, 25);
+  assert.deepEqual(t.marks.map((m) => m.at), [5, 15, 25]);
+  assert.deepEqual(t.next, { at: 5, isGoal: false, left: 1 });
+  assert.deepEqual(dayTrail(4, 15).marks.map((m) => m.at), [5, 10, 15]);
+  assert.deepEqual(dayTrail(4, 40).marks.map((m) => m.at), [5, 20, 35, 40]);
+  assert.deepEqual(dayTrail(0, 10).marks.map((m) => m.at), [5, 10]);
+  assert.deepEqual(dayTrail(16, 25).next, { at: 25, isGoal: true, left: 9 });
+  assert.equal(dayTrail(30, 25).next, null);
+  assert.equal(dayTrail(30, 25).pct, 1);
+  assert.deepEqual(dayTrail(3, 0).marks, []);
+});
+
+test('el reto del día solo cuenta apartados entregados', async () => {
+  const { dayChallenge } = await import('./motivation.js');
+  const holds = [{ status: 'served' }, { status: 'waiting' }, { status: 'no_show' }, { status: 'served' }];
+  assert.deepEqual(dayChallenge(holds), { target: 3, served: 2, done: false });
+  assert.deepEqual(dayChallenge([...holds, { status: 'served' }, { status: 'served' }]), { target: 3, served: 3, done: true });
+  assert.deepEqual(dayChallenge(null), { target: 3, served: 0, done: false });
+});
