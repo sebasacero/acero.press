@@ -1,5 +1,6 @@
 // Micra en la portada: qué es, las cifras reales del estudio (micra_street_map) junto al celular con
-// Vender (se toca +1 y la taza se llena), los dos banners de siempre, las fichas de redes y las tiendas.
+// Vender (se toca +1 y la taza se llena), las tiendas, y arriba los dos banners de siempre como dos
+// puertas a la vez. Las fichas de redes van al final de la página.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
@@ -19,16 +20,21 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await page.goto('/', { waitUntil: 'load' });
   const micra = page.locator('#micra');
   await micra.scrollIntoViewIfNeeded();
-  await expect(micra.getByRole('heading', { level: 2 }).first()).toContainText('Micra.');
-  await expect(micra.locator('.essp-script').first()).toHaveText('vive del café');
-  // Tres pasos cortos junto al texto y, en el panel del celular, las cifras reales del estudio
-  await expect(micra.locator('.micra-steps li')).toHaveCount(3);
+  await expect(micra.getByRole('heading', { level: 2 })).toHaveText(/El mejor café lo vende\s*alguien cerca de ti\./);
+  await expect(micra).toContainText('Micra es para quienes venden café');
+  // Tres pasos que caen como notificaciones y, junto al celular, las cifras reales del estudio
+  await expect(micra.locator('.pg-notes li b')).toHaveText(['Aprende', 'Vende', 'Certifícate']);
+  await expect(micra.locator('.pg-notes')).toHaveClass(/is-on/);
   await expect(micra.getByRole('list', { name: 'El estudio de calle hoy' }).locator('b')).toHaveText(['40', '1', '2']);
-  await expect(micra.getByRole('group', { name: 'Descarga la app Micra' })).toBeVisible();
-  // El primer botón abre la app de verdad
-  await expect(micra.getByRole('link', { name: 'Abrir la app' })).toHaveAttribute('href', '/micra');
-  // Abajo, las fichas de redes con su video y el botón de la app
-  const banners = micra.locator('#publicaciones .posts-banner');
+  // Sin enlace a las tiendas, dicen «Pronto» y no son enlaces
+  const stores = micra.getByRole('group', { name: 'Descarga la app Micra' });
+  await expect(stores).toContainText('App Store');
+  await expect(stores.locator('i')).toHaveText(['Pronto', 'Pronto']);
+  await expect(stores.getByRole('link')).toHaveCount(0);
+  // En público se dice «baristas»; sin nombres
+  await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
+  // Las fichas de redes van al final, con su video y el botón de la app
+  const banners = page.locator('#publicaciones .posts-banner');
   await expect(banners).toHaveCount(3);
   await expect(banners.locator('video')).toHaveCount(3);
   const links = banners.getByRole('link');
@@ -36,30 +42,15 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await expect(links.nth(0)).toContainText('@aceropress');
   await expect(links.nth(1)).toContainText('@acero.press');
   await expect(links.nth(2)).toHaveAttribute('href', /youtube\.com/);
-  // En público se dice «baristas»; sin nombres
-  await expect(micra).not.toContainText(/tintero|Laura|en camino/i);
-  // Los dos banners de siempre van bajo el de 24 horas: el primero muestra quién está en la calle (micra_baristas) y lleva a la app
-  const hero = page.locator('#baristas');
-  await hero.scrollIntoViewIfNeeded();
-  await expect(hero.getByRole('heading', { level: 2 }).first()).toContainText(/Pide café\s*en AeroPress\s*a domicilio/);
-  await expect(hero.getByTestId('hero-live').first()).toBeVisible();
-  await expect(hero.getByRole('link', { name: 'Ver quién pasa cerca' }).first()).toHaveAttribute('href', '/micra');
-  // Sin enlace a las tiendas, el banner no muestra sus botones
-  await expect(hero.getByRole('group', { name: 'Descarga la app Micra' })).toHaveCount(0);
-  await hero.getByRole('button', { name: 'Soy barista' }).click();
-  await expect(hero.getByRole('heading', { level: 2 }).filter({ hasText: 'Vive' })).toContainText(/Vive\s*del café\.\s*con tu AeroPress/);
-  await expect(hero.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /wa\.me\/\d+\?text=/);
   // Un aliado no se nombra antes de serlo
   await expect(page.locator('body')).not.toContainText(/Amor Perfecto/i);
-  // Los llamados: WhatsApp con el mensaje listo y la Escuela
-  await expect(micra.getByRole('link', { name: 'Vendo café', exact: true })).toHaveAttribute('href', /wa\.me\/\d+\?text=.*Micra/);
-  await expect(micra.getByRole('link', { name: 'Empezar la Escuela', exact: true })).toHaveAttribute('href', '/escuela');
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
 test('el celular de Micra es Vender: cada +1 suma la taza y la plata y llena la meta, sin escribir nada', async ({ browser }) => {
-  const { page, errors, api } = await openPage(browser, { context: DESK });
+  // Con «menos movimiento» el celular no se toca solo: así la cuenta es la de la prueba
+  const { page, errors, api } = await openPage(browser, { context: { ...DESK, reducedMotion: 'reduce' } });
   await page.goto('/', { waitUntil: 'load' });
   const phone = page.getByRole('group', { name: /el panel de vender del barista/ });
   await phone.scrollIntoViewIfNeeded();
@@ -75,37 +66,43 @@ test('el celular de Micra es Vender: cada +1 suma la taza y la plata y llena la 
   await page.context().close();
 });
 
-test('los enlaces viejos a /#tinteros y /#baristas abren el banner «Ser barista»', async ({ browser }) => {
+test('el celular se toca solo mientras nadie lo use: la taza sube', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
-  await page.goto('/#tinteros', { waitUntil: 'load' });
-  await expect(page.locator('#baristas .essp-slide--photo')).toHaveAttribute('aria-hidden', 'false');
+  await page.goto('/', { waitUntil: 'load' });
+  const phone = page.getByRole('group', { name: /el panel de vender del barista/ });
+  await phone.scrollIntoViewIfNeeded();
+  await expect.poll(async () => Number(await phone.locator('.sellp-count b').textContent()), { timeout: 8000 }).toBeGreaterThan(4);
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('los dos banners de siempre van en carrusel, sin tabla ni botones de control', async ({ browser }) => {
+test('las dos puertas: los dos banners de siempre a la vez, sin carrusel', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
-  await page.clock.install();
   await page.goto('/', { waitUntil: 'load' });
-  const hero = page.locator('#baristas');
-  // Fuera de pantalla no corre su turno: va bajo el banner de 24 horas
-  await hero.scrollIntoViewIfNeeded();
-  await expect(hero).toHaveAttribute('aria-roledescription', 'carousel');
-  await expect(hero.getByText(/^(ZONA|HORA|FECHA|PREPARA)$/)).toHaveCount(0);
-  await expect(hero.getByRole('tab')).toHaveCount(0);
-  await expect(hero.getByRole('button', { name: /anterior|siguiente/i })).toHaveCount(0);
-  const order = hero.locator('.essp-slide--paper');
-  const barista = hero.locator('.essp-slide--photo');
-  await expect(order).toHaveAttribute('aria-hidden', 'false');
-  // Pasa solo al siguiente banner y vuelve al primero
-  await page.clock.runFor(8500);
-  await expect(barista).toHaveAttribute('aria-hidden', 'false');
-  await page.clock.runFor(8500);
-  await expect(order).toHaveAttribute('aria-hidden', 'false');
-  // Con el cursor encima se queda quieto
-  await hero.hover();
-  await page.clock.runFor(20000);
-  await expect(order).toHaveAttribute('aria-hidden', 'false');
+  const doors = page.locator('#baristas');
+  await doors.scrollIntoViewIfNeeded();
+  await expect(doors.getByRole('heading', { level: 2 })).toHaveText(/¿Tomas café\s*o lo vendes\?/);
+  await expect(doors).not.toHaveAttribute('aria-roledescription', 'carousel');
+  const order = doors.locator('[data-door="order"]'), barista = doors.locator('[data-door="barista"]');
+  await expect(order).toBeVisible();
+  await expect(barista).toBeVisible();
+  await expect(order.getByRole('heading', { level: 3 })).toHaveText(/Pide café\s*en AeroPress\s*a domicilio/);
+  await expect(order.getByRole('link', { name: 'Abrir Micra' })).toHaveAttribute('href', '/micra');
+  await expect(barista.getByRole('heading', { level: 3 })).toHaveText(/Vive\s*del café\s*con tu AeroPress/);
+  await expect(barista.getByRole('link', { name: 'Soy barista' })).toHaveAttribute('href', '/micra/barista');
+  // Lado a lado en computador
+  const a = await order.boundingBox(), b = await barista.boundingBox();
+  expect(b.x).toBeGreaterThan(a.x + a.width);
+  await expect(doors).not.toContainText(/tintero/i);
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
+test('los enlaces viejos a /#tinteros y /#baristas señalan la puerta del barista', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await page.goto('/#tinteros', { waitUntil: 'load' });
+  await expect(page.locator('#baristas [data-door="barista"]')).toHaveClass(/is-focus/);
+  await expect(page.locator('#baristas [data-door="barista"]')).toBeInViewport();
   expect(errors).toEqual([]);
   await page.context().close();
 });

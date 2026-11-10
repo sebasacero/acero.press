@@ -8,13 +8,12 @@ import SectionEditButton from '../../admin/SectionEditButton.jsx';
 import { useEditableTexts } from '../../../shared/lib/editableTexts.js';
 
 const HEAD_FIELDS = [
-  { key: 'recipes_title', label: 'Título de la sección' },
   { key: 'recipes_desc', label: 'Descripción', multiline: true },
 ];
 
 export default function RecipeArchive() {
   const { t } = useLanguage();
-  const [text, reloadTexts] = useEditableTexts(['recipes_title', 'recipes_desc']);
+  const [text, reloadTexts] = useEditableTexts(['recipes_desc']);
   const [openRecipe, setOpenRecipe] = useState(null);
   const [focusKit, setFocusKit] = useState(false);
   const pairings = useRecipePairings();
@@ -22,18 +21,11 @@ export default function RecipeArchive() {
 
   return (
     <>
-      <div className="section-label" id="metodo">
-        <span className="num">{t('section.num')}</span>
-        <span className="rule"></span>
-        <span className="sub">{t('section.sub')}</span>
-      </div>
-
-      <div className="sp" style={{ position: 'relative' }}>
+      <div className="pg-champ-head" id="metodo" style={{ position: 'relative' }}>
         <SectionEditButton section="Recetas · textos" fig="FIG. 03 — ARCHIVO" onSaved={reloadTexts} fields={HEAD_FIELDS} />
-        <h2 className="sec-h2">{text('recipes_title', t('section.title'))}</h2>
-        <p className="sec-desc">
-          {text('recipes_desc', t('section.desc'))}
-        </p>
+        <p className="pg-mono">{t('page.champ.kicker')}</p>
+        <h2 className="pg-wac">World <em>AeroPress</em> Championship</h2>
+        <p className="pg-wac-s">{text('recipes_desc', t('page.champ.text'))}</p>
       </div>
 
       <RecipeBanners recipes={recipes} pairings={pairings} onOpen={open} />

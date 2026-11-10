@@ -10,23 +10,21 @@ import './day-banner.css';
 // El banner principal: 24 horas con un barista de calle. El horizonte curvo no
 // se mueve y el mundo cambia encima: la ciudad gira bajo los pies del barista,
 // el cielo es el de la hora de Bogotá en que se abre la página y el celular
-// muestra lo que él hace en Micra a esa hora. Los puntos de la línea del día
-// dejan mirar otro momento; solo vuelve a «ahora».
+// muestra lo que él hace en Micra a esa hora. Sin la línea de horas de abajo
+// (pedido del usuario, 10 nov 2026): el día sigue en el resto de la página.
 // Lleva el menú y el único h1 de la portada.
 
 const STEP_S = 0.75;      // segundos por paso: la tierra avanza una zancada por paso
-const PEEK_MS = 9000;     // cuánto dura un momento mirado antes de volver a ahora
 const CLOUD = 'M10 44 c-14 0 -14 -20 2 -20 c2 -16 26 -18 32 -4 c8 -10 28 -4 26 10 c14 0 14 16 0 16 Z';
 
 export default function DayBanner({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
   const root = useRef(null), city = useRef(null), far = useRef(null), near = useRef(null), earth = useRef(null);
-  const walker = useRef(null), shade = useRef(null), sun = useRef(null), flare = useRef(null), moon = useRef(null), head = useRef(null);
+  const walker = useRef(null), shade = useRef(null), sun = useRef(null), flare = useRef(null), moon = useRef(null);
   const [now, setNow] = useState(() => bogotaHour());
-  const [peek, setPeek] = useState(null);       // índice del momento que se está mirando, o null (ahora)
   const [day, setDay] = useState(() => paletteAt(bogotaHour()).day);
   const [shown, setShown] = useState(() => bogotaHour());   // la hora que marca el reloj (va hacia la meta)
-  const target = peek == null ? now : MOMENTS[peek].h;
+  const target = now;
   const live = useRef({ hour: bogotaHour(), target: bogotaHour(), painted: -1, g: null });
   live.current.target = target;
 
@@ -35,13 +33,6 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
     const id = setInterval(() => setNow(bogotaHour()), 15000);
     return () => clearInterval(id);
   }, []);
-  // Un momento mirado vuelve solo a ahora
-  useEffect(() => {
-    if (peek == null) return undefined;
-    const id = setTimeout(() => setPeek(null), PEEK_MS);
-    return () => clearTimeout(id);
-  }, [peek]);
-
   useEffect(() => {
     const el = root.current, S = live.current;
     if (!el) return undefined;
@@ -66,7 +57,6 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
       const orbit = (u) => { const x = g.small ? g.W * (0.07 + 0.86 * u) : g.W * (0.36 + 0.38 * u); return [x, ground(x) + 70 * g.z - Math.sin(u * Math.PI) * g.H * (g.small ? 0.2 : 0.52)]; };
       const put = (node, u, extra = '') => { if (u == null) { node.style.opacity = 0; return; } const [x, y] = orbit(u); node.style.transform = `translate(${x}px,${y}px)${extra}`; node.style.opacity = 1; };
       put(sun.current, o.sun); put(moon.current, o.moon, ' rotate(-18deg)'); put(flare.current, o.sun); flare.current.style.opacity = o.low;
-      head.current.style.left = `${(h / 24) * 100}%`;
       S.painted = h;
     };
     // Lo que se mueve: la cuadra gira módulo un sector y el barista sube y baja con el paso
@@ -113,9 +103,8 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
   useEffect(() => { fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setNumber(n || FALLBACK_WHATSAPP_NUMBER)); }, []);
 
-  const idx = peek ?? momentAt(now);
+  const idx = momentAt(now);
   const m = MOMENTS[idx], clock = clockOf(shown);
-  const label = (mo) => { const c = clockOf(mo.h); return `${c.text} ${c.am ? t('day.am') : t('day.pm')}`; };
   const stars = useMemo(() => { const r = rng(5); return Array.from({ length: 70 }, () => ({ x: (r() * 100).toFixed(2), y: (r() * 62).toFixed(2), r: (0.6 + r() * 1.1).toFixed(2), tw: r() < 0.3, d: (r() * 3).toFixed(2) })); }, []);
   const title = t('day.title');
 
@@ -141,7 +130,7 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
       </div>
 
       <div className="db-copy">
-        <p className="db-eyebrow"><i className={peek == null ? 'is-live' : undefined} />{t(peek == null ? 'day.live' : 'day.peek')}</p>
+        <p className="db-eyebrow"><i className="is-live" />{t('day.live')}</p>
         <p className="db-clock" data-testid="day-clock"><span>{clock.text}</span><small>{clock.am ? t('day.am') : t('day.pm')}</small></p>
         <p className="db-now" key={m.key} data-testid="day-caption">{t(`day.caps.${m.key}`)}</p>
         <h1 className="db-title">{title[0]} <em>{title[1]}</em></h1>
@@ -160,18 +149,6 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
       </div>
 
       <div className="db-scrim" />
-      <div className="db-day24">
-        <div className="db-bar" />
-        <span ref={head} className="db-head" />
-        <div className="db-dots" role="group" aria-label={t('day.timeline')}>
-          {MOMENTS.map((mo, i) => (
-            <button key={mo.key} type="button" className={`db-dot${i === idx ? ' is-on' : ''}${mo.h <= shown ? ' is-past' : ''}`} style={{ left: `${(mo.h / 24) * 100}%` }}
-              aria-pressed={i === idx} aria-label={`${label(mo)}: ${t(`day.caps.${mo.key}`)}`} onClick={() => setPeek(i)} />
-          ))}
-        </div>
-        <div className="db-hrs" aria-hidden="true">{t('day.hours').map((h, i) => <span key={i}>{h}</span>)}</div>
-        {peek != null && <button type="button" className="db-back" onClick={() => setPeek(null)}>{t('day.back')}</button>}
-      </div>
     </header>
   );
 }

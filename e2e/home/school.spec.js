@@ -1,4 +1,4 @@
-// Escuela: la receta oficial de la portada lleva a /escuela; ahí la receta de AeroPress Original
+// Escuela: la tarjeta de diez pasos de la portada lleva a /escuela; ahí la receta de AeroPress Original
 // contada con el scroll, las seis lecciones en tarjetas (una abierta a la vez, en su lugar),
 // el modo preparar, la cuenta de la taza y lo visto recordado en el navegador.
 import { test, expect } from '@playwright/test';
@@ -7,24 +7,42 @@ import { openPage } from '../micra/fixtures.js';
 const DESK = { viewport: { width: 1440, height: 900 } };
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true };
 
-test('portada: la hoja de AeroPress Go en diez pasos lleva a la Escuela', async ({ browser }) => {
+test('portada: la hoja de AeroPress Go en una tarjeta de diez pasos y las seis lecciones llevan a la Escuela', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
   const brew = page.locator('#escuela');
   // Sin franja en movimiento (el usuario la quitó)
   await expect(page.locator('.marquee')).toHaveCount(0);
   await brew.scrollIntoViewIfNeeded();
-  await expect(brew.getByRole('heading', { level: 2 })).toContainText('AeroPress Go');
-  // Diez pasos, cada uno con su dibujo; caliente y cold brew como en la hoja oficial
-  const steps = brew.locator('.brew-sheet > li');
-  await expect(steps).toHaveCount(10);
-  await expect(steps.locator('svg.brew-draw')).toHaveCount(10);
-  await expect(steps.nth(5)).toContainText('80 °C');
-  await expect(steps.nth(6).locator('.is-hot')).toHaveText('Caliente: 10 segundos.');
-  await expect(steps.nth(6).locator('b.is-cold')).toHaveText('Cold brew: 1 minuto.');
+  await expect(brew.getByRole('heading', { level: 2 })).toHaveText('Diez pasos y sale un café.');
+  await expect(brew).toContainText('AeroPress Go');
+  // Una tarjeta con sus diez puntos; cada paso con su dibujo
+  const sheet = brew.locator('.pg-sheet');
+  const dots = sheet.locator('.pg-dots button');
+  await expect(dots).toHaveCount(10);
+  await expect(dots.nth(0)).toHaveAttribute('aria-pressed', 'true');
+  await expect(sheet.getByRole('heading', { level: 3 })).toHaveText('Saca el émbolo de la cámara.');
+  await expect(sheet.locator('svg.brew-draw')).toHaveCount(1);
+  // El color térmico va solo en lo caliente: el paso 1 (prensa vacía) sin color, el 6 (agua a 80 °C) con él
+  expect(await sheet.locator('.pg-sheet-pic [fill^="url(#"]').count()).toBe(0);
+  await dots.nth(5).click();
+  await expect(sheet).toContainText('80 °C');
+  expect(await sheet.locator('.pg-sheet-pic [fill^="url(#"]').count()).toBeGreaterThan(0);
+  await sheet.getByRole('button', { name: 'Siguiente' }).click();
+  await expect(dots.nth(6)).toHaveAttribute('aria-pressed', 'true');
+  await expect(sheet.locator('.is-hot')).toHaveText('Caliente: 10 segundos.');
+  await expect(sheet.locator('.is-cold')).toHaveText('Cold brew: 1 minuto.');
+  await sheet.getByRole('button', { name: 'Anterior' }).click();
+  await expect(dots.nth(5)).toHaveAttribute('aria-pressed', 'true');
   await expect(brew).toContainText('aeropress.com');
   await expect(page.locator('#prensado, .school-teaser')).toHaveCount(0);
   await expect(page.locator('.navbar a[href="/escuela"]').first()).toHaveText('Aprende');
+  // Las seis lecciones de la Escuela, cada una con su enlace
+  const lessons = brew.locator('.pg-lessons a');
+  await expect(lessons).toHaveCount(6);
+  await expect(lessons.nth(0)).toContainText('Conoce tu AeroPress');
+  await expect(lessons.nth(2)).toHaveAttribute('href', '/escuela#leccion-3');
+  await expect(brew.getByRole('link', { name: 'Ir a la Escuela' })).toHaveAttribute('href', '/escuela');
 
   await brew.getByRole('link', { name: /Prepárala con cronómetro/ }).click();
   await expect(page).toHaveURL(/\/escuela#leccion-2$/);
@@ -35,44 +53,20 @@ test('portada: la hoja de AeroPress Go en diez pasos lleva a la Escuela', async 
   await page.context().close();
 });
 
-test('celular de pie: los diez pasos se pasan de lado con Siguiente/Anterior y los puntos, sin fijar la página', async ({ browser }) => {
+test('celular: la tarjeta de pasos cabe, no fija la página y los puntos miden 44 px', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: PHONE });
   await page.goto('/', { waitUntil: 'load' });
   const brew = page.locator('#escuela');
   await brew.scrollIntoViewIfNeeded();
-  await expect(brew).toHaveClass(/is-swipe/);
-  // La sección mide lo que su contenido: no diez pantallas de scroll
-  expect(await brew.evaluate((el) => el.offsetHeight)).toBeLessThan(1400);
-  const sheet = brew.locator('.brew-sheet');
-  const dots = brew.locator('.brew-dots button');
-  const prev = brew.getByRole('button', { name: 'Anterior' });
-  const next = brew.getByRole('button', { name: 'Siguiente' });
-  await expect(prev).toBeDisabled();
-  await next.click();
-  await expect(dots.nth(1)).toHaveAttribute('aria-pressed', 'true');
-  await expect.poll(() => sheet.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(1);
-  await dots.nth(9).click();
-  await expect.poll(() => sheet.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(9);
-  await expect(next).toBeDisabled();
-  await prev.click();
-  await expect(dots.nth(8)).toHaveAttribute('aria-pressed', 'true');
-  // El color térmico va solo en lo caliente: el paso 1 (prensa vacía) sin color, el 6 (agua a 80 °C) con él
-  const steps = brew.locator('.brew-sheet > li');
-  expect(await steps.nth(0).locator('[fill^="url(#"]').count()).toBe(0);
-  expect(await steps.nth(5).locator('[fill^="url(#"]').count()).toBeGreaterThan(0);
-  expect(errors).toEqual([]);
-  await page.context().close();
-});
-
-test('celular acostado: sin altura para fijar la hoja, los pasos de Aprende quedan en fila y a la vista', async ({ browser }) => {
-  const { page, errors } = await openPage(browser, { context: { viewport: { width: 844, height: 390 }, hasTouch: true } });
-  await page.goto('/', { waitUntil: 'load' });
-  const brew = page.locator('#escuela');
-  await brew.scrollIntoViewIfNeeded();
-  await expect(brew.locator('.brew-dots')).toBeHidden();
-  const steps = brew.locator('.brew-sheet > li');
-  await expect(steps.nth(4)).toHaveCSS('opacity', '1');
-  expect(await brew.locator('.brew-sheet').evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+  const sheet = await brew.locator('.pg-sheet').boundingBox();
+  expect(sheet.x).toBeGreaterThanOrEqual(0);
+  expect(sheet.x + sheet.width).toBeLessThanOrEqual(390);
+  const dot = await brew.locator('.pg-dots button').nth(9).boundingBox();
+  expect(Math.min(dot.width, dot.height)).toBeGreaterThanOrEqual(44);
+  expect(dot.x + dot.width).toBeLessThanOrEqual(390);
+  await brew.locator('.pg-dots button').nth(9).click();
+  await expect(brew.locator('.pg-sheet')).toContainText('Sírvelo a tu gusto');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect(errors).toEqual([]);
   await page.context().close();
 });

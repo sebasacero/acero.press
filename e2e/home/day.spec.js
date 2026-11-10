@@ -1,5 +1,5 @@
 // El banner de 24 horas: abre en la hora de Bogotá en que se visita la web (reloj, cielo y la
-// pantalla de Micra de ese momento), deja mirar otro momento del día y vuelve a «ahora».
+// pantalla de Micra de ese momento). Sin la línea de horas: el día sigue en el resto de la página.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
@@ -27,7 +27,7 @@ test('abre en la hora de Bogotá: reloj, momento del barista y su pantalla; llev
   await page.context().close();
 });
 
-test('un punto de la línea muestra otro momento y «Volver a ahora» regresa', async ({ browser }) => {
+test('de día va en tinta y ya no lleva la línea de horas ni sus puntos', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.clock.setFixedTime(bogota('13:20'));
   await page.goto('/', { waitUntil: 'load' });
@@ -35,21 +35,16 @@ test('un punto de la línea muestra otro momento y «Volver a ahora» regresa', 
   await expect(day.getByTestId('day-clock')).toHaveText(/1:20\s*p\. m\./);
   await expect(day).toHaveClass(/is-day/);
   await expect(day.getByTestId('day-caption')).toHaveText('En el almuerzo, una lección de 3 minutos.');
-  const dots = day.getByRole('group', { name: 'Los momentos del día' }).getByRole('button');
-  await expect(dots).toHaveCount(9);
-  await expect(dots.nth(4)).toHaveAttribute('aria-pressed', 'true');
-  await day.getByRole('button', { name: /^4:40 p\. m\.: Meta cumplida/ }).click();
-  await expect(day.getByTestId('day-caption')).toHaveText('Meta cumplida: 40 tazas.');
-  await expect(day.getByTestId('day-clock')).toHaveText(/4:40\s*p\. m\./);
-  await expect(day.getByRole('img', { name: 'La app Micra en este momento del día' })).toHaveAttribute('src', '/image/dia/app-1640.webp');
-  await day.getByRole('button', { name: 'Volver a ahora' }).click();
-  await expect(day.getByTestId('day-clock')).toHaveText(/1:20\s*p\. m\./);
-  await expect(day.getByRole('button', { name: 'Volver a ahora' })).toHaveCount(0);
+  await expect(day.getByRole('img', { name: 'La app Micra en este momento del día' })).toHaveAttribute('src', '/image/dia/app-1300.webp');
+  await expect(day.getByRole('group', { name: 'Los momentos del día' })).toHaveCount(0);
+  await expect(day.locator('.db-day24, .db-dot')).toHaveCount(0);
+  // Debajo, la primera sección sigue una hora después
+  await expect(page.locator('.pg-sec > .pg-hour b').first()).toHaveText(/2:20\s*p\. m\./);
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('celular: el menú cabe, nada se sale de lado y los puntos se pueden tocar', async ({ browser }) => {
+test('celular: el menú cabe y nada se sale de lado', async ({ browser }) => {
   const { page, errors } = await openPage(browser);
   await page.clock.setFixedTime(bogota('21:10'));
   await page.goto('/', { waitUntil: 'load' });
@@ -59,22 +54,19 @@ test('celular: el menú cabe, nada se sale de lado y los puntos se pueden tocar'
   const nav = await day.getByRole('navigation').boundingBox();
   expect(nav.x).toBeGreaterThanOrEqual(0);
   expect(nav.x + nav.width).toBeLessThanOrEqual(page.viewportSize().width);
-  const dot = await day.getByRole('button', { name: /^5:30 a\. m\./ }).boundingBox();
-  expect(Math.min(dot.width, dot.height)).toBeGreaterThanOrEqual(44);
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('con «menos movimiento» no camina, pero la hora y los momentos sí cambian', async ({ browser }) => {
+test('con «menos movimiento» no camina, pero la hora sí es la de la visita', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { ...DESK, reducedMotion: 'reduce' } });
-  await page.clock.setFixedTime(bogota('10:05'));
+  await page.clock.install({ time: bogota('23:40') });
   await page.goto('/', { waitUntil: 'load' });
   const day = page.locator('#dia');
-  await expect(day.getByTestId('day-clock')).toHaveText(/10:05\s*a\. m\./);
-  const before = await day.locator('.db-walker').evaluate((e) => e.style.transform);
-  await day.getByRole('button', { name: /^11:30 p\. m\./ }).click();
-  await expect(day.getByTestId('day-clock')).toHaveText(/11:30\s*p\. m\./);
+  await expect(day.getByTestId('day-clock')).toHaveText(/11:40\s*p\. m\./);
   await expect(day).not.toHaveClass(/is-day/);
+  const before = await day.locator('.db-walker').evaluate((e) => e.style.transform);
+  await page.clock.runFor(3000);
   expect(await day.locator('.db-walker').evaluate((e) => e.style.transform)).toBe(before);
   expect(errors).toEqual([]);
   await page.context().close();
