@@ -724,3 +724,12 @@
 .mapp-reto-dots i.on{background:var(--t-6);border-color:var(--t-7);box-shadow:0 0 10px rgba(255,194,60,.9)}
 .mapp-reto.is-done{border-color:var(--t-6);background:rgba(255,194,60,.16)}
 .mapp-sellhead-kpi{appearance:none;border:0;background:transparent;padding:0;margin:0;min-height:44px;min-width:44px;font:inherit;text-align:left;cursor:pointer}
+
+/* ── La barra con nombres y el muro corto del inicio, 10 nov 2026 ──────────────
+   Los íconos solos no decían a dónde llevan (la brújula y el calendario eran «Hoy»). */
+.mapp .mapp-tabs.is-ig button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:54px}
+.mapp-tabs-l{font:600 .62rem/1.1 'Archivo',sans-serif;letter-spacing:.01em;white-space:nowrap}
+.mapp .mapp-tabs.is-ig svg{width:24px;height:24px}
+.mapp .mapp-tabs.is-ig .mapp-tab-av{width:26px;height:26px}
+.mapp .mapp-tabs .mapp-tabs-badge{top:2px}
+.mapp-feed-more{display:flex;width:calc(100% - 32px);margin:14px 16px 0;justify-content:center}

@@ -417,6 +417,7 @@ function BaristaTabs({ tab, go, waiting, onCamera }) {
   const btn = ([id, label, Icon, path]) => (
     <button key={id} type="button" className={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(path)} aria-label={label} title={label}>
       <Icon />
+      <small className="mapp-tabs-l" aria-hidden="true">{label}</small>
       {id === 'vender' && waiting > 0 && <span className="mapp-tabs-badge" aria-label={`${waiting} te esperan`}>{waiting}</span>}
     </button>
   );

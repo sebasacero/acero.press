@@ -318,19 +318,23 @@ export default function MicraApp() {
         <nav className="mapp-tabs is-ig" aria-label="Micra">
           <button type="button" className={route.view === 'home' || route.view === 'barista-card' ? 'on' : ''} aria-current={route.view === 'home' ? 'page' : undefined} onClick={() => go('/micra')} aria-label="Inicio" title="Inicio">
             <IconHome />
+            <small className="mapp-tabs-l" aria-hidden="true">Inicio</small>
           </button>
           <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/hoy')} aria-label="Hoy en el café" title="Hoy en el café">
             <IconCompass />
+            <small className="mapp-tabs-l" aria-hidden="true">Hoy</small>
           </button>
           <button type="button" className="mapp-tabs-cam" onClick={() => setPublishing(true)} aria-label="Publicar" title="Publicar" data-testid="tab-publish">
             <IconPlus />
           </button>
           <button type="button" className={route.view === 'holds' ? 'on' : ''} aria-current={route.view === 'holds' ? 'page' : undefined} onClick={() => go('/micra/apartados')} aria-label="Mis apartados" title="Mis apartados">
             <IconCup />
+            <small className="mapp-tabs-l" aria-hidden="true">Apartados</small>
           </button>
           <button type="button" className={`is-me ${route.view === 'me' ? 'on' : ''}`} aria-current={route.view === 'me' ? 'page' : undefined} onClick={() => go('/micra/perfil')} aria-label="Mi perfil" title="Mi perfil" data-testid="me-button">
             <span className="mapp-tab-av">{clientName ? initials(clientName) : <IconUser />}</span>
             {gustosDot && <i className="mapp-tab-dot" aria-hidden="true" data-testid="gustos-dot" />}
+            <small className="mapp-tabs-l" aria-hidden="true">Yo</small>
           </button>
         </nav>
       )}
@@ -339,18 +343,22 @@ export default function MicraApp() {
         <nav className="mapp-tabs is-ig" aria-label="Equipo">
           <button type="button" className={route.view === 'owner' && !route.tab ? 'on' : ''} onClick={() => go('/micra/equipo')} aria-label="Hoy" title="Hoy">
             <IconToday />
+            <small className="mapp-tabs-l" aria-hidden="true">Hoy</small>
           </button>
           <button type="button" className={route.view === 'study' && route.tab === 'mapa' ? 'on' : ''} onClick={() => go('/micra/mapa')} aria-label="Mapa" title="Mapa" data-testid="tab-map">
             <IconPin />
+            <small className="mapp-tabs-l" aria-hidden="true">Mapa</small>
           </button>
           <button type="button" className={`mapp-tabs-cam ${route.view === 'camera' ? 'on' : ''}`} onClick={() => go('/micra/camara')} aria-label="Cámara" title="Cámara" data-testid="tab-camera">
             <IconCamera />
           </button>
           <button type="button" className={route.view === 'ficha' ? 'on' : ''} onClick={() => go('/micra/ficha')} aria-label="Encuesta" title="Encuesta" data-testid="tab-survey">
             <IconClipboard />
+            <small className="mapp-tabs-l" aria-hidden="true">Encuesta</small>
           </button>
           <button type="button" className={route.view === 'study' && route.tab !== 'mapa' ? 'on' : ''} onClick={() => go('/micra/estudio')} aria-label="Estudio" title="Estudio">
             <IconBars />
+            <small className="mapp-tabs-l" aria-hidden="true">Estudio</small>
           </button>
         </nav>
       )}
