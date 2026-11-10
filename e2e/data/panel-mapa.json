@@ -1,0 +1,1375 @@
+{
+ "generatedAt": "now-0m",
+ "days": 30,
+ "week": {
+  "from": "2026-11-02",
+  "to": "2026-11-08",
+  "cur": {
+   "cups": 0,
+   "sales": 0,
+   "income": 0,
+   "blocks": 0,
+   "zones": [],
+   "kg": 0
+  },
+  "prev": {
+   "cups": 0,
+   "sales": 0,
+   "income": 0,
+   "blocks": 0,
+   "zones": [],
+   "kg": 0
+  }
+ },
+ "sales": [],
+ "tinteros": [
+  {
+   "id": "60000000-0000-0000-0000-000000000001",
+   "name": "Marlene Rojas",
+   "stage": "activo",
+   "linked": true,
+   "referencia": "Cl. 57 con Cra. 7",
+   "localidad": "Chapinero",
+   "lat": 4.643,
+   "lng": -74.064,
+   "out_until": "now+120m",
+   "out_lat": 4.643,
+   "out_lng": -74.064,
+   "app_seen_at": "now-0m",
+   "out_mode": "caminando",
+   "tinto_price": 1500
+  },
+  {
+   "id": "60000000-0000-0000-0000-000000000002",
+   "name": "Jairo Pérez",
+   "stage": "activo",
+   "linked": true,
+   "referencia": "Cl. 59 con Cra. 12",
+   "localidad": "Chapinero",
+   "lat": 4.6505,
+   "lng": -74.0585,
+   "app_seen_at": "now-40m",
+   "tinto_price": 1300
+  },
+  {
+   "id": "60000000-0000-0000-0000-000000000003",
+   "name": "Wilson Cárdenas",
+   "stage": "piloto",
+   "linked": true,
+   "referencia": "Parque de los Hippies",
+   "localidad": "Chapinero",
+   "lat": 4.6372,
+   "lng": -74.0668,
+   "out_until": "now+60m",
+   "out_lat": 4.637,
+   "out_lng": -74.067,
+   "app_seen_at": "now-2m",
+   "out_mode": "sombrilla",
+   "tinto_price": 1500
+  },
+  {
+   "id": "t-ana",
+   "name": "Ana Lucía Gómez",
+   "stage": "piloto",
+   "linked": true,
+   "referencia": "Calle 72 con Cra. 11",
+   "localidad": "Chapinero",
+   "lat": 4.6577,
+   "lng": -74.0634,
+   "app_seen_at": "now-1m",
+   "tinto_price": 1400
+  },
+  {
+   "id": "t-luis",
+   "name": "Don Luis",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Salida de la 72",
+   "localidad": "Chapinero",
+   "lat": 4.6588,
+   "lng": -74.0601,
+   "tinto_price": 1500
+  },
+  {
+   "id": "t-rosa",
+   "name": "Doña Rosa",
+   "stage": "piloto",
+   "linked": true,
+   "referencia": "Cra. 13 con 63",
+   "localidad": "Chapinero",
+   "lat": 4.6489,
+   "lng": -74.0632,
+   "app_seen_at": "now-4000m"
+  },
+  {
+   "id": "f0",
+   "name": "Puesto 1",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Kennedy",
+   "localidad": "Kennedy",
+   "lat": 4.62575,
+   "lng": -74.15752,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f1",
+   "name": "Puesto 2",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Chapinero",
+   "localidad": "Chapinero",
+   "lat": 4.65371,
+   "lng": -74.07174,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f2",
+   "name": "Puesto 3",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.6169,
+   "lng": -74.06859,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f3",
+   "name": "Puesto 4",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.61818,
+   "lng": -74.06881,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f4",
+   "name": "Puesto 5",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.63114,
+   "lng": -74.06501,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f5",
+   "name": "Puesto 6",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.66919,
+   "lng": -74.06169,
+   "tinto_price": 1200
+  },
+  {
+   "id": "f6",
+   "name": "Puesto 7",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Kennedy",
+   "localidad": "Kennedy",
+   "lat": 4.61306,
+   "lng": -74.15402,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f7",
+   "name": "Puesto 8",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.61847,
+   "lng": -74.06529,
+   "tinto_price": 1200
+  },
+  {
+   "id": "f8",
+   "name": "Puesto 9",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Kennedy",
+   "localidad": "Kennedy",
+   "lat": 4.60534,
+   "lng": -74.14991,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f9",
+   "name": "Puesto 10",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.62791,
+   "lng": -74.06624,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f10",
+   "name": "Puesto 11",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.68205,
+   "lng": -74.05612,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f11",
+   "name": "Puesto 12",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.63507,
+   "lng": -74.06222,
+   "tinto_price": 1200
+  },
+  {
+   "id": "f12",
+   "name": "Puesto 13",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Chapinero",
+   "localidad": "Chapinero",
+   "lat": 4.64779,
+   "lng": -74.0614,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f13",
+   "name": "Puesto 14",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.67491,
+   "lng": -74.04348,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f14",
+   "name": "Puesto 15",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.67196,
+   "lng": -74.05879,
+   "tinto_price": null
+  },
+  {
+   "id": "f15",
+   "name": "Puesto 16",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.66894,
+   "lng": -74.05096,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f16",
+   "name": "Puesto 17",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Kennedy",
+   "localidad": "Kennedy",
+   "lat": 4.61969,
+   "lng": -74.15274,
+   "tinto_price": null
+  },
+  {
+   "id": "f17",
+   "name": "Puesto 18",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Chapinero",
+   "localidad": "Chapinero",
+   "lat": 4.65416,
+   "lng": -74.05133,
+   "tinto_price": null
+  },
+  {
+   "id": "f18",
+   "name": "Puesto 19",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Chapinero",
+   "localidad": "Chapinero",
+   "lat": 4.63546,
+   "lng": -74.05716,
+   "tinto_price": null
+  },
+  {
+   "id": "f19",
+   "name": "Puesto 20",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Kennedy",
+   "localidad": "Kennedy",
+   "lat": 4.6202,
+   "lng": -74.14571,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f20",
+   "name": "Puesto 21",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Chapinero",
+   "localidad": "Chapinero",
+   "lat": 4.65658,
+   "lng": -74.06547,
+   "tinto_price": 1000
+  },
+  {
+   "id": "f21",
+   "name": "Puesto 22",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.66941,
+   "lng": -74.04856,
+   "tinto_price": 1200
+  },
+  {
+   "id": "f22",
+   "name": "Puesto 23",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.62555,
+   "lng": -74.057,
+   "tinto_price": null
+  },
+  {
+   "id": "f23",
+   "name": "Puesto 24",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Chapinero",
+   "localidad": "Chapinero",
+   "lat": 4.63799,
+   "lng": -74.06436,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f24",
+   "name": "Puesto 25",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Santa Fe",
+   "localidad": "Santa Fe",
+   "lat": 4.63566,
+   "lng": -74.05826,
+   "tinto_price": 1500
+  },
+  {
+   "id": "f25",
+   "name": "Puesto 26",
+   "stage": "prospecto",
+   "linked": false,
+   "referencia": "Usaquén",
+   "localidad": "Usaquén",
+   "lat": 4.69168,
+   "lng": -74.05061,
+   "tinto_price": null
+  }
+ ],
+ "surveys": [
+  {
+   "id": "e0",
+   "tintero_id": "t-luis",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e1",
+   "tintero_id": "f1",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e2",
+   "tintero_id": "f3",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e3",
+   "tintero_id": "f5",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e4",
+   "tintero_id": "f8",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e5",
+   "tintero_id": "f11",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e6",
+   "tintero_id": "f14",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  },
+  {
+   "id": "e7",
+   "tintero_id": "f20",
+   "surveyed_at": "now-2000m",
+   "consent": true
+  }
+ ],
+ "surveysReady": true,
+ "routes": [
+  {
+   "id": "r-live",
+   "tintero_id": "60000000-0000-0000-0000-000000000001",
+   "started_at": "now-121m",
+   "ended_at": null,
+   "points_n": 60,
+   "distance_m": null,
+   "stops": null,
+   "path": null,
+   "source": "gps"
+  },
+  {
+   "id": "r-jairo",
+   "tintero_id": "60000000-0000-0000-0000-000000000002",
+   "started_at": "now-330m",
+   "ended_at": "now-190m",
+   "points_n": 420,
+   "distance_m": 3480,
+   "stops": [
+    {},
+    {},
+    {}
+   ],
+   "path": [
+    [
+     -74.058606,
+     4.650397
+    ],
+    [
+     -74.058708,
+     4.650112
+    ],
+    [
+     -74.05885,
+     4.650028
+    ],
+    [
+     -74.059019,
+     4.649792
+    ],
+    [
+     -74.059315,
+     4.649503
+    ],
+    [
+     -74.059459,
+     4.649416
+    ],
+    [
+     -74.059535,
+     4.649222
+    ],
+    [
+     -74.059626,
+     4.649007
+    ],
+    [
+     -74.059875,
+     4.648885
+    ],
+    [
+     -74.060105,
+     4.648625
+    ],
+    [
+     -74.060264,
+     4.648363
+    ],
+    [
+     -74.060464,
+     4.648105
+    ],
+    [
+     -74.060545,
+     4.647817
+    ],
+    [
+     -74.060735,
+     4.647582
+    ],
+    [
+     -74.060818,
+     4.647402
+    ],
+    [
+     -74.060898,
+     4.647183
+    ],
+    [
+     -74.06107,
+     4.646983
+    ],
+    [
+     -74.061366,
+     4.646789
+    ],
+    [
+     -74.061622,
+     4.646574
+    ],
+    [
+     -74.06173,
+     4.646255
+    ],
+    [
+     -74.061917,
+     4.645977
+    ],
+    [
+     -74.062083,
+     4.645831
+    ],
+    [
+     -74.062259,
+     4.645589
+    ],
+    [
+     -74.06237,
+     4.645402
+    ],
+    [
+     -74.062536,
+     4.645108
+    ],
+    [
+     -74.062769,
+     4.644847
+    ],
+    [
+     -74.062948,
+     4.644713
+    ],
+    [
+     -74.063065,
+     4.644527
+    ],
+    [
+     -74.063259,
+     4.644426
+    ],
+    [
+     -74.063438,
+     4.644253
+    ],
+    [
+     -74.063571,
+     4.644056
+    ],
+    [
+     -74.063743,
+     4.643845
+    ],
+    [
+     -74.063817,
+     4.64364
+    ],
+    [
+     -74.063907,
+     4.643487
+    ],
+    [
+     -74.064145,
+     4.643394
+    ],
+    [
+     -74.064218,
+     4.643208
+    ],
+    [
+     -74.064485,
+     4.643089
+    ],
+    [
+     -74.064679,
+     4.642799
+    ],
+    [
+     -74.064921,
+     4.642496
+    ],
+    [
+     -74.065061,
+     4.642194
+    ]
+   ],
+   "source": "gps"
+  },
+  {
+   "id": "r-ana",
+   "tintero_id": "t-ana",
+   "started_at": "now-1500m",
+   "ended_at": "now-1380m",
+   "points_n": 300,
+   "distance_m": 2650,
+   "stops": [
+    {}
+   ],
+   "path": [
+    [
+     -74.063205,
+     4.657518
+    ],
+    [
+     -74.063053,
+     4.657185
+    ],
+    [
+     -74.063039,
+     4.656974
+    ],
+    [
+     -74.062826,
+     4.656816
+    ],
+    [
+     -74.062618,
+     4.656498
+    ],
+    [
+     -74.062521,
+     4.656224
+    ],
+    [
+     -74.062341,
+     4.656091
+    ],
+    [
+     -74.062257,
+     4.65576
+    ],
+    [
+     -74.062196,
+     4.655514
+    ],
+    [
+     -74.06214,
+     4.655191
+    ],
+    [
+     -74.062155,
+     4.654994
+    ],
+    [
+     -74.062069,
+     4.654757
+    ],
+    [
+     -74.06201,
+     4.654392
+    ],
+    [
+     -74.061907,
+     4.654171
+    ],
+    [
+     -74.06169,
+     4.653817
+    ],
+    [
+     -74.061477,
+     4.653636
+    ],
+    [
+     -74.061433,
+     4.653291
+    ],
+    [
+     -74.061266,
+     4.652931
+    ],
+    [
+     -74.061255,
+     4.652625
+    ],
+    [
+     -74.061057,
+     4.652357
+    ],
+    [
+     -74.061014,
+     4.652183
+    ],
+    [
+     -74.060814,
+     4.651849
+    ],
+    [
+     -74.060666,
+     4.651616
+    ],
+    [
+     -74.060672,
+     4.651268
+    ],
+    [
+     -74.06059,
+     4.651063
+    ],
+    [
+     -74.060385,
+     4.65071
+    ],
+    [
+     -74.060212,
+     4.650492
+    ],
+    [
+     -74.060027,
+     4.650143
+    ],
+    [
+     -74.05984,
+     4.649789
+    ],
+    [
+     -74.059778,
+     4.649527
+    ],
+    [
+     -74.059576,
+     4.64929
+    ],
+    [
+     -74.059565,
+     4.648984
+    ],
+    [
+     -74.059528,
+     4.648741
+    ],
+    [
+     -74.059509,
+     4.648397
+    ],
+    [
+     -74.059481,
+     4.648039
+    ]
+   ],
+   "source": "gps"
+  },
+  {
+   "id": "r-luis",
+   "tintero_id": "t-luis",
+   "started_at": "now-4400m",
+   "ended_at": "now-4300m",
+   "points_n": 8,
+   "distance_m": 1900,
+   "stops": null,
+   "path": [
+    [
+     -74.060747,
+     4.659655
+    ],
+    [
+     -74.061397,
+     4.660617
+    ],
+    [
+     -74.062075,
+     4.661517
+    ],
+    [
+     -74.06279,
+     4.66238
+    ],
+    [
+     -74.063506,
+     4.663221
+    ],
+    [
+     -74.064094,
+     4.664177
+    ],
+    [
+     -74.0647,
+     4.665002
+    ],
+    [
+     -74.065395,
+     4.666006
+    ]
+   ],
+   "source": "relato"
+  },
+  {
+   "id": "r-rosa",
+   "tintero_id": "t-rosa",
+   "started_at": "now-17000m",
+   "ended_at": "now-16800m",
+   "points_n": 500,
+   "distance_m": 4100,
+   "stops": [
+    {},
+    {}
+   ],
+   "path": [
+    [
+     -74.063016,
+     4.649277
+    ],
+    [
+     -74.062736,
+     4.649575
+    ],
+    [
+     -74.062534,
+     4.64985
+    ],
+    [
+     -74.062219,
+     4.650195
+    ],
+    [
+     -74.061939,
+     4.650457
+    ],
+    [
+     -74.061706,
+     4.650807
+    ],
+    [
+     -74.061543,
+     4.651084
+    ],
+    [
+     -74.061432,
+     4.651277
+    ],
+    [
+     -74.061174,
+     4.651474
+    ],
+    [
+     -74.061055,
+     4.651715
+    ],
+    [
+     -74.060773,
+     4.651915
+    ],
+    [
+     -74.060532,
+     4.652304
+    ],
+    [
+     -74.060394,
+     4.652552
+    ],
+    [
+     -74.060203,
+     4.652802
+    ],
+    [
+     -74.060016,
+     4.65302
+    ],
+    [
+     -74.059706,
+     4.653263
+    ],
+    [
+     -74.059494,
+     4.653677
+    ],
+    [
+     -74.059183,
+     4.653915
+    ],
+    [
+     -74.059017,
+     4.65417
+    ],
+    [
+     -74.058845,
+     4.65435
+    ],
+    [
+     -74.058645,
+     4.654644
+    ],
+    [
+     -74.058444,
+     4.654872
+    ],
+    [
+     -74.0583,
+     4.655053
+    ],
+    [
+     -74.058124,
+     4.655255
+    ],
+    [
+     -74.058039,
+     4.655445
+    ],
+    [
+     -74.057903,
+     4.655698
+    ],
+    [
+     -74.057696,
+     4.656018
+    ],
+    [
+     -74.057458,
+     4.656379
+    ],
+    [
+     -74.057167,
+     4.65673
+    ],
+    [
+     -74.057009,
+     4.657004
+    ],
+    [
+     -74.056893,
+     4.65742
+    ],
+    [
+     -74.056659,
+     4.657774
+    ],
+    [
+     -74.056378,
+     4.657964
+    ],
+    [
+     -74.056148,
+     4.658359
+    ],
+    [
+     -74.055873,
+     4.658715
+    ],
+    [
+     -74.055667,
+     4.658928
+    ],
+    [
+     -74.055387,
+     4.659229
+    ],
+    [
+     -74.055108,
+     4.659602
+    ],
+    [
+     -74.054814,
+     4.659922
+    ],
+    [
+     -74.054568,
+     4.660266
+    ]
+   ],
+   "source": "gps"
+  }
+ ],
+ "routesReady": true,
+ "routePoints": [
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-120m",
+   "lat": 4.64389,
+   "lng": -74.063904
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-118m",
+   "lat": 4.644092,
+   "lng": -74.063988
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-116m",
+   "lat": 4.644308,
+   "lng": -74.064012
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-114m",
+   "lat": 4.64461,
+   "lng": -74.064089
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-112m",
+   "lat": 4.644771,
+   "lng": -74.064128
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-110m",
+   "lat": 4.645019,
+   "lng": -74.064132
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-108m",
+   "lat": 4.645408,
+   "lng": -74.064106
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-106m",
+   "lat": 4.645692,
+   "lng": -74.064098
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-104m",
+   "lat": 4.646014,
+   "lng": -74.064225
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-102m",
+   "lat": 4.64639,
+   "lng": -74.064178
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-100m",
+   "lat": 4.64676,
+   "lng": -74.064127
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-98m",
+   "lat": 4.647014,
+   "lng": -74.064171
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-96m",
+   "lat": 4.647199,
+   "lng": -74.064159
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-94m",
+   "lat": 4.647374,
+   "lng": -74.064282
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-92m",
+   "lat": 4.647584,
+   "lng": -74.064384
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-90m",
+   "lat": 4.647825,
+   "lng": -74.064511
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-88m",
+   "lat": 4.647985,
+   "lng": -74.064615
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-86m",
+   "lat": 4.64817,
+   "lng": -74.064667
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-84m",
+   "lat": 4.648336,
+   "lng": -74.064597
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-82m",
+   "lat": 4.648643,
+   "lng": -74.064702
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-80m",
+   "lat": 4.648864,
+   "lng": -74.064758
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-78m",
+   "lat": 4.649111,
+   "lng": -74.064869
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-76m",
+   "lat": 4.649475,
+   "lng": -74.064771
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-74m",
+   "lat": 4.649747,
+   "lng": -74.064795
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-72m",
+   "lat": 4.649927,
+   "lng": -74.06491
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-70m",
+   "lat": 4.65017,
+   "lng": -74.064986
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-68m",
+   "lat": 4.650529,
+   "lng": -74.065088
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-66m",
+   "lat": 4.650694,
+   "lng": -74.064999
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-64m",
+   "lat": 4.650981,
+   "lng": -74.065104
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-62m",
+   "lat": 4.651271,
+   "lng": -74.065238
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-60m",
+   "lat": 4.651558,
+   "lng": -74.065143
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-58m",
+   "lat": 4.651925,
+   "lng": -74.065116
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-56m",
+   "lat": 4.652148,
+   "lng": -74.065168
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-54m",
+   "lat": 4.652348,
+   "lng": -74.065123
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-52m",
+   "lat": 4.652636,
+   "lng": -74.065076
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-50m",
+   "lat": 4.652875,
+   "lng": -74.065162
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-48m",
+   "lat": 4.65323,
+   "lng": -74.065066
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-46m",
+   "lat": 4.653594,
+   "lng": -74.065012
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-44m",
+   "lat": 4.653951,
+   "lng": -74.064975
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-42m",
+   "lat": 4.654165,
+   "lng": -74.06499
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-40m",
+   "lat": 4.65441,
+   "lng": -74.065123
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-38m",
+   "lat": 4.654577,
+   "lng": -74.065196
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-36m",
+   "lat": 4.654799,
+   "lng": -74.06517
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-34m",
+   "lat": 4.655189,
+   "lng": -74.065203
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-32m",
+   "lat": 4.655574,
+   "lng": -74.065106
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-30m",
+   "lat": 4.655963,
+   "lng": -74.065158
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-28m",
+   "lat": 4.656176,
+   "lng": -74.065244
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-26m",
+   "lat": 4.656383,
+   "lng": -74.065335
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-24m",
+   "lat": 4.656693,
+   "lng": -74.065259
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-22m",
+   "lat": 4.657055,
+   "lng": -74.065284
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-20m",
+   "lat": 4.657371,
+   "lng": -74.065232
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-18m",
+   "lat": 4.657552,
+   "lng": -74.065213
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-16m",
+   "lat": 4.65793,
+   "lng": -74.065165
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-14m",
+   "lat": 4.65827,
+   "lng": -74.065191
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-12m",
+   "lat": 4.658473,
+   "lng": -74.065141
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-10m",
+   "lat": 4.658713,
+   "lng": -74.065089
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-8m",
+   "lat": 4.659106,
+   "lng": -74.065134
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-6m",
+   "lat": 4.659362,
+   "lng": -74.065047
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-4m",
+   "lat": 4.659696,
+   "lng": -74.065146
+  },
+  {
+   "route_id": "r-live",
+   "recorded_at": "now-2m",
+   "lat": 4.659887,
+   "lng": -74.06525
+  }
+ ],
+ "study": {
+  "surveyed": 0,
+  "with_photo": 0,
+  "consented": 0,
+  "tinto_price_avg": null,
+  "cups_per_hour_avg": null,
+  "zones": []
+ }
+}
