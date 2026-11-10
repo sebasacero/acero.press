@@ -1,6 +1,6 @@
 // El café de origen (Origen.jsx, Finca.jsx, origen.js; 7 nov 2026): el cliente ve marcas
 // y fincas y arma su pedido en la tienda; el barista pide café por kilo en Insumos › Café
-// y escoge con cuál prepara; el caficultor crea su finca en cuatro pasos. Los datos salen
+// y escoge con cuál prepara; el caficultor crea su finca en cinco pasos. Los datos salen
 // de app_config `micra_origen` (aquí, de muestra).
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -50,6 +50,7 @@ test('cliente: sin app_config no hay marcas, solo el aviso y el camino del cafic
   await expect(page.getByTestId('origen-empty')).toContainText('Todavía no hay');
   await expect(page.getByTestId('origen')).not.toContainText('Amor Perfecto');
   await page.getByTestId('to-finca').click();
+  await page.getByTestId('fincas-start').click();
   await expect(page.getByTestId('finca')).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -115,30 +116,35 @@ test('barista: Insumos › Café muestra las marcas y fincas por kilo, pide por 
   expect(errors).toEqual([]);
 });
 
-test('caficultor: la finca en cuatro pasos exige lo mínimo, se queda en el celular y muestra el perfil', async ({ browser }) => {
+test('caficultor: la finca en cinco pasos exige lo mínimo, se queda en el celular y muestra el perfil', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra/finca', { waitUntil: 'load' });
   const w = page.getByTestId('finca');
-  await expect(w).toContainText('paso 1 de 4');
+  await expect(w).toContainText('paso 1 de 5');
   await page.getByTestId('finca-next').click();
   await expect(page.getByTestId('finca-missing')).toContainText('Falta');
   await page.getByLabel('Tu nombre').fill('Rosalba Quintero');
   await page.getByLabel('Finca').fill('La Esperanza');
   await page.getByLabel('Municipio').fill('Pitalito, Huila');
   await page.getByTestId('finca-next').click();
-  await expect(w).toContainText('paso 2 de 4');
+  await expect(w).toContainText('paso 2 de 5');
   await page.getByLabel(/Altura/).fill('1750');
   await page.getByLabel(/Hectáreas/).fill('3,5');
   await page.getByLabel(/Desde qué año/).fill('2009');
   await page.getByTestId('finca-next').click();
-  await expect(w).toContainText('paso 3 de 4');
+  await expect(w).toContainText('paso 3 de 5');
   await page.getByRole('radio', { name: 'Castillo' }).click();
   await page.getByRole('radio', { name: 'Lavado' }).click();
   await page.getByLabel(/Kilos disponibles/).fill('40');
   await page.getByLabel(/Precio por kilo/).fill('48000');
   await expect(w).toContainText('La carga FNC hoy equivale a');
   await page.getByTestId('finca-next').click();
-  await expect(w).toContainText('paso 4 de 4');
+  await expect(w).toContainText('paso 4 de 5');
+  await page.getByRole('button', { name: 'WhatsApp en mi celular' }).click();
+  await page.getByRole('radio', { name: 'A la cooperativa o la FNC' }).click();
+  await page.getByRole('radio', { name: 'Sí' }).click();
+  await page.getByTestId('finca-next').click();
+  await expect(w).toContainText('paso 5 de 5');
   await expect(w).toContainText('Castillo lavado');
   const href = await page.getByTestId('finca-send').getAttribute('href');
   expect(decodeURIComponent(href)).toContain('La Esperanza');

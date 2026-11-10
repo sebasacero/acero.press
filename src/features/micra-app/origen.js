@@ -5,6 +5,8 @@
 // carga el equipo) y los pedidos van por WhatsApp al equipo: Micra no cobra ni guarda dinero.
 // Sin acuerdo firmado no hay marca en el JSON, así ninguna se nombra en público antes.
 
+import { emptyPresencia, presenciaMissing, presenciaLines } from './presencia.js';
+
 export const ORIGEN_KEY = 'micra_origen';
 export const PREPARA_KEY = 'micra_prepara_con_v1';
 export const FINCA_KEY = 'micra_finca_v1';
@@ -152,16 +154,19 @@ export const FINCA_STEPS = [
   { id: 'quien', title: 'Cuéntanos de tu finca', fields: ['owner', 'name', 'city'] },
   { id: 'finca', title: 'Cómo es tu finca', fields: ['altitude', 'hectares', 'since'] },
   { id: 'lote', title: 'Publica tu primer lote', fields: ['variety', 'process', 'kg', 'kilo'] },
+  // Lo que la finca tiene en internet (presencia.js): sirve al equipo para medir la brecha
+  { id: 'internet', title: 'Tu finca en internet', fields: ['presencia'] },
   { id: 'listo', title: 'Lo revisamos y te llamamos', fields: [] },
 ];
 
-export const emptyFinca = () => ({ owner: '', name: '', city: '', altitude: '', hectares: '', since: '', variety: 'Castillo', process: 'Lavado', kg: '', kilo: '', notes: '', phone: '' });
+export const emptyFinca = () => ({ owner: '', name: '', city: '', altitude: '', hectares: '', since: '', variety: 'Castillo', process: 'Lavado', kg: '', kilo: '', notes: '', phone: '', presencia: emptyPresencia() });
 
 /** Qué falta en un paso (vacío = se puede seguir). */
 export function fincaMissing(d, step) {
   const s = FINCA_STEPS[step];
   if (!s) return [];
   const labels = { owner: 'tu nombre', name: 'el nombre de la finca', city: 'el municipio', altitude: 'la altura', hectares: 'las hectáreas', since: 'desde qué año', variety: 'la variedad', process: 'el proceso', kg: 'los kilos', kilo: 'el precio por kilo' };
+  if (s.fields.includes('presencia')) return presenciaMissing(d?.presencia);
   return s.fields.filter((f) => (['altitude', 'hectares', 'since', 'kg', 'kilo'].includes(f) ? !num(d?.[f]) : !text(d?.[f], 80))).map((f) => labels[f]);
 }
 
@@ -180,12 +185,13 @@ export function fincaText(d) {
     `Hola, soy ${p.owner || 'caficultor'} de la finca ${p.name}${p.city ? ` (${p.city})` : ''}. Quiero vender mi café en Micra.`,
     `Finca: ${p.altitude ? `${p.altitude.toLocaleString('es-CO')} m` : 'altura sin dato'} · ${p.hectares ? `${p.hectares.toLocaleString('es-CO')} ha` : 'hectáreas sin dato'}${p.since ? ` · desde ${p.since}` : ''}`,
     lot ? `Lote: ${lot.name} · ${lot.kg ? `${lot.kg} kg` : 'kilos sin dato'} · $${lot.kilo.toLocaleString('es-CO')} el kilo${lot.notes ? ` · ${lot.notes}` : ''}` : 'Lote: sin datos todavía',
+    ...(d?.presencia?.canales?.length ? presenciaLines(d.presencia) : []),
     '¿Cuándo pueden probar una muestra?',
   ].join('\n');
 }
 
 export function readFinca(storage = globalThis.localStorage) {
-  try { const v = JSON.parse(storage?.getItem(FINCA_KEY) ?? 'null'); return v && typeof v === 'object' ? { ...emptyFinca(), ...v } : null; } catch { return null; }
+  try { const v = JSON.parse(storage?.getItem(FINCA_KEY) ?? 'null'); return v && typeof v === 'object' ? { ...emptyFinca(), ...v, presencia: { ...emptyPresencia(), ...(v.presencia ?? {}) } } : null; } catch { return null; }
 }
 export function writeFinca(d, storage = globalThis.localStorage) {
   try { storage?.setItem(FINCA_KEY, JSON.stringify(d)); } catch { /* sin memoria */ }

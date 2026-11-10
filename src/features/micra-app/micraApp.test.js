@@ -295,6 +295,7 @@ test('rutas del café de origen', () => {
   assert.deepEqual(parseRoute('/micra/origen/Mal Id'), { view: 'home' });
   assert.deepEqual(parseRoute('/micra/tienda'), { view: 'tienda' });
   assert.deepEqual(parseRoute('/micra/finca'), { view: 'finca' });
+  assert.deepEqual(parseRoute('/micra/fincas'), { view: 'fincas' });
   assert.deepEqual(parseRoute('/micra/finca/perfil'), { view: 'finca', tab: 'perfil' });
 });
 

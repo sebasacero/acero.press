@@ -97,7 +97,7 @@ export function OrigenDirectory({ go }) {
         <section className="mapp-glass mapp-ogroup"><p className="mapp-fine" data-testid="origen-empty">Todavía no hay {filter === 'marcas' ? 'marcas con acuerdo' : filter === 'fincas' ? 'fincas verificadas' : 'marcas ni fincas'} en Micra. Las primeras salen aquí cuando firmen.</p></section>
       )}
       <a className="mapp-btn is-ghost" href={ask} target="_blank" rel="noopener noreferrer" data-testid="origen-ask">¿Tienes una marca o una finca? Escríbenos</a>
-      <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/finca')} data-testid="to-finca">Soy caficultor: quiero vender mi café</button>
+      <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/fincas')} data-testid="to-finca">Soy caficultor: quiero vender mi café</button>
     </div>
   );
 }

@@ -752,3 +752,34 @@
 .mapp-now .mapp-rate .mapp-fine { color: var(--m-soft); }
 .mapp-now .mapp-rate .mapp-beans button { color: color-mix(in srgb, var(--m-ink) 35%, #fff); }
 .mapp-now .mapp-rate .mapp-beans .on { color: var(--t-4); }
+/* La finca en internet y la oferta para caficultores (presencia.js) */
+.mapp-finca .mapp-check{display:flex;align-items:flex-start;gap:10px;font-weight:500;font-size:.86rem;line-height:1.4;color:var(--m-soft)}
+.mapp-finca .mapp-check input{flex:0 0 auto;margin-top:2px}
+.mapp-finca .mapp-chips.is-wrap button{min-height:44px}
+.mapp-fincas{display:flex;flex-direction:column;gap:12px}
+.mapp-fincas-gap{padding:16px;font-size:.95rem;line-height:1.45}
+.mapp-fincas-gap p{margin:0}
+.mapp-fincas-price{margin-top:10px !important;color:var(--t-4)}
+.mapp-fincas-benefits{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.mapp-fincas-benefits li{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;border:1px solid var(--m-line);background:#fff}
+.mapp-fincas-benefits li>span:first-child{font-size:1.5rem;line-height:1}
+.mapp-fincas-benefits b{display:block;font:800 .95rem 'Archivo',sans-serif}
+.mapp-fincas-benefits small{display:block;margin-top:2px;font-size:.84rem;line-height:1.4;color:var(--m-soft)}
+/* Equipo › Hoy › Fincas */
+.mapp-fp{display:flex;flex-direction:column;gap:10px}
+.mapp-fp .mapp-kicker{margin:6px 0 0}
+.mapp-fp-cifras{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+.mapp-fp-cifra{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:14px;border:1px solid var(--m-line)}
+.mapp-fp-cifra dd{margin:0;font:800 1.5rem 'Archivo',sans-serif;color:var(--t-4)}
+.mapp-fp-cifra dt{font-weight:700;font-size:.82rem}
+.mapp-fp-cifra small{font:500 .7rem/1.35 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-fp-bars{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mapp-fp-bars li{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;align-items:center;gap:8px;font-size:.82rem}
+.mapp-fp-bars i{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--t-4) var(--w,0%),var(--m-line) var(--w,0%))}
+.mapp-fp-bars b{font:700 .74rem 'JetBrains Mono',monospace}
+.mapp-fp-tool{border-top:1px solid var(--m-line);padding-top:8px}
+.mapp-fp-tool summary{min-height:44px;display:flex;align-items:center;font-weight:800;cursor:pointer}
+.mapp-fp-tool .mapp-field{margin:8px 0}
+.mapp-fp-list{margin:8px 0 0;padding-left:22px;display:grid;gap:4px;font-size:.85rem}
+.mapp-fp-list li span{margin-right:8px}
+.mapp-fp-url{margin:0 0 8px;font:500 .74rem 'JetBrains Mono',monospace;word-break:break-all}

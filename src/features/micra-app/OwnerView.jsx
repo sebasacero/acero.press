@@ -15,6 +15,7 @@ const PostReview = lazy(() => import('./PostReview.jsx'));
 const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
 // Competencia: abrir el reto de la semana y ver cómo va
 const ChallengePanel = lazy(() => import('./ChallengePanel.jsx'));
+const FincasPanel = lazy(() => import('./FincasPanel.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle) y la activación automática: nadie aprueba a mano (activation.js y
@@ -150,6 +151,7 @@ export default function OwnerView({ onActAs, go }) {
       <div id="owner-review"><Suspense fallback={null}><PostReview /></Suspense></div>
       <div id="owner-challenge"><Suspense fallback={null}><ChallengePanel /></Suspense></div>
       <Suspense fallback={null}><AdsPanel /></Suspense>
+      <div id="owner-fincas"><Suspense fallback={null}><FincasPanel /></Suspense></div>
 
       {/* Lo que pide una mano: lo demás se activa solo */}
       {sum.alerts.length > 0 && (

@@ -382,7 +382,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, { id: r.id, status: r.status, media_path: r.media_path });
     }
 
-    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|hold_rate|hold_ratings|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps|seek|live_map))$/)?.[1];
+    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|hold_rate|hold_ratings|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps|seek|live_map|finca_presencia_add|finca_presencia_list))$/)?.[1];
     if (mfn) {
       const M = micra;
       const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
@@ -414,6 +414,18 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         return json(200, h);
       }
       // La tarjeta de sellos del cliente: solo si los datos de prueba la traen
+      // La presencia digital de las fincas (20261109090000_micra_finca_presencia.sql); M.fincasMissing: sin la migración
+      if (mfn === 'micra_finca_presencia_add' || mfn === 'micra_finca_presencia_list') {
+        if (M.fincasMissing) return fail(404, 'PGRST202', `Could not find the function public.${mfn} in the schema cache`);
+        M.fincas ??= [];
+        if (mfn === 'micra_finca_presencia_list') return M.admin ? json(200, M.fincas) : fail(403, '42501', 'Solo el equipo ve el estudio de fincas.');
+        const p = data.p ?? {};
+        if (p.consent !== true) return json(200, { saved: false, reason: 'sin_permiso' });
+        const row = { finca_key: p.finca_key, departamento: p.departamento ?? null, hectareas: p.hectareas ?? null, canales: p.canales, nivel: p.nivel, venta: p.venta, interes: p.interes, ig: p.ig, web: p.web, ref: p.ref, muestra: !!p.muestra };
+        const i = M.fincas.findIndex((x) => x.finca_key === p.finca_key);
+        if (i >= 0) M.fincas[i] = { ...row, ref: M.fincas[i].ref ?? row.ref, muestra: M.fincas[i].muestra || row.muestra }; else M.fincas.push(row);
+        return json(200, { saved: true });
+      }
       if (mfn === 'micra_my_stamps') return M.stamps ? json(200, M.stamps) : fail(404, 'PGRST202', 'Could not find the function micra_my_stamps');
       if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) { h.status = 'cancelled'; h.cancel_reason = ['tarde', 'no_llego', 'cambie', 'otro'].includes(data.p_reason) ? data.p_reason : null; } return json(200, !!h); }
       // Tiempos del apartado (20261110180000_micra_hold_times.sql); M.holdTimes: el resumen ya hecho
