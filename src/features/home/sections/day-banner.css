@@ -73,9 +73,11 @@
 .db-title em { display: block; font: 400 .82em/1.15 'Permanent Marker', cursive; font-style: normal; letter-spacing: 0; color: #FFD9A8; transform: rotate(-2deg); transform-origin: 0 50%; margin-top: 4px; }
 .db.is-day .db-title em { color: var(--red, #DE1B1B); }
 .db-ctas { display: flex; align-items: center; gap: 22px; margin-top: 20px; flex-wrap: wrap; }
-.db-btn { display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border-radius: 999px; font: 700 16px/1 'Archivo', sans-serif; background: var(--t-cta, linear-gradient(100deg, #B0127A 0%, #DE1B1B 42%, #F2542D 80%, #FF8A3D 100%)); color: #fff; text-decoration: none; box-shadow: 0 14px 28px -12px rgba(242, 84, 45, .85), inset 0 1px 0 rgba(255, 243, 176, .45); transition: transform .15s; }
+.db-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; border-radius: 999px; font: 700 16px/1 'Archivo', sans-serif; background: var(--t-cta, linear-gradient(100deg, #B0127A 0%, #DE1B1B 42%, #F2542D 80%, #FF8A3D 100%)); color: #fff; text-decoration: none; box-shadow: 0 14px 28px -12px rgba(242, 84, 45, .85), inset 0 1px 0 rgba(255, 243, 176, .45); transition: transform .15s; }
 .db-btn:hover { transform: translateY(-2px); }
-.db-link { display: inline-flex; align-items: center; min-height: 44px; padding: 12px 0 3px; font-weight: 700; color: inherit; text-decoration: none; border-bottom: 2px solid currentColor; }
+/* El segundo botón en gradiente frío (pedido del usuario, 10 nov 2026: «se pierde»): se lee sobre cualquier cielo sin competir con el caliente */
+.db-link { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; border-radius: 999px; font: 700 16px/1 'Archivo', sans-serif; color: #fff; text-decoration: none; background: linear-gradient(100deg, #22125A 0%, #3A2C9A 55%, #5A1E9E 100%); border: 1px solid rgba(255, 255, 255, .35); box-shadow: 0 14px 28px -12px rgba(34, 18, 90, .8), inset 0 1px 0 rgba(255, 255, 255, .25); transition: transform .15s; }
+.db-link:hover { transform: translateY(-2px); }
 .db-btn:focus-visible, .db-link:focus-visible, .db-dot:focus-visible, .db-back:focus-visible { outline: 3px solid #FFC23C; outline-offset: 3px; }
 @keyframes db-in { from { opacity: 0; transform: translateY(8px); } }
 
@@ -113,7 +115,8 @@
   .db-now { min-height: 50px; padding-left: 12px; font-size: 17px; max-width: 26ch; }
   .db-title { font-size: 27px; margin-top: 14px !important; }
   .db-ctas { margin-top: 14px; gap: 18px; }
-  .db-btn { min-height: 48px; padding: 0 22px; font-size: 15px; }
+  .db-ctas { gap: 10px; flex-wrap: nowrap; }
+  .db-btn, .db-link { flex: 1 1 0; min-width: 0; min-height: 48px; padding: 0 14px; font-size: 15px; white-space: nowrap; }
   .db-phone { width: 142px; border-radius: 24px; right: 14px; top: auto; bottom: 104px; }
   .db-phone::before, .db-tag { display: none; }
   .db-scr, .db-glass { inset: 5px; border-radius: 20px; }
