@@ -34,7 +34,7 @@ function speak(text) {
 }
 
 export default function ControlRoom({ state, places, at, p, hud = false, picked = null }) {
-  const [extra, setExtra] = useState({ live: null, ratings: null });
+  const [extra, setExtra] = useState({ live: null, ratings: null, times: null });
   const [log, setLog] = useState([]);
   const snap = useRef(null);
   const latest = useRef({ state, places });
@@ -46,8 +46,9 @@ export default function ControlRoom({ state, places, at, p, hud = false, picked 
       const { state: st, places: pl } = latest.current;
       const live = st.owner ? await rpc('micra_live_map', {}) : null;
       const ratings = st.owner ? await rpc('micra_hold_ratings') : null;
+      const times = st.owner ? await rpc('micra_hold_times', { p_days: 7 }) : null;
       if (!alive) return;
-      setExtra({ live, ratings });
+      setExtra({ live, ratings, times });
       // Solo se comparan dos lecturas iguales (del dueño y con o sin mapa las dos): la primera
       // llega antes de saber quién mira y todo parecería nuevo
       const now = { ...snapshot({ state: st, live }), like: `${st.owner}|${!!live}` };
@@ -58,7 +59,7 @@ export default function ControlRoom({ state, places, at, p, hud = false, picked 
     return () => { alive = false; };
   }, [at]);
 
-  const notes = useMemo(() => (state.owner ? insights({ state, live: extra.live, ratings: extra.ratings, places }) : []), [state, extra, places]);
+  const notes = useMemo(() => (state.owner ? insights({ state, live: extra.live, ratings: extra.ratings, times: extra.times, places }) : []), [state, extra, places]);
   const zones = useMemo(() => (extra.live ? zonesGeoJSON(extra.live, extra.live.min_count) : null), [extra.live]);
   // En el mapa: quien está en la calle (con su punto de ahora) y, apagados, los demás públicos
   const pins = useMemo(() => {

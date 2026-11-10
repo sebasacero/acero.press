@@ -72,6 +72,18 @@ test('el parte: lo de ahora y la primera prioridad; sin dueño, solo lo público
   assert.match(briefing({ state: { owner: true, kpis: { ...kpis, live: 0, waiting: 0 } } }), /^Nadie en la calle\. 12 tazas hoy.* Sin alertas\.$/);
 });
 
+test('tiempos y cancelaciones: mediana, peor 10 % y el motivo más dicho, nunca con menos de 3', () => {
+  assert.deepEqual(insights({ times: { days: 7, served_n: 2, served_p50: 9, served_p90: 40, served: 2, missed: 0, cancelled: 0, reasons: {} } }), []);
+  const times = { days: 7, n: 12, served: 8, missed: 1, cancelled: 3, waiting: 0, seen_n: 9, seen_p50: 6.5, seen_p90: 15, served_n: 8, served_p50: 12.4, served_p90: 34, reasons: { tarde: 2, no_llego: 0, cambie: 1, otro: 0 } };
+  const list = insights({ times });
+  assert.deepEqual(list.map((i) => i.key), ['lost', 'times', 'seen']);
+  assert.equal(list[0].title, 'Se pierde 33 % de los apartados');
+  assert.match(list[0].text, /4 de 12 en 7 días \(3 cancelados, 1 sin entregar\)\. Motivo más dicho: se demoró \(2\)\./);
+  assert.equal(list[1].title, 'Un apartado tarda 12,4 min en entregarse');
+  assert.match(list[1].text, /pasa de 34 min .* Ahí se pierden clientes\./);
+  assert.equal(list[2].title, 'Los baristas tardan 6,5 min en ver un apartado');
+});
+
 test('la bitácora deja lo nuevo arriba y no crece sin fin', () => {
   const log = pushLog([{ key: 'viejo' }], [{ key: 'x' }, { key: 'y' }], 2);
   assert.deepEqual(log.map((e) => e.key), ['y', 'x']);

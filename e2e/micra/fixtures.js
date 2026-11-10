@@ -409,7 +409,15 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       }
       // La tarjeta de sellos del cliente: solo si los datos de prueba la traen
       if (mfn === 'micra_my_stamps') return M.stamps ? json(200, M.stamps) : fail(404, 'PGRST202', 'Could not find the function micra_my_stamps');
-      if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) h.status = 'cancelled'; return json(200, !!h); }
+      if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) { h.status = 'cancelled'; h.cancel_reason = ['tarde', 'no_llego', 'cambie', 'otro'].includes(data.p_reason) ? data.p_reason : null; } return json(200, !!h); }
+      // Tiempos del apartado (20261110180000_micra_hold_times.sql); M.holdTimes: el resumen ya hecho
+      if (mfn === 'micra_hold_times') {
+        if (!M.admin) return fail(403, '42501', 'Solo el equipo.');
+        if (M.holdTimes) return json(200, M.holdTimes);
+        const by = (s) => M.holds.filter((h) => h.status === s).length;
+        const reasons = Object.fromEntries(['tarde', 'no_llego', 'cambie', 'otro'].map((r) => [r, M.holds.filter((h) => h.cancel_reason === r).length]));
+        return json(200, { days: 7, n: M.holds.length, served: by('served'), missed: by('missed'), cancelled: by('cancelled'), waiting: by('waiting'), seen_n: 0, seen_p50: null, seen_p90: null, served_n: 0, served_p50: null, served_p90: null, reasons });
+      }
       // «¿Cómo te fue?» (20261110130000_micra_hold_rating.sql)
       if (mfn === 'micra_hold_rate') {
         if (!(data.p_rating >= 1 && data.p_rating <= 5)) return fail(400, '22023', 'La nota va de 1 a 5 granos.');
@@ -542,6 +550,12 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         return json(200, { ...s, replay: false });
       }
       if (mfn === 'micra_barista_undo') { const s = M.sales.find((x) => x.id === data.p_sale_id && !x.voided); if (s) s.voided = true; return json(200, !!s); }
+      if (mfn === 'micra_holds_seen') {
+        const ids = data.p_ids ?? [];
+        let n = 0;
+        M.holds.forEach((h) => { if (ids.includes(h.id) && h.tintero_id === b.id && !h.seen_at) { h.seen_at = new Date().toISOString(); n += 1; } });
+        return json(200, n);
+      }
       if (mfn === 'micra_hold_close') {
         const h = M.holds.find((x) => x.id === data.p_hold_id);
         if (h.status !== 'waiting') return json(200, { id: h.id, status: h.status, replay: true });

@@ -49,7 +49,7 @@ const cellKey = (c) => `${Number(c.lat).toFixed(4)},${Number(c.lng).toFixed(4)}`
  * - ratings: micra_hold_ratings o null. - places: puntos con nombre (micra_baristas).
  * Devuelve [{ key, kind: 'mejora' | 'tendencia', level: 'alta' | 'media' | 'info', title, text }].
  */
-export function insights({ state = null, live = null, ratings = null, places = [] } = {}) {
+export function insights({ state = null, live = null, ratings = null, places = [], times = null } = {}) {
   const out = [];
   const add = (key, kind, level, title, text) => out.push({ key, kind, level, title, text });
   const min = Number(live?.min_count) || 2;
@@ -121,6 +121,27 @@ export function insights({ state = null, live = null, ratings = null, places = [
   const k = state?.kpis;
   if (k && (k.served ?? 0) + (k.waiting ?? 0) >= MIN_N) {
     add('holds', 'tendencia', 'info', `${k.served} de ${k.served + k.waiting} apartados de hoy ya se entregaron`, k.waiting > 0 ? `${plural(k.waiting, 'apartado espera', 'apartados esperan')} todavía.` : 'Ninguno espera.');
+  }
+
+  // Tiempos del apartado (micra_hold_times, 7 días): mediana y peor 10 %, como Rappi
+  const mins = (m) => `${String(Math.round(Number(m) * 10) / 10).replace('.', ',')} min`;
+  if (times && Number(times.served_n) >= MIN_N && times.served_p50 != null) {
+    const slow = Number(times.served_p90) >= 30;
+    add('times', 'tendencia', slow ? 'media' : 'info', `Un apartado tarda ${mins(times.served_p50)} en entregarse`,
+      `El 10 % más lento pasa de ${mins(times.served_p90)} (${times.served_n} entregas, ${times.days} días).${slow ? ' Ahí se pierden clientes.' : ''}`);
+  }
+  if (times && Number(times.seen_n) >= MIN_N && times.seen_p50 != null && Number(times.seen_p50) >= 5) {
+    add('seen', 'mejora', 'media', `Los baristas tardan ${mins(times.seen_p50)} en ver un apartado`, 'Activar el aviso por WhatsApp acorta ese tiempo.');
+  }
+  // Cancelaciones: cuántas y el motivo que más se repite
+  const closed = Number(times?.served ?? 0) + Number(times?.missed ?? 0) + Number(times?.cancelled ?? 0);
+  if (times && closed >= MIN_N && Number(times.cancelled) + Number(times.missed) > 0) {
+    const lost = Number(times.cancelled) + Number(times.missed);
+    const pct = Math.round((lost / closed) * 100);
+    const REASON = { tarde: 'se demoró', no_llego: 'no llegó', cambie: 'ya no quería', otro: 'otro motivo' };
+    const top = Object.entries(times.reasons ?? {}).sort((a, b) => b[1] - a[1])[0];
+    add('lost', 'mejora', pct >= 25 ? 'alta' : 'media', `Se pierde ${pct} % de los apartados`,
+      `${lost} de ${closed} en ${times.days} días (${times.cancelled} cancelados, ${times.missed} sin entregar).${top && top[1] > 0 ? ` Motivo más dicho: ${REASON[top[0]]} (${top[1]}).` : ''}`);
   }
 
   const order = { alta: 0, media: 1, info: 2 };
