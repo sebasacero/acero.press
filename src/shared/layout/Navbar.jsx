@@ -46,10 +46,11 @@ export default function Navbar({ onOpenNavDrawer, navOpen, variant = 'overlay', 
         </div>
 
         <div className="nav-icons right">
-          <LanguageSwitcher variant={variant === 'sheet' && tone === 'paper' ? 'ink' : 'light'} />
+          {/* Con las tres rayas, el idioma y la cuenta viven en el menú lateral: arriba quedan el carrito y las rayas */}
+          <span className="nav-wide"><LanguageSwitcher variant={variant === 'sheet' && tone === 'paper' ? 'ink' : 'light'} /></span>
           <a
             href="#account"
-            className="icon-link"
+            className="icon-link nav-wide"
             aria-label="Cuenta de usuario"
             onClick={(e) => {
               e.preventDefault();

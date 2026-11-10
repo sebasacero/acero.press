@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MOMENTS, bogotaHour, momentAt, clockOf, paletteAt, orbsAt, hourLerp, layoutOf, mix, rng } from './dayBanner.js';
+import { MOMENTS, bogotaHour, momentAt, clockOf, paletteAt, orbsAt, hourLerp, layoutOf, mix, rng, runHour, DAY_SECONDS } from './dayBanner.js';
 
 test('bogotaHour: UTC menos cinco, sin horario de verano', () => {
   assert.equal(bogotaHour(new Date('2026-11-09T10:30:00Z')), 5.5);
@@ -74,4 +74,17 @@ test('mix y rng: deterministas', () => {
   assert.equal(mix('rgba(0,0,0,0)', '#ffffff', 1), 'rgba(255,255,255,1)');
   const a = rng(5), b = rng(5);
   assert.deepEqual([a(), a(), a()], [b(), b(), b()]);
+});
+
+test('runHour: el día corre desde la hora de la visita y da la vuelta', () => {
+  assert.equal(runHour(6.5, 0), 6.5);
+  assert.equal(runHour(6, DAY_SECONDS / 4), 12);
+  assert.equal(runHour(23, DAY_SECONDS / 12), 1);
+  assert.ok(Math.abs(runHour(13.25, DAY_SECONDS) - 13.25) < 1e-9);
+});
+
+test('clockOf: nunca marca el minuto 60', () => {
+  assert.equal(clockOf(9.99999999).text, '10:00');
+  assert.equal(clockOf(23.99999999).text, '12:00');
+  assert.equal(clockOf(23.99999999).am, true);
 });
