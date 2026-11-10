@@ -117,7 +117,8 @@
   .db-ctas { margin-top: 14px; gap: 18px; }
   .db-ctas { gap: 10px; flex-wrap: nowrap; }
   .db-btn, .db-link { flex: 1 1 0; min-width: 0; min-height: 48px; padding: 0 14px; font-size: 15px; white-space: nowrap; }
-  .db-phone { width: 142px; border-radius: 24px; right: 14px; top: auto; bottom: 104px; }
+  /* Nunca encima de los botones: abajo como siempre, pero no más arriba de 410 px (pantallas bajas) */
+  .db-phone { width: 142px; border-radius: 24px; right: 14px; top: max(410px, calc(100% - 104px - 292px)); bottom: auto; }
   .db-phone::before, .db-tag { display: none; }
   .db-scr, .db-glass { inset: 5px; border-radius: 20px; }
   .db-shade { width: 140px; margin-left: -70px; height: 11px; }
