@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import Beans from './Beans.jsx';
 import { money, cupsLabel, weekBars, weekdayLetter, baristaPath } from './micraApp.js';
 import * as api from './api.js';
 import platform from './platform.js';
@@ -34,12 +35,15 @@ export default function OwnerView({ onActAs, go }) {
   // Para «Qué ajustar»: publicaciones por revisar, las de la semana y el reto abierto (sin la migración, null)
   const [posts, setPosts] = useState(null);
   const [reto, setReto] = useState(null);
+  // «¿Cómo te fue?»: granos y precio pagado por barista, 30 días (sin la migración, null)
+  const [ratings, setRatings] = useState(null);
   useEffect(() => {
     const since = Date.now() - 7 * 864e5;
     Promise.all([api.postsPending(), api.postsFeed(100)])
       .then(([p, f]) => setPosts({ pending: (p ?? []).length, week: (f ?? []).filter((x) => Date.parse(x.created_at) >= since).length }))
       .catch(() => setPosts(null));
     api.challenge().then((d) => setReto(d?.challenge ?? null)).catch(() => setReto(null));
+    api.holdRatings().then((r) => setRatings(r ?? [])).catch(() => setRatings(null));
   }, []);
   const load = useCallback(() => {
     api.ownerDay().then((d) => { setData(d); setError(null); }).catch((e) => setError(e.missing ? 'Falta activar las tablas de Micra en la base (migración 20261026210000_micra_app).' : e.message));
@@ -109,6 +113,20 @@ export default function OwnerView({ onActAs, go }) {
         <div><dt>Apartados</dt><dd>{tot.waiting + tot.served}<small> · {tot.served} entregados</small></dd></div>
         <div><dt>En la calle</dt><dd>{tot.live}<small> de {list.length}</small></dd></div>
       </dl>
+
+      {ratings?.length > 0 && (
+        <section className="mapp-glass" aria-label="Lo que dicen los clientes" data-testid="owner-ratings">
+          <p className="mapp-cota">Lo que dicen los clientes · 30 días</p>
+          <ul className="mapp-ratings">
+            {ratings.map((r) => (
+              <li key={r.id}>
+                <b>{r.name}</b> <span className="mapp-rating"><Beans value={Number(r.avg)} size="small" /> {Number(r.avg).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ({r.n})</span>
+                {r.paid_n > 0 && <small> · pagan {money(r.paid_cup)} por taza (pide {money(r.listed_cup)}, {r.paid_n} {r.paid_n === 1 ? 'dato' : 'datos'})</small>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {(() => {
         const tips = growthTips({ sum, tot, week, posts, challenge: reto, clients: data.clients });

@@ -336,6 +336,32 @@ test('cliente con apartado: arriba va «Tu apartado» con sus etapas; las tarjet
   expect(errors).toEqual([]);
 });
 
+test('cliente: después de la entrega califica con granos y dice cuánto pagó; el equipo lo ve', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.holds.push({ id: 'apartado-mio', tintero_id: MARLENE, client_ref: 'MI-CEL', name: 'Sebas', items: [{ product: 'tinto', qty: 2, unit_price: 1500 }], cups: 2, total: 3000, status: 'served' });
+  const { page, api, errors } = await open(browser, { seed });
+  await page.addInitScript(() => { localStorage.setItem('micra_device_v1', JSON.stringify('MI-CEL')); localStorage.setItem('micra_name_v1', JSON.stringify('Sebas · oficina 302')); });
+  await page.goto('/micra', { waitUntil: 'load' });
+
+  const rate = page.getByRole('region', { name: 'Tu apartado de hoy' }).getByTestId('rate-hold');
+  await expect(rate).toContainText('¿Cómo te fue con Marlene?');
+  await rate.getByRole('radio', { name: '4 granos' }).click();
+  // Lo apartado va primero; se puede decir otro valor o «No sé»
+  await expect(rate.getByRole('radiogroup', { name: 'Cuánto pagaste' }).getByRole('radio')).toHaveText([/3\.000/, /2\.000/, /4\.000/, 'Otro', 'No sé']);
+  await rate.getByRole('radio', { name: /2\.000/ }).click();
+  await rate.getByRole('button', { name: 'Enviar' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Le diste 4 granos a Marlene' })).toBeVisible();
+  const h = api.micra.holds.find((x) => x.id === 'apartado-mio');
+  expect([h.rating, h.paid_total]).toEqual([4, 2000]);
+  expect(errors).toEqual([]);
+
+  // El equipo ve el promedio y lo pagado por taza frente a lo que pide
+  const team = await open(browser, { who: 'team', seed: { ...seed, holds: [{ ...seed.holds.at(-1), rating: 4, paid_total: 2000 }] } });
+  await team.page.goto('/micra/equipo', { waitUntil: 'load' });
+  await expect(team.page.getByTestId('owner-ratings')).toContainText(/Marlene.*4,0 \(1\).*pagan \$\s?1\.000 por taza \(pide \$\s?1\.500/);
+  expect(team.errors).toEqual([]);
+});
+
 test('barista: la cabecera roja de Vender lleva su punto y «Mi QR», sin buscador', async ({ browser }) => {
   const { page, errors } = await open(browser, { who: 'barista' });
   await page.goto('/micra/barista', { waitUntil: 'load' });

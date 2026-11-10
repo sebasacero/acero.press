@@ -13,6 +13,8 @@ import Figure from './Elenco.jsx';
 import { IconThermo, IconCheck, IconOut, IconToday, IconPin, IconSearch, IconChevron, IconTrophy, IconCup } from './icons.jsx';
 import { Cargando } from './Animado.jsx';
 import { figureFor } from './motivation.js';
+import Beans from './Beans.jsx';
+import { needsRating, paidChoices, ratePayload } from './rating.js';
 // Los anuncios «Patrocinado»: la burbuja en las historias y la historia a pantalla completa
 import { useAds, AdStoryBubble, AdStoryView } from './Ads.jsx';
 import { stageAlert, outAlert, POLL_MS } from './alerts.js';
@@ -137,7 +139,60 @@ function HoldCard({ hold, barista, go }) {
           </li>
         ))}
       </ol>
+      {stage === 3 && <RateHold hold={hold} baristaName={barista.name} />}
     </section>
+  );
+}
+
+/**
+ * «¿Cómo te fue?»: después de la entrega, granos de 1 a 5 y cuánto pagó.
+ * El precio real de la calle es el dato que más le sirve al estudio; lo pagado
+ * es opcional para que nadie se quede sin calificar por no acordarse.
+ */
+function RateHold({ hold, baristaName }) {
+  const [rating, setRating] = useState(0);
+  const [paid, setPaid] = useState(null);
+  const [other, setOther] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [sent, setSent] = useState(null);
+  if (sent) {
+    return <p className="mapp-rate-done" role="status">¡Gracias! Le diste {sent} {sent === 1 ? 'grano' : 'granos'} a {baristaName}.</p>;
+  }
+  if (!needsRating(hold)) return null;
+  const choices = paidChoices(hold.total, hold.cups);
+  const send = async () => {
+    const body = ratePayload(rating, paid === 'otro' ? other : paid);
+    if (!body) { setError(rating ? 'Revisa cuánto pagaste.' : 'Escoge de 1 a 5 granos.'); return; }
+    setBusy(true); setError(null);
+    try {
+      const ok = await api.rateHold(hold.id, body.rating, body.paid);
+      if (ok === false) throw new Error('Ya no se puede calificar este apartado.');
+      setSent(body.rating);
+    } catch (e) { setError(e.message); }
+    setBusy(false);
+  };
+  return (
+    <div className="mapp-rate" data-testid="rate-hold">
+      <p className="mapp-rate-q"><b>¿Cómo te fue con {baristaName}?</b></p>
+      <Beans value={rating} onPick={setRating} label={`Califica a ${baristaName}`} />
+      {rating > 0 && (
+        <>
+          <p className="mapp-rate-q">¿Cuánto pagaste?</p>
+          <div className="mapp-rate-paid" role="radiogroup" aria-label="Cuánto pagaste">
+            {choices.map((v) => <button key={v} type="button" role="radio" aria-checked={paid === v} className={paid === v ? 'on' : ''} onClick={() => setPaid(v)}>{money(v)}</button>)}
+            <button type="button" role="radio" aria-checked={paid === 'otro'} className={paid === 'otro' ? 'on' : ''} onClick={() => setPaid('otro')}>Otro</button>
+            <button type="button" role="radio" aria-checked={paid == null} className={paid == null ? 'on' : ''} onClick={() => setPaid(null)}>No sé</button>
+          </div>
+          {paid === 'otro' && (
+            <label className="mapp-rate-other">Pagué $<input type="number" inputMode="numeric" min="0" max="60000" step="100" value={other} onChange={(e) => setOther(e.target.value)} aria-label="Lo que pagaste" /></label>
+          )}
+          <button type="button" className="mapp-btn" onClick={send} disabled={busy}>{busy ? 'Enviando…' : 'Enviar'}</button>
+        </>
+      )}
+      {error && <p className="mapp-error" role="alert">{error}</p>}
+      <p className="mapp-fine">{baristaName} solo ve el promedio de sus granos, nunca quién calificó.</p>
+    </div>
   );
 }
 
@@ -549,6 +604,7 @@ export function BaristaPage({ id, go }) {
         <section className="mapp-done" role="status">
           <b>{mine.status === 'served' ? '¡Entregado!' : 'Hoy no se pudo.'}</b>
           <p>{mine.status === 'served' ? `${b.name} ya te entregó ${itemsLabel(mine.items)}. Mañana puedes volver a apartar.` : `${b.name} marcó que no se encontraron. Mañana puedes volver a apartar.`}</p>
+          {mine.status === 'served' && <RateHold hold={mine} baristaName={b.name} />}
         </section>
       ) : !b.takes_holds ? (
         <section className="mapp-glass">
