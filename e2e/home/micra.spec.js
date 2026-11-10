@@ -1,5 +1,5 @@
 // Micra en la portada: qué es, las cifras reales del estudio (micra_street_map) junto al centro de
-// control de la operación en vivo (público para todos, completo para el dueño), las tiendas, y arriba los dos banners de siempre como dos
+// celular de Micra con Vender, las tiendas, y arriba los dos banners de siempre como dos
 // puertas a la vez. Las fichas de redes van al final de la página.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
@@ -48,47 +48,30 @@ test('con ventas y baristas reales, las cifras salen en el celular, sin nombres;
   await page.context().close();
 });
 
-const BARISTAS = [
-  { id: 'b1', name: 'Marlene', full: 'Marlene Rojas', localidad: 'Chapinero', referencia: 'Cl. 57 con Cra. 7', prices: { tinto: 1500 }, takes_holds: true, live_until: '2099-01-01T00:00:00Z' },
-  { id: 'b2', name: 'Jairo', full: 'Jairo Peña', localidad: 'Suba', referencia: 'Portal Suba', prices: {}, takes_holds: true },
-];
-
-test('el centro de control: cualquiera ve quién está en la calle, sin plata y con los controles cerrados', async ({ browser }) => {
-  const { page, errors, api } = await openPage(browser, { context: DESK });
-  api.micra.admin = false;
-  api.micra.baristas = structuredClone(BARISTAS);
-  api.micra.holds = [{ id: 'h1', tintero_id: 'b1', status: 'waiting', cups: 2 }];
+test('el celular de Micra es Vender: cada +1 suma la taza y la plata y llena la meta, sin escribir nada', async ({ browser }) => {
+  // Con «menos movimiento» el celular no se toca solo: así la cuenta es la de la prueba
+  const { page, errors, api } = await openPage(browser, { context: { ...DESK, reducedMotion: 'reduce' } });
   await page.goto('/', { waitUntil: 'load' });
-  const panel = page.getByTestId('control-panel');
-  await panel.scrollIntoViewIfNeeded();
-  await expect(panel).toContainText('Vista pública');
-  await expect(panel.getByTestId('ctl-live')).toHaveText('1');
-  await expect(panel.getByTestId('ctl-waiting')).toHaveText('1');
-  await expect(panel.locator('.pg-ctl-list li').first()).toContainText('Marlene');
-  await expect(panel.getByTestId('ctl-cups')).toHaveCount(0);
-  await expect(panel).not.toContainText('$');
-  await expect(panel).toContainText('Los controles son del equipo.');
-  await expect(panel.getByRole('link', { name: 'Entrar como equipo' })).toHaveAttribute('href', '/micra/equipo');
-  await expect(panel).not.toContainText(/tintero|Rojas/i);
+  const phone = page.getByRole('group', { name: /el panel de vender del barista/ });
+  await phone.scrollIntoViewIfNeeded();
+  await expect(phone.locator('.sellp-count b')).toHaveText('4');
+  await expect(phone.locator('.sellp-cash')).toContainText('$6.000');
+  await phone.getByRole('button', { name: 'Vendí un perico' }).click();
+  await expect(phone.locator('.sellp-count b')).toHaveText('5');
+  await expect(phone.locator('.sellp-cash')).toContainText('$8.000');
+  await expect(phone.locator('.sellp-pop em')).toHaveText('+$2.000');
+  // Es un ejemplo: no registra ventas
+  expect(api.micra.sales ?? []).toEqual([]);
   expect(errors).toEqual([]);
   await page.context().close();
 });
 
-test('el centro de control del dueño: el día completo, lo que hay que atender y los controles', async ({ browser }) => {
-  const { page, errors, api } = await openPage(browser, { context: DESK });
-  api.micra.baristas = structuredClone(BARISTAS);
-  api.micra.sales = [{ id: 's1', tintero_id: 'b1', product: 'tinto', qty: 3, total: 4500, at: new Date().toISOString() }];
+test('el celular se toca solo mientras nadie lo use: la taza sube', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/', { waitUntil: 'load' });
-  const panel = page.getByTestId('control-panel');
-  await panel.scrollIntoViewIfNeeded();
-  await expect(panel).toContainText('Equipo');
-  await expect(panel.getByTestId('ctl-cups')).toHaveText('3');
-  await expect(panel).toContainText('$4.500');
-  // Jairo tiene cuenta pero no precios: sale para atender
-  await expect(panel.locator('.pg-ctl-alerts')).toContainText('1 baristas sin precios');
-  const controls = panel.getByRole('navigation', { name: 'Controles' });
-  await expect(controls.getByRole('link', { name: 'Mapa en vivo' })).toHaveAttribute('href', '/micra/mapa');
-  await expect(controls.getByRole('link', { name: /Actuar como/ })).toHaveAttribute('href', '/micra/equipo');
+  const phone = page.getByRole('group', { name: /el panel de vender del barista/ });
+  await phone.scrollIntoViewIfNeeded();
+  await expect.poll(async () => Number(await phone.locator('.sellp-count b').textContent()), { timeout: 8000 }).toBeGreaterThan(4);
   expect(errors).toEqual([]);
   await page.context().close();
 });
