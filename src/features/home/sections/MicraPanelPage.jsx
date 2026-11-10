@@ -16,13 +16,13 @@ export default function MicraPanelPage() {
             <img src="/image/micra-icon-192.png" alt="" width="40" height="40" />
             <b>Micra</b>
           </a>
+          <h1>Centro de control · Bogotá</h1>
           <nav aria-label="Micra">
             <a href="/micra?app">Abrir la app</a>
             <a href="/">ACERO.press</a>
           </nav>
         </header>
         <main className="pg-panel-main">
-          <h1>Centro de control</h1>
           <ControlPanel on wide />
         </main>
       </div>

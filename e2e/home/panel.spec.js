@@ -10,7 +10,7 @@ test('computador: /micra abre el centro de control y «Abrir la app» lleva a la
   api.micra.baristas = [{ id: 'b1', name: 'Marlene', localidad: 'Chapinero', referencia: 'Cl. 57', prices: { tinto: 1500 }, takes_holds: true, live_until: '2099-01-01T00:00:00Z' }];
   // En Vite dev «/micra» sirve micra.html (la entrada nativa); en Vercel cae en index.html. «/micra/» va por main.jsx.
   await page.goto('/micra/', { waitUntil: 'load' });
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Centro de control');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Centro de control · Bogotá');
   const panel = page.getByTestId('control-panel');
   await expect(panel.getByTestId('ctl-live')).toHaveText('1');
   await expect(panel.getByRole('navigation', { name: 'Controles' })).toBeVisible();

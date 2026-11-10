@@ -50,21 +50,21 @@ export default function ControlRoom({ state, places, at, p }) {
   const demandN = (zones?.demand.features ?? []).reduce((a, f) => a + f.properties.n, 0);
 
   return (
-    <div className="pg-ctl-room">
-      <div className="pg-ctl-card pg-ctl-map" data-testid="ctl-map">
-        <h3>{p.map.title}</h3>
+    <>
+      <div className="pg-fleet-map" data-testid="ctl-map">
+        <h2 className="pg-fleet-vh">{p.map.title}</h2>
         <ul className="pg-ctl-legend" aria-label={p.map.legend}>
           <li><i className="is-pin" />{p.map.pins}</li>
           {state.owner && <li><i className="is-demand" />{p.map.demand}{demandN > 0 && <b> · {demandN}</b>}</li>}
           {state.owner && <li><i className="is-study" />{p.map.study}</li>}
         </ul>
         <Suspense fallback={<div className="mapp-map is-big" aria-hidden="true" />}>
-          <MicraMap baristas={pins} me={null} theme="noche" onPick={(id) => window.location.assign(`/micra/b/${id}`)} zones={zones} big named label={p.map.title} testId="ctl-map-canvas" />
+          <MicraMap baristas={pins} me={null} theme="plano" onPick={(id) => window.location.assign(`/micra/b/${id}`)} zones={zones} big named label={p.map.title} testId="ctl-map-canvas" />
         </Suspense>
         <p className="pg-ctl-fine">{state.owner ? p.map.fine : p.map.finePublic}</p>
       </div>
-      <div className="pg-ctl-card pg-ctl-feed">
-        <h3>{p.feed.now}</h3>
+      <div className="pg-fleet-feed">
+        <h2>{p.feed.now}</h2>
         {state.owner ? (
           <>
             <ul className="pg-ctl-notes" aria-live="polite" data-testid="ctl-events">
@@ -75,7 +75,7 @@ export default function ControlRoom({ state, places, at, p }) {
                 </li>
               ))}
             </ul>
-            <h3>{p.feed.title}</h3>
+            <h2>{p.feed.title}</h2>
             <ul className="pg-ctl-notes" data-testid="ctl-insights">
               {notes.length === 0 && <li className="pg-ctl-empty">{p.feed.empty}</li>}
               {notes.map((n) => (
@@ -87,6 +87,6 @@ export default function ControlRoom({ state, places, at, p }) {
           </>
         ) : <p className="pg-ctl-empty">{p.feed.locked}</p>}
       </div>
-    </div>
+    </>
   );
 }

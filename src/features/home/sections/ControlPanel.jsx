@@ -69,6 +69,55 @@ export default function ControlPanel({ on, wide = false }) {
   const max = Math.max(1, ...(s?.week ?? []).map((d) => d.cups || 0));
   const clock = at ? at.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone: 'America/Bogota' }) : '…';
 
+  // En computador: la central de flota (pedido del usuario, 10 nov 2026: «algo más sobrio, como si
+  // tuviéramos una flota que seguir con el mapa de Bogotá»). A la izquierda la flota, en el centro
+  // el mapa a todo lo alto, a la derecha lo que pasa y lo que conviene mejorar.
+  if (wide) {
+    const live = (s?.rows ?? []).filter((r) => r.live);
+    const off = (s?.rows ?? []).filter((r) => !r.live);
+    const unit = (r) => (
+      <li key={r.id} className={r.live ? 'is-live' : ''}>
+        <i aria-hidden="true" />
+        <div><b>{r.name}</b><span>{r.where || '—'}</span></div>
+        <em>{r.waiting > 0 && <>{r.waiting} {p.waitingN}</>}{r.cups > 0 && <>{r.waiting > 0 ? ' · ' : ''}{r.cups} {p.cupsN}</>}</em>
+      </li>
+    );
+    return (
+      <section className={`pg-fleet${s?.owner ? ' is-owner' : ''}`} aria-label={p.label} data-testid="control-panel">
+        <dl className="pg-fleet-kpis">
+          <div><dt>{p.kpis.live}</dt><dd><b data-testid="ctl-live">{k ? k.live : '–'}</b><small>/ {k?.baristas ?? '–'}</small></dd></div>
+          <div><dt>{p.kpis.waiting}</dt><dd><b data-testid="ctl-waiting">{k ? k.waiting : '–'}</b></dd></div>
+          {s?.owner && <div><dt>{p.kpis.cups}</dt><dd><b data-testid="ctl-cups">{k.cups}</b><small>{k.served} {p.kpis.served}</small></dd></div>}
+          {s?.owner && <div><dt>{p.kpis.total}</dt><dd><b>{money(k.total)}</b></dd></div>}
+          <div className="pg-fleet-clock"><dt>{s?.owner ? p.team : p.public}</dt><dd><time aria-live="polite">{failed ? p.error : `${p.updated} ${clock}`}</time></dd></div>
+        </dl>
+        <div className="pg-fleet-body">
+          <aside className="pg-fleet-side">
+            <h2>{p.street} <small>{live.length}</small></h2>
+            {s && live.length === 0 && <p className="pg-ctl-empty">{p.empty}</p>}
+            <ul className="pg-fleet-units">{live.map(unit)}</ul>
+            {off.length > 0 && <><h2>{p.off} <small>{off.length}</small></h2><ul className="pg-fleet-units">{off.slice(0, 40).map(unit)}</ul></>}
+            {s?.owner ? (
+              <>
+                {s.alerts.length > 0 && (
+                  <><h2>{p.alertsTitle}</h2>
+                    <ul className="pg-fleet-alerts">{s.alerts.map((a) => <li key={a.key}><a href={a.href}><b>{a.n}</b> {p.alerts[a.key]}</a></li>)}</ul></>
+                )}
+                <h2>{p.controls}</h2>
+                <nav className="pg-fleet-actions" aria-label={p.controls}>
+                  {p.actions.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+                </nav>
+              </>
+            ) : (
+              <><p className="pg-ctl-empty">{p.locked}</p><a className="pg-fleet-enter" href="/micra/equipo">{p.enter}</a></>
+            )}
+          </aside>
+          {s && <Suspense fallback={<div className="pg-fleet-map" />}><ControlRoom state={s} places={places} at={at} p={p} /></Suspense>}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={`pg-ctl${s?.owner ? ' is-owner' : ''}${wide ? ' is-wide' : ''}`} aria-label={p.label} data-testid="control-panel">
       <header className="pg-ctl-top">
@@ -84,14 +133,12 @@ export default function ControlPanel({ on, wide = false }) {
         {s?.owner && <div><dd>{money(k.total)}</dd><dt>{p.kpis.total}</dt></div>}
       </dl>
 
-      {wide && s && <Suspense fallback={null}><ControlRoom state={s} places={places} at={at} p={p} /></Suspense>}
-
       <div className="pg-ctl-grid">
         <div className="pg-ctl-card">
           <h3>{p.street}</h3>
           {s && s.rows.filter((r) => r.live).length === 0 && <p className="pg-ctl-empty">{p.empty}</p>}
           <ul className="pg-ctl-list">
-            {(s?.rows ?? []).slice(0, wide ? 40 : 6).map((r) => (
+            {(s?.rows ?? []).slice(0, 6).map((r) => (
               <li key={r.id} className={r.live ? 'is-live' : ''}>
                 <i aria-hidden="true" />
                 <div><b>{r.name}</b><span>{r.where || '—'}</span></div>
