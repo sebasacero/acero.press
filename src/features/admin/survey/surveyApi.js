@@ -12,7 +12,7 @@ export async function postSurvey(tinteroId, body) {
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const detail = data?.detail;
-    throw new Error(Array.isArray(detail) ? detail.map((d) => String(d.msg).replace(/^Value error, /, '')).join(' · ') : detail || 'La API de Acero no respondió.');
+    throw Object.assign(new Error(Array.isArray(detail) ? detail.map((d) => String(d.msg).replace(/^Value error, /, '')).join(' · ') : detail || 'La API de Acero no respondió.'), { status: res.status });
   }
   return data;
 }

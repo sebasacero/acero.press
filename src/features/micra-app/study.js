@@ -82,3 +82,42 @@ export function salePhotoPoints(list) {
     .map((r, i) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(r.lng), Number(r.lat)] }, properties: { id: i, weight: 1, at: r.at ?? null } }));
   return { type: 'FeatureCollection', features };
 }
+
+// ── Volver a las fichas que ya están en el mapa ──────────────────────────────
+
+/** Metros entre dos puntos { lat, lng } (haversine); null si alguno no sirve. */
+export function distanceM(a, b) {
+  const n = [a?.lat, a?.lng, b?.lat, b?.lng].map((v) => (v === null || v === undefined || v === '' ? NaN : Number(v)));
+  if (n.some((v) => !Number.isFinite(v))) return null;
+  const rad = (d) => (d * Math.PI) / 180;
+  const h = Math.sin(rad(n[2] - n[0]) / 2) ** 2 + Math.cos(rad(n[0])) * Math.cos(rad(n[2])) * Math.sin(rad(n[3] - n[1]) / 2) ** 2;
+  return Math.round(2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h))));
+}
+
+/** «a 120 m», «a 1,2 km»: redondeado a lo que se camina. */
+export function distLabel(m) {
+  if (m === null || m === undefined) return null;
+  if (m < 1000) return `a ${Math.max(10, Math.round(m / 10) * 10)} m`;
+  return `a ${(m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', ',')} km`;
+}
+
+/** Las fichas con su distancia al celular, la más cercana primero; las que no tienen GPS, al final en su orden. */
+export function nearRows(rows, pos) {
+  return (rows ?? [])
+    .map((r, i) => ({ ...r, dist: distanceM(pos, r), i }))
+    .sort((a, b) => (a.dist === null) - (b.dist === null) || (a.dist ?? 0) - (b.dist ?? 0) || a.i - b.i)
+    .map(({ i, ...r }) => r);
+}
+
+/** Los filtros de la lista: lo que falta por hacer en la calle. */
+export const STUDY_FILTERS = [['todas', 'Todas'], ['encuesta', 'Sin encuesta'], ['gps', 'Sin GPS'], ['foto', 'Sin foto']];
+
+export function filterRows(rows, filter) {
+  if (!filter || filter === 'todas') return rows ?? [];
+  return (rows ?? []).filter((r) => r.pending.includes(filter));
+}
+
+/** Cuántas fichas deja cada filtro, para el número de cada botón. */
+export function filterCounts(rows) {
+  return Object.fromEntries(STUDY_FILTERS.map(([id]) => [id, filterRows(rows, id).length]));
+}

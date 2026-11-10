@@ -121,7 +121,8 @@ test('equipo: la encuesta de una ficha y «Encuesta» de la barra abre la ficha 
   await luis.getByRole('button', { name: /encuest/ }).click();
   const enc = page.getByRole('dialog', { name: 'Encuesta de Don Luis' });
   await expect(enc).toBeVisible();
-  await expect(enc.getByRole('button', { name: 'Guardar encuesta' })).toBeDisabled();
+  // La misma encuesta de la ficha rápida: una pregunta por pantalla, y primero el permiso
+  await expect(enc.getByRole('button', { name: 'Empezar' })).toBeDisabled();
   await enc.getByRole('button', { name: 'Cerrar' }).click();
   await expect(enc).toHaveCount(0);
 
@@ -152,6 +153,67 @@ test('equipo: la encuesta de una ficha y «Encuesta» de la barra abre la ficha 
   await page.getByRole('button', { name: 'Cerrar la cámara' }).click();
   await expect(page).toHaveURL(/\/micra\/estudio$/);
   await expect(page.locator('.mstudio')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('equipo: la encuesta no se pierde: borrador al recargar, cola sin señal y «Subir ahora»', async ({ browser }) => {
+  const { page, api, errors } = await open(browser);
+  await page.goto('/micra/estudio', { waitUntil: 'load' });
+  const row = () => page.getByRole('list', { name: 'Fichas del estudio' }).getByRole('listitem').filter({ hasText: 'Don Ernesto' });
+  await row().getByRole('button', { name: 'Hacer encuesta' }).click();
+  const enc = page.getByRole('dialog', { name: 'Encuesta de Don Ernesto' });
+  await enc.getByLabel('Aceptó responder').check();
+  await enc.getByRole('button', { name: 'Empezar' }).click();
+  await expect(enc).toContainText('1 de ');
+  await enc.getByRole('button', { name: 'Siguiente' }).click();
+  await expect(enc).toContainText('2 de ');
+
+  // Se recarga la página a media encuesta: la ficha ofrece seguirla, en la pregunta donde iba
+  await page.reload({ waitUntil: 'load' });
+  await row().getByRole('button', { name: 'Seguir la encuesta' }).click();
+  await expect(enc).toContainText('2 de ');
+  await expect(enc).toContainText('Seguimos donde ibas');
+
+  // Sin señal al guardar: queda en el celular, y la ficha lo dice
+  let down = true;
+  await page.route('**/api/v1/bi/tinteros/*/surveys', (route) => (down ? route.abort('internetdisconnected') : route.fallback()));
+  await enc.getByRole('button', { name: 'Guardar lo que hay' }).click();
+  await expect(page.locator('.mapp-notice')).toContainText('Encuesta de Don Ernesto guardada en el celular');
+  await expect(page.getByTestId('study-wait')).toContainText('1 encuesta en el celular');
+  await expect(row()).toContainText('Encuesta en el celular, sin subir');
+  await expect(row()).toContainText('Sin encuesta');
+  expect(api.all('/api/v1/bi/tinteros/t6/surveys', 'POST')).toHaveLength(0);
+
+  // Vuelve la señal: «Subir ahora» la manda con el permiso y la hora en que se hizo
+  down = false;
+  await page.getByTestId('study-wait').getByRole('button', { name: 'Subir ahora' }).click();
+  await expect(page.locator('.mapp-notice')).toContainText('Subió lo que estaba en el celular: 1 encuesta.');
+  await expect(page.getByTestId('study-wait')).toHaveCount(0);
+  const sent = api.all('/api/v1/bi/tinteros/t6/surveys', 'POST');
+  expect(sent).toHaveLength(1);
+  expect(sent[0].data).toMatchObject({ consent: true });
+  expect(sent[0].data.surveyed_at).toMatch(/^\d{4}-\d\d-\d\dT/);
+  await expect(row()).not.toContainText('Sin encuesta');
+  expect(errors.filter((e) => !/ERR_INTERNET_DISCONNECTED|Failed to load resource/.test(e))).toEqual([]);
+});
+
+test('equipo: «Cerca de mí» ordena las fichas por distancia y los filtros dejan lo pendiente', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/estudio', { waitUntil: 'load' });
+  const fichas = page.getByRole('list', { name: 'Fichas del estudio' }).getByRole('listitem');
+  await expect(fichas).toHaveCount(6);
+  await page.getByTestId('study-near').click();
+  await expect(page.getByTestId('study-near')).toHaveAttribute('aria-pressed', 'true');
+  // Doña Rosa está en la salida de la 72, donde está el celular
+  await expect(fichas.first()).toContainText('Doña Rosa');
+  await expect(fichas.first()).toContainText('a 10 m · Salida de la 72');
+
+  const filtros = page.getByRole('group', { name: 'Filtrar las fichas' });
+  await filtros.getByRole('button', { name: /^Sin GPS/ }).click();
+  await expect(fichas.filter({ hasText: 'Doña Rosa' })).toHaveCount(0);
+  for (const li of await fichas.all()) await expect(li).toContainText('Sin GPS');
+  await filtros.getByRole('button', { name: /^Todas · 6/ }).click();
+  await expect(fichas).toHaveCount(6);
   expect(errors).toEqual([]);
 });
 

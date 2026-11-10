@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { salePhotoPoints, pendingOf, studyRows, studyCounts, whereLine, gpsPatch } from './study.js';
+import { salePhotoPoints, pendingOf, studyRows, studyCounts, whereLine, gpsPatch, distanceM, distLabel, nearRows, filterRows, filterCounts } from './study.js';
 
 const JAIRO = { id: 't1', name: 'Don Jairo', referencia: 'Salida de la 72', localidad: 'Chapinero', lat: 4.6577, lng: -74.0634, gps_accuracy_m: 9, photo_url: 'https://x/estudio/a.jpg' };
 const ROSA = { id: 't2', name: 'Doña Rosa', carrera: 13, calle: 60, zone: 'Chapinero' };
@@ -57,4 +57,41 @@ test('salePhotoPoints: las fotos de venta con punto válido, en [lng, lat]', () 
   assert.equal(g.features.length, 1);
   assert.deepEqual(g.features[0].geometry.coordinates, [-74.0585, 4.6485]);
   assert.equal(salePhotoPoints(undefined).features.length, 0);
+});
+
+test('distanceM: metros entre dos puntos de Bogotá; null si falta alguno', () => {
+  // De la estación de la 72 una cuadra al norte: ~111 m por milésima de grado
+  assert.equal(distanceM({ lat: 4.6577, lng: -74.0634 }, { lat: 4.6587, lng: -74.0634 }), 111);
+  assert.equal(distanceM({ lat: 4.6577, lng: -74.0634 }, { lat: 4.6577, lng: -74.0634 }), 0);
+  assert.equal(distanceM({ lat: 4.6577, lng: -74.0634 }, { lat: null, lng: null }), null);
+  assert.equal(distanceM(null, { lat: 4.6, lng: -74 }), null);
+});
+
+test('distLabel: como se camina', () => {
+  assert.equal(distLabel(4), 'a 10 m');
+  assert.equal(distLabel(118), 'a 120 m');
+  assert.equal(distLabel(1240), 'a 1,2 km');
+  assert.equal(distLabel(12400), 'a 12 km');
+  assert.equal(distLabel(null), null);
+});
+
+test('nearRows: la más cercana primero y las que no tienen GPS al final', () => {
+  const rows = [
+    { id: 'lejos', lat: 4.70, lng: -74.06, pending: [] },
+    { id: 'sin', lat: null, lng: null, pending: ['gps'] },
+    { id: 'cerca', lat: 4.6578, lng: -74.0634, pending: ['encuesta'] },
+    { id: 'sin2', pending: ['gps'] },
+  ];
+  const out = nearRows(rows, { lat: 4.6577, lng: -74.0634 });
+  assert.deepEqual(out.map((r) => r.id), ['cerca', 'lejos', 'sin', 'sin2']);
+  assert.equal(out[0].dist, 11);
+  assert.equal(out[2].dist, null);
+});
+
+test('filterRows y filterCounts: lo que falta por hacer', () => {
+  const rows = [{ id: 1, pending: ['encuesta', 'gps'] }, { id: 2, pending: ['encuesta'] }, { id: 3, pending: [] }];
+  assert.deepEqual(filterRows(rows, 'encuesta').map((r) => r.id), [1, 2]);
+  assert.deepEqual(filterRows(rows, 'gps').map((r) => r.id), [1]);
+  assert.equal(filterRows(rows, 'todas').length, 3);
+  assert.deepEqual(filterCounts(rows), { todas: 3, encuesta: 2, gps: 1, foto: 0 });
 });

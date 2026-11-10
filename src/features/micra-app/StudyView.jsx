@@ -1,9 +1,13 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { apiUrl } from '../../shared/lib/apiBase.js';
 import { biApi } from '../admin/micra/tinteroApi.js';
 import { photoPath } from '../admin/micra/tinteroForm.js';
-import { studyRows, studyCounts, whereLine, gpsPatch, PENDING_LABEL } from './study.js';
+import { studyRows, studyCounts, whereLine, gpsPatch, PENDING_LABEL, nearRows, distLabel, filterRows, filterCounts, STUDY_FILTERS } from './study.js';
+import { readSurveyQueue, queuedIds, draftKeys, waitingText } from './surveyQueue.js';
+import { waiting } from './studySync.js';
+import { syncNow } from './studySyncNow.js';
 import platform from './platform.js';
 import { postPoints, addSighting, sightings as listSightings } from './api.js';
 import { newRef } from './micraApp.js';
@@ -16,8 +20,12 @@ import { Cargando } from './Animado.jsx';
 // «Registrar un barista» abre la cámara con la ficha (foto, GPS, encuesta y su
 // tarjeta); aquí se ve cada ficha y se completa lo que quedó pendiente: la
 // encuesta, el punto de GPS o la foto del puesto. Mismas tablas y misma API.
+// Para volver a las fichas que ya están en el mapa: «Cerca de mí» las ordena
+// por distancia y los filtros dejan solo las que no tienen encuesta, GPS o foto.
+// Lo que quedó en el celular sin señal (fichas y encuestas) sube al abrir, al
+// volver la señal o con «Subir ahora».
 
-const SurveyDialog = lazy(() => import('../admin/survey/SurveyDialog.jsx'));
+const SurveyWizard = lazy(() => import('./SurveyWizard.jsx'));
 const StudyHeatMap = lazy(() => import('./StudyHeatMap.jsx'));
 const BUCKET = 'estudio';
 const shortDate = (iso) => new Date(iso).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' });
@@ -220,14 +228,54 @@ export default function StudyView({ go, focus = null }) {
   const mapRef = useRef(null);
   useEffect(() => { if (focus === 'mapa' && data) mapRef.current?.scrollIntoView({ block: 'start' }); }, [focus, data]);
 
-  const done = (text) => { setNotice(`✓ ${text}`); setOpen(null); load(); };
+  // Lo que espera en el celular: sube al abrir y cuando vuelve la señal
+  const [wait, setWait] = useState(() => waiting(localStorage));
+  const [syncing, setSyncing] = useState(false);
+  const [syncNote, setSyncNote] = useState(null);
+  const sync = useCallback(async (manual = false) => {
+    if (!waiting(localStorage).fichas && !waiting(localStorage).surveys) { setWait(waiting(localStorage)); return; }
+    setSyncing(true);
+    try {
+      const out = await syncNow();
+      setWait(out.left);
+      const up = waitingText({ fichas: out.fichas, surveys: out.surveys });
+      const lost = out.dropped.map((d) => `La ${d.kind}${d.name ? ` de ${d.name}` : ''} no se pudo guardar: ${d.why}`);
+      if (up) { setNotice(`✓ Subió lo que estaba en el celular: ${up}.`); load(); }
+      setSyncNote(lost.length ? lost.join(' ') : manual && !up ? 'Todavía no sube: revisa la señal o vuelve a entrar con tu cuenta.' : null);
+    } catch { setWait(waiting(localStorage)); } finally { setSyncing(false); }
+  }, [load]);
+  useEffect(() => {
+    sync();
+    const again = () => sync();
+    window.addEventListener('online', again);
+    return () => window.removeEventListener('online', again);
+  }, [sync]);
+  // La lista: lo que falta y, con «Cerca de mí», por distancia
+  const [filter, setFilter] = useState('todas');
+  const [me, setMe] = useState(null); // { lat, lng } | 'wait'
+  const [nearErr, setNearErr] = useState(null);
+  const near = async () => {
+    if (me && me !== 'wait') { setMe(null); return; }
+    setMe('wait');
+    setNearErr(null);
+    const fix = gpsPatch(await platform.position(15000, true));
+    if (fix.error) { setMe(null); setNearErr(fix.error); } else setMe({ lat: fix.lat, lng: fix.lng });
+  };
+
+  const done = (text) => { setNotice(`✓ ${text}`); setOpen(null); setWait(waiting(localStorage)); load(); };
   const spotted = (text) => { setNotice(`✓ ${text}`); load(); loadSightings(); };
 
   if (error && !data) return <p className="mapp-error" role="alert">No se pudo leer el estudio: {error}</p>;
   if (!data) return <Cargando fig="caminando">Leyendo el estudio…</Cargando>;
 
-  const rows = studyRows(data.tinteros, data.surveys);
-  const n = studyCounts(rows);
+  const all = studyRows(data.tinteros, data.surveys);
+  const n = studyCounts(all);
+  const counts = filterCounts(all);
+  const located = me && me !== 'wait';
+  const rows = located ? nearRows(filterRows(all, filter), me) : filterRows(all, filter);
+  const inPhone = queuedIds(readSurveyQueue(localStorage));
+  const halfDone = draftKeys(localStorage);
+  const waitText = waitingText(wait);
   const surveysReady = data.surveysReady !== false;
   const tinto = sightingCounts(seen, queued);
 
@@ -248,15 +296,37 @@ export default function StudyView({ go, focus = null }) {
 
       <SpotButton onDone={spotted} />
 
+      {waitText && (
+        <p className="mapp-study-wait" role="status" data-testid="study-wait">
+          <span>{waitText} en el celular, sin subir. {syncNote ?? 'Suben solas cuando haya señal.'}</span>
+          <button type="button" className="mapp-btn is-small" onClick={() => sync(true)} disabled={syncing}>{syncing ? 'Subiendo…' : 'Subir ahora'}</button>
+        </p>
+      )}
+      {!waitText && syncNote && <p className="mapp-error" role="alert">{syncNote}</p>}
       {notice && <p className="mapp-notice" role="status">{notice}</p>}
       {error && <p className="mapp-error" role="alert">{error}</p>}
 
       <div ref={mapRef} id="estudio-mapa" />
-      <Suspense fallback={null}><StudyHeatMap rows={rows} routes={data.routes ?? []} photos={photos} sightings={[...seen, ...queued]} /></Suspense>
+      <Suspense fallback={null}><StudyHeatMap rows={all} routes={data.routes ?? []} photos={photos} sightings={[...seen, ...queued]} /></Suspense>
 
       <section className="mapp-glass">
         <p className="mapp-cota">Fichas · {n.total - n.done} con algo pendiente</p>
-        {rows.length === 0 ? (
+        {all.length > 0 && (
+          <div className="mapp-bar mapp-study-bar">
+            <button type="button" className="mapp-near" aria-pressed={!!located} onClick={near} disabled={me === 'wait'} data-testid="study-near">
+              {me === 'wait' ? 'Buscando el GPS…' : located ? '📍 Cerca de mí ✓' : '📍 Cerca de mí'}
+            </button>
+            <div className="mapp-chips" role="group" aria-label="Filtrar las fichas">
+              {STUDY_FILTERS.map(([id, label]) => (
+                <button key={id} type="button" className={filter === id ? 'on' : ''} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label} · {counts[id]}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {nearErr && <p className="mapp-error" role="alert">{nearErr}</p>}
+        {all.length > 0 && rows.length === 0 ? (
+          <p className="mapp-muted">Ninguna ficha con ese pendiente. ¡Bien!</p>
+        ) : all.length === 0 ? (
           <p className="mapp-muted">Aún no hay fichas. Toca «Encuesta» abajo frente a un puesto, o «Marcar aquí» al pasar.</p>
         ) : (
           <ul className="mapp-team mapp-study-list" aria-label="Fichas del estudio">
@@ -266,18 +336,19 @@ export default function StudyView({ go, focus = null }) {
                   <Thumb url={r.photo_consent ? r.photo_url : null} name={r.name} />
                   <div>
                     <b>{r.name}</b>
-                    <span className="mapp-muted">{whereLine(r)}</span>
+                    <span className="mapp-muted">{[located ? distLabel(r.dist) : null, whereLine(r)].filter(Boolean).join(' · ')}</span>
                     <span className="mapp-study-tags">
                       {r.pending.length === 0 && <span className="mapp-badge is-live">Completa</span>}
                       {r.pending.map((p) => <span key={p} className="mapp-badge is-usual">{PENDING_LABEL[p]}</span>)}
                       {r.survey && <span className="mapp-todo">Encuesta del {shortDate(r.survey.surveyed_at)}</span>}
+                      {inPhone.has(String(r.id)) && <span className="mapp-todo">Encuesta en el celular, sin subir</span>}
                     </span>
                   </div>
                 </div>
                 <span className="mapp-row-btns">
                   {surveysReady && (
                     <button type="button" className="mapp-link" onClick={() => { setNotice(null); setSurveying(r); }}>
-                      {r.survey ? 'Volver a encuestar' : 'Hacer encuesta'}
+                      {halfDone.has(String(r.id)) ? 'Seguir la encuesta' : r.survey ? 'Volver a encuestar' : 'Hacer encuesta'}
                     </button>
                   )}
                   {(r.pending.includes('gps') || r.pending.includes('foto')) && (
@@ -294,15 +365,22 @@ export default function StudyView({ go, focus = null }) {
       </section>
       <a className="mapp-link" href={platform.siteUrl('/admin')}>Ver el mapa y el informe en el panel</a>
 
-      {surveying && (
-        <Suspense fallback={null}>
-          <SurveyDialog
-            tintero={surveying}
-            onClose={() => setSurveying(null)}
-            onSaved={() => { const name = surveying.name; setSurveying(null); done(`Encuesta de ${name} guardada.`); }}
-          />
-        </Suspense>
-      )}
+      {/* Fuera de la página del estudio: su animación de entrada deja un transform y la hoja fija se correría */}
+      {surveying && createPortal((
+        <div className="mff">
+          <Suspense fallback={null}>
+            <SurveyWizard
+              tintero={surveying}
+              onClose={() => setSurveying(null)}
+              onSaved={({ queued }) => {
+                const name = surveying.name;
+                setSurveying(null);
+                done(queued ? `Encuesta de ${name} guardada en el celular: sube sola cuando haya señal.` : `Encuesta de ${name} guardada.`);
+              }}
+            />
+          </Suspense>
+        </div>
+      ), document.querySelector('.mapp-main') ?? document.body)}
     </div>
   );
 }
