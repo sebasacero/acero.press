@@ -111,8 +111,8 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
   // Clima fijo: 14 °C y lluvia ligera
   await page.route(/open-meteo/, (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify({ current: { temperature_2m: 14, weather_code: 61 } }) }));
   await page.route('**/api/v1/pulse', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: 'null' }));
-  // Teselas del mapa real (MapLibre): un estilo mínimo de OpenFreeMap y PNG de 1 px de OpenStreetMap.
-  // opts.styleDown simula que OpenFreeMap no responde (el mapa cae a OpenStreetMap).
+  // Teselas del mapa real (MapLibre): un estilo mínimo de OpenFreeMap.
+  // opts.styleDown simula que OpenFreeMap no responde: el mapa cae a Bogotá servida por el sitio (public/mapa/).
   await page.route('https://tiles.openfreemap.org/**', (route) => (opts.styleDown
     ? route.fulfill({ status: 503, headers: CORS, body: 'caído' })
     : route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify(TEST_STYLE) })));
@@ -132,7 +132,6 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       why: 'Los Reels de receta son los que más se comparten en tu cuenta.', sources: [{ url: 'https://example.com/fuente', title: 'Fuente de prueba' }],
     }) });
   });
-  await page.route('https://tile.openstreetmap.org/**', (route) => route.fulfill({ status: 200, headers: CORS, contentType: 'image/png', body: PIXEL }));
   // API de BI: el piloto (lo que la prueba ponga en opts.piloto; vacío por defecto)
   await page.route('**/api/v1/bi/piloto**', (route) => {
     if (!(route.request().headers().authorization || '').startsWith('Bearer ')) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ detail: 'Sin sesión' }) });
