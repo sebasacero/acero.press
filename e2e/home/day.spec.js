@@ -1,15 +1,23 @@
 // El banner de 24 horas: abre en la hora de Bogotá en que se visita la web (reloj, cielo y la
-// pantalla de Micra de ese momento). Sin la línea de horas: el día sigue en el resto de la página.
+// pantalla de Micra de ese momento) y desde ahí el reloj corre: el día entero pasa en dos minutos
+// y toda la página cambia de color con él. Sin la línea de horas: el día sigue en la página.
+// Para leer la hora de entrada las pruebas detienen el tiempo (`stopAt`) y lo sueltan con `runFor`.
 import { test, expect } from '@playwright/test';
 import { openPage } from '../micra/fixtures.js';
 
 const DESK = { viewport: { width: 1440, height: 900 } };
 // Bogotá va cinco horas detrás de UTC todo el año
 const bogota = (hhmm) => new Date(`2026-11-10T${hhmm}:00-05:00`);
+/** El tiempo de la página queda quieto en esa hora de Bogotá hasta `page.clock.runFor`. */
+async function stopAt(page, hhmm) {
+  const at = bogota(hhmm);
+  await page.clock.install({ time: new Date(at.getTime() - 1000) });
+  await page.clock.pauseAt(at);
+}
 
 test('abre en la hora de Bogotá: reloj, momento del barista y su pantalla; lleva el menú y el h1', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
-  await page.clock.setFixedTime(bogota('06:50'));
+  await stopAt(page, '06:50');
   await page.goto('/', { waitUntil: 'load' });
   const day = page.locator('#dia');
   await expect(day.getByTestId('day-clock')).toHaveText(/6:50\s*a\. m\./);
@@ -29,7 +37,7 @@ test('abre en la hora de Bogotá: reloj, momento del barista y su pantalla; llev
 
 test('de día va en tinta y ya no lleva la línea de horas ni sus puntos', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
-  await page.clock.setFixedTime(bogota('13:20'));
+  await stopAt(page, '13:20');
   await page.goto('/', { waitUntil: 'load' });
   const day = page.locator('#dia');
   await expect(day.getByTestId('day-clock')).toHaveText(/1:20\s*p\. m\./);
@@ -44,9 +52,30 @@ test('de día va en tinta y ya no lleva la línea de horas ni sus puntos', async
   await page.context().close();
 });
 
+test('el reloj corre apenas se entra: el día pasa y el banner y las secciones cambian de color', async ({ browser }) => {
+  const { page, errors } = await openPage(browser, { context: DESK });
+  await stopAt(page, '05:00');
+  await page.goto('/', { waitUntil: 'load' });
+  const day = page.locator('#dia'), first = page.locator('.pg-sec').first();
+  await expect(day.getByTestId('day-clock')).toHaveText(/5:00\s*a\. m\./);
+  await expect(day).not.toHaveClass(/is-day/);
+  const sky0 = await day.evaluate((e) => e.style.getPropertyValue('--db-top'));
+  const sec0 = await first.evaluate((e) => e.style.getPropertyValue('--pg-a'));
+  // 20 s de página son 4 horas del día: ya es de mañana
+  await page.clock.runFor(20000);
+  await expect(day.getByTestId('day-clock')).toHaveText(/(8:5|9:0)\d\s*a\. m\./);
+  await expect(day).toHaveClass(/is-day/);
+  await expect(day.getByTestId('day-caption')).toHaveText('Hora pico: un toque por cada taza.');
+  expect(await day.evaluate((e) => e.style.getPropertyValue('--db-top'))).not.toBe(sky0);
+  expect(await first.evaluate((e) => e.style.getPropertyValue('--pg-a'))).not.toBe(sec0);
+  await expect(first.locator('.pg-hour b')).toHaveText(/(9:5|10:0)\d/);
+  expect(errors).toEqual([]);
+  await page.context().close();
+});
+
 test('celular: el menú cabe y nada se sale de lado', async ({ browser }) => {
   const { page, errors } = await openPage(browser);
-  await page.clock.setFixedTime(bogota('21:10'));
+  await stopAt(page, '21:10');
   await page.goto('/', { waitUntil: 'load' });
   const day = page.locator('#dia');
   await expect(day.getByTestId('day-clock')).toHaveText(/9:10\s*p\. m\./);
@@ -60,7 +89,7 @@ test('celular: el menú cabe y nada se sale de lado', async ({ browser }) => {
 
 test('con «menos movimiento» no camina, pero la hora sí es la de la visita', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: { ...DESK, reducedMotion: 'reduce' } });
-  await page.clock.install({ time: bogota('23:40') });
+  await stopAt(page, '23:40');
   await page.goto('/', { waitUntil: 'load' });
   const day = page.locator('#dia');
   await expect(day.getByTestId('day-clock')).toHaveText(/11:40\s*p\. m\./);
@@ -68,6 +97,8 @@ test('con «menos movimiento» no camina, pero la hora sí es la de la visita', 
   const before = await day.locator('.db-walker').evaluate((e) => e.style.transform);
   await page.clock.runFor(3000);
   expect(await day.locator('.db-walker').evaluate((e) => e.style.transform)).toBe(before);
+  // …ni corre el día: el reloj y el cielo de las secciones se quedan en la hora real
+  await expect(day.getByTestId('day-clock')).toHaveText(/11:40\s*p\. m\./);
   expect(errors).toEqual([]);
   await page.context().close();
 });

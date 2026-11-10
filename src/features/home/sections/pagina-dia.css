@@ -263,3 +263,10 @@ a.pg-store:hover { transform: translateY(-3px); }
 }
 /* El lápiz de las recetas (solo el equipo) va a la derecha del título: arriba quedó la fila de años */
 .pg-sec .rb > .bp-edit-tag { top: -34px; left: auto; right: 16px; }
+
+/* El día corre: el cielo de cada sección pasa de un paso del reloj al siguiente sin saltos */
+@property --pg-a { syntax: '<color>'; inherits: true; initial-value: #F7F3E8; }
+@property --pg-b { syntax: '<color>'; inherits: true; initial-value: #F7F3E8; }
+.pg-sec { transition: --pg-a .22s linear, --pg-b .22s linear, color .3s; }
+.pg-hour b { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .pg-sec { transition: none; } }

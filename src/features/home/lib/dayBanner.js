@@ -22,6 +22,12 @@ export function bogotaHour(date = new Date()) {
 }
 
 /** El momento que corre a esa hora: el último que ya empezó; de madrugada sigue el descanso. */
+// Apenas se abre la página el reloj corre: el día entero pasa en dos minutos (pedido del usuario,
+// 10 nov 2026: «la idea es mostrar que es 24 horas»). Arranca en la hora real de Bogotá.
+export const DAY_SECONDS = 120;
+/** La hora que marca el reloj `seconds` segundos después de abrir en `start`. */
+export const runHour = (start, seconds, day = DAY_SECONDS) => (((start + (seconds * 24) / day) % 24) + 24) % 24;
+
 export function momentAt(h) {
   let i = MOMENTS.length - 1;
   MOMENTS.forEach((m, j) => { if (m.h <= h) i = j; });
@@ -31,7 +37,8 @@ export function momentAt(h) {
 /** «6:05» y si es antes del mediodía, para el reloj grande. */
 export function clockOf(h) {
   const x = ((h % 24) + 24) % 24;
-  const H = Math.floor(x), m = Math.floor((x - H) * 60 + 1e-6);
+  // en minutos enteros primero: con el reloj corriendo, 9,99999 daba «9:60»
+  const min = Math.floor(x * 60 + 1e-6) % 1440, H = Math.floor(min / 60), m = min % 60;
   return { text: `${((H + 11) % 12) + 1}:${String(m).padStart(2, '0')}`, am: H < 12 };
 }
 

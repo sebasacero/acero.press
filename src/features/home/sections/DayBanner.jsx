@@ -3,14 +3,16 @@ import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import Navbar from '../../../shared/layout/Navbar.jsx';
 import { fetchAppConfig } from '../../../shared/lib/appConfig.js';
 import { FALLBACK_WHATSAPP_NUMBER } from '../../../shared/layout/WhatsAppButton.jsx';
-import { MOMENTS, bogotaHour, momentAt, clockOf, paletteAt, orbsAt, hourLerp, layoutOf, rng } from '../lib/dayBanner.js';
+import { MOMENTS, momentAt, clockOf, paletteAt, orbsAt, hourLerp, layoutOf, rng } from '../lib/dayBanner.js';
 import { buildCity } from './dayCity.js';
+import { useDayClock } from './DaySection.jsx';
 import './day-banner.css';
 
 // El banner principal: 24 horas con un barista de calle. El horizonte curvo no
 // se mueve y el mundo cambia encima: la ciudad gira bajo los pies del barista,
 // el cielo es el de la hora de Bogotá en que se abre la página y el celular
-// muestra lo que él hace en Micra a esa hora. Sin la línea de horas de abajo
+// muestra lo que él hace en Micra a esa hora. El reloj no se queda en esa hora: corre (el día
+// entero en dos minutos, `useDayClock`) y el cielo, la ciudad y el celular cambian con él. Sin la línea de horas de abajo
 // (pedido del usuario, 10 nov 2026): el día sigue en el resto de la página.
 // Lleva el menú y el único h1 de la portada.
 
@@ -21,18 +23,14 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
   const { t } = useLanguage();
   const root = useRef(null), city = useRef(null), far = useRef(null), near = useRef(null), earth = useRef(null);
   const walker = useRef(null), shade = useRef(null), sun = useRef(null), flare = useRef(null), moon = useRef(null);
-  const [now, setNow] = useState(() => bogotaHour());
-  const [day, setDay] = useState(() => paletteAt(bogotaHour()).day);
-  const [shown, setShown] = useState(() => bogotaHour());   // la hora que marca el reloj (va hacia la meta)
-  const target = now;
-  const live = useRef({ hour: bogotaHour(), target: bogotaHour(), painted: -1, g: null });
-  live.current.target = target;
+  const digits = useRef(null);
+  const clockSrc = useDayClock();
+  const [day, setDay] = useState(() => paletteAt(clockSrc.hour).day);
+  const [am, setAm] = useState(() => clockOf(clockSrc.hour).am);
+  const [idx, setIdx] = useState(() => momentAt(clockSrc.hour));
+  const live = useRef(null);
+  live.current ??= { hour: clockSrc.hour, target: clockSrc.hour, painted: -1, g: null };
 
-  // El minuto que corre
-  useEffect(() => {
-    const id = setInterval(() => setNow(bogotaHour()), 15000);
-    return () => clearInterval(id);
-  }, []);
   useEffect(() => {
     const el = root.current, S = live.current;
     if (!el) return undefined;
@@ -52,7 +50,10 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
     const paintHour = (h) => {
       const g = S.g, p = paletteAt(h);
       for (const k in p.vars) el.style.setProperty(k, p.vars[k]);
-      setDay(p.day); setShown(h);
+      // Los números se escriben directo (cambian en cada cuadro); lo demás solo cuando cambia
+      const c = clockOf(h);
+      if (digits.current) digits.current.textContent = c.text;
+      setDay(p.day); setAm(c.am); setIdx(momentAt(h));
       const o = orbsAt(h);
       const orbit = (u) => { const x = g.small ? g.W * (0.07 + 0.86 * u) : g.W * (0.36 + 0.38 * u); return [x, ground(x) + 70 * g.z - Math.sin(u * Math.PI) * g.H * (g.small ? 0.2 : 0.52)]; };
       const put = (node, u, extra = '') => { if (u == null) { node.style.opacity = 0; return; } const [x, y] = orbit(u); node.style.transform = `translate(${x}px,${y}px)${extra}`; node.style.opacity = 1; };
@@ -74,6 +75,7 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
       raf = requestAnimationFrame(frame);
       if (ts - last < 30) return;                     // unos 30 cuadros por segundo: alcanza y cuida el celular
       const dt = Math.min(0.1, last ? (ts - last) / 1000 : 0); last = ts;
+      S.target = clockSrc.hour;
       // la hora va hacia su meta por el camino corto
       const d = Math.abs((((S.target - S.hour) % 24) + 36) % 24 - 12);
       if (d > 0.002) S.hour = hourLerp(S.hour, S.target, Math.min(1, dt * 3.2 + 0.004 / d));
@@ -94,17 +96,15 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
     const onVis = () => { if (document.hidden) stop(); else start(); };
     document.addEventListener('visibilitychange', onVis);
     // Con «menos movimiento» no camina: se pinta la hora cuando cambia
-    S.repaint = still ? () => { S.hour = S.target; paintHour(S.hour); } : null;
+    const off = still ? clockSrc.subscribe(() => { S.hour = S.target = clockSrc.hour; paintHour(S.hour); }) : null;
     start();
-    return () => { stop(); ro.disconnect(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis); S.repaint = null; };
-  }, []);
-  useEffect(() => { live.current.repaint?.(); }, [target]);
+    return () => { stop(); ro.disconnect(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis); off?.(); };
+  }, [clockSrc]);
 
   const [number, setNumber] = useState(FALLBACK_WHATSAPP_NUMBER);
   useEffect(() => { fetchAppConfig('whatsapp_number', FALLBACK_WHATSAPP_NUMBER).then((n) => setNumber(n || FALLBACK_WHATSAPP_NUMBER)); }, []);
 
-  const idx = momentAt(now);
-  const m = MOMENTS[idx], clock = clockOf(shown);
+  const m = MOMENTS[idx], clock = clockOf(live.current.hour);
   const stars = useMemo(() => { const r = rng(5); return Array.from({ length: 70 }, () => ({ x: (r() * 100).toFixed(2), y: (r() * 62).toFixed(2), r: (0.6 + r() * 1.1).toFixed(2), tw: r() < 0.3, d: (r() * 3).toFixed(2) })); }, []);
   const title = t('day.title');
 
@@ -131,7 +131,7 @@ export default function DayBanner({ navOpen, onOpenNavDrawer }) {
 
       <div className="db-copy">
         <p className="db-eyebrow"><i className="is-live" />{t('day.live')}</p>
-        <p className="db-clock" data-testid="day-clock"><span>{clock.text}</span><small>{clock.am ? t('day.am') : t('day.pm')}</small></p>
+        <p className="db-clock" data-testid="day-clock"><span ref={digits}>{clock.text}</span><small>{am ? t('day.am') : t('day.pm')}</small></p>
         <p className="db-now" key={m.key} data-testid="day-caption">{t(`day.caps.${m.key}`)}</p>
         <h1 className="db-title">{title[0]} <em>{title[1]}</em></h1>
         <div className="db-ctas">

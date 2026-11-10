@@ -28,6 +28,7 @@ import './shared/styles/estilo-app.css';
 import './shared/styles/termico-web.css';
 // La página que sigue el día: va de última, encima de las pieles anteriores
 import './features/home/sections/pagina-dia.css';
+import './shared/styles/menu-vidrio.css';
 // La Escuela tiene su página (/escuela): se manda por WhatsApp y se aprende sin la portada
 // alrededor. En la portada queda la receta oficial en cinco pasos (BrewGuide), que lleva a ella.
 const SchoolPage = lazy(() => import('./features/school/SchoolPage.jsx'));
