@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { initials, menuOf, windowLabel, baristaPath, cupsLabel, status as baristaStatus } from './micraApp.js';
 import MiniQr, { useQr } from './MiniQr.jsx';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
@@ -13,14 +13,13 @@ import platform from './platform.js';
 import { ProductGrid, PayMethods } from './BaristaFlow.jsx';
 import { methodsLabel } from './flow.js';
 import Termo from './Termo.jsx';
-const AceroAd = lazy(() => import('./AceroAd.jsx'));
 import { InsumosSection, InsumosSheet } from './Insumos.jsx';
 import { GustosQuiz, useGustos } from './Gustos.jsx';
 import { tasteProfile, answeredCount } from './gustos.js';
 import {
   IconQr, IconShare, IconEye, IconWallet, IconTag, IconCard, IconUser, IconTarget, IconShield, IconHelp, IconLock,
-  IconCap, IconCan, IconCup, IconHeart, IconToday, IconGift, IconPin, IconThermo, IconBag, IconClipboard,
-  IconCamera, IconOut, IconTrophy, IconHome,
+  IconCup, IconHeart, IconToday, IconGift, IconPin, IconClipboard,
+  IconCamera, IconOut, IconHome,
 } from './icons.jsx';
 import { IconBean } from './icons.jsx';
 import { readPreparaCon } from './origen.js';
@@ -192,7 +191,6 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
   const [publicCard, setPublicCard] = useState(null);
   const [sheet, setSheet] = useState(null); // 'datos' | 'precios' | 'pagos' | 'meta' | 'permisos'
   const [edit, setEdit] = useState(null); // dentro de la hoja: 'prices' | 'pay'
-  const [promo, setPromo] = useState(false);
   const [insumos, setInsumos] = useState(null); // { cat, cart }: la hoja de pedir insumos
   const preparaCon = readPreparaCon(); // el café de origen que escogió (origen.js), en este celular
   const [confirm, setConfirm] = useState(false);
@@ -329,10 +327,8 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         <Tile icon={IconLock} label="Privacidad" href={PRIVACY()} external />
       </Group>
 
+      {/* Escuela, Competencia y ACERO.press pasaron al menú del café (el logo de arriba, 7 nov 2026) */}
       <Group title="Otros">
-        <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
-        <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
-        <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/barista/reto')} testid="tile-reto" />
         {/* «Cliente / Barista» ya no va arriba (ahí va la meta del día): se cambia desde aquí */}
         <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />
         {admin && <Tile icon={IconClipboard} label="Equipo" onClick={() => switchTo('owner', go)} testid="tile-mode-owner" />}
@@ -456,7 +452,6 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         </Sheet>
       )}
 
-      {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
       {insumos && <InsumosSheet name={day.name} where={where} cat={insumos.cat} cart={insumos.cart} onClose={() => setInsumos(null)} />}
     </div>
   );
@@ -519,7 +514,6 @@ export function ClientProfile({ go, who }) {
   const [list, setList] = useState(null);
   const [zoneOff, setZoneOff] = useState(seekOff);
   const [sheet, setSheet] = useState(null); // 'nombre' | 'baristas' | 'zona'
-  const [promo, setPromo] = useState(false);
   // Sus gustos (pedido del usuario): si saltó las preguntas del inicio, aquí las completa (con su punto)
   const [gustos, saveGustos] = useGustos();
   const [quiz, setQuiz] = useState(false);
@@ -576,8 +570,6 @@ export function ClientProfile({ go, who }) {
         <Tile icon={IconCup} label="Mis apartados" onClick={() => go('/micra/apartados')} />
         <Tile icon={IconHeart} label="Mis baristas" count={favs.length || null} onClick={() => setSheet('baristas')} testid="tile-baristas" />
         <Tile icon={IconCup} label={taste ? `Mis gustos · ${taste.name}` : 'Mis gustos'} dot={answeredCount(gustos) === 0} onClick={() => setQuiz(true)} testid="tile-gustos" />
-        <Tile icon={IconToday} label="Hoy en el café" onClick={() => go('/micra/hoy')} />
-        <Tile icon={IconTrophy} label="Competencia" onClick={() => go('/micra/reto')} testid="tile-reto" />
         <Tile icon={IconGift} label="Invita amigos" onClick={invite} />
       </Group>
 
@@ -588,13 +580,8 @@ export function ClientProfile({ go, who }) {
         <Tile icon={IconLock} label="Privacidad" href={PRIVACY()} external />
       </Group>
 
-      <Group title="Otros">
-        <Tile icon={IconThermo} label="Sé barista" onClick={() => go('/micra/barista')} />
-        <Tile icon={IconCan} label="ACERO.press" onClick={() => setPromo(true)} testid="tile-coldbrew" />
-        <Tile icon={IconCap} label="Escuela" href={platform.siteUrl('/escuela')} />
-        <Tile icon={IconBag} label="Tienda" onClick={() => go('/micra/tienda')} testid="tile-tienda" />
-        <Tile icon={IconBean} label="Marcas y fincas" onClick={() => go('/micra/origen')} testid="tile-origen" />
-      </Group>
+      {/* Hoy, Competencia, la tienda, marcas y fincas, la Escuela, ACERO.press y «Sé barista»
+          pasaron al menú del café: el logo de arriba (pedido del usuario, 7 nov 2026) */}
 
       {confirm ? (
         <Confirm title={wipeLabel} busy={busy} confirmLabel={plainSession ? 'Sí, cerrar sesión' : 'Sí, borrar'} onConfirm={wipe} onCancel={() => setConfirm(false)}>
@@ -661,7 +648,6 @@ export function ClientProfile({ go, who }) {
         </Sheet>
       )}
 
-      {promo && <Suspense fallback={null}><AceroAd onClose={() => setPromo(false)} /></Suspense>}
       {quiz && <GustosQuiz answers={gustos} onDone={saveGustos} onClose={() => setQuiz(false)} />}
     </div>
   );
