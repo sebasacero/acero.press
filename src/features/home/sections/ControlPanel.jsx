@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext.jsx';
 import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { useIsOwner } from '../../admin/useAdminAuth.js';
 import { panelState } from '../lib/controlPanel.js';
+
+// El panel ancho (mapa, avisos) va en su propio pedazo: la portada no lo descarga
+const ControlRoom = lazy(() => import('./ControlRoom.jsx'));
 
 // El centro de control de Micra en la portada (pedido del usuario, 10 nov 2026): en vez del
 // celular, la operación en tiempo real. Cualquiera ve lo público (quién está en la calle entre
@@ -10,6 +13,8 @@ import { panelState } from '../lib/controlPanel.js';
 // completo del equipo, lo que hay que atender y los controles. Se refresca cada 20 s con la
 // sección a la vista y la pestaña abierta.
 const REFRESH_MS = 20000;
+// Las pruebas lo acortan (window.__ctlPollMs) para no esperar 20 s
+const pollMs = () => (typeof window !== 'undefined' && Number(window.__ctlPollMs)) || REFRESH_MS;
 const money = (n) => `$${Math.round(n).toLocaleString('es-CO')}`;
 
 async function rpc(fn, args) {
@@ -26,6 +31,8 @@ export default function ControlPanel({ on, wide = false }) {
   const [at, setAt] = useState(null);
   const [failed, setFailed] = useState(false);
   const busy = useRef(false);
+  // Lo que leyó la última vez, para el panel ancho (el mapa y los avisos lo completan)
+  const [places, setPlaces] = useState([]);
 
   const load = useCallback(async () => {
     if (busy.current) return;
@@ -37,7 +44,9 @@ export default function ControlPanel({ on, wide = false }) {
         owner = await rpc('micra_owner_day').catch(() => null);
         pending = await rpc('micra_posts_pending').then((r) => (r ?? []).length).catch(() => null);
       }
-      setState(panelState({ baristas: baristas ?? [], owner, pending }));
+      const next = panelState({ baristas: baristas ?? [], owner, pending });
+      setState(next);
+      setPlaces(baristas ?? []);
       setAt(new Date());
       setFailed(false);
     } catch {
@@ -51,7 +60,7 @@ export default function ControlPanel({ on, wide = false }) {
   useEffect(() => {
     if (!on) return undefined;
     load();
-    const id = setInterval(() => { if (!document.hidden) load(); }, REFRESH_MS);
+    const id = setInterval(() => { if (!document.hidden) load(); }, pollMs());
     return () => clearInterval(id);
   }, [on, load]);
 
@@ -74,6 +83,8 @@ export default function ControlPanel({ on, wide = false }) {
         {s?.owner && <div><dd data-testid="ctl-cups">{k.cups}</dd><dt>{p.kpis.cups}<small> · {k.served} {p.kpis.served}</small></dt></div>}
         {s?.owner && <div><dd>{money(k.total)}</dd><dt>{p.kpis.total}</dt></div>}
       </dl>
+
+      {wide && s && <Suspense fallback={null}><ControlRoom state={s} places={places} at={at} p={p} /></Suspense>}
 
       <div className="pg-ctl-grid">
         <div className="pg-ctl-card">
