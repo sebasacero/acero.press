@@ -43,8 +43,14 @@ test('nadie en la calle: los que suelen estar; nadie con punto: sin radar', () =
   const v = radarView([b('j', 'Jairo', 4.646, -74.066, 'usual')], me);
   assert.equal(v.mode, 'usual');
   assert.deepEqual(radarTitle(v), { big: 'Nadie en la calle', small: '1 barista suele salir a esta hora' });
-  assert.equal(radarView([{ id: 'a', name: 'A', status: 'live' }], me).mode, 'none');
-  assert.equal(radarTitle(radarView([], me)), null);
+  assert.equal(radarView([{ id: 'a', name: 'A', status: 'live' }], me).mode, 'off');
+  // El radar no se esconde: sin nadie dice que no hay nadie en la calle
+  assert.equal(radarTitle(radarView([], me)).big, 'Nadie en la calle');
+  // De noche (nadie en la calle ni de turno) salen apagados los que están en Micra
+  const night = radarView([{ id: 'a', name: 'Ana', status: 'off', lat: 4.64, lng: -74.06 }, { id: 'b', name: 'Beto', status: 'off', lat: 4.65, lng: -74.07 }], null);
+  assert.equal(night.mode, 'off');
+  assert.equal(night.dots.length, 2);
+  assert.match(radarTitle(night).small, /2 baristas están en Micra/);
 });
 
 test('a lo sumo seis puntos y nunca encima del centro', () => {

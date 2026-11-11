@@ -314,7 +314,6 @@ export default function MicraApp() {
       <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
         {/* El termo del icono en su baldosa crema y la palabra: abre el menú del café (el inicio está en la barra de abajo) */}
         <button type="button" className="mapp-brand" onClick={() => setDrawer(true)} aria-label="Abrir el menú del café" aria-haspopup="dialog" aria-expanded={drawer} data-testid="brand-menu">
-          <span className="mapp-brand-burger" aria-hidden="true"><i /><i /><i /></span>
           <span className="mapp-brand-mark"><Termo /></span>
           <span className="mapp-brand-word">micra<i>.</i></span>
         </button>

@@ -19,14 +19,16 @@ export function bearing(a, b) {
  * Lo que muestra el radar. `list` ya viene con `status` (sortBaristas).
  * Con la ubicación (`me`) el centro eres tú y los puntos van a su distancia;
  * sin ella el centro es el medio de los que salen y no se dicen cuadras.
- * Sin nadie en la calle, los que suelen estar a esta hora.
+ * Sin nadie en la calle, los que suelen estar a esta hora; y sin ellos, todos, apagados.
  */
 export function radarView(list, me = null, { range = RADAR_RANGE_M, max = RADAR_MAX } = {}) {
   const withPos = (list ?? []).filter((b) => b?.lat != null && b?.lng != null);
   const live = withPos.filter((b) => b.status === 'live');
-  const mode = live.length ? 'live' : withPos.some((b) => b.status === 'usual') ? 'usual' : 'none';
-  const pool = mode === 'live' ? live : withPos.filter((b) => b.status === 'usual');
-  if (!pool.length) return { mode: 'none', count: 0, dots: [], nearest: null, located: !!me };
+  // El radar no se esconde (10 nov 2026: de noche no salía y el cliente creía que no estaba):
+  // sin nadie en la calle ni de turno a esta hora, muestra apagados a los que están en Micra
+  const mode = live.length ? 'live' : withPos.some((b) => b.status === 'usual') ? 'usual' : 'off';
+  const pool = mode === 'live' ? live : mode === 'usual' ? withPos.filter((b) => b.status === 'usual') : withPos;
+  if (!pool.length) return { mode: 'off', count: 0, dots: [], nearest: null, located: !!me };
   const center = me ?? {
     lat: pool.reduce((s, b) => s + b.lat, 0) / pool.length,
     lng: pool.reduce((s, b) => s + b.lng, 0) / pool.length,
@@ -70,5 +72,5 @@ export function radarTitle(v) {
   const who = n === 1 ? '1 barista' : `${n} baristas`;
   if (v.mode === 'live') return { big: who, small: v.located ? 'en la calle cerca de ti' : 'en la calle ahora' };
   if (v.mode === 'usual') return { big: 'Nadie en la calle', small: `${n === 1 ? '1 barista suele' : `${n} baristas suelen`} salir a esta hora` };
-  return null;
+  return { big: 'Nadie en la calle', small: n ? `${n === 1 ? '1 barista está' : `${n} baristas están`} en Micra; ${n === 1 ? 'sale' : 'salen'} en su horario` : 'a esta hora' };
 }

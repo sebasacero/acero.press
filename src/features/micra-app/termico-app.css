@@ -784,7 +784,6 @@
 .mapp-fp-list li span{margin-right:8px}
 .mapp-fp-url{margin:0 0 8px;font:500 .74rem 'JetBrains Mono',monospace;word-break:break-all}
 /* Las tres rayas del menú del café: blancas sobre la barra fría de arriba */
-.mapp .mapp-top .mapp-brand-burger i{background:#fff !important}
 
 /* ── «Micra en tres toques», lo que faltaba de la maqueta (10 nov 2026) ── */
 /* El radar del cliente: vidrio sobre la cabecera fría, puntos calientes */
@@ -801,8 +800,8 @@
 .mapp-radar-dot{appearance:none;border:0;background:none;padding:0;position:absolute;width:44px;height:44px;margin:-22px;display:grid;place-items:center;z-index:3;cursor:pointer;transition:left 1.2s cubic-bezier(.3,.8,.3,1),top 1.2s cubic-bezier(.3,.8,.3,1)}
 .mapp-radar-dot::before{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(closest-side,var(--t-7,#FFF3B0),var(--t-6,#FFC23C) 25%,var(--t-5,#F2542D) 45%,var(--t-4,#DE1B1B) 60%,rgba(176,18,122,.6) 78%,transparent)}
 .mapp-radar-dot span{position:relative;font:900 .8rem 'Archivo',sans-serif;color:#22125A}
-.mapp-radar.is-usual .mapp-radar-dot::before{background:radial-gradient(closest-side,rgba(255,255,255,.85),rgba(255,255,255,.35) 55%,transparent)}
-.mapp-radar.is-usual .mapp-radar-scope::after{display:none}
+.mapp-radar.is-usual .mapp-radar-dot::before,.mapp-radar.is-off .mapp-radar-dot::before{background:radial-gradient(closest-side,rgba(255,255,255,.85),rgba(255,255,255,.35) 55%,transparent)}
+.mapp-radar.is-usual .mapp-radar-scope::after,.mapp-radar.is-off .mapp-radar-scope::after{display:none}
 @media (prefers-reduced-motion:reduce){.mapp-radar-scope::after{animation:none}.mapp-radar-dot{transition:none}}
 @media (max-width:359px){.mapp-radar{grid-template-columns:1fr}.mapp-radar-scope{justify-self:center}}
 
