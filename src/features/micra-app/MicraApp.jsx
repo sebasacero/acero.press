@@ -9,7 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
-import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconCompass, IconPlus, IconSend, IconBell } from './icons.jsx';
+import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconCompass, IconSend, IconBell, IconChevron } from './icons.jsx';
 import './micra-app.css';
 import './termico-app.css';
 import ThermalDefs from '../../shared/layout/ThermalDefs.jsx';
@@ -28,7 +28,6 @@ const ClientProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: 
 const OwnerProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.OwnerProfile })));
 // Hoy del cliente: el mismo muro del barista (cargado aparte), sin logros ni ideas de foto
 const HoyFeed = lazy(() => import('./HoyFeed.jsx'));
-const ClientPublish = lazy(() => import('./HoyFeed.jsx').then((m) => ({ default: m.ClientPublish })));
 // Competencia: el reto de la semana (el cliente califica; el barista lo tiene en su modo)
 const Competencia = lazy(() => import('./Competencia.jsx'));
 const OrigenDirectory = lazy(() => import('./Origen.jsx'));
@@ -36,6 +35,8 @@ const SellerPage = lazy(() => import('./Origen.jsx').then((m) => ({ default: m.S
 const Tienda = lazy(() => import('./Origen.jsx').then((m) => ({ default: m.Tienda })));
 const FincaWizard = lazy(() => import('./Finca.jsx'));
 const Fincas = lazy(() => import('./Fincas.jsx'));
+import { pillOf, WANT_AT_KEY } from './pill.js';
+import { requestWant } from './want.js';
 const CafeDrawer = lazy(() => import('./CafeDrawer.jsx'));
 const AceroAd = lazy(() => import('./AceroAd.jsx'));
 const FincaPreview = lazy(() => import('./Finca.jsx').then((m) => ({ default: m.FincaPreview })));
@@ -174,7 +175,6 @@ export default function MicraApp() {
   const [live, setLive] = useState(false);
   // La meta del día (la avisa BaristaHome): en la barra de arriba, en vez de «Cliente / Barista»
   const [board, setBoard] = useState(null);
-  const [publishing, setPublishing] = useState(false);
   // El menú del café (el logo de arriba) y la publicidad de ACERO.press que se abre desde él
   const [drawer, setDrawer] = useState(false);
   const [acero, setAcero] = useState(false);
@@ -184,6 +184,15 @@ export default function MicraApp() {
   const [refreshKey, setRefreshKey] = useState(0);
   // La campana del cliente (como en las apps de domicilios): punto rojo si tiene un apartado en curso
   const [holdOn, setHoldOn] = useState(false);
+  // La pastilla viva sobre la barra del cliente: su apartado o su «quiero un café», en todas las pestañas
+  const [myHolds, setMyHolds] = useState([]);
+  const [pillTick, setPillTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setPillTick((n) => n + 1);
+    window.addEventListener('micra:pill', bump);
+    const id = setInterval(bump, 60000);
+    return () => { window.removeEventListener('micra:pill', bump); clearInterval(id); };
+  }, []);
 
   const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
@@ -215,8 +224,13 @@ export default function MicraApp() {
 
   useEffect(() => {
     if (viewMode !== 'client') return;
-    api.myHolds().then((h) => setHoldOn((h ?? []).some((x) => x.status === 'waiting'))).catch(() => setHoldOn(false));
-  }, [viewMode, route.view, refreshKey]);
+    api.myHolds().then((h) => { setMyHolds(h ?? []); setHoldOn((h ?? []).some((x) => x.status === 'waiting')); }).catch(() => { setMyHolds([]); setHoldOn(false); });
+  }, [viewMode, route.view, refreshKey, pillTick]);
+
+  let wantAt = null;
+  try { wantAt = localStorage.getItem(WANT_AT_KEY); } catch { /* sin memoria */ }
+  const pill = viewMode === 'client' ? pillOf({ holds: myHolds, wantAt }) : null;
+  const wantFromBar = () => { if (route.view !== 'home') go('/micra'); requestWant(); };
 
   const switchMode = (m) => {
     try { localStorage.setItem(MODE_KEY, m); } catch { /* sin memoria */ }
@@ -325,6 +339,13 @@ export default function MicraApp() {
       </header>
       <PullRefresh onRefresh={() => setRefreshKey((k) => k + 1)} disabled={videoView || route.view === 'camera' || route.view === 'ficha' || route.view === 'study'} />
       <main className="mapp-main" key={route.view === 'barista' ? 'barista' : refreshKey}>{body}</main>
+      {clientTabs && pill && !(pill.kind !== 'want' && route.view === 'holds') && (
+        <button type="button" className={`mapp-pill is-${pill.kind}`} onClick={() => go(pill.to)} data-testid="live-pill">
+          <span className="mapp-pill-ic" aria-hidden="true">{pill.icon}</span>
+          <span className="mapp-pill-txt"><b>{pill.title}</b><small>{pill.sub}</small></span>
+          <IconChevron />
+        </button>
+      )}
       {clientTabs && (
         // Como Instagram: inicio, explorar (Hoy), crear, lo tuyo (apartados) y tu perfil; solo íconos
         <nav className="mapp-tabs is-ig" aria-label="Micra">
@@ -336,11 +357,13 @@ export default function MicraApp() {
             <IconCompass />
             <small className="mapp-tabs-l" aria-hidden="true">Hoy</small>
           </button>
-          <button type="button" className="mapp-tabs-cam" onClick={() => setPublishing(true)} aria-label="Publicar" title="Publicar" data-testid="tab-publish">
-            <IconPlus />
+          {/* El centro es lo que el cliente vino a hacer (maqueta del 10 nov 2026): «Quiero un café».
+              Publicar queda en el «＋ Publicar» de Hoy */}
+          <button type="button" className="mapp-tabs-cam" onClick={wantFromBar} aria-label="Quiero un café" title="Quiero un café" data-testid="tab-want">
+            <IconCup />
           </button>
           <button type="button" className={route.view === 'holds' ? 'on' : ''} aria-current={route.view === 'holds' ? 'page' : undefined} onClick={() => go('/micra/apartados')} aria-label="Mis apartados" title="Mis apartados">
-            <IconCup />
+            <IconClipboard />
             <small className="mapp-tabs-l" aria-hidden="true">Apartados</small>
           </button>
           <button type="button" className={`is-me ${route.view === 'me' ? 'on' : ''}`} aria-current={route.view === 'me' ? 'page' : undefined} onClick={() => go('/micra/perfil')} aria-label="Mi perfil" title="Mi perfil" data-testid="me-button">
@@ -381,7 +404,6 @@ export default function MicraApp() {
           <MicraStudio key={route.view} lite={videoView} onExit={() => go(videoView ? '/micra/barista' : '/micra/estudio')} />
         </Suspense>
       )}
-      {publishing && clientTabs && <Suspense fallback={null}><ClientPublish onClose={() => setPublishing(false)} /></Suspense>}
       {drawer && (
         <Suspense fallback={null}>
           <CafeDrawer mode={viewMode === 'barista' && (who.barista || acting) ? 'barista' : 'client'} go={go} onClose={closeDrawer} onAcero={() => setAcero(true)} pathname={window.location.pathname} />

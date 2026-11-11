@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { baristaPath, cupsLabel } from './micraApp.js';
-import { POLL_MS, legendCounts, shouldPoll, zonesGeoJSON } from './liveMap.js';
+import { POLL_MS, legendCounts, shouldPoll, zonesGeoJSON, seekNudge } from './liveMap.js';
 import * as api from './api.js';
 
 // El mapa en vivo (como Uber al ponerse «en línea»): con «Salí a vender»
@@ -107,7 +107,7 @@ export default function LivePanel({ mode = 'barista', live = false, selfId = nul
           </Suspense>
         </div>
         <div className="mapp-live-over">{children}</div>
-        <p className="mapp-live-nudge" data-testid="live-nudge">Sal a vender para ver quién busca café ahora</p>
+        <p className="mapp-live-nudge" data-testid="live-nudge">{seekNudge(counts?.seeking)}</p>
         {others.length > 0 && <p className="mapp-live-near">{others.length === 1 ? '1 barista en la calle cerca' : `${others.length} baristas en la calle cerca`}</p>}
       </section>
     );
@@ -121,7 +121,7 @@ export default function LivePanel({ mode = 'barista', live = false, selfId = nul
           <Suspense fallback={<div className="mapp-map" aria-hidden="true" />}>
             <MicraMap baristas={others} me={me} theme={theme} onPick={open} zones={zones} label="Mapa de los baristas cerca de ti" />
           </Suspense>
-          <p className="mapp-live-nudge" data-testid="live-nudge">Sal a vender para ver quién busca café ahora</p>
+          <p className="mapp-live-nudge" data-testid="live-nudge">{seekNudge(counts?.seeking)}</p>
         </div>
         {(data?.study?.length ?? 0) > 0 && <ul className="mapp-live-legend"><li><i className="is-study" aria-hidden="true" />Suelen vender (estudio de calle)</li></ul>}
       </section>

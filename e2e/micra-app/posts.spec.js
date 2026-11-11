@@ -93,9 +93,6 @@ test('cliente: lo aprobado sale en el muro de su inicio, con su barista y cómo 
   await expect(card).toContainText('El primer tinto del día en la 85');
   await expect(card.getByRole('img', { name: /Foto de Marlene/ })).toHaveAttribute('src', /\/object\/sign\/micra-posts\/.+token=/);
   await expect(feed).not.toContainText('Todavía en revisión');
-  // El chip «De los baristas» deja solo lo publicado por ellos
-  await feed.getByRole('tab', { name: 'De los baristas' }).click();
-  await expect(feed.getByTestId('feed').getByRole('article')).toHaveCount(1);
   await card.getByRole('button', { name: 'Apartarle a Marlene ›' }).click();
   await expect(page).toHaveURL(new RegExp(`/micra/b/${MARLENE}$`));
   expect(errors).toEqual([]);

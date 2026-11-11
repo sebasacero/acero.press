@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildFeed, filterFeed, chipCounts, readPrices, millions, cupCost, coffeeOrderText, HOUSE, achievements, photoIdeas, readCurated, addCurated, CURATED, coffeeHead, priceTrend, priceRows } from './feed.js';
+import { buildFeed, filterFeed, chipCounts, readPrices, millions, cupCost, coffeeOrderText, HOUSE, achievements, photoIdeas, readCurated, addCurated, CURATED, coffeeHead, priceTrend, priceRows, hoyTab, tabFeed, medalsOf, newsMark } from './feed.js';
 
 const B = [
   { id: 'a', name: 'Marlene', referencia: 'Cl. 85 con Cra. 15', hora_inicio: 6, hora_fin: 11, prices: { tinto: 1500 }, status: 'usual' },
@@ -165,4 +165,24 @@ test('el muro lleva a lo más 12 puestos, los de la calle primero', async () => 
   const puestos = buildFeed({ baristas }).filter((i) => i.kind === 'puestos');
   assert.equal(puestos.length, FEED_PUESTOS);
   assert.equal(puestos[0].by, 'B39');
+});
+
+test('Hoy en tres pestañas: noticias y recetas aparte, los logros como medallas', () => {
+  assert.equal(hoyTab('cafe'), 'noticias');
+  assert.equal(hoyTab('videos'), 'noticias');
+  assert.equal(hoyTab('recetas'), 'recetas');
+  assert.equal(hoyTab('puestos'), 'ahora');
+  const items = [
+    { id: 'racha', kind: 'logros', badge: 'racha', count: 4, title: 'Llevas 4 días' },
+    { id: 'escuela', kind: 'logros', badge: 'escuela', done: 2, total: 6, title: '2 de 6 lecciones', text: 'Sigue' },
+    { id: 'meta', kind: 'logros', badge: 'meta', title: '¡Cumpliste tu meta de hoy!' },
+    { id: 'p', kind: 'puestos' }, { id: 'n', kind: 'cafe', org: 'FNC' }, { id: 'r', kind: 'recetas' },
+  ];
+  assert.deepEqual(tabFeed(items, 'ahora').map((i) => i.id), ['p']);
+  assert.deepEqual(tabFeed(items, 'noticias').map((i) => i.id), ['n']);
+  assert.deepEqual(medalsOf(items).map((m) => m.mark), ['4', '2/6', '✓']);
+  assert.equal(medalsOf(items)[0].title, 'Días de racha');
+  assert.equal(newsMark({ org: 'FNC' }), 'FNC');
+  assert.equal(newsMark({ by: 'ACERO.press' }), 'AP');
+  assert.equal(newsMark({ kind: 'videos' }), '▶');
 });

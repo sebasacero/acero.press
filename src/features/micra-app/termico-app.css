@@ -785,3 +785,106 @@
 .mapp-fp-url{margin:0 0 8px;font:500 .74rem 'JetBrains Mono',monospace;word-break:break-all}
 /* Las tres rayas del menú del café: blancas sobre la barra fría de arriba */
 .mapp .mapp-top .mapp-brand-burger i{background:#fff !important}
+
+/* ── «Micra en tres toques», lo que faltaba de la maqueta (10 nov 2026) ── */
+/* El radar del cliente: vidrio sobre la cabecera fría, puntos calientes */
+.mapp-radar{display:grid;grid-template-columns:minmax(0,1fr) 132px;gap:10px;align-items:center;margin-top:4px;padding:14px;border-radius:22px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.mapp-radar-big{margin:0;font:900 1.75rem/1 'Archivo',sans-serif;letter-spacing:-.03em;color:#fff}
+.mapp-radar-big small{display:block;margin-top:5px;font:700 .84rem/1.2 'Archivo',sans-serif;letter-spacing:0;opacity:.88}
+.mapp-radar-near{margin:10px 0 0;font-size:.8rem;line-height:1.35;color:rgba(255,255,255,.92)}
+.mapp-radar-near b{color:var(--t-6,#FFC23C)}
+.mapp-radar-loc{appearance:none;margin-top:10px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font:700 .82rem 'Archivo',sans-serif;cursor:pointer}
+.mapp-radar-scope{position:relative;width:132px;height:132px;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 20px,rgba(255,255,255,.16) 20px 21px)}
+.mapp-radar-scope::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,195,60,.32),transparent 28%);animation:mapp-radar-sweep 4s linear infinite;pointer-events:none}
+@keyframes mapp-radar-sweep{to{transform:rotate(360deg)}}
+.mapp-radar-you{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.25);z-index:2}
+.mapp-radar-dot{appearance:none;border:0;background:none;padding:0;position:absolute;width:44px;height:44px;margin:-22px;display:grid;place-items:center;z-index:3;cursor:pointer;transition:left 1.2s cubic-bezier(.3,.8,.3,1),top 1.2s cubic-bezier(.3,.8,.3,1)}
+.mapp-radar-dot::before{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(closest-side,var(--t-7,#FFF3B0),var(--t-6,#FFC23C) 25%,var(--t-5,#F2542D) 45%,var(--t-4,#DE1B1B) 60%,rgba(176,18,122,.6) 78%,transparent)}
+.mapp-radar-dot span{position:relative;font:900 .8rem 'Archivo',sans-serif;color:#22125A}
+.mapp-radar.is-usual .mapp-radar-dot::before{background:radial-gradient(closest-side,rgba(255,255,255,.85),rgba(255,255,255,.35) 55%,transparent)}
+.mapp-radar.is-usual .mapp-radar-scope::after{display:none}
+@media (prefers-reduced-motion:reduce){.mapp-radar-scope::after{animation:none}.mapp-radar-dot{transition:none}}
+@media (max-width:359px){.mapp-radar{grid-template-columns:1fr}.mapp-radar-scope{justify-self:center}}
+
+/* Las bebidas en una fila corta */
+.mapp .mapp-drinks-q{font-size:1.05rem;margin-bottom:8px}
+.mapp .mapp-drinks-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.mapp .mapp-drinks-grid button{grid-template-columns:1fr;grid-template-rows:auto auto auto;justify-items:center;text-align:center;min-height:76px;padding:8px 4px;border-radius:16px;row-gap:1px}
+.mapp .mapp-drinks-grid b,.mapp .mapp-drinks-grid small{grid-column:1}
+.mapp .mapp-drinks-grid b{font-size:.8rem;line-height:1.1}
+.mapp .mapp-drinks-grid small{font-size:.62rem}
+.mapp .mapp-drinks-grid .mapp-drink-ico{width:30px;height:30px;font-size:1rem;grid-row:auto}
+
+/* «Cerca de ti»: los baristas en filas con Apartar */
+.mapp-near-h{flex:1 1 auto;margin:0;font:800 1.15rem/1.1 'Archivo',sans-serif;letter-spacing:-.01em}
+.mapp-near-h small{margin-left:8px;font:500 .68rem 'JetBrains Mono',monospace;color:var(--m-soft);letter-spacing:0}
+.mapp-list.is-rows{display:grid;gap:8px;margin:4px 0 10px;padding:0;list-style:none}
+.mapp-brow{display:grid !important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;min-height:76px;padding:10px 12px;border-radius:18px;text-align:left;background:#fff;border:1px solid var(--t-line,var(--m-line));box-shadow:var(--t-glow-cold,none)}
+.mapp-brow-av{position:relative;display:grid;place-items:center}
+.mapp-brow-av .mapp-av{width:46px;height:46px}
+.mapp-brow-now{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1px 5px;border-radius:6px;background:var(--t-4,#DE1B1B);color:#fff;font:700 .5rem 'JetBrains Mono',monospace;font-style:normal;letter-spacing:.04em}
+.mapp-brow .mapp-row-main>b{font-size:1.02rem}
+.mapp-brow .mapp-row-main>span{font-size:.8rem}
+.mapp-brow-facts{font:500 .72rem 'JetBrains Mono',monospace !important;color:var(--m-soft)}
+.mapp-brow-cta{display:grid;place-items:center;min-height:44px;padding:0 14px;border-radius:999px;background:var(--t-cta,var(--m-cta));color:#fff;font:800 .86rem 'Archivo',sans-serif}
+.mapp-brow-cta.is-ghost{background:none;border:1.5px solid var(--m-line);color:var(--m-fg)}
+.mapp-list.is-rows>li.is-off .mapp-brow{opacity:.78}
+
+/* «Quiero un café» ya no va pegado abajo: vive bajo el radar y en el centro de la barra */
+.mapp .mapp-want{position:static;margin:0 0 12px;padding:0;background:none}
+/* La pastilla viva: sobre la barra del cliente, en todas las pestañas */
+.mapp-pill{appearance:none;position:fixed;z-index:39;left:50%;transform:translateX(-50%);bottom:calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));width:min(calc(100vw - 32px),448px);min-height:52px;display:flex;align-items:center;gap:10px;padding:8px 12px;border:0;border-radius:18px;text-align:left;color:#fff;background:linear-gradient(100deg,var(--t-0,#0D0820),var(--t-1,#22125A) 55%,var(--t-2,#5A1E9E));box-shadow:0 14px 30px -14px rgba(13,8,32,.75);cursor:pointer;animation:mapp-pill-in .3s cubic-bezier(.2,.7,.2,1) both}
+.mapp-pill.is-hold{background:var(--t-cta,linear-gradient(100deg,#B0127A,#DE1B1B 42%,#F2542D 80%,#FF8A3D))}
+.mapp-pill-ic{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.16);font-size:1rem}
+.mapp-pill-txt{display:grid;min-width:0;flex:1}
+.mapp-pill-txt b{font:800 .9rem/1.15 'Archivo',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapp-pill-txt small{font-size:.74rem;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapp-pill>svg{flex:none;width:18px;height:18px;transform:rotate(-90deg);opacity:.8}
+@keyframes mapp-pill-in{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.mapp-pill{animation:none}}
+
+/* ── Lo que faltaba de «Micra en tres toques» (10 nov 2026): barista y Hoy ── */
+.mapp-until{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 2px}
+.mapp-until>span{font:600 .72rem 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--m-soft)}
+.mapp .mapp-until button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(20,22,27,.14);background:#fff;font:600 .86rem Archivo,sans-serif;color:var(--m-ink);cursor:pointer}
+.mapp .mapp-until button.on{background:var(--t-cta);border-color:transparent;color:#fff}
+.mapp .mapp-tabs .mapp-tabs-cam.is-plus b{font:800 1.25rem Archivo,sans-serif;letter-spacing:-.02em;color:#fff}
+.mapp-quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.mapp .mapp-quick button{display:flex;align-items:center;gap:10px;min-height:68px;padding:10px 12px;border-radius:18px;border:1px solid rgba(20,22,27,.1);background:#fff;text-align:left;cursor:pointer;box-shadow:0 8px 18px -14px rgba(20,22,27,.5)}
+.mapp .mapp-quick button:active{transform:scale(.97)}
+.mapp .mapp-quick button>b{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--t-cta);color:#fff;font:800 1rem Archivo,sans-serif}
+.mapp-quick button span{display:grid;font:700 .95rem Archivo,sans-serif;color:var(--m-ink)}
+.mapp-quick button small{font:500 .72rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-hold-hint{margin:0 0 6px;font:500 .72rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-swipe{position:relative;overflow:hidden;border-radius:16px;touch-action:pan-y;padding:0 !important;display:block !important}
+.mapp-swipe-bg{position:absolute;inset:0;display:flex;align-items:center;padding-left:16px;background:#1f9d55;color:#fff;font:700 .9rem Archivo,sans-serif;font-style:normal;border-radius:16px}
+.mapp-swipe-card{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:16px;transition:transform .2s ease}
+.mapp-swipe.is-dragging .mapp-swipe-card{transition:none}
+.mapp-swipe-card>div{flex:1;min-width:0;display:grid}
+.mapp .mapp-hold-n{background:var(--t-cta);color:#fff;font:800 1rem Archivo,sans-serif}
+.mapp-hoytabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:10px 16px;padding:4px;border-radius:999px;background:rgba(20,22,27,.06)}
+.mapp .mapp-hoytabs button{min-height:44px;border:0;border-radius:999px;background:transparent;font:700 .9rem Archivo,sans-serif;color:var(--m-soft);cursor:pointer}
+.mapp .mapp-hoytabs button.on{background:#fff;color:var(--m-ink);box-shadow:0 4px 12px -6px rgba(20,22,27,.4)}
+.mapp-medals{margin:8px 16px 14px}
+.mapp-medals ul{list-style:none;margin:8px 0;padding:0 0 4px;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
+.mapp-medals li{flex:none;display:flex;align-items:center;gap:10px;min-width:190px;padding:10px 12px;border-radius:18px;background:#fff;border:1px solid rgba(20,22,27,.08)}
+.mapp-medals li>i{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--t-cta);color:#fff;font:800 1rem Archivo,sans-serif;font-style:normal}
+.mapp-medals li span{display:grid;min-width:0}
+.mapp-medals li b{font:700 .9rem Archivo,sans-serif;color:var(--m-ink)}
+.mapp-medals li small{font:500 .7rem 'JetBrains Mono',monospace;color:var(--m-soft);max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapp-news{list-style:none;margin:0;padding:0 16px 16px}
+.mapp-news>li{border-bottom:1px solid rgba(20,22,27,.08)}
+.mapp .mapp-nrow{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 0;border:0;background:none;text-align:left;cursor:pointer}
+.mapp-nrow>i{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--t-1),var(--t-3));color:#fff;font:800 .78rem 'JetBrains Mono',monospace;font-style:normal}
+.mapp-nrow span{display:grid;min-width:0}
+.mapp-nrow b{font:700 .95rem Archivo,sans-serif;color:var(--m-ink);line-height:1.2}
+.mapp-nrow small{font:500 .72rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+/* La tarjeta que se desliza es una fila: número, quién y qué, y los botones */
+.mapp .mapp-holds li.mapp-swipe{display:block;padding:0;border:0;margin:0 0 8px;background:none;box-shadow:none}
+.mapp .mapp-holds li.mapp-swipe>.mapp-swipe-card{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;min-width:0;padding:10px 12px;border:1px solid rgba(20,22,27,.1)}
+.mapp .mapp-swipe-card>div{flex:1;min-width:130px;display:flex;flex-direction:column}
+.mapp .mapp-swipe-card>div span{color:var(--m-soft);font-size:.92rem}
+.mapp .mapp-swipe-card>.mapp-av{flex:0 0 auto;width:40px;height:40px;display:grid;place-items:center;border-radius:50%}
+.mapp .mapp-medals{display:block}
+.mapp .mapp-medals ul{display:flex;flex-direction:row}
+.mapp .mapp-medals li{display:flex;flex-direction:row;align-items:center;text-align:left}
