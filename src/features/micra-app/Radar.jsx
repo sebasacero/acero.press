@@ -16,6 +16,8 @@ export default function Radar({ list, me, onOpen, onNear, asking }) {
         <p className="mapp-radar-big" data-testid="radar-count">{title.big}<small>{title.small}</small></p>
         {v.nearest ? (
           <p className="mapp-radar-near">{v.mode === 'live' ? 'Más cerca' : 'El más cercano'}: <b>{v.nearest.name}, {v.nearest.distance}</b>.{v.nearest.price ? ` ${v.nearest.price}.` : ''}</p>
+        ) : v.mode === 'off' ? (
+          <p className="mapp-radar-near">Abajo ves a qué hora sale cada uno.</p>
         ) : v.located ? (
           <p className="mapp-radar-near">Nadie a menos de 25 cuadras ahora. Abajo están todos.</p>
         ) : (

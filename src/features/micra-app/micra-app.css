@@ -1642,8 +1642,6 @@
 .mapp-jefe-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
 .mapp-jefe-form .mapp-btn { min-height: 44px; }
 /* El menú del café (7 nov 2026): sale de la izquierda al tocar el logo de arriba */
-.mapp-brand-burger { display: inline-flex; flex-direction: column; gap: 3px; margin-right: 2px; }
-.mapp-brand-burger i { display: block; width: 16px; height: 2px; border-radius: 2px; background: currentColor; }
 .mapp-drawerwrap { position: fixed; inset: 0; z-index: 70; display: flex; }
 .mapp-drawer-scrim { position: absolute; inset: 0; border: 0; background: rgba(13, 8, 32, .5); cursor: pointer; }
 .mapp-drawer { position: relative; width: min(86vw, 340px); height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--m-bg); border-radius: 0 24px 24px 0; padding: 0 14px calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); box-shadow: 24px 0 48px -24px rgba(13, 8, 32, .7); animation: mapp-drawer-in .26s cubic-bezier(.2, .7, .2, 1) both; }
