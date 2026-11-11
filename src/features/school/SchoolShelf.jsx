@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SCHOOLS, gearShelf, readSchools, writeSchools, markSchool, seenFor } from '../micra-app/escuelas.js';
+import { SCHOOLS, gearShelf, gearLabel, readSchools, writeSchools, markSchool, seenFor } from '../micra-app/escuelas.js';
 import LessonVideo, { SchoolIcon } from './LessonVideo.jsx';
 
 // Las cuatro escuelas en /escuela (6 nov 2026, pedido del usuario: «para la escuela en la web crea
@@ -18,7 +18,7 @@ export function SchoolShelf({ aeroLessons, aeroSeen, stored, current, onPick }) 
             {g.unlocked ? <i className="ss-ok" aria-hidden="true">✓</i> : g.done === 0 && <i className="ss-lock" aria-hidden="true">🔒</i>}
           </span>
           <b>{g.name}</b>
-          <small>{g.unlocked ? 'Desbloqueada' : `${g.done}/${g.total} lecciones`}</small>
+          <small>{gearLabel(g, ' lecciones')}</small>
         </button>
       ))}
     </div>
@@ -38,6 +38,8 @@ export function OtherSchool({ id, stored, onSeen }) {
   if (!school?.lessons) return null;
   const seen = seenFor(id, [], stored);
   return (
+    <>
+    {school.video && <p className="ss-note" data-testid="web-school-video-note">La insignia del termo es el primer requisito de todo barista en Micra: ves estas lecciones, te grabas sirviendo un tinto y el equipo lo verifica.</p>}
     <ol className="sa ss-lessons" data-testid={`web-school-lessons-${id}`}>
       {school.lessons.map((l, i) => {
         const isOpen = open === i;
@@ -80,5 +82,6 @@ export function OtherSchool({ id, stored, onSeen }) {
         );
       })}
     </ol>
+    </>
   );
 }

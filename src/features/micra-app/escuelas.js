@@ -172,14 +172,17 @@ const ESPRESSO = [
 ];
 
 /** Las cuatro escuelas, en orden. La AeroPress usa las lecciones de /escuela. */
+// El termo va primero (pedido del usuario, 10 nov 2026): es la insignia más básica y el primer
+// requisito de todo barista. Se gana viendo sus lecciones y mandando un video sirviendo un tinto
+// que el equipo verifica (`video: true`, 20261111090000_micra_badges.sql); las demás, con las lecciones.
 export const SCHOOLS = [
+  { id: 'termo', name: 'Termo', title: 'Tinto de termo', lessons: TERMO, video: true },
   { id: 'aeropress', name: 'AeroPress', title: 'Barista AeroPress', lessons: null },
-  { id: 'termo', name: 'Termo', title: 'Tinto de termo', lessons: TERMO },
   { id: 'v60', name: 'V60', title: 'Barista V60', lessons: V60 },
   { id: 'espresso', name: 'Espresso', title: 'Barista espresso', lessons: ESPRESSO },
 ];
 
-export const schoolOf = (id) => SCHOOLS.find((s) => s.id === id) ?? SCHOOLS[0];
+export const schoolOf = (id) => SCHOOLS.find((s) => s.id === id) ?? SCHOOLS.find((s) => s.id === 'aeropress');
 
 /** Las lecciones de una escuela (la de AeroPress viene de /escuela). */
 export const schoolLessons = (school, aeropressLessons = []) => school.lessons ?? aeropressLessons;
@@ -197,15 +200,53 @@ export function markSchool(stored = {}, id, key) {
   return { ...stored, [id]: [...prev, key] };
 }
 
-/** Cada escuela con cuántas lleva y si su ícono ya se desbloqueó (todas sus lecciones vistas). */
-export function gearShelf(aeropressLessons = [], aeropressSeen = [], stored = {}) {
+/**
+ * Cada escuela con cuántas lleva y si su ícono ya se desbloqueó. Las de lecciones, al verlas todas;
+ * la del termo (`video`), solo cuando el equipo aprobó el video (`badges`, de `micra_badges_mine`:
+ * { termo: { status: 'pending' | 'approved' | 'rejected', note } }).
+ */
+export function gearShelf(aeropressLessons = [], aeropressSeen = [], stored = {}, badges = {}) {
   return SCHOOLS.map((s) => {
     const lessons = schoolLessons(s, aeropressLessons);
     const seen = new Set(seenFor(s.id, aeropressSeen, stored));
     const done = lessons.filter((l) => seen.has(l.key)).length;
-    return { id: s.id, name: s.name, done, total: lessons.length, unlocked: lessons.length > 0 && done === lessons.length };
+    const ready = lessons.length > 0 && done === lessons.length;
+    const badge = s.video ? (badges?.[s.id]?.status ?? null) : null;
+    return { id: s.id, name: s.name, done, total: lessons.length, video: !!s.video, ready, badge, unlocked: s.video ? badge === 'approved' : ready };
   });
 }
+
+/** Lo que dice cada escuela bajo su ícono. */
+export function gearLabel(g, unit = '') {
+  if (g.unlocked) return g.video ? 'Verificada' : 'Desbloqueada';
+  if (g.badge === 'pending') return 'En revisión';
+  if (g.video && g.ready) return 'Falta tu video';
+  return `${g.done}/${g.total}${unit}`;
+}
+
+/**
+ * Dónde va el barista con la insignia que pide video: 'lessons' (aún le faltan lecciones),
+ * 'record' (ya puede grabarse), 'pending' (el equipo lo está viendo), 'retry' (no pasó: otra vez)
+ * o 'done' (verificada). Si ya la tiene o la mandó, no importa lo visto en este celular.
+ */
+export function badgeStep(g) {
+  if (g.badge === 'approved') return 'done';
+  if (g.badge === 'pending') return 'pending';
+  if (!g.ready) return 'lessons';
+  return g.badge === 'rejected' ? 'retry' : 'record';
+}
+
+/** La ruta del video en la carpeta del barista (la base exige `<id>/<nombre>.<mp4|mov|webm>`). */
+const VIDEO_EXT = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' };
+export function badgeVideoPath(tinteroId, type, badge = 'termo', now = Date.now(), rand = Math.random) {
+  const ext = VIDEO_EXT[String(type ?? '').split(';')[0]];
+  if (!tinteroId || !ext) return null;
+  const r = Math.floor(rand() * 36 ** 8).toString(36).padStart(8, '0');
+  return `${tinteroId}/insignia-${badge}-${now.toString(36)}-${r}.${ext}`;
+}
+
+/** El video va hasta 25 MB, como las publicaciones (el bucket no recibe más). */
+export const BADGE_VIDEO_MAX = 25 * 1024 * 1024;
 
 export function readSchools(storage = globalThis.localStorage) {
   try { return JSON.parse(storage?.getItem(SCHOOLS_KEY) ?? '{}') || {}; } catch { return {}; }

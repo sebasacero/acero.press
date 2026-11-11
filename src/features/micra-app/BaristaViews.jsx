@@ -872,7 +872,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   } else if (tab === 'qr') {
     body = <Suspense fallback={<Cargando fig="caminando" />}><QrPage url={platform.siteUrl(baristaPath(day.id))} name={first} mode={mode} go={go} /></Suspense>;
   } else if (tab === 'aprende') {
-    body = <Suspense fallback={<Cargando fig="aeropress" />}><Aprende go={go} night={night} /></Suspense>;
+    body = <Suspense fallback={<Cargando fig="aeropress" />}><Aprende go={go} night={night} selfId={day.id} asId={asId} /></Suspense>;
   } else if (tab === 'hoy') {
     body = (
       <>

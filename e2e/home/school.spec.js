@@ -90,7 +90,7 @@ test('escritorio: la receta paso a paso, lecciones en tarjetas, modo preparar, e
   for (let i = 0; i < 6; i += 1) await expect(heads.nth(i)).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('.sa').getByRole('tab')).toHaveCount(0);
   const schools = page.getByRole('tablist', { name: 'Escuelas' });
-  await expect(schools.getByRole('tab')).toHaveText([/AeroPress/, /Termo/, /V60/, /Espresso/]);
+  await expect(schools.getByRole('tab')).toHaveText([/Termo/, /AeroPress/, /V60/, /Espresso/]);
   await expect(schools.getByRole('tab', { name: /AeroPress/ })).toHaveAttribute('aria-selected', 'true');
   await heads.first().click();
   await expect(heads.first()).toHaveAttribute('aria-expanded', 'true');
@@ -250,7 +250,7 @@ test('el carrito sigue al pasar de la portada a la Escuela y volver', async ({ b
   await page.context().close();
 });
 
-test('las cuatro escuelas: termo, V60 y espresso con su video; lo visto enciende el ícono', async ({ browser }) => {
+test('las cuatro escuelas: termo, V60 y espresso con su video; el termo pide además el video en Micra', async ({ browser }) => {
   const { page, errors } = await openPage(browser, { context: DESK });
   await page.goto('/escuela', { waitUntil: 'load' });
   const schools = page.getByRole('tablist', { name: 'Escuelas' });
@@ -266,7 +266,9 @@ test('las cuatro escuelas: termo, V60 y espresso con su video; lo visto enciende
   await expect(video).toContainText('Llénalo con agua caliente');
   for (let i = 0; i < 3; i += 1) await list.getByRole('button', { name: 'Siguiente →' }).click();
   await list.getByRole('button', { name: 'Terminar la escuela' }).click();
-  await expect(schools.getByRole('tab', { name: /Termo/ })).toContainText('Desbloqueada');
+  // En la web se ven las lecciones; la insignia se verifica en Micra con el video
+  await expect(schools.getByRole('tab', { name: /Termo/ })).toContainText('Falta tu video');
+  await expect(page.getByTestId('web-school-video-note')).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('micra_escuelas_v1')).termo.length)).toBe(4);
   expect(errors).toEqual([]);
 });
