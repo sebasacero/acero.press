@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { TOOLS, callTool } from './tools.js';
 import { memorySource, remoteSource } from './sources.js';
-import { askAgent, cleanHistory, connectMicra, textOf } from './agent.js';
+import { askAgent, cleanHistory, connectMicra, textOf, writeParte } from './agent.js';
 
 const demo = JSON.parse(readFileSync(new URL('./demo.json', import.meta.url), 'utf8'));
 const run = async (name, args) => {
@@ -13,7 +13,7 @@ const run = async (name, args) => {
 };
 
 test('todas las herramientas son de solo lectura y con esquema cerrado', () => {
-  assert.deepEqual(TOOLS.map((t) => t.name), ['estudio_resumen', 'mapa_en_vivo', 'dia_del_equipo', 'precio_cafe']);
+  assert.deepEqual(TOOLS.map((t) => t.name), ['estudio_resumen', 'mapa_en_vivo', 'dia_del_equipo', 'precio_cafe', 'apartados', 'fincas', 'encuestas_pendientes']);
   for (const t of TOOLS) {
     assert.equal(t.inputSchema.type, 'object');
     assert.equal(t.inputSchema.additionalProperties, false);
@@ -57,6 +57,46 @@ test('precio_cafe: cambio en porcentaje frente al dato anterior', async () => {
   assert.deepEqual(r.faltan, []);
 });
 
+test('apartados: nombre de pila, notas con n y tiempos; sin la migración de tiempos dice qué falta', async () => {
+  const r = await run('apartados', { dias: 99 });
+  assert.deepEqual(r.notas.map((x) => x.nombre), ['Marlene', 'Wilson']);
+  assert.equal(r.notas[1].pagado_taza, 3000);
+  assert.equal(r.tiempos.dias, 7);
+  assert.deepEqual(r.tiempos.entregar_min, { n: 10, mediana: 18, peor_10: 41 });
+  assert.equal(r.tiempos.motivos_cancelar.se_demoro, 1);
+  assert.ok(!JSON.stringify(r).includes('Gómez'));
+  const { holdTimes: _t, ...sinTiempos } = demo;
+  const r2 = (await callTool(memorySource(sinTiempos), 'apartados')).structuredContent;
+  assert.equal(r2.tiempos, null);
+  assert.equal(r2.notas.length, 2);
+  assert.match(r2.faltan[0], /tiempos/);
+});
+
+test('fincas: con menos de 5 respuestas no da proporción ni cifra del país', async () => {
+  const r = await run('fincas');
+  assert.equal(r.todas.n, 4);
+  assert.equal(r.todas.con_cuenta.k, 2);
+  assert.equal(r.todas.con_cuenta.p, null);
+  assert.equal(r.todas.con_cuenta.familias, null);
+  assert.equal(r.muestra_al_azar.n, 3);
+  assert.equal(r.muestra_al_azar.faltan, 200);
+  const many = Array.from({ length: 10 }, (_, i) => ({ departamento: 'Huila', nivel: i < 2 ? 2 : 0, muestra: true }));
+  const r2 = (await callTool(memorySource({ fincas: many }), 'fincas')).structuredContent;
+  assert.equal(r2.muestra_al_azar.con_cuenta.p, 0.2);
+  assert.ok(r2.muestra_al_azar.con_cuenta.familias.mid > 100000);
+});
+
+test('encuestas_pendientes: cuentas por zona hacia 25, sin nombres', async () => {
+  const r = await run('encuestas_pendientes');
+  assert.equal(r.meta, 25);
+  assert.equal(r.fichas, demo.piloto.tinteros.length);
+  assert.equal(r.encuestas + r.sin_encuesta, r.fichas);
+  assert.equal(r.faltan, 25 - r.encuestas);
+  assert.deepEqual(r.ir_primero, r.por_zona.filter((z) => z.sin_encuesta > 0).slice(0, 3).map((z) => z.zona));
+  const text = JSON.stringify(r);
+  for (const t of demo.piloto.tinteros) assert.ok(!text.includes(t.name), `sale ${t.name}`);
+});
+
 test('un error de la fuente vuelve como error de la herramienta, no como excepción', async () => {
   const r = await callTool(memorySource({}), 'precio_cafe');
   assert.equal(r.isError, true);
@@ -64,11 +104,11 @@ test('un error de la fuente vuelve como error de la herramienta, no como excepci
   assert.equal((await callTool(memorySource(demo), 'borrar_todo')).isError, true);
 });
 
-test('por MCP: el cliente lista las 4 herramientas y las llama', async () => {
+test('por MCP: el cliente lista las 7 herramientas y las llama', async () => {
   const { client, close } = await connectMicra(memorySource(demo));
   try {
     const { tools } = await client.listTools();
-    assert.equal(tools.length, 4);
+    assert.equal(tools.length, 7);
     assert.ok(tools.every((t) => t.annotations?.readOnlyHint === true));
     const res = await client.callTool({ name: 'dia_del_equipo', arguments: {} });
     assert.equal(JSON.parse(res.content[0].text).totales.tazas, 23);
@@ -100,7 +140,7 @@ test('askAgent: le pasa al Tool Runner las herramientas MCP y anota cuáles usó
     assert.equal(r.answer, 'Hoy van 23 tazas.');
     assert.deepEqual(r.tools, ['dia_del_equipo']);
     assert.equal(seen.model, 'claude-opus-5-5');
-    assert.equal(seen.tools.length, 4);
+    assert.equal(seen.tools.length, 7);
     assert.deepEqual(seen.messages, [{ role: 'user', content: '¿Cómo vamos hoy?' }]);
     await assert.rejects(askAgent({ anthropic, mcp: client, question: '   ' }), /Escribe una pregunta/);
   } finally {
@@ -152,4 +192,42 @@ test('sourceFromEnv: sin token ni archivo, la demo; con token, la fuente remota'
   const remote = await sourceFromEnv({ MICRA_TOKEN: 't', VITE_SUPABASE_URL: 'https://db.co', VITE_SUPABASE_ANON_KEY: 'a' });
   assert.equal(typeof remote.liveMap, 'function');
   await assert.rejects(sourceFromEnv({ MICRA_TOKEN: 't' }), /Faltan/);
+});
+
+test('writeParte: Celestra lee, suma el uso de cada vuelta del Tool Runner y devuelve 3 propuestas', async () => {
+  const { client, close } = await connectMicra(memorySource(demo));
+  let seen = null;
+  const parteJson = JSON.stringify({ resumen: 'Hoy van 23 tazas.', propuestas: [
+    { oficio: 'estudio', titulo: 'Encuestar en Usaquén', por_que: 'Falta 1 ficha (n=6).', accion: 'Ir a las 10' },
+    { oficio: 'raro', titulo: 'Salir temprano', por_que: 'Más apartados a las 7 (n=14).' },
+  ] });
+  const anthropic = {
+    beta: {
+      messages: {
+        toolRunner(params) {
+          seen = params;
+          // Dos vueltas, como el Tool Runner real: una pide herramientas, la otra responde
+          return (async function* () {
+            await params.tools.find((t) => t.name === 'encuestas_pendientes').run({});
+            yield { model: 'claude-opus-5-5', stop_reason: 'tool_use', content: [], usage: { input_tokens: 1000, output_tokens: 100 } };
+            yield { model: 'claude-opus-5-5', stop_reason: 'end_turn', content: [{ type: 'text', text: `Listo:\n${parteJson}` }], usage: { input_tokens: 2000, output_tokens: 400, cache_read_input_tokens: 1000 } };
+          })();
+        },
+      },
+    },
+  };
+  try {
+    const r = await writeParte({ anthropic, mcp: client, today: '2026-11-11', decisions: [{ dia: '2026-11-10', titulo: 'Ir a Kennedy', estado: 'descartada', nota: 'lejos' }] });
+    assert.equal(r.parte.propuestas.length, 2);
+    assert.equal(r.parte.propuestas[1].oficio, 'equipo');
+    assert.deepEqual(r.tools, ['encuestas_pendientes']);
+    assert.deepEqual(r.usage, { input_tokens: 3000, output_tokens: 500, cache_read_input_tokens: 1000, cache_creation_input_tokens: 0 });
+    assert.equal(r.cost, 0.0222);
+    assert.equal(seen.output_config.effort, 'high');
+    assert.match(seen.messages[0].content, /2026-11-11/);
+    assert.match(seen.messages[0].content, /descartada: Ir a Kennedy \(nota del dueño: lejos\)/);
+    assert.match(seen.system[0].text, /Eres Celestra/);
+  } finally {
+    await close();
+  }
 });

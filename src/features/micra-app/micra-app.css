@@ -1647,6 +1647,28 @@
 .mapp-jefe-a { margin: 0; white-space: pre-wrap; line-height: 1.45; }
 .mapp-jefe-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
 .mapp-jefe-form .mapp-btn { min-height: 44px; }
+/* Celestra (11 nov 2026): la estrella térmica, el parte del día y sus 3 propuestas */
+.mapp-celestra-head { display: flex; align-items: center; gap: 12px; }
+.mapp-celestra-head p { margin: 0; }
+.mapp-celestra-name { font-weight: 900; font-size: 1.25rem; letter-spacing: -.01em; }
+.mapp-celestra-star { flex: none; border-radius: 50%; box-shadow: 0 8px 22px -10px rgba(242, 84, 45, .8); }
+@media (prefers-reduced-motion: no-preference) { .mapp-celestra-star { animation: mapp-celestra-glow 4s ease-in-out infinite; } }
+@keyframes mapp-celestra-glow { 50% { box-shadow: 0 8px 28px -6px rgba(255, 194, 60, .85); } }
+.mapp-celestra-parte { display: grid; gap: 8px; }
+.mapp-celestra-resumen { margin: 0; line-height: 1.45; }
+.mapp-celestra-props { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: celestra; }
+.mapp-celestra-prop { counter-increment: celestra; display: grid; gap: 4px; padding: 12px 12px 12px 44px; position: relative; border-radius: 14px; border: 1px solid var(--m-line, rgba(0, 0, 0, .1)); }
+.mapp-celestra-prop::before { content: counter(celestra); position: absolute; left: 12px; top: 12px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 .8rem/1 'JetBrains Mono', monospace; color: #fff; background: var(--t-cta, #DE1B1B); }
+.mapp-celestra-prop p { margin: 0; }
+.mapp-celestra-prop.is-descartada { opacity: .6; }
+.mapp-celestra-prop.is-descartada::before, .mapp-celestra-prop.is-hecha::before { background: var(--t-1, #22125A); }
+.mapp-celestra-oficio { font: 600 .72rem/1.2 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.mapp-celestra-titulo { font-weight: 800; }
+.mapp-celestra-why { line-height: 1.4; }
+.mapp-celestra-accion { font-weight: 600; }
+.mapp-celestra-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 4px; }
+.mapp-celestra-acts .mapp-btn.is-ghost { margin-top: 0; }
+.mapp-celestra-acts .mapp-field { flex: 1 1 100%; }
 /* El menú del café (7 nov 2026): sale de la izquierda al tocar el logo de arriba */
 .mapp-drawerwrap { position: fixed; inset: 0; z-index: 70; display: flex; }
 .mapp-drawer-scrim { position: absolute; inset: 0; border: 0; background: rgba(13, 8, 32, .5); cursor: pointer; }

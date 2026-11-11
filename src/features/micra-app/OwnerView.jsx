@@ -19,7 +19,7 @@ const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
 const ChallengePanel = lazy(() => import('./ChallengePanel.jsx'));
 const FincasPanel = lazy(() => import('./FincasPanel.jsx'));
 // El agente del equipo (API de Claude + MCP de Micra), aparte: solo lo ve el owner
-const JefeDeTurno = lazy(() => import('./JefeDeTurno.jsx'));
+const Celestra = lazy(() => import('./Celestra.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle) y la activación automática: nadie aprueba a mano (activation.js y
@@ -135,7 +135,7 @@ export default function OwnerView({ onActAs, go }) {
 
       <Suspense fallback={null}><StudyGoal go={go} /></Suspense>
 
-      <Suspense fallback={null}><JefeDeTurno /></Suspense>
+      <Suspense fallback={null}><Celestra /></Suspense>
 
       {(() => {
         const tips = growthTips({ sum, tot, week, posts, challenge: reto, clients: data.clients });

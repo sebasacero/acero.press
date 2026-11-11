@@ -428,11 +428,14 @@ where created_at > now() - interval '7 days' group by status;
 
 ---
 
-## 11. Jefe de turno: el agente del equipo (API de Claude + MCP)
+## 11. Celestra: la inteligencia de Micra (API de Claude + MCP)
 
-En Vercel no hay nada nuevo: `api/micra-agent.js` usa `ANTHROPIC_API_KEY`,
+(Antes «Jefe de turno».) En Vercel no hay nada nuevo: `api/micra-agent.js` usa `ANTHROPIC_API_KEY`,
 `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`, las mismas del agente de
-crecimiento. Solo responde al owner.
+crecimiento. Solo responde al owner. El parte del día, lo que el dueño decide y
+el tope de US$50 al mes viven en `supabase/migrations/20261111200000_celestra.sql`;
+sin aplicarla Celestra responde, pero el parte queda solo en el celular y el tope
+no se cuenta.
 
 Para correr el servidor MCP o el agente en tu computador (`npm run mcp`,
 `npm run agente -- "pregunta"`, o Claude Code con `.mcp.json`), opcionales:
@@ -440,7 +443,7 @@ Para correr el servidor MCP o el agente en tu computador (`npm run mcp`,
 | Variable | Para qué |
 |---|---|
 | `MICRA_TOKEN` | el `access_token` de tu sesión de owner; sin ella se usan los datos de demostración |
-| `MICRA_MCP_DATA` | otro JSON con las cuatro respuestas, en vez de `mcp/micra/demo.json` |
+| `MICRA_MCP_DATA` | otro JSON con las mismas respuestas (`piloto`, `liveMap`, `ownerDay`, `pulse`, `holdRatings`, `holdTimes`, `fincas`), en vez de `mcp/micra/demo.json` |
 | `MICRA_API_BASE` | dónde está la API de Acero; por defecto `https://www.aceropress.com` |
 
 `MICRA_TOKEN` vence en una hora y es tu sesión: no la pegues en chats ni la
