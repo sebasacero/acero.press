@@ -12,6 +12,7 @@ const LivePanel = lazy(() => import('./LiveMap.jsx'));
 // Lo que los baristas mandaron para Hoy y espera revisión
 const PostReview = lazy(() => import('./PostReview.jsx'));
 const BadgeReview = lazy(() => import('./BadgeReview.jsx'));
+const StudyGoal = lazy(() => import('./StudyGoal.jsx'));
 // Los anuncios «Patrocinado»: cargarlos, pausarlos y sus cifras
 const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
 // Competencia: abrir el reto de la semana y ver cómo va
@@ -131,6 +132,8 @@ export default function OwnerView({ onActAs, go }) {
           </ul>
         </section>
       )}
+
+      <Suspense fallback={null}><StudyGoal go={go} /></Suspense>
 
       <Suspense fallback={null}><JefeDeTurno /></Suspense>
 

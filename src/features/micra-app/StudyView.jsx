@@ -1,7 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../shared/lib/supabaseClient.js';
-import { apiUrl } from '../../shared/lib/apiBase.js';
 import { biApi } from '../admin/micra/tinteroApi.js';
 import { photoPath } from '../admin/micra/tinteroForm.js';
 import { studyRows, studyCounts, whereLine, gpsPatch, PENDING_LABEL, nearRows, distLabel, filterRows, filterCounts, STUDY_FILTERS } from './study.js';
@@ -14,6 +13,8 @@ import { newRef } from './micraApp.js';
 import { EMPTY_FICHA, quickBody, enqueue, isOffline } from './fichaFlow.js';
 import { SPOT_KINDS, readSightingQueue, queueSighting, unqueueSighting, sightingFrom, sightingCounts } from './avistar.js';
 import { Cargando } from './Animado.jsx';
+import { loadStudy } from './studyData.js';
+import StudyGoal from './StudyGoal.jsx';
 
 // Estudio de calle en la app (modo equipo): lo mismo que «Tintero» en la cámara
 // de Micra y la pestaña Estudio del panel, para hacerlo parado en la calle.
@@ -29,14 +30,6 @@ const SurveyWizard = lazy(() => import('./SurveyWizard.jsx'));
 const StudyHeatMap = lazy(() => import('./StudyHeatMap.jsx'));
 const BUCKET = 'estudio';
 const shortDate = (iso) => new Date(iso).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' });
-
-async function loadStudy() {
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(apiUrl('/api/v1/bi/piloto?days=90'), { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.detail || 'La API de Acero no respondió.');
-  return data;
-}
 
 // Bucket privado: se guarda la URL «pública» como referencia y se pide una firmada para verla
 const signed = new Map();
@@ -293,6 +286,8 @@ export default function StudyView({ go, focus = null }) {
         </dl>
         <p className="mapp-coffeehead-fine">{n.total - n.done} fichas con algo pendiente · {n.foto} con foto · {tinto.week} avistamientos en 7 días{tinto.pending ? ` · ${tinto.pending} en el celular` : ''}</p>
       </section>
+
+      <StudyGoal data={data} />
 
       <SpotButton onDone={spotted} />
 
