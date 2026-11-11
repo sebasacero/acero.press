@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { initials, menuOf, windowLabel, baristaPath, cupsLabel, status as baristaStatus } from './micraApp.js';
 import MiniQr, { useQr } from './MiniQr.jsx';
 import { streakLabel, lessonPath, LEVELS } from './motivation.js';
@@ -23,6 +23,7 @@ import {
 } from './icons.jsx';
 import { IconBean } from './icons.jsx';
 import { readPreparaCon } from './origen.js';
+const StudyGoal = lazy(() => import('./StudyGoal.jsx'));
 
 // «Mi perfil» y «Cerrar sesión» de Micra, para el barista, el cliente (sin
 // cuenta: lo que guarda el celular) y el equipo. Como el perfil de las apps de
@@ -678,6 +679,7 @@ export function OwnerProfile({ go, onSignedOut }) {
   return (
     <div className="mapp-owner mapp-profile" data-testid="owner-profile">
       <Hello av={initials(user?.email?.split('@')[0] ?? 'Equipo')} name="Equipo" sub={account} subTestid="owner-account" />
+      <Suspense fallback={null}><StudyGoal go={go} compact /></Suspense>
 
       <Group title="El equipo">
         <Tile icon={IconToday} label="Hoy" onClick={() => go('/micra/equipo')} />

@@ -246,3 +246,24 @@ test('el dueño en modo barista tampoco ve la ficha ni la encuesta en la cámara
   await expect(page.locator('.mst-tintero')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
+
+test('equipo: «Tu trabajo» mide el estudio contra la propuesta en Estudio, Hoy y Mi perfil', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/estudio', { waitUntil: 'load' });
+  const work = page.getByTestId('study-work');
+  await expect(work).toContainText(/Propuesta de valor: \d de 7 cosas listas/);
+  await expect(work.getByTestId('study-work-kpis')).toContainText('/20');
+  await expect(work.getByTestId('study-work-pace')).toContainText('necesitas');
+  await expect(work.getByTestId('study-work-needs').getByRole('progressbar')).toHaveCount(4);
+  await expect(work.getByTestId('study-work-ready').getByRole('listitem')).toHaveCount(7);
+  // En Equipo › Hoy, con el botón al estudio
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await expect(page.getByTestId('study-work')).toBeVisible();
+  await page.getByTestId('study-work-go').click();
+  await expect(page).toHaveURL(/\/micra\/estudio$/);
+  // En Mi perfil, corto
+  await page.goto('/micra/equipo/perfil', { waitUntil: 'load' });
+  await expect(page.getByTestId('study-work-compact')).toContainText(/de 20 encuestas/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
