@@ -491,6 +491,8 @@ test('barista: aprende en un camino de lecciones; lo visto queda marcado y Hoy l
   await page.addInitScript(() => { localStorage.removeItem('acero.escuela.vistas'); });
   await page.goto('/micra/barista/aprende', { waitUntil: 'load' });
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu camino a');
+  // Abre en el termo, la primera insignia; la AeroPress está al lado
+  await page.getByRole('tablist', { name: 'Escuelas' }).getByRole('tab', { name: /AeroPress/ }).click();
   await expect(page.getByTestId('level')).toContainText('0 de 6 lecciones');
   await page.getByRole('button', { name: 'Empezar' }).click();
   const lesson = page.getByRole('dialog');

@@ -840,6 +840,11 @@
 .mapp-path li.is-final { flex-direction: column; text-align: center; transform: translate(-50%, -28px); }
 .mapp-path li.is-final .mapp-stop-label { text-align: center; width: 180px; }
 .mapp-final .mapp-btn { margin-top: 10px; }
+/* La insignia del termo: grabar, ver y mandar el video */
+.mapp-final.is-badge .mapp-lesson-video { width: 100%; max-height: 340px; border-radius: 14px; margin-top: 10px; background: #000; }
+.mapp-final.is-badge label.mapp-btn { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mapp-badge-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.mapp-badge-hint { color: var(--m-soft); font-size: .9rem; }
 
 /* Una lección abierta */
 .mapp-lesson { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--m-bg); color: var(--m-fg); animation: mapp-in .25s both; }
@@ -1356,6 +1361,7 @@
 .mapp-review-copy b { display: block; }
 .mapp-review-copy small { color: var(--m-soft); font-size: .78rem; }
 .mapp-review-copy p { margin: 6px 0 8px; }
+.mapp-review-note { display: block; width: 100%; min-height: 44px; margin: 8px 0; padding: 8px 12px; border: 1px solid var(--m-line, #e3e3e3); border-radius: 12px; font: inherit; font-size: .9rem; background: #fff; color: inherit; }
 /* Lo de los baristas va vertical, como en Instagram (4:5) */
 .mapp-ig.is-publicaciones .mapp-ig-photo img, .mapp-ig.is-publicaciones .mapp-ig-photo video { aspect-ratio: 4 / 5; }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { lessonsFor } from '../school/lessons.js';
 import { readSeen, writeSeen } from '../school/progress.js';
 import { lessonHash } from '../school/school.js';
@@ -8,7 +8,7 @@ import * as api from './api.js';
 import Figure from './Elenco.jsx';
 import { IconCheck } from './icons.jsx';
 import LessonVideo from '../school/LessonVideo.jsx';
-import { schoolOf, schoolLessons, seenFor, markSchool, gearShelf, readSchools, writeSchools } from './escuelas.js';
+import { schoolOf, schoolLessons, seenFor, markSchool, gearShelf, gearLabel, badgeStep, badgeVideoPath, BADGE_VIDEO_MAX, readSchools, writeSchools } from './escuelas.js';
 
 /** Los íconos de cada escuela, a trazo: se encienden en térmico al desbloquearse. */
 function GearIcon({ id }) {
@@ -27,7 +27,7 @@ function GearShelf({ shelf, current, onPick }) {
         <button key={g.id} type="button" role="tab" aria-selected={current === g.id} className={`mapp-gear ${g.unlocked ? 'is-unlocked' : ''} ${current === g.id ? 'on' : ''}`} onClick={() => onPick(g.id)} data-testid={`school-${g.id}`}>
           <span className="mapp-gear-ico"><GearIcon id={g.id} />{g.unlocked ? <i className="mapp-gear-ok" aria-hidden="true">✓</i> : !g.done && <i className="mapp-gear-lock" aria-hidden="true">🔒</i>}</span>
           <b>{g.name}</b>
-          <small>{g.unlocked ? 'Desbloqueada' : `${g.done}/${g.total}`}</small>
+          <small>{gearLabel(g)}</small>
         </button>
       ))}
     </div>
@@ -107,7 +107,92 @@ function LessonSheet({ lesson, n, seen, aero = true, school = 'aeropress', onDon
   );
 }
 
-export default function Aprende({ go }) {
+const STOP_LABEL = {
+  lessons: 'Al terminar las lecciones',
+  record: 'Grábate sirviendo un tinto',
+  retry: 'Grábalo otra vez',
+  pending: 'El equipo lo está viendo',
+  done: '¡Verificada!',
+};
+
+/**
+ * La insignia del termo: el barista se graba sirviendo un tinto y el video va a su carpeta
+ * (bucket privado) para que el equipo lo verifique en Equipo › Hoy.
+ */
+function BadgeVideo({ step, note, selfId, asId, missing, onSent, onNext }) {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  const pickFile = (e) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    setError(null);
+    if (!f) return;
+    if (!String(f.type).startsWith('video/')) { setError('Tiene que ser un video.'); return; }
+    if (f.size > BADGE_VIDEO_MAX) { setError('El video pesa más de 25 MB. Grábalo más corto (unos 30 segundos bastan).'); return; }
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  };
+  const send = async () => {
+    const type = file.type || 'video/mp4';
+    const path = badgeVideoPath(selfId, type);
+    if (!path) { setError('Ese tipo de video no se puede subir. Prueba con la cámara del celular.'); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      await api.requestBadge({ badge: 'termo', path, blob: file, type, asId });
+      setFile(null);
+      setPreview(null);
+      onSent();
+    } catch (e) {
+      setError(e.missing ? 'La verificación abre muy pronto. Guarda tu video y vuelve a intentarlo.' : e.message);
+    }
+    setBusy(false);
+  };
+
+  if (step === 'done') {
+    return (
+      <section className="mapp-glass mapp-final is-badge" data-testid="badge-video">
+        <p className="mapp-cota">Insignia del termo · verificada</p>
+        <p>El equipo vio tu video. Ya tienes tu primera insignia: <b>Tinto de termo</b>.</p>
+        <button type="button" className="mapp-btn is-cta" onClick={onNext}>Seguir con AeroPress</button>
+      </section>
+    );
+  }
+  if (step === 'pending') {
+    return (
+      <section className="mapp-glass mapp-final is-badge" data-testid="badge-video">
+        <p className="mapp-cota">Insignia del termo · en revisión</p>
+        <p>Tu video está con el equipo. Aquí mismo verás cuando lo verifiquen.</p>
+      </section>
+    );
+  }
+  return (
+    <section className="mapp-glass mapp-final is-badge" data-testid="badge-video">
+      <p className="mapp-cota">Tu primera insignia · el termo</p>
+      {step === 'retry' && <p className="mapp-error" role="status">El equipo no pudo verificar el anterior{note ? `: ${note}` : '.'} Grábalo otra vez.</p>}
+      <p>Grábate sirviendo un tinto del termo, como en las lecciones: el vaso, el chorro y la entrega. Unos 30 segundos bastan. El equipo lo ve y verifica tu insignia.</p>
+      {missing && <p className="mapp-badge-hint">La verificación abre muy pronto.</p>}
+      {preview && <video className="mapp-lesson-video" src={preview} controls playsInline data-testid="badge-preview" />}
+      {error && <p className="mapp-error" role="alert">{error}</p>}
+      {file ? (
+        <div className="mapp-badge-actions">
+          <button type="button" className="mapp-btn is-cta" onClick={send} disabled={busy} data-testid="badge-send">{busy ? 'Subiendo…' : 'Mandar al equipo'}</button>
+          <button type="button" className="mapp-btn" onClick={() => { setFile(null); setPreview(null); }} disabled={busy}>Grabar otro</button>
+        </div>
+      ) : (
+        <label className="mapp-btn is-cta">
+          Grabar mi video
+          <input type="file" accept="video/*" capture="environment" hidden onChange={pickFile} data-testid="badge-file" />
+        </label>
+      )}
+    </section>
+  );
+}
+
+export default function Aprende({ go, selfId = null, asId = null }) {
   // El video del nivel se graba con la cámara del celular y se manda al equipo por WhatsApp
   // (la cámara con filtros de Micra es solo del equipo)
   const [team, setTeam] = useState('573152125327');
@@ -115,15 +200,25 @@ export default function Aprende({ go }) {
   const aeroLessons = lessonsFor('es');
   const [aeroSeen, setAeroSeen] = useState(readSeen);
   const [stored, setStored] = useState(readSchools);
-  const [schoolId, setSchoolId] = useState('aeropress');
+  // La primera insignia es la del termo: Aprende abre ahí hasta que el equipo la verifique
+  const [schoolId, setSchoolId] = useState('termo');
+  const [badges, setBadges] = useState({});
+  const [badgesMissing, setBadgesMissing] = useState(false);
+  const picked = useRef(false);
+  const loadBadges = useCallback(() => api.badgesMine(asId).then((b) => {
+    setBadges(b ?? {});
+    if (b?.termo?.status === 'approved' && !picked.current) setSchoolId('aeropress');
+  }).catch((e) => { if (e.missing) setBadgesMissing(true); }), [asId]);
+  useEffect(() => { if (selfId || asId) loadBadges(); }, [loadBadges, selfId, asId]);
   const [open, setOpen] = useState(null);
   const school = schoolOf(schoolId);
   const aero = school.id === 'aeropress';
   const lessons = schoolLessons(school, aeroLessons);
   const seen = seenFor(school.id, aeroSeen, stored);
   const path = lessonPath(lessons, seen);
-  const shelf = gearShelf(aeroLessons, aeroSeen, stored);
+  const shelf = gearShelf(aeroLessons, aeroSeen, stored, badges);
   const mine = shelf.find((g) => g.id === school.id);
+  const step = mine?.video ? badgeStep(mine) : null;
   const markSeen = (key) => {
     if (aero) {
       const next = aeroSeen.includes(key) ? aeroSeen : [...aeroSeen, key];
@@ -136,7 +231,7 @@ export default function Aprende({ go }) {
     }
     setOpen(null);
   };
-  const pick = (id) => { setSchoolId(id); setOpen(null); };
+  const pick = (id) => { picked.current = true; setSchoolId(id); setOpen(null); };
   const lvl = LEVELS[0];
   const nextLvl = LEVELS[1];
 
@@ -160,9 +255,9 @@ export default function Aprende({ go }) {
         <section className="mapp-glass mapp-level is-gear" aria-label={`Escuela ${school.name}`} data-testid="school-progress">
           <span className={`mapp-gear-ico is-big ${mine.unlocked ? 'is-unlocked' : ''}`}><GearIcon id={school.id} /></span>
           <div>
-            <b>{mine.unlocked ? `${school.name} desbloqueada` : `Desbloquea ${school.name}`}</b>
+            <b>{mine.video ? (mine.unlocked ? `${school.name} verificada` : `Gana la insignia del ${school.name.toLowerCase()}`) : mine.unlocked ? `${school.name} desbloqueada` : `Desbloquea ${school.name}`}</b>
             <div className="mapp-level-bar" role="progressbar" aria-valuemin={0} aria-valuemax={path.total} aria-valuenow={path.done} aria-label="Lecciones vistas"><i style={{ width: `${path.pct * 100}%` }} /></div>
-            <small>{path.done} de {path.total} lecciones</small>
+            <small>{mine.video ? `Tu primer requisito · ${path.done} de ${path.total} lecciones y tu video sirviendo un tinto` : `${path.done} de ${path.total} lecciones`}</small>
           </div>
         </section>
       )}
@@ -184,11 +279,13 @@ export default function Aprende({ go }) {
               )}
             </li>
           ))}
-          <li className={`is-final ${path.ready ? 'is-now' : 'is-next'}`} style={{ '--x': '50%', top: ROW * path.steps.length + 40 }}>
+          <li className={`is-final ${(step ? step !== 'lessons' : path.ready) ? 'is-now' : 'is-next'}`} style={{ '--x': '50%', top: ROW * path.steps.length + 40 }}>
             <span className="mapp-stop" aria-hidden="true">🏅</span>
             {aero
               ? <span className="mapp-stop-label"><b>Tu video → {nextLvl.id}</b><small>{path.ready ? 'Grábalo y el equipo lo revisa' : 'Al terminar las lecciones'}</small></span>
-              : <span className="mapp-stop-label"><b>Ícono {school.name}</b><small>{path.ready ? '¡Desbloqueado!' : 'Al terminar las lecciones'}</small></span>}
+              : step
+                ? <span className="mapp-stop-label"><b>Tu video sirviendo un tinto</b><small>{STOP_LABEL[step]}</small></span>
+                : <span className="mapp-stop-label"><b>Ícono {school.name}</b><small>{path.ready ? '¡Desbloqueado!' : 'Al terminar las lecciones'}</small></span>}
           </li>
         </ol>
       </div>
@@ -199,6 +296,10 @@ export default function Aprende({ go }) {
           <p>Graba con tu celular un video corto preparando una taza con la receta y mándaselo al equipo de Micra por WhatsApp. Lo revisamos para subirte a <b>{nextLvl.name}</b>.</p>
           <a className="mapp-btn is-cta" href={`https://wa.me/${team}?text=${encodeURIComponent(`Hola, equipo de Micra. Les mando mi video para subir a ${nextLvl.name}.`)}`} target="_blank" rel="noopener noreferrer" data-testid="level-video-send">Mandar mi video por WhatsApp</a>
         </section>
+      )}
+
+      {step && step !== 'lessons' && (
+        <BadgeVideo step={step} note={badges?.termo?.note} selfId={asId || selfId} asId={asId} missing={badgesMissing} onSent={loadBadges} onNext={() => pick('aeropress')} />
       )}
 
       {open != null && (

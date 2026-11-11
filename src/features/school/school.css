@@ -407,3 +407,4 @@
 .ss-grid .sl-text { grid-area: auto; }
 .ss { max-width: 680px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .ss { width: 100%; }
+.ss-note { max-width: 62ch; margin: 0 0 14px; color: var(--muted, #5a5a5a); font-size: .95rem; }

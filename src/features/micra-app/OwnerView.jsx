@@ -11,6 +11,7 @@ import { teamSummary, findBaristas, missingStep, BARISTA_STEPS, CLIENT_RULES, LE
 const LivePanel = lazy(() => import('./LiveMap.jsx'));
 // Lo que los baristas mandaron para Hoy y espera revisión
 const PostReview = lazy(() => import('./PostReview.jsx'));
+const BadgeReview = lazy(() => import('./BadgeReview.jsx'));
 // Los anuncios «Patrocinado»: cargarlos, pausarlos y sus cifras
 const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
 // Competencia: abrir el reto de la semana y ver cómo va
@@ -153,6 +154,7 @@ export default function OwnerView({ onActAs, go }) {
       })()}
 
       <div id="owner-review"><Suspense fallback={null}><PostReview /></Suspense></div>
+      <div id="owner-badges"><Suspense fallback={null}><BadgeReview /></Suspense></div>
       <div id="owner-challenge"><Suspense fallback={null}><ChallengePanel /></Suspense></div>
       <Suspense fallback={null}><AdsPanel /></Suspense>
       <div id="owner-fincas"><Suspense fallback={null}><FincasPanel /></Suspense></div>

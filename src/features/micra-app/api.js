@@ -170,6 +170,18 @@ export async function postUrls(paths) {
   return Object.fromEntries((data ?? []).filter((x) => x.signedUrl && !x.error).map((x) => [x.path, x.signedUrl]));
 }
 
+// La insignia del termo: el video sirviendo un tinto que verifica el equipo (20261111090000_micra_badges.sql)
+export const badgesMine = (asId) => call('micra_badges_mine', as(asId));
+export const badgesPending = () => call('micra_badges_pending');
+export const badgeReview = (id, approve, note) => call('micra_badge_review', { p_id: id, p_approve: approve, p_note: note || null });
+
+/** Sube el video a la carpeta del barista (bucket privado) y lo deja con el equipo. */
+export async function requestBadge({ badge = 'termo', path, blob, type, asId }) {
+  const { error } = await supabase.storage.from(POSTS_BUCKET).upload(path, blob, { contentType: type, upsert: false });
+  if (error) throw Object.assign(new Error(`No se pudo subir el video: ${error.message}`), { code: error.statusCode });
+  return call('micra_badge_request', { p_badge: badge, p_path: path, ...as(asId) });
+}
+
 // Avisos por WhatsApp cuando le apartan (20261031210000_micra_whatsapp_alerts.sql)
 export const baristaAlerts = (on, asId) => call('micra_barista_alerts', { p_on: on ?? null, ...as(asId) });
 export const baristaSeen = () => call('micra_barista_seen');

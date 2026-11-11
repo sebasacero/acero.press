@@ -335,6 +335,38 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, { lat: r.lat, lng: r.lng, at: r.at });
     }
 
+    // La insignia del termo: video sirviendo un tinto que verifica el equipo (20261111090000_micra_badges.sql)
+    const bfn = p.match(/\/rpc\/(micra_badge_request|micra_badges_mine|micra_badges_pending|micra_badge_review)$/)?.[1];
+    if (bfn) {
+      const M = micra;
+      M.badgeRequests ??= [];
+      const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
+      if (M.badgesMissing) return fail(404, 'PGRST202', `Could not find the function public.${bfn} in the schema cache`);
+      const me = data?.p_tintero_id ? M.baristas.find((b) => b.id === data.p_tintero_id) : M.baristas.find((b) => b.mine);
+      if (bfn === 'micra_badge_request') {
+        if (!me) return fail(403, '42501', 'Enlaza tu cuenta de barista primero.');
+        if (!new RegExp(`^${me.id}/[A-Za-z0-9_-]{6,64}\\.(mp4|mov|webm)$`).test(String(data.p_path))) return fail(403, '42501', 'Ese video no es tuyo.');
+        if (M.badgeRequests.some((x) => x.tintero_id === me.id && ['pending', 'approved'].includes(x.status))) return fail(409, '23505', 'Tu video ya está con el equipo o la insignia ya es tuya.');
+        const r = { id: `badge-${M.badgeRequests.length + 1}`, tintero_id: me.id, badge: data.p_badge, media_path: data.p_path, status: 'pending', note: null, created_at: new Date().toISOString() };
+        M.badgeRequests.push(r);
+        return json(200, { id: r.id, badge: r.badge, status: r.status, created_at: r.created_at });
+      }
+      if (bfn === 'micra_badges_mine') {
+        if (!me) return fail(403, '42501', 'Enlaza tu cuenta de barista primero.');
+        const mine = M.badgeRequests.filter((x) => x.tintero_id === me.id);
+        const last = mine.find((x) => x.status === 'approved') ?? mine[mine.length - 1];
+        return json(200, last ? { [last.badge]: { status: last.status, note: last.note, at: last.created_at } } : {});
+      }
+      if (!M.admin) return fail(403, '42501', 'Solo el equipo verifica las insignias.');
+      if (bfn === 'micra_badges_pending') {
+        return json(200, M.badgeRequests.filter((x) => x.status === 'pending').map((x) => ({ ...x, name: M.baristas.find((b) => b.id === x.tintero_id)?.name ?? '' })));
+      }
+      const r = M.badgeRequests.find((x) => x.id === data.p_id && x.status === 'pending');
+      if (!r) return fail(404, 'P0002', 'Ese video ya se revisó o no existe.');
+      Object.assign(r, { status: data.p_approve ? 'approved' : 'rejected', note: data.p_note ?? null });
+      return json(200, { id: r.id, status: r.status });
+    }
+
     // Publicaciones de los baristas en Hoy (20261031160000_micra_barista_posts.sql), en memoria
     const pfn = p.match(/\/rpc\/(micra_post_add|micra_posts_feed|micra_posts_mine|micra_posts_pending|micra_post_review|micra_post_remove|micra_post_place|micra_post_points)$/)?.[1];
     if (pfn) {
