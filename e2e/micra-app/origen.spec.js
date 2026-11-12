@@ -44,6 +44,17 @@ test('cliente: Marcas y fincas lista lo de app_config, filtra y abre el perfil d
   expect(errors).toEqual([]);
 });
 
+test('cliente: la pestaña Café lista las marcas y fincas de app_config y abre una', async ({ browser }) => {
+  const { page, errors } = await open(browser);
+  await page.goto('/micra/cafe', { waitUntil: 'load' });
+  const strip = page.getByTestId('cafe-origen-strip');
+  await expect(strip.locator('.mapp-orow')).toHaveCount(Math.min(4, DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length));
+  await expect(strip.getByTestId('cafe-origen-empty')).toHaveCount(0);
+  await strip.locator('.mapp-orow').first().click();
+  await expect(page).toHaveURL(/\/micra\/origen\/[a-z0-9-]+$/);
+  expect(errors).toEqual([]);
+});
+
 test('cliente: sin app_config no hay marcas, solo el aviso y el camino del caficultor', async ({ browser }) => {
   const { page, errors } = await open(browser, { origen: null });
   await page.goto('/micra/origen', { waitUntil: 'load' });

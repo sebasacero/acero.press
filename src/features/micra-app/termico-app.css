@@ -902,3 +902,9 @@
 .mapp-plata-more summary small{font:500 .82rem 'Archivo',sans-serif;color:var(--t-soft,#6E6787)}
 .mapp-plata-sec{margin-top:16px}
 .mapp-plata-share{width:100%}
+
+/* Marcas y fincas dentro de Café (12 nov 2026) */
+.mapp-ostrip{margin:0 0 12px}
+.mapp-ostrip-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.mapp-ostrip-head .mapp-kicker{margin:0}
+.mapp-ostrip .mapp-origen-finca{margin-top:8px}
