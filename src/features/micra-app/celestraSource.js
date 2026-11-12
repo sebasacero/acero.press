@@ -57,9 +57,16 @@ function readCache(storage) {
   try { const v = JSON.parse(storage?.getItem(LECTURAS_KEY) ?? 'null'); return v && typeof v === 'object' && v.l ? v : null; } catch { return null; }
 }
 
+// Con mala señal una lectura puede colgarse mucho más de lo que aguanta alguien en la calle:
+// pasado este tiempo, lo que no llegó se da por no leído y sale la última lectura guardada
+export const LECTURA_MAX_MS = 5000;
+const conTope = (p, ms = LECTURA_MAX_MS) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('Sin respuesta a tiempo')), ms))]);
+
 /** Lo que el algoritmo necesita hoy: { l, redes, tienda, cached }. Sin señal, la última lectura guardada. */
 export async function lecturasDeHoy(storage) {
-  const [l, redes, tienda] = await Promise.all([leer(source), redes30().catch(() => null), tienda30().catch(() => null)]);
+  const [l, redes, tienda] = await Promise.all([
+    conTope(leer(source)).catch(() => null), conTope(redes30()).catch(() => null), conTope(tienda30()).catch(() => null),
+  ]);
   if (hayLectura(l)) {
     const fresh = { l, redes, tienda };
     try { storage?.setItem(LECTURAS_KEY, JSON.stringify(fresh)); } catch { /* sin espacio: sigue sin guardar */ }

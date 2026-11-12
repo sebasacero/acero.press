@@ -28,19 +28,25 @@ export function Galaxia({ size = 58, fast = false }) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
+      ctx.clearRect(0, 0, size, size);
+      // El aura del espacio: índigo que se desvanece hacia el borde, sin corte
       const sky = ctx.createRadialGradient(R, R, 0, R, R, R);
-      sky.addColorStop(0, '#2A1670');
-      sky.addColorStop(0.6, '#160C3F');
-      sky.addColorStop(1, '#0D0820');
+      sky.addColorStop(0, 'rgba(42,22,112,1)');
+      sky.addColorStop(0.45, 'rgba(26,14,70,.95)');
+      sky.addColorStop(0.72, 'rgba(34,18,90,.55)');
+      sky.addColorStop(0.9, 'rgba(90,30,158,.18)');
+      sky.addColorStop(1, 'rgba(90,30,158,0)');
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, size, size);
       ctx.globalCompositeOperation = 'lighter';
       for (const e of es) {
         const p = punto(e, rot);
-        ctx.globalAlpha = e.alpha;
+        // Las estrellas del borde se apagan: la galaxia se disuelve en el aura
+        const d = Math.hypot(p.x, p.y);
+        ctx.globalAlpha = e.alpha * (d > 0.62 ? Math.max(0, 1 - (d - 0.62) / 0.3) : 1);
         ctx.fillStyle = TONOS[e.tono];
         ctx.beginPath();
-        ctx.arc(R + p.x * R * 0.96, R + p.y * R * 0.96, e.size * k, 0, Math.PI * 2);
+        ctx.arc(R + p.x * R * 0.9, R + p.y * R * 0.9, e.size * k, 0, Math.PI * 2);
         ctx.fill();
       }
       // El núcleo: blanco caliente que se apaga en rosa
@@ -92,7 +98,7 @@ export default function CelestraOrb() {
       )}
       <button ref={orb} type="button" className={`mapp-orb ${open ? 'is-open' : ''}`} onClick={toggle}
         aria-label={open ? 'Cerrar Celestra' : 'Abrir Celestra'} aria-expanded={open} data-testid="celestra-orb">
-        <Galaxia size={open ? 104 : 58} fast={open} />
+        <Galaxia size={open ? 132 : 72} fast={open} />
       </button>
     </>
   );

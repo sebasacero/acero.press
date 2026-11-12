@@ -207,7 +207,8 @@ test('sin señal: el parte sale de la última lectura, queda en el celular y sub
   const cel = page.getByTestId('owner-agent');
   await expect(cel.getByTestId('celestra-gasto')).toContainText('solo en este celular');
   await cel.getByTestId('celestra-write').click();
-  await expect(cel.getByTestId('celestra-prop')).toHaveCount(3);
+  // Sin señal las lecturas se rinden a los 5 s y sale la guardada
+  await expect(cel.getByTestId('celestra-prop')).toHaveCount(3, { timeout: 15000 });
   await expect(cel.getByTestId('celestra-parte')).toContainText('última lectura guardada');
   await cel.getByTestId('celestra-prop').nth(1).getByRole('button', { name: 'Aprobar' }).click();
   await expect(cel.getByTestId('celestra-prop').nth(1)).toContainText('Aprobada');
