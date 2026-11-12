@@ -939,3 +939,24 @@ button.mapp-hcoffee.mapp-olot{width:100%;height:100%;text-align:left;font:inheri
 .mapp-olot-art{display:grid;place-items:center;width:100%;aspect-ratio:1.6;border-radius:12px;font-size:30px;background:linear-gradient(135deg,#F5F1E8,#EADFCB)}
 .mapp-olot small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mapp-hcoffee-price i{font-style:normal;opacity:.6;font-size:.85em}
+/* Las filas de cafés se desplazan dentro de su caja: sin esto, con seis bolsas la grilla toma el
+   ancho de toda la fila y la página entera se corre hacia el lado (12 nov 2026, en el iPhone) */
+.mapp-cafeshelf,.mapp-oshelves{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+.mapp-cafeshelf>*,.mapp-oshelves>*,.mapp-hcoffees,.mapp-oshelf{min-width:0;max-width:100%}
+.mapp-oshelf.is-sample .mapp-hcoffee{border-style:dashed;box-shadow:none;background:#FCFAF6}
+.mapp-oshelf.is-sample .mapp-orow-txt b{color:var(--m-soft)}
+.mapp-omark.is-sample{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:1.5px dashed rgba(20,16,40,.25);font-size:20px}
+.mapp-osample-tag{font:700 .62rem 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--m-soft);border:1px dashed rgba(20,16,40,.25);border-radius:99px;padding:4px 8px}
+.mapp-fincta{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px 12px;padding:14px}
+.mapp-fincta-icon{font-size:28px}
+.mapp-fincta-txt{display:grid;gap:2px}
+.mapp-fincta-txt b{font:800 1.05rem/1.2 'Archivo',sans-serif}
+.mapp-fincta-txt small{color:var(--m-soft);font-size:.85rem}
+.mapp-fincta .mapp-btn,.mapp-fincta .mapp-link{grid-column:1/-1}
+.mapp-ofarms{list-style:none;margin:0;padding:2px 2px 8px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(132px,38%);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;min-width:0;max-width:100%}
+.mapp-ofarm{scroll-snap-align:start;width:100%;height:100%;display:flex;flex-direction:column;gap:3px;padding:10px;text-align:left;font:inherit;color:inherit;cursor:pointer;background:#fff;border:1px solid rgba(20,16,40,.08);border-radius:18px;box-shadow:0 6px 18px rgba(20,16,40,.06)}
+.mapp-ofarm b{font:800 .95rem/1.2 'Archivo',sans-serif}
+.mapp-ofarm small{font:500 .68rem/1.3 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-ofarm-art{display:grid;place-items:center;aspect-ratio:1.3;border-radius:12px;font-size:30px;background:linear-gradient(135deg,#EAF6EF,#D4EBDD);margin-bottom:4px}
+.mapp-ofarm.is-sample{border-style:dashed;box-shadow:none;background:#FCFAF6}
+.mapp-oshelf{scroll-margin-top:80px}

@@ -3,7 +3,7 @@ import { supabase } from '../../shared/lib/supabaseClient.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { money, sortBaristas } from './micraApp.js';
-import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText, sellerShelves, lotCard } from './origen.js';
+import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText, sellerShelves, lotCard, regionOf, regionsOf, SHELF_SAMPLES } from './origen.js';
 import { fetchCoffeeVarieties } from '../../shared/lib/catalog.js';
 
 // El café de origen para el cliente (7 nov 2026, pedido del usuario): el directorio de marcas y
@@ -89,28 +89,30 @@ function HouseCoffees({ cards, team }) {
   );
 }
 
-/** Una finca o marca como un restaurante en la lista: su nombre arriba y sus cafés en fila. */
+/** Una finca o marca como un restaurante en la lista: su nombre arriba y sus cafés en fila.
+ *  Las de muestra van punteadas, sin precio, y llevan a crear la finca. */
 function SellerShelf({ s, go }) {
+  const to = s.sample ? '/micra/finca' : `/micra/origen/${s.id}`;
   return (
-    <section className="mapp-oshelf" aria-labelledby={`os-${s.id}`} data-testid={`shelf-${s.id}`}>
-      <button type="button" className="mapp-oshelf-head" onClick={() => go(`/micra/origen/${s.id}`)}>
-        <SellerMark s={s} />
+    <section className={`mapp-oshelf ${s.sample ? 'is-sample' : ''}`} aria-labelledby={`os-${s.id}`} id={`shelf-${s.id}`} data-testid={s.sample ? 'shelf-sample' : `shelf-${s.id}`}>
+      <button type="button" className="mapp-oshelf-head" onClick={() => go(to)}>
+        {s.sample ? <span className="mapp-omark is-sample" aria-hidden="true">{s.kind === 'finca' ? '🌱' : '☕'}</span> : <SellerMark s={s} />}
         <span className="mapp-orow-txt">
           <b id={`os-${s.id}`}>{s.name}{s.verified && <i className="mapp-oseal" aria-label="verificada">✓</i>}</b>
           <small>{[s.kind === 'finca' ? 'Finca' : 'Marca', s.city, s.altitude ? `${s.altitude.toLocaleString('es-CO')} m` : null].filter(Boolean).join(' · ')}</small>
         </span>
-        <span className="mapp-orow-go" aria-hidden="true">›</span>
+        {s.sample ? <span className="mapp-osample-tag">Ejemplo</span> : <span className="mapp-orow-go" aria-hidden="true">›</span>}
       </button>
       <ul className="mapp-hcoffee-row">
         {s.lots.map((l) => {
           const c = lotCard(l);
           return (
             <li key={c.id}>
-              <button type="button" className="mapp-hcoffee mapp-olot" onClick={() => go(`/micra/origen/${s.id}`)} data-testid={`lot-${s.id}-${c.id}`}>
+              <button type="button" className="mapp-hcoffee mapp-olot" onClick={() => go(to)} data-testid={`lot-${s.id}-${c.id}`}>
                 <span className="mapp-olot-art" aria-hidden="true">{s.kind === 'finca' ? '🫘' : '☕'}</span>
                 <b>{c.name}</b>
                 <small>{[c.line, c.notes].filter(Boolean).join(' · ')}</small>
-                {c.price && <span className="mapp-hcoffee-price">{money(c.price)} <i>{c.unit}</i></span>}
+                <span className="mapp-hcoffee-price">{c.price ? money(c.price) : '$ —'} <i>{c.unit === 'kilo' && !c.price ? '250 g' : c.unit}</i></span>
               </button>
             </li>
           );
@@ -120,42 +122,65 @@ function SellerShelf({ s, go }) {
   );
 }
 
-/** La pestaña Café (12 nov 2026, pedido del usuario): primero las bolsas de café y luego cada
- *  finca o marca con sus cafés, una tras otra, como los restaurantes en una app de domicilios. */
+/** La pestaña Café (12 nov 2026, pedido del usuario): las bolsas de café, el botón para crear la
+ *  finca, el carrusel de las fincas principales por región y luego los cafés de cada una, uno tras
+ *  otro como los restaurantes en una app de domicilios. Sin fincas todavía, cuatro de muestra. */
 export function CafeShelf({ go }) {
   const origen = useOrigen();
   const [cards, setCards] = useState(null);
   const [team, setTeam] = useState('573152125327');
-  const [filter, setFilter] = useState('todas');
+  const [region, setRegion] = useState(null);
   useEffect(() => {
     let alive = true;
     fetchCoffeeVarieties().then((list) => alive && setCards(houseCoffeeCards(list))).catch(() => alive && setCards([]));
     api.teamWhatsApp().then((t) => alive && t && setTeam(t)).catch(() => {});
     return () => { alive = false; };
   }, []);
-  const shelves = origen ? sellerShelves(origen, filter) : [];
+  const real = origen?.sellers ?? [];
+  const sample = origen !== null && real.length === 0;
+  const pool = sample ? { sellers: SHELF_SAMPLES } : origen;
+  const regions = regionsOf(pool?.sellers ?? []);
+  const shelves = pool ? sellerShelves(pool, region) : [];
+  const farms = shelves.filter((s) => s.kind === 'finca');
+  const toShelf = (s) => document.getElementById(`shelf-${s.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const ask = `https://wa.me/${team}?text=${encodeURIComponent('Hola, equipo de Micra. Tengo una marca o una finca de café y quiero venderlo con ustedes.')}`;
   return (
     <div className="mapp-cafeshelf" data-testid="cafe-shelf">
       <HouseCoffees cards={cards} team={team} />
+      <section className="mapp-glass mapp-fincta" data-testid="cafe-finca-cta">
+        <span className="mapp-fincta-icon" aria-hidden="true">🌱</span>
+        <span className="mapp-fincta-txt"><b>¿Tienes una finca?</b><small>Ponla en Micra gratis y que los baristas te compren.</small></span>
+        <button type="button" className="mapp-btn is-cta" onClick={() => go('/micra/finca')} data-testid="fincas-start">Crear mi finca</button>
+        <button type="button" className="mapp-link" onClick={() => go('/micra/fincas')} data-testid="to-finca">Así funciona ›</button>
+      </section>
       <section className="mapp-oshelves" aria-labelledby="cafe-origen-h" data-testid="cafe-origen-dir">
-        <header className="mapp-origen-embhead">
-          <p className="mapp-kicker">Quién hace el café que tomas</p>
-          <h2 id="cafe-origen-h" className="mapp-title is-small">Fincas y marcas</h2>
-        </header>
-        <div className="mapp-chips is-scroll mapp-origen-chips" role="tablist" aria-label="Filtrar">
-          {[['todas', 'Todas'], ['fincas', 'Fincas'], ['marcas', 'Marcas']].map(([id, label]) => (
-            <button key={id} type="button" role="tab" aria-selected={filter === id} className={filter === id ? 'on' : ''} onClick={() => setFilter(id)}>{label}</button>
-          ))}
+        <header className="mapp-ostrip-head">
+          <h2 id="cafe-origen-h" className="mapp-title is-small">Fincas por región</h2>
           <button type="button" className="mapp-origen-shop" onClick={() => go('/micra/tienda')} data-testid="to-shop">🛍 Tienda</button>
+        </header>
+        {sample && <p className="mapp-fine" data-testid="origen-empty">Todavía no hay fincas en Micra. Así se verán cuando entren:</p>}
+        <div className="mapp-chips is-scroll mapp-origen-chips" role="tablist" aria-label="Región">
+          {[null, ...regions].map((r) => (
+            <button key={r ?? 'todas'} type="button" role="tab" aria-selected={region === r} className={region === r ? 'on' : ''} onClick={() => setRegion(r)}>{r ?? 'Todas'}</button>
+          ))}
         </div>
         {!origen && <p className="mapp-fine">Cargando…</p>}
-        {shelves.map((s) => <SellerShelf key={s.id} s={s} go={go} />)}
-        {origen && shelves.length === 0 && (
-          <p className="mapp-glass mapp-ogroup mapp-fine" data-testid="origen-empty">Todavía no hay {filter === 'marcas' ? 'marcas con acuerdo' : filter === 'fincas' ? 'fincas verificadas' : 'fincas ni marcas'} en Micra. Las primeras salen aquí cuando firmen.</p>
+        {farms.length > 0 && (
+          <ul className="mapp-ofarms" aria-label="Fincas principales" data-testid="cafe-farms">
+            {farms.map((s) => (
+              <li key={s.id}>
+                <button type="button" className={`mapp-ofarm ${s.sample ? 'is-sample' : ''}`} onClick={() => toShelf(s)}>
+                  <span className="mapp-ofarm-art" aria-hidden="true">{s.sample ? '🌱' : '🫘'}</span>
+                  <b>{s.name}</b>
+                  <small>{[regionOf(s), s.altitude ? `${s.altitude.toLocaleString('es-CO')} m` : null].filter(Boolean).join(' · ')}</small>
+                  <small>{s.lots.length} {s.lots.length === 1 ? 'café' : 'cafés'}{s.verified ? ' · ✓ verificada' : ''}</small>
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
-        <a className="mapp-btn is-ghost" href={ask} target="_blank" rel="noopener noreferrer" data-testid="origen-ask">¿Tienes una finca o una marca? Escríbenos</a>
-        <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/fincas')} data-testid="to-finca">Soy caficultor: quiero vender mi café</button>
+        {shelves.map((s) => <SellerShelf key={s.id} s={s} go={go} />)}
+        <a className="mapp-btn is-ghost" href={ask} target="_blank" rel="noopener noreferrer" data-testid="origen-ask">¿Tienes una marca? Escríbenos</a>
       </section>
     </div>
   );

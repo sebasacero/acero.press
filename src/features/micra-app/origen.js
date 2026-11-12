@@ -244,11 +244,28 @@ export function houseOrderText(card) {
   return `Hola, equipo de ACERO.press. Quiero pedir el café ${card.name} en bolsa de ${card.sizeText}. ¿Me cuentan cómo me llega? (Desde Micra)`;
 }
 
+/** La región de una finca o marca: lo último de «Pitalito, Huila» (el departamento), o la ciudad. */
+export function regionOf(s) {
+  const parts = String(s?.city ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+  return parts.at(-1) ?? null;
+}
+
+/** Las regiones con fincas, de la que más tiene a la que menos (12 nov 2026, pedido del usuario:
+ *  «un carrusel de las fincas principales según la región»). Las marcas no cuentan como región. */
+export function regionsOf(sellers) {
+  const n = new Map();
+  for (const s of sellers) if (s.kind === 'finca' && regionOf(s)) n.set(regionOf(s), (n.get(regionOf(s)) ?? 0) + 1);
+  return [...n].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es')).map(([r]) => r);
+}
+
 /** Café como un listado de restaurantes (12 nov 2026, pedido del usuario): cada finca o marca
- *  con su nombre y debajo sus cafés en fila; primero las fincas. */
-export function sellerShelves(origen, filter = 'todas') {
-  const all = sellersOf(origen, filter);
-  return [...all.filter((s) => s.kind === 'finca'), ...all.filter((s) => s.kind !== 'finca')];
+ *  con su nombre y debajo sus cafés en fila; primero las fincas, las verificadas y con más cafés
+ *  delante. Con una región, solo las fincas de ahí (las marcas no tienen región). */
+export function sellerShelves(origen, region = null) {
+  const all = origen?.sellers ?? [];
+  const rank = (a, b) => (b.verified ? 1 : 0) - (a.verified ? 1 : 0) || b.lots.length - a.lots.length;
+  const fincas = all.filter((s) => s.kind === 'finca' && (!region || regionOf(s) === region)).sort(rank);
+  return region ? fincas : [...fincas, ...all.filter((s) => s.kind !== 'finca')];
 }
 
 /** La tarjeta de un café de una finca o marca: la bolsa más pequeña, o el kilo si no vende bolsas. */
@@ -261,3 +278,14 @@ export function lotCard(lot) {
     notes: lot.notes || null, price, unit: bag ? `${bag.g} g` : 'kilo',
   };
 }
+
+/** Espacios de muestra mientras no hay fincas (12 nov 2026, pedido del usuario: «aunque todavía no
+ *  hay fincas crea 3 o 4 espacios de cómo se vería»). Sin nombres reales: ningún aliado se nombra
+ *  antes del acuerdo. Tienen la forma de una finca de verdad para pasar por el mismo dibujo. */
+const sampleLot = (id, name, process) => ({ id, name, process, notes: 'Tus notas de sabor', bags: [] });
+export const SHELF_SAMPLES = [
+  { id: 'muestra-huila', kind: 'finca', sample: true, name: 'Tu finca aquí', city: 'Huila', altitude: 1700, lots: [sampleLot('a', 'Tu café lavado', 'Lavado'), sampleLot('b', 'Tu café honey', 'Honey')] },
+  { id: 'muestra-narino', kind: 'finca', sample: true, name: 'Tu finca aquí', city: 'Nariño', altitude: 1900, lots: [sampleLot('a', 'Tu café lavado', 'Lavado'), sampleLot('b', 'Tu microlote', 'Natural')] },
+  { id: 'muestra-tolima', kind: 'finca', sample: true, name: 'Tu finca aquí', city: 'Tolima', altitude: 1600, lots: [sampleLot('a', 'Tu café natural', 'Natural')] },
+  { id: 'muestra-marca', kind: 'marca', sample: true, name: 'Tu marca aquí', city: 'Bogotá', lots: [sampleLot('a', 'Tu café de la casa', 'Tostión media'), sampleLot('b', 'Tu espresso', 'Tostión oscura')] },
+];
