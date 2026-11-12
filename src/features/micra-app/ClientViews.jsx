@@ -283,9 +283,9 @@ function Stories({ baristas, go, ads = [], onAd, reto = null }) {
   return (
     <ul className="mapp-hists" aria-label="Historias" data-testid="stories">
       <li>
-        <button type="button" className="mapp-hist is-hoy" onClick={() => go('/micra/hoy')} aria-label="Hoy en el café">
+        <button type="button" className="mapp-hist is-hoy" onClick={() => go('/micra/cafe')} aria-label="Café">
           <span className="mapp-hist-ring"><span className="mapp-hist-av"><IconToday /></span></span>
-          <small>Hoy</small>
+          <small>Café</small>
         </button>
       </li>
       {/* Lo patrocinado después de Hoy, marcado como tal */}

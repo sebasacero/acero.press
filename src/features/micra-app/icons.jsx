@@ -97,6 +97,10 @@ export const IconBag = () => (
 export const IconCompass = () => (
   <svg {...base}><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2 5-5 2 2-5z" /></svg>
 );
+// La montaña de la pestaña Café (12 nov 2026): dos picos con su nieve, dibujo propio
+export const IconMountain = () => (
+  <svg {...base}><path d="M2.5 19.5 9 8l3.6 6.2L15 10.5l6.5 9z" /><path d="m7.1 11.4 1.9 1.4 1.7-1.2" /></svg>
+);
 export const IconPlus = () => (
   <svg {...base}><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><path d="M12 8v8M8 12h8" /></svg>
 );

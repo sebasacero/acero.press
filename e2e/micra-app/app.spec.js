@@ -538,16 +538,15 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   await page.goto('/micra', { waitUntil: 'load' });
   // Arriba: Hoy y luego los baristas; quien está en la calle lleva «AHORA»
   const stories = page.getByTestId('stories');
-  await expect(stories.getByRole('button').first()).toHaveAccessibleName('Hoy en el café');
+  await expect(stories.getByRole('button').first()).toHaveAccessibleName('Café');
   await expect(stories.getByRole('button', { name: /en la calle ahora/ }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+/);
   // Debajo de los baristas sigue el muro de Hoy, como el feed de Instagram (un solo h1 en la página)
   const feed = page.getByTestId('home-feed');
-  await expect(feed.getByRole('heading', { level: 2, name: 'Hoy en el café' })).toBeVisible();
-  await expect(feed.getByTestId('price-card')).toContainText('$1.300');
-  // El muro del inicio va corto: lo demás se abre con «Ver todo lo de hoy»
-  await page.getByTestId('feed-more').click();
-  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await expect(feed.getByRole('heading', { level: 2, name: 'En la calle hoy' })).toBeVisible();
+  // Lo del café (precio, noticias, recetas) se fue a la pestaña Café
+  await expect(feed.getByTestId('price-card')).toHaveCount(0);
+  await expect(feed).not.toContainText('World of Coffee');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana
   await expect(page.locator('.mapp')).toHaveClass(/is-redtop/);
@@ -580,34 +579,26 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   expect(errors).toEqual([]);
 });
 
-test('cliente: Hoy es el muro del café, sin logros ni ideas de foto; publicar le escribe al equipo', async ({ browser }) => {
+test('cliente: la pestaña Café (la montaña) junta lo del café; el inicio se queda con la calle', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
-  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: /Hoy/ }).click();
-  await expect(page).toHaveURL(/\/micra\/hoy$/);
-  await expect(page.getByRole('heading', { name: 'Hoy en el café' })).toBeVisible();
-  // La cabecera como la de Vender: sin precio de la FNC, el tinto en la calle en grande
+  // En el inicio no van las noticias ni las recetas: eso es de Café
+  await expect(page.getByTestId('home-feed')).not.toContainText('World of Coffee');
+  await page.getByTestId('tab-cafe').click();
+  await expect(page).toHaveURL(/\/micra\/cafe$/);
+  await expect(page.getByRole('heading', { name: 'Café', exact: true })).toBeVisible();
   await expect(page.getByTestId('coffee-big')).toHaveText('$1.300');
-  await expect(page.getByTestId('coffee-live')).toContainText(/baristas? en la calle/);
-  await expect(page.getByTestId('price-card')).toHaveCount(0);
+  await expect(page.locator('[data-testid="medals"], [data-testid="feed-idea"], [data-testid="hoy-tabs"]')).toHaveCount(0);
   const feed = page.getByTestId('feed');
-  // Hoy en tres pestañas: las noticias van en filas y un toque abre la entera
-  await expect(page.getByTestId('hoy-tabs').getByRole('tab')).toHaveText(['Ahora', 'Noticias', 'Recetas']);
-  await expect(page.locator('[data-testid="medals"], [data-testid="feed-idea"]')).toHaveCount(0);
-  await page.getByRole('tab', { name: 'Noticias' }).click();
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
-  await feed.getByRole('button', { name: /Federación de Cafeteros/ }).first().click();
-  await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
-  // El video lleva a la Escuela del sitio, no a Aprende del barista
-  await feed.getByRole('button', { name: /Una AeroPress en un minuto/ }).click();
-  await expect(feed.getByRole('link', { name: 'Aprender en la Escuela ›' })).toHaveAttribute('href', /\/escuela$/);
-  await page.getByRole('tab', { name: 'Recetas' }).click();
   await expect(feed).toContainText('La receta oficial de AeroPress');
-  // Un puesto abre su tarjeta para apartar
-  await page.getByRole('tab', { name: 'Ahora' }).click();
-  await feed.getByRole('button', { name: 'Ver en el mapa ›' }).first().click();
-  await expect(page).toHaveURL(/\/micra\/b\//);
-  await page.goto('/micra/hoy', { waitUntil: 'load' });
+  await expect(feed).not.toContainText('Ver en el mapa');
+  await page.getByTestId('feed-bubbles').getByRole('tab', { name: 'Recetas' }).click();
+  await expect(feed).not.toContainText('World of Coffee');
+  await expect(feed).toContainText('La receta oficial de AeroPress');
+  await page.getByTestId('cafe-origen').click();
+  await expect(page).toHaveURL(/\/micra\/origen$/);
+  await page.goto('/micra/cafe', { waitUntil: 'load' });
   // Publicar: receta, café o barista de su cuadra, por WhatsApp al equipo (sin cámara)
   await page.getByRole('button', { name: '＋ Publicar' }).click();
   const sheet = page.getByTestId('publish');

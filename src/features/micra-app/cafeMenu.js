@@ -49,7 +49,7 @@ export function cafeMenu(mode, { siteUrl = (p) => p } = {}) {
     {
       title: 'Lo de hoy',
       items: [
-        { id: 'hoy', label: 'Hoy en el café', sub: 'El precio del café y lo que pasa', icon: 'today', to: '/micra/hoy' },
+        { id: 'hoy', label: 'Café', sub: 'El precio, noticias, recetas y videos', icon: 'today', to: '/micra/cafe' },
         { id: 'reto', label: 'Competencia', sub: 'El reto de la semana', icon: 'trophy', to: '/micra/reto' },
       ],
     },

@@ -20,7 +20,9 @@ test('en el muro: el primero después de 3 publicaciones y luego cada 5, una vez
   assert.equal(out[9].id, 'ad-a2');
   assert.equal(out.filter((x) => x.kind === 'patrocinado').length, 2); // 12 publicaciones: caben 2
   assert.equal(out.find((x) => x.adId === 'a1').kind, 'patrocinado');
-  assert.deepEqual(withAds([{ id: 'p0' }], [ad()]).map((x) => x.id), ['p0']);
+  // Un muro corto lleva igual el primero, al final (12 nov 2026: el inicio del cliente quedó corto sin lo del café)
+  assert.deepEqual(withAds([{ id: 'p0' }], [ad(), ad({ id: 'a2' })]).map((x) => x.id), ['p0', 'ad-a1']);
+  assert.deepEqual(withAds([], [ad()]).map((x) => x.id), ['ad-a1']);
 });
 
 test('una vista por celular al día', () => {
