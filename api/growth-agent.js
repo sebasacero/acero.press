@@ -19,7 +19,7 @@ import recipes from '../src/features/recipes/data/recipes.js';
 import { PRODUCT_FIELDS, shapeProducts } from '../src/shared/lib/productShape.js';
 import { resolvePairings, recipeTraits } from '../src/shared/lib/pairing.js';
 
-const MODEL = 'claude-opus-5-5';
+const MODEL = 'claude-sonnet-5-5';
 const MAX_CONTINUATIONS = 3;
 
 // Las búsquedas web pueden tardar: hasta 2 minutos por análisis.

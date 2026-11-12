@@ -11,7 +11,9 @@ import { mcpTools } from '@anthropic-ai/sdk/helpers/beta/mcp';
 import { createMicraServer } from './server.js';
 import { addUsage, costUsd, parseParte, partePrompt } from './celestra.js';
 
-export const MODEL = 'claude-fable-5-2';
+// Cada trabajo con el modelo más barato que lo hace bien (12 nov 2026, pedido del usuario):
+// las preguntas sueltas con uno rápido; el parte del día, que pide criterio, con uno más fuerte.
+export const MODELS = { pregunta: 'claude-sonnet-5-5', parte: 'claude-opus-5-5' };
 export const MAX_QUESTION = 600;
 const MAX_ITERATIONS = 6;
 
@@ -72,13 +74,13 @@ async function drive(runner) {
   return { final, usage: addUsage({}, final?.usage) };
 }
 
-async function run({ anthropic, mcp, messages, effort = 'medium' }) {
+async function run({ anthropic, mcp, messages, model: wanted = MODELS.pregunta, effort = 'medium' }) {
   // Anota qué herramientas usó, para mostrarlo debajo de la respuesta
   const used = [];
   const recording = { callTool: (params) => { used.push(params.name); return mcp.callTool(params); } };
   const { tools } = await mcp.listTools();
   const { final, usage } = await drive(anthropic.beta.messages.toolRunner({
-    model: MODEL,
+    model: wanted,
     max_tokens: 16000,
     max_iterations: MAX_ITERATIONS,
     betas: ['server-side-fallback-2026-07-01'],
@@ -90,7 +92,7 @@ async function run({ anthropic, mcp, messages, effort = 'medium' }) {
     messages,
   }));
   if (final?.stop_reason === 'refusal') throw Object.assign(new Error('El modelo no pudo responder esta pregunta.'), { status: 502 });
-  const model = final?.model || MODEL;
+  const model = final?.model || wanted;
   return { final, tools: [...new Set(used)], model, usage, cost: costUsd(usage, model) };
 }
 
@@ -101,7 +103,7 @@ async function run({ anthropic, mcp, messages, effort = 'medium' }) {
 export async function askAgent({ anthropic, mcp, question, history = [] }) {
   const q = String(question ?? '').trim().slice(0, MAX_QUESTION);
   if (!q) throw Object.assign(new Error('Escribe una pregunta.'), { status: 400 });
-  const out = await run({ anthropic, mcp, messages: [...cleanHistory(history), { role: 'user', content: q }] });
+  const out = await run({ anthropic, mcp, model: MODELS.pregunta, messages: [...cleanHistory(history), { role: 'user', content: q }] });
   const answer = textOf(out.final) || 'No alcancé a responder: intenta una pregunta más concreta.';
   return { answer, tools: out.tools, model: out.model, usage: out.usage, cost: out.cost };
 }
@@ -111,6 +113,6 @@ export async function askAgent({ anthropic, mcp, question, history = [] }) {
  * `decisions` es lo que el dueño aprobó o descartó antes (la memoria).
  */
 export async function writeParte({ anthropic, mcp, today, decisions = [] }) {
-  const out = await run({ anthropic, mcp, effort: 'high', messages: [{ role: 'user', content: partePrompt({ today, decisions }) }] });
+  const out = await run({ anthropic, mcp, model: MODELS.parte, effort: 'high', messages: [{ role: 'user', content: partePrompt({ today, decisions }) }] });
   return { parte: parseParte(textOf(out.final)), tools: out.tools, model: out.model, usage: out.usage, cost: out.cost };
 }

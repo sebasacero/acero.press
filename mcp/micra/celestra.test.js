@@ -2,9 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TOPE_USD, addUsage, cleanDecision, cleanDecisions, costUsd, overBudget, parseParte, partePrompt } from './celestra.js';
 
-test('costo: Fable 5.2, Opus 5.5 si respondió el respaldo, y un modelo desconocido como Fable', () => {
+test('costo: Sonnet 5.5 (preguntas), Opus 5.5 (parte) y un modelo desconocido como el más caro', () => {
   const u = { input_tokens: 1_000_000, output_tokens: 100_000, cache_read_input_tokens: 1_000_000, cache_creation_input_tokens: 0 };
   assert.equal(costUsd(u, 'claude-opus-5-5'), 6.2);
+  assert.equal(costUsd(u, 'claude-sonnet-5-5'), 3.1);
   assert.equal(costUsd(u, 'claude-fable-5-2'), 12.2);
   assert.equal(costUsd(u, 'otro'), 12.2);
   assert.equal(costUsd({}, 'claude-opus-5-5'), 0);

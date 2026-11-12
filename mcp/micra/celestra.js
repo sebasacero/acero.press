@@ -12,9 +12,10 @@ export const TOPE_USD = 50;
 
 // US$ por millón de tokens. La escritura en caché (5 min) cuesta 1,25 veces la entrada.
 export const PRICES = {
-  'claude-fable-5-2': { input: 8, output: 40, cacheRead: 0.2, cacheWrite: 10 },
-  // Si el modelo se niega, el servidor responde con otro (fallbacks): se cobra a su precio
+  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
   'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
+  // Si el modelo se niega, el servidor responde con otro (fallbacks): se cobra a su precio
+  'claude-fable-5-2': { input: 8, output: 40, cacheRead: 0.2, cacheWrite: 10 },
 };
 // Lo desconocido se cobra como lo más caro, para no pasarse del tope
 const DEFAULT_PRICE = PRICES['claude-fable-5-2'];
