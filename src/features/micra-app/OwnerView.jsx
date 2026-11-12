@@ -19,7 +19,6 @@ const AdsPanel = lazy(() => import('./AdsPanel.jsx'));
 const ChallengePanel = lazy(() => import('./ChallengePanel.jsx'));
 const FincasPanel = lazy(() => import('./FincasPanel.jsx'));
 // El agente del equipo (API de Claude + MCP de Micra), aparte: solo lo ve el owner
-const Celestra = lazy(() => import('./Celestra.jsx'));
 
 // Modo equipo: el día de todos (tazas, plata, apartados, quién está en la
 // calle) y la activación automática: nadie aprueba a mano (activation.js y
@@ -80,11 +79,10 @@ export default function OwnerView({ onActAs, go }) {
     platform.openExternal(`https://wa.me/?text=${encodeURIComponent(`Hola, ${b.name.split(' ')[0]}. Este es tu enlace para entrar a Micra: ${url} (tu código es ${code}, vence en 7 días).`)}`);
   };
 
-  // Sin señal el día no carga, pero Celestra sí: su algoritmo trabaja con la última lectura guardada
+  // Sin señal el día no carga, pero Celestra sí: su orbe sigue abajo (CelestraOrb en MicraApp)
   if (error && !data) return (
     <div className="mapp-owner">
       <p className="mapp-error" role="alert">{error}</p>
-      <Suspense fallback={null}><Celestra /></Suspense>
     </div>
   );
   if (!data) return <Cargando fig="ruana">Cargando el día…</Cargando>;
@@ -140,8 +138,6 @@ export default function OwnerView({ onActAs, go }) {
       )}
 
       <Suspense fallback={null}><StudyGoal go={go} /></Suspense>
-
-      <Suspense fallback={null}><Celestra /></Suspense>
 
       {(() => {
         const tips = growthTips({ sum, tot, week, posts, challenge: reto, clients: data.clients });

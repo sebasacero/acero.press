@@ -1749,3 +1749,19 @@
 .mapp-sgoal.is-compact { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 64px; }
 .mapp-sgoal.is-compact > span:last-child { display: grid; gap: 2px; min-width: 0; }
 .mapp-sgoal.is-compact small { color: var(--m-soft); font-size: .8rem; }
+
+/* Celestra como asistente: el orbe de galaxia abajo y la hoja que sube al tocarlo (12 nov 2026) */
+.mapp-orb { position: fixed; left: 50%; bottom: calc(72px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); z-index: 96; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; overflow: hidden; background: var(--t-0, #0D0820); cursor: pointer; transform: translateX(-50%); box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 0 22px 2px rgba(176, 18, 122, .55), 0 10px 22px -8px rgba(34, 18, 90, .8); transition: width .32s cubic-bezier(.2, .9, .2, 1), height .32s cubic-bezier(.2, .9, .2, 1), bottom .32s cubic-bezier(.2, .9, .2, 1); animation: mapp-orb-breathe 3.6s ease-in-out infinite; }
+.mapp-orb.is-open { width: 104px; height: 104px; bottom: calc(18px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); box-shadow: 0 0 0 2px rgba(255, 255, 255, .7), 0 0 46px 10px rgba(176, 18, 122, .6), 0 0 90px 24px rgba(90, 30, 158, .5); }
+.mapp-orb-galaxia { display: block; border-radius: 50%; }
+.mapp-orb:focus-visible { outline: 3px solid var(--t-6, #FFC23C); outline-offset: 3px; }
+@keyframes mapp-orb-breathe { 50% { box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 0 34px 8px rgba(176, 18, 122, .7), 0 10px 22px -8px rgba(34, 18, 90, .8); } }
+.mapp-orb-layer { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; justify-content: flex-end; padding: calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top))) 10px calc(134px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+.mapp-orb-layer[hidden] { display: none; }
+.mapp-orb-scrim { position: absolute; inset: 0; border: 0; padding: 0; cursor: pointer; background: radial-gradient(120% 70% at 50% 100%, rgba(90, 30, 158, .78), rgba(34, 18, 90, .86) 45%, rgba(13, 8, 32, .9)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: mapp-orb-fade .25s ease both; }
+.mapp-orb-sheet { position: relative; width: 100%; max-width: 560px; max-height: 100%; margin: 0 auto; overflow-y: auto; overscroll-behavior: contain; border-radius: 26px; animation: mapp-orb-rise .34s cubic-bezier(.2, .9, .2, 1) both; }
+.mapp-orb-sheet > .mapp-celestra { margin: 0; background: var(--m-bg); }
+.mapp-orb-wait { margin: 0; padding: 18px; border-radius: 26px; background: var(--m-bg); text-align: center; }
+@keyframes mapp-orb-fade { from { opacity: 0; } }
+@keyframes mapp-orb-rise { from { opacity: 0; transform: translateY(40px) scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .mapp-orb, .mapp-orb-scrim, .mapp-orb-sheet { animation: none; transition: none; } }

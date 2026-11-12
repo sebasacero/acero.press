@@ -38,6 +38,7 @@ const Fincas = lazy(() => import('./Fincas.jsx'));
 import { pillOf, WANT_AT_KEY } from './pill.js';
 import { requestWant } from './want.js';
 const CafeDrawer = lazy(() => import('./CafeDrawer.jsx'));
+const CelestraOrb = lazy(() => import('./CelestraOrb.jsx'));
 const AceroAd = lazy(() => import('./AceroAd.jsx'));
 const FincaPreview = lazy(() => import('./Finca.jsx').then((m) => ({ default: m.FincaPreview })));
 
@@ -372,6 +373,8 @@ export default function MicraApp() {
           </button>
         </nav>
       )}
+      {/* Celestra, como un asistente: su orbe flota en las pantallas del equipo (no sobre el visor) */}
+      {teamTabs && route.view !== 'camera' && route.view !== 'ficha' && <Suspense fallback={null}><CelestraOrb /></Suspense>}
       {teamTabs && (
         // El equipo en la calle (6 nov 2026): Hoy, el mapa, la cámara al centro, la encuesta y el estudio; con el mismo diseño de la del cliente
         <nav className="mapp-tabs is-ig" aria-label="Equipo">

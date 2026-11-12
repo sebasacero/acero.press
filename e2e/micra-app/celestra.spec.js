@@ -43,6 +43,7 @@ test('con su memoria en la base: escribe el parte, el dueño decide y ve el gast
   });
 
   await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   const cel = page.getByTestId('owner-agent');
   await expect(cel.getByText('Celestra', { exact: true })).toBeVisible();
   await expect(cel.getByTestId('celestra-gasto')).toContainText('Este mes: US$1,23 de US$50,00');
@@ -71,6 +72,7 @@ test('con su memoria en la base: escribe el parte, el dueño decide y ve el gast
 
   // Al volver ese día, el parte sigue ahí y no se vuelve a pedir
   await page.reload({ waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   await expect(page.getByTestId('celestra-prop')).toHaveCount(3);
   await expect(page.getByTestId('celestra-write')).toHaveCount(0);
   expect(asked).toHaveLength(1);
@@ -88,6 +90,7 @@ test('preguntas: ve la respuesta, qué leyó, sigue la conversación y el tope f
   });
 
   await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   const cel = page.getByTestId('owner-agent');
   await cel.getByRole('button', { name: '¿Cómo vamos hoy?' }).click();
   await expect(cel.getByTestId('agent-turn')).toHaveCount(1);
@@ -125,6 +128,7 @@ test('sin la migración: el parte y lo decidido quedan en el celular y lo dice',
   });
 
   await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   const cel = page.getByTestId('owner-agent');
   await expect(cel.getByTestId('celestra-gasto')).toContainText('solo en este celular');
   await cel.getByTestId('celestra-write').click();
@@ -135,6 +139,7 @@ test('sin la migración: el parte y lo decidido quedan en el celular y lo dice',
 
   // Al recargar sigue el parte de hoy (del celular), sin volver a pagarlo
   await page.reload({ waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   await expect(page.getByTestId('celestra-prop')).toHaveCount(3);
   await expect(page.getByTestId('celestra-prop').nth(2)).toContainText('Hecha');
   expect(asked).toHaveLength(1);
@@ -153,6 +158,7 @@ test('algoritmo: escribe el parte sin la IA, lo guarda sin costo, responde las p
   await page.route('**/api/micra-agent', (route) => { iaCalls += 1; return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }); });
 
   await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   const cel = page.getByTestId('owner-agent');
   await expect(cel.getByTestId('celestra-modo-algoritmo')).toHaveAttribute('aria-pressed', 'true');
   await expect(cel.getByTestId('celestra-juego')).toContainText('Nivel 1 · Semilla');
@@ -189,6 +195,7 @@ test('algoritmo: escribe el parte sin la IA, lo guarda sin costo, responde las p
 test('sin señal: el parte sale de la última lectura, queda en el celular y sube al volver', async ({ browser }) => {
   const { page, api } = await setup(browser, { hoy: '2026-11-11', gastado_mes: 0 }, 'algoritmo');
   await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   // La primera visita deja la lectura guardada
   await expect.poll(() => page.evaluate(() => !!window.localStorage.getItem('micra_celestra_lecturas_v1'))).toBe(true);
 
@@ -196,6 +203,7 @@ test('sin señal: el parte sale de la última lectura, queda en el celular y sub
   await page.route('**/rest/v1/**', cut);
   await page.route('**/api/v1/**', cut);
   await page.reload({ waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   const cel = page.getByTestId('owner-agent');
   await expect(cel.getByTestId('celestra-gasto')).toContainText('solo en este celular');
   await cel.getByTestId('celestra-write').click();
@@ -209,6 +217,7 @@ test('sin señal: el parte sale de la última lectura, queda en el celular y sub
   await page.unroute('**/rest/v1/**', cut);
   await page.unroute('**/api/v1/**', cut);
   await page.reload({ waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   await expect(page.getByTestId('celestra-prop')).toHaveCount(3);
   await expect(page.getByTestId('celestra-gasto')).toContainText('Este mes');
   expect(api.micra.celestra.parte.propuestas.map((x) => x.estado)).toEqual(['pendiente', 'aprobada', 'pendiente']);
@@ -218,6 +227,7 @@ test('con IA y sin respuesta: escribe el algoritmo y lo dice', async ({ browser 
   const { page } = await setup(browser, { hoy: '2026-11-11', gastado_mes: 0 });
   await page.route('**/api/micra-agent', (route) => route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Falta ANTHROPIC_API_KEY en Vercel.' }) }));
   await page.goto('/micra/equipo', { waitUntil: 'load' });
+  await page.getByTestId('celestra-orb').click();
   const cel = page.getByTestId('owner-agent');
   await cel.getByTestId('celestra-write').click();
   await expect(cel.getByTestId('celestra-prop')).toHaveCount(3);
