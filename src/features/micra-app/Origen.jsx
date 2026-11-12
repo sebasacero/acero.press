@@ -3,7 +3,7 @@ import { supabase } from '../../shared/lib/supabaseClient.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { money, sortBaristas } from './micraApp.js';
-import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText, shelfFincasFirst } from './origen.js';
+import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText } from './origen.js';
 import { fetchCoffeeVarieties } from '../../shared/lib/catalog.js';
 
 // El café de origen para el cliente (7 nov 2026, pedido del usuario): el directorio de marcas y
@@ -11,15 +11,16 @@ import { fetchCoffeeVarieties } from '../../shared/lib/catalog.js';
 // (/micra/tienda), como la de Insumos. Lo puro en origen.js; los pedidos van por WhatsApp.
 
 /** app_config `micra_origen`, leído una vez por pantalla. */
-export function useOrigen() {
+export function useOrigen(enabled = true) {
   const [origen, setOrigen] = useState(null);
   useEffect(() => {
+    if (!enabled) return undefined;
     let alive = true;
     supabase.from('app_config').select('value').eq('key', ORIGEN_KEY).maybeSingle()
       .then(({ data }) => alive && setOrigen(readOrigen(data?.value)))
       .catch(() => alive && setOrigen(readOrigen(null)));
     return () => { alive = false; };
-  }, []);
+  }, [enabled]);
   return origen;
 }
 
@@ -62,25 +63,6 @@ export function SellerRow({ s, go }) {
   );
 }
 
-/** Marcas y fincas dentro de la pestaña Café: las primeras de cada clase ahí mismo,
- *  «Ver todas» abre /micra/origen y el caficultor tiene su camino. */
-export function OrigenStrip({ go, origen, max = 4 }) {
-  const list = origen ? sellersOf(origen).slice(0, max) : [];
-  const total = origen ? sellersOf(origen).length : 0;
-  return (
-    <section className="mapp-glass mapp-ogroup mapp-ostrip" aria-labelledby="cafe-origen-h" data-testid="cafe-origen-strip">
-      <div className="mapp-ostrip-head">
-        <h2 id="cafe-origen-h" className="mapp-kicker">Fincas y marcas</h2>
-        <button type="button" className="mapp-link" onClick={() => go('/micra/origen')} data-testid="cafe-origen">{total > list.length ? `Ver todas (${total}) ›` : 'Ver todas ›'}</button>
-      </div>
-      {!origen && <p className="mapp-fine">Cargando…</p>}
-      {origen && list.length > 0 && <ul className="mapp-olist">{list.map((s) => <SellerRow key={s.id} s={s} go={go} />)}</ul>}
-      {origen && list.length === 0 && <p className="mapp-fine" data-testid="cafe-origen-empty">Todavía no hay fincas ni marcas en Micra. Las primeras salen aquí cuando firmen.</p>}
-      <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/fincas')} data-testid="cafe-to-finca">Soy caficultor: quiero vender mi café</button>
-    </section>
-  );
-}
-
 /** Los cafés que vende ACERO.press (los mismos de la tienda de la web), en fila. */
 function HouseCoffees({ cards, team }) {
   if (cards && cards.length === 0) return null;
@@ -108,8 +90,7 @@ function HouseCoffees({ cards, team }) {
   );
 }
 
-/** Lo principal de la pestaña Café: fincas y marcas, y el café que se vende. Con fincas
- *  cargadas van primero; mientras no haya, primero los cafés de la casa. */
+/** Lo principal de la pestaña Café: la ventana de Fincas y marcas y, debajo, el café que se vende. */
 export function CafeShelf({ go }) {
   const origen = useOrigen();
   const [cards, setCards] = useState(null);
@@ -120,14 +101,19 @@ export function CafeShelf({ go }) {
     api.teamWhatsApp().then((t) => alive && t && setTeam(t)).catch(() => {});
     return () => { alive = false; };
   }, []);
-  const fincas = <OrigenStrip go={go} origen={origen} />;
-  const house = <HouseCoffees cards={cards} team={team} />;
-  return <div className="mapp-cafeshelf" data-testid="cafe-shelf">{shelfFincasFirst(origen) ? <>{fincas}{house}</> : <>{house}{fincas}</>}</div>;
+  // Lo principal (pedido del usuario, 12 nov 2026): la ventana de Fincas y marcas entera, primero
+  return (
+    <div className="mapp-cafeshelf" data-testid="cafe-shelf">
+      <OrigenDirectory go={go} embedded origen={origen} />
+      <HouseCoffees cards={cards} team={team} />
+    </div>
+  );
 }
 
 /** /micra/origen: quién hace el café. Marcas con acuerdo y fincas verificadas. */
-export function OrigenDirectory({ go }) {
-  const origen = useOrigen();
+export function OrigenDirectory({ go, embedded = false, origen: given }) {
+  const loaded = useOrigen(!embedded);
+  const origen = embedded ? given : loaded;
   const [filter, setFilter] = useState('todas');
   const [team, setTeam] = useState(null);
   useEffect(() => { api.teamWhatsApp().then(setTeam).catch(() => setTeam('573152125327')); }, []);
@@ -136,8 +122,13 @@ export function OrigenDirectory({ go }) {
   const fincas = sellersOf(origen, 'fincas');
   const ask = `https://wa.me/${team}?text=${encodeURIComponent('Hola, equipo de Micra. Tengo una marca o una finca de café y quiero venderlo con ustedes.')}`;
   return (
-    <div className="mapp-client mapp-origen" data-testid="origen">
-      <OHead kicker="Quién hace el café que tomas" title="Marcas y fincas" pill="Café de Colombia" back={{ to: '/micra', label: 'Inicio' }} go={go} testid="origen-head" />
+    <div className={embedded ? 'mapp-origen is-embedded' : 'mapp-client mapp-origen'} data-testid={embedded ? 'cafe-origen-dir' : 'origen'}>
+      {embedded ? (
+        <header className="mapp-origen-embhead">
+          <p className="mapp-kicker">Quién hace el café que tomas</p>
+          <h2 className="mapp-title is-small">Fincas y marcas</h2>
+        </header>
+      ) : <OHead kicker="Quién hace el café que tomas" title="Marcas y fincas" pill="Café de Colombia" back={{ to: '/micra', label: 'Inicio' }} go={go} testid="origen-head" />}
       <div className="mapp-chips is-scroll mapp-origen-chips" role="tablist" aria-label="Filtrar">
         {[['todas', 'Todas'], ['marcas', 'Marcas'], ['fincas', 'Fincas']].map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={filter === id} className={filter === id ? 'on' : ''} onClick={() => setFilter(id)}>{label}</button>

@@ -924,3 +924,9 @@
 .mapp-hcoffee-price{font:700 16px/1.2 'Archivo',sans-serif}
 .mapp-hcoffee-price i{font:500 11px 'JetBrains Mono',monospace;font-style:normal;color:#6B6880}
 .mapp-hcoffee .mapp-btn{margin-top:4px;justify-content:center;text-decoration:none}
+.mapp-origen.is-embedded{display:grid;gap:10px}
+.mapp-origen.is-embedded .mapp-ogroup{margin:0}
+.mapp-origen.is-embedded .mapp-origen-finca{margin:2px auto 0}
+.mapp-origen-embhead{padding:0 2px}
+.mapp-origen-embhead .mapp-kicker{margin:0 0 2px}
+.mapp-origen-embhead .mapp-title{margin:0}

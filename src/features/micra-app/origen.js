@@ -239,9 +239,6 @@ export function houseCoffeeCards(coffees = []) {
   }).filter(Boolean);
 }
 
-/** Con fincas o marcas cargadas van primero; si no, los cafés de la casa y luego el aviso de las fincas. */
-export const shelfFincasFirst = (origen) => sellersOf(origen).length > 0;
-
 /** El mensaje de WhatsApp para pedir un café de la casa desde Micra. */
 export function houseOrderText(card) {
   return `Hola, equipo de ACERO.press. Quiero pedir el café ${card.name} en bolsa de ${card.sizeText}. ¿Me cuentan cómo me llega? (Desde Micra)`;

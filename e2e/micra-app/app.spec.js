@@ -596,18 +596,21 @@ test('cliente: la pestaña Café (la montaña) junta lo del café; el inicio se 
   await page.getByTestId('feed-bubbles').getByRole('tab', { name: 'Recetas' }).click();
   await expect(feed).not.toContainText('World of Coffee');
   await expect(feed).toContainText('La receta oficial de AeroPress');
-  // Marcas y fincas van dentro de Café (12 nov 2026): sin datos, el aviso y el camino del caficultor
-  // Lo principal de Café (12 nov 2026): el café que se vende (la tabla products) y las fincas
+  // Lo principal de Café (12 nov 2026): la ventana de Fincas y marcas entera, primero, y el café que vendemos
+  const dir = page.getByTestId('cafe-origen-dir');
+  await expect(dir).toContainText('Fincas y marcas');
+  await expect(dir.getByTestId('origen-empty')).toContainText('Todavía no hay');
+  await expect(dir.getByTestId('to-finca')).toBeVisible();
   const house = page.getByTestId('cafe-house');
   await expect(house.locator('.mapp-hcoffee').first()).toBeVisible();
   await expect(house.getByRole('link', { name: 'Pedir' }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*bolsa/);
-  await expect(page.locator('[data-testid="coffee-kpis"], .mapp-coffeehead-kpis')).toHaveCount(0);
-  const strip = page.getByTestId('cafe-origen-strip');
-  await expect(strip).toContainText('Fincas y marcas');
-  await expect(strip.getByTestId('cafe-origen-empty')).toContainText('Todavía no hay');
-  await expect(strip.getByTestId('cafe-to-finca')).toBeVisible();
-  await page.getByTestId('cafe-origen').click();
-  await expect(page).toHaveURL(/\/micra\/origen$/);
+  expect(await dir.evaluate((d, h) => !!(d.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING), await house.elementHandle())).toBe(true);
+  await expect(page.locator('.mapp-coffeehead-kpis')).toHaveCount(0);
+  await dir.getByTestId('to-shop').click();
+  await expect(page).toHaveURL(/\/micra\/tienda$/);
+  await page.goto('/micra/cafe', { waitUntil: 'load' });
+  await page.getByTestId('cafe-origen-dir').getByTestId('to-finca').click();
+  await expect(page).toHaveURL(/\/micra\/fincas$/);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
   // Publicar: receta, café o barista de su cuadra, por WhatsApp al equipo (sin cámara)
   await page.getByRole('button', { name: '＋ Publicar' }).click();
