@@ -600,13 +600,14 @@ test('cliente: la pestaña Café (la montaña) es primero las bolsas y luego cad
   await expect(house.locator('.mapp-hcoffee').first()).toBeVisible();
   await expect(house.getByRole('link', { name: 'Pedir' }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*bolsa/);
   expect(await house.evaluate((h, d) => !!(h.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING), await dir.elementHandle())).toBe(true);
-  await expect(dir).toContainText('Fincas y marcas');
-  await expect(dir.getByTestId('origen-empty')).toContainText('Todavía no hay');
+  await expect(dir).toContainText('Fincas por región');
+  await expect(dir.getByTestId('origen-empty')).toContainText('Todavía no hay fincas');
+  await expect(dir.getByTestId('shelf-sample')).toHaveCount(4);
   await dir.getByTestId('to-shop').click();
   await expect(page).toHaveURL(/\/micra\/tienda$/);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
-  await page.getByTestId('cafe-origen-dir').getByTestId('to-finca').click();
-  await expect(page).toHaveURL(/\/micra\/fincas$/);
+  await page.getByTestId('cafe-finca-cta').getByTestId('fincas-start').click();
+  await expect(page).toHaveURL(/\/micra\/finca$/);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
   // Publicar: receta, café o barista de su cuadra, por WhatsApp al equipo (sin cámara)
   await page.getByRole('button', { name: '＋ Publicar' }).click();

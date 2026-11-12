@@ -4,18 +4,18 @@
 // de app_config `micra_origen` (aquí, de muestra).
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { mockBackend, signIn, watchErrors, PHONE } from '../micra/fixtures.js';
+import { mockBackend, signIn, watchErrors, PHONE, TWO_COFFEES } from '../micra/fixtures.js';
 import { DEMO_ORIGEN } from '../../src/features/micra-app/origen.js';
 
 const SEED = JSON.parse(readFileSync(new URL('../data/micra.json', import.meta.url), 'utf8'));
 const MARLENE = SEED.baristas[0].id;
 
-async function open(browser, { who = 'visitor', origen = DEMO_ORIGEN } = {}) {
+async function open(browser, { who = 'visitor', origen = DEMO_ORIGEN, coffee } = {}) {
   const ctx = await browser.newContext(PHONE);
   const page = await ctx.newPage();
   page.setDefaultTimeout(8000);
   const errors = watchErrors(page);
-  const api = await mockBackend(page);
+  const api = await mockBackend(page, coffee ? { coffee } : {});
   Object.assign(api.micra, structuredClone(SEED));
   api.micra.admin = false;
   if (origen) api.micra.config = { micra_origen: origen, micra_precio_carga: '2.900.000' };
@@ -44,22 +44,48 @@ test('cliente: Marcas y fincas lista lo de app_config, filtra y abre el perfil d
   expect(errors).toEqual([]);
 });
 
-test('cliente: la pestaña Café pone cada finca o marca con su nombre y sus cafés debajo, como restaurantes', async ({ browser }) => {
+test('cliente: la pestaña Café pone las fincas por región en un carrusel y cada una con sus cafés debajo, como restaurantes', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
   const dir = page.getByTestId('cafe-origen-dir');
   await expect(dir.locator('.mapp-oshelf')).toHaveCount(DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length);
   await expect(dir.getByTestId('origen-empty')).toHaveCount(0);
-  // Primero la finca, con sus dos cafés en fila
+  await expect(dir.getByTestId('shelf-sample')).toHaveCount(0);
+  // El carrusel de fincas y, debajo, la finca primero con sus dos cafés en fila
+  await expect(page.getByTestId('cafe-farms').getByRole('button')).toHaveCount(DEMO_ORIGEN.fincas.length);
   const finca = dir.locator('.mapp-oshelf').first();
   await expect(finca.locator('.mapp-oshelf-head')).toContainText('Finca La Esperanza');
   await expect(finca.locator('.mapp-olot')).toHaveCount(2);
   await expect(finca).toContainText('$16.000');
-  await dir.getByRole('tab', { name: 'Marcas' }).click();
-  await expect(dir.locator('.mapp-oshelf')).toHaveCount(DEMO_ORIGEN.marcas.length);
-  await dir.getByRole('tab', { name: 'Fincas' }).click();
+  // Una región deja solo sus fincas
+  await dir.getByRole('tab', { name: 'Huila' }).click();
+  await expect(dir.locator('.mapp-oshelf')).toHaveCount(1);
   await dir.locator('.mapp-olot').first().click();
   await expect(page).toHaveURL(/\/micra\/origen\/la-esperanza$/);
+  expect(errors).toEqual([]);
+});
+
+test('cliente: Café sin fincas: bolsas, «Crear mi finca» y cuatro espacios de muestra por región; con seis bolsas la página no se corre', async ({ browser }) => {
+  // Seis bolsas, como en producción: la fila se desplaza dentro de su caja (en el iPhone empujaba la página)
+  const six = [0, 1, 2].flatMap((n) => TWO_COFFEES.map((c) => ({ ...c, id: `${c.id}-${n}`, slug: `${c.slug}-${n}`, name: `${c.name} ${n}` })));
+  const { page, errors } = await open(browser, { origen: null, coffee: six });
+  await page.goto('/micra/cafe', { waitUntil: 'load' });
+  const house = page.getByTestId('cafe-house');
+  await expect(house.locator('.mapp-hcoffee')).toHaveCount(6);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const cta = page.getByTestId('cafe-finca-cta');
+  expect(await house.evaluate((h, o) => !!(h.compareDocumentPosition(o) & Node.DOCUMENT_POSITION_FOLLOWING), await cta.elementHandle())).toBe(true);
+  const dir = page.getByTestId('cafe-origen-dir');
+  await expect(dir.getByTestId('origen-empty')).toContainText('Todavía no hay fincas');
+  await expect(dir.getByTestId('shelf-sample')).toHaveCount(4);
+  await expect(page.getByTestId('cafe-farms').getByRole('button')).toHaveCount(3);
+  await dir.getByRole('tab', { name: 'Nariño' }).click();
+  await expect(dir.getByTestId('shelf-sample')).toHaveCount(1);
+  await dir.getByTestId('shelf-sample').getByRole('button').first().click();
+  await expect(page).toHaveURL(/\/micra\/finca$/);
+  await page.goBack();
+  await page.getByTestId('cafe-finca-cta').getByTestId('to-finca').click();
+  await expect(page).toHaveURL(/\/micra\/fincas$/);
   expect(errors).toEqual([]);
 });
 

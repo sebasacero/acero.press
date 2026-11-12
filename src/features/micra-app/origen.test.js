@@ -127,15 +127,23 @@ test('café de la casa: una tarjeta de 250 g por café, sin el sobre ni los que 
   assert.match(houseOrderText(cards[0]), /Bourbon Aji en bolsa de 250 g/);
 });
 
-test('Café como restaurantes: fincas primero, cada café con su bolsa más pequeña o el kilo', async () => {
-  const { sellerShelves, lotCard } = await import('./origen.js');
+test('Café como restaurantes: fincas por región primero, cada café con su bolsa más pequeña o el kilo', async () => {
+  const { sellerShelves, lotCard, regionOf, regionsOf, SHELF_SAMPLES } = await import('./origen.js');
   const origen = readOrigen(DEMO_ORIGEN);
   const all = sellerShelves(origen);
   assert.equal(all[0].kind, 'finca');
   assert.equal(all.length, DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length);
-  assert.ok(sellerShelves(origen, 'marcas').every((x) => x.kind === 'marca'));
+  assert.equal(regionOf(all[0]), 'Huila');
+  assert.deepEqual(regionsOf(origen.sellers), ['Huila']);
+  assert.deepEqual(sellerShelves(origen, 'Huila').map((x) => x.id), ['la-esperanza']);
+  assert.deepEqual(sellerShelves(origen, 'Cauca'), []);
   assert.deepEqual(sellerShelves({ sellers: [] }), []);
   const c = lotCard(all[0].lots[0]);
   assert.deepEqual([c.price, c.unit, c.line, c.notes], [16000, '250 g', 'Lavado', 'Panela, naranja, cuerpo medio']);
-  assert.deepEqual([lotCard({ id: 'k', name: 'Kilo', kilo: 50000, bags: [] }).unit, lotCard({ id: 'k', name: 'Kilo', kilo: 50000, bags: [] }).price], ['kilo', 50000]);
+  const k = lotCard({ id: 'k', name: 'Kilo', kilo: 50000, bags: [] });
+  assert.deepEqual([k.unit, k.price], ['kilo', 50000]);
+  // Las muestras: 3 fincas en 3 regiones y 1 marca, sin nombres reales
+  assert.deepEqual(regionsOf(SHELF_SAMPLES), ['Huila', 'Nariño', 'Tolima']);
+  assert.ok(SHELF_SAMPLES.every((x) => x.sample && /^Tu (finca|marca) aquí$/.test(x.name)));
+  assert.equal(lotCard(SHELF_SAMPLES[0].lots[0]).price, null);
 });

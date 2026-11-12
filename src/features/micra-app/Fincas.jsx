@@ -10,7 +10,8 @@ import { OFERTA, readOferta, readRefParams, rememberRef, readRef, inviteUrl, inv
 // de la muestra) que se guarda para contar de dónde vino cada finca en el estudio.
 // Los textos se pueden cambiar en app_config `micra_fincas_oferta`.
 
-export default function Fincas({ go }) {
+/** La oferta para caficultores, debajo de la cabecera de /micra/fincas. */
+function FincasOffer({ go }) {
   const [o, setO] = useState(OFERTA);
   const [ref] = useState(() => {
     const r = readRefParams(window.location.search);
@@ -24,13 +25,7 @@ export default function Fincas({ go }) {
     platform.openExternal(`https://wa.me/?text=${encodeURIComponent(inviteText({ url }))}`);
   };
   return (
-    <div className="mapp-client mapp-origen mapp-fincas" data-testid="fincas">
-      <section className="mapp-ohead">
-        <button type="button" className="mapp-back" onClick={() => go('/micra/origen')}>‹ Marcas y fincas</button>
-        <div className="mapp-ohead-row">
-          <div><p className="mapp-ohead-kicker">Para caficultores</p><h1 className="mapp-ohead-title">{o.titulo}</h1></div>
-        </div>
-      </section>
+    <>
       <section className="mapp-glass mapp-fincas-gap" data-testid="fincas-gap">
         <p>{o.cifra}</p>
         <p className="mapp-fincas-price"><b>{o.precio}</b></p>
@@ -45,6 +40,22 @@ export default function Fincas({ go }) {
       <button type="button" className="mapp-btn is-cta" onClick={() => go('/micra/finca')} data-testid="fincas-start">Crear mi finca</button>
       <button type="button" className="mapp-btn is-ghost" onClick={share} data-testid="fincas-share">Invitar a otra finca por WhatsApp</button>
       <p className="mapp-fine">Micra es de ACERO.press, en Bogotá. Tu celular y tu nombre solo los ve el equipo.</p>
+    </>
+  );
+}
+
+export default function Fincas({ go }) {
+  const [titulo, setTitulo] = useState(OFERTA.titulo);
+  useEffect(() => { fetchAppConfig('micra_fincas_oferta', null).then((v) => setTitulo(readOferta(v).titulo)).catch(() => {}); }, []);
+  return (
+    <div className="mapp-client mapp-origen mapp-fincas" data-testid="fincas">
+      <section className="mapp-ohead">
+        <button type="button" className="mapp-back" onClick={() => go('/micra/origen')}>‹ Marcas y fincas</button>
+        <div className="mapp-ohead-row">
+          <div><p className="mapp-ohead-kicker">Para caficultores</p><h1 className="mapp-ohead-title">{titulo}</h1></div>
+        </div>
+      </section>
+      <FincasOffer go={go} />
     </div>
   );
 }
