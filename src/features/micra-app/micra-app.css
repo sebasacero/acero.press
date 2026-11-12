@@ -1638,6 +1638,22 @@
 .mapp-celestra-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 4px; }
 .mapp-celestra-acts .mapp-btn.is-ghost { margin-top: 0; }
 .mapp-celestra-acts .mapp-field { flex: 1 1 100%; }
+/* El juego de Celestra: nivel, racha y el camino a la meta */
+.mapp-celestra-juego { display: grid; gap: 6px; }
+.mapp-celestra-nivel p { margin: 0; }
+.mapp-celestra-gano { font: 700 .8rem/1 'JetBrains Mono', monospace; color: var(--t-cta, #DE1B1B); }
+.mapp-celestra-bar { height: 8px; border-radius: 99px; background: var(--m-line, rgba(0, 0, 0, .1)); overflow: hidden; }
+.mapp-celestra-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--t-3, #B0127A), var(--t-4, #DE1B1B), var(--t-6, #FFC23C)); }
+@media (prefers-reduced-motion: no-preference) { .mapp-celestra-bar i { transition: width .6s cubic-bezier(.2, .7, .2, 1); } }
+.mapp-celestra-camino summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.mapp-celestra-camino ul { margin: 0 0 6px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.mapp-celestra-camino li { display: grid; grid-template-columns: 5.5rem 1fr; gap: 2px 10px; align-items: center; }
+.mapp-celestra-camino li span { font: 600 .72rem/1.2 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+.mapp-celestra-camino li small { grid-column: 2; opacity: .75; }
+.mapp-celestra-camino li.is-off { opacity: .6; }
+.mapp-celestra-modo { display: flex; gap: 6px; }
+.mapp-celestra-modo button { flex: 1; min-height: 44px; border-radius: 99px; border: 1px solid var(--m-line, rgba(0, 0, 0, .12)); background: transparent; color: inherit; font: inherit; font-weight: 700; }
+.mapp-celestra-modo button.on { background: var(--m-fg, #14102A); color: var(--m-bg, #fff); border-color: var(--m-fg, #14102A); }
 /* El menú del café (7 nov 2026): sale de la izquierda al tocar el logo de arriba */
 .mapp-drawerwrap { position: fixed; inset: 0; z-index: 70; display: flex; }
 .mapp-drawer-scrim { position: absolute; inset: 0; border: 0; background: rgba(13, 8, 32, .5); cursor: pointer; }
@@ -1711,6 +1727,49 @@
 .mapp-sgoal.is-compact > span:last-child { display: grid; gap: 2px; min-width: 0; }
 .mapp-sgoal.is-compact small { color: var(--m-soft); font-size: .8rem; }
 
+/* Celestra como asistente: el orbe de galaxia abajo y la hoja que sube al tocarlo (12 nov 2026) */
+.mapp-orb { position: fixed; left: 50%; bottom: calc(66px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); z-index: 96; width: 72px; height: 72px; padding: 0; border: 0; border-radius: 50%; overflow: visible; background: none; cursor: pointer; transform: translateX(-50%); filter: drop-shadow(0 0 14px rgba(176, 18, 122, .55)) drop-shadow(0 0 30px rgba(90, 30, 158, .45)); transition: width .32s cubic-bezier(.2, .9, .2, 1), height .32s cubic-bezier(.2, .9, .2, 1), bottom .32s cubic-bezier(.2, .9, .2, 1); animation: mapp-orb-breathe 3.6s ease-in-out infinite; }
+.mapp-orb.is-open { width: 132px; height: 132px; bottom: calc(6px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); filter: drop-shadow(0 0 26px rgba(176, 18, 122, .65)) drop-shadow(0 0 60px rgba(90, 30, 158, .55)); }
+.mapp-orb-galaxia { display: block; border-radius: 50%; }
+.mapp-orb:focus-visible { outline: 3px solid var(--t-6, #FFC23C); outline-offset: 3px; border-radius: 50%; }
+@keyframes mapp-orb-breathe { 50% { filter: drop-shadow(0 0 22px rgba(176, 18, 122, .75)) drop-shadow(0 0 44px rgba(90, 30, 158, .55)); } }
+.mapp-orb-layer { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; justify-content: flex-end; padding: calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top))) 10px calc(140px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+.mapp-orb-layer[hidden] { display: none; }
+.mapp-orb-scrim { position: absolute; inset: 0; border: 0; padding: 0; cursor: pointer; background: radial-gradient(120% 70% at 50% 100%, rgba(90, 30, 158, .78), rgba(34, 18, 90, .86) 45%, rgba(13, 8, 32, .9)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: mapp-orb-fade .25s ease both; }
+.mapp-orb-sheet { position: relative; width: 100%; max-width: 560px; max-height: 100%; margin: 0 auto; overflow-y: auto; overscroll-behavior: contain; border-radius: 26px; animation: mapp-orb-rise .34s cubic-bezier(.2, .9, .2, 1) both; }
+.mapp-orb-sheet > .mapp-celestra { margin: 0; background: var(--m-bg); }
+.mapp-orb-wait { margin: 0; padding: 18px; border-radius: 26px; background: var(--m-bg); text-align: center; }
+@keyframes mapp-orb-fade { from { opacity: 0; } }
+@keyframes mapp-orb-rise { from { opacity: 0; transform: translateY(40px) scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .mapp-orb, .mapp-orb-scrim, .mapp-orb-sheet { animation: none; transition: none; } }
+
+/* Celestra como un chat (12 nov 2026): la conversación se desliza, la caja de escribir queda abajo */
+.mapp-orb-sheet { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.mapp-celestra.is-chat { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; padding: 14px 14px 10px; border-radius: 26px; }
+.mapp-celestra.is-chat .mapp-celestra-head { gap: 10px; }
+.mapp-celestra.is-chat .mapp-celestra-head > div:first-of-type { flex: 1; min-width: 0; }
+.mapp-celestra.is-chat .mapp-celestra-name { font-size: 1.05rem; }
+.mapp-celestra.is-chat .mapp-celestra-head .mapp-fine { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mapp-celestra.is-chat .mapp-celestra-modo { flex: none; margin: 0; }
+.mapp-celestra.is-chat .mapp-celestra-modo button { min-height: 44px; padding: 0 12px; font-size: .78rem; }
+.mapp-chat { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 14px; padding: 2px 2px 6px; scroll-behavior: smooth; }
+.mapp-chat > * { flex: none; }
+.mapp-chat-msg { display: grid; gap: 10px; }
+.mapp-chat-text { margin: 0; font-size: 1rem; line-height: 1.5; }
+.mapp-chat .mapp-jefe-turn { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; }
+.mapp-chat .mapp-jefe-q { align-self: flex-end; max-width: 86%; padding: 10px 14px; border-radius: 20px 20px 6px 20px; background: color-mix(in srgb, var(--m-fg) 8%, var(--m-bg)); font-weight: 600; }
+.mapp-chat-wait { margin: 0; color: var(--t-3, #B0127A); font-weight: 700; animation: mapp-chat-pulse 1.2s ease-in-out infinite; }
+@keyframes mapp-chat-pulse { 50% { opacity: .45; } }
+.mapp-chat-chips { flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; overflow-x: auto; overflow-y: hidden; margin: 0 -14px; padding: 0 14px 2px; scrollbar-width: none; }
+.mapp-chat-chips::-webkit-scrollbar { display: none; }
+.mapp-chat-chips button { flex: none; height: 44px; white-space: nowrap; }
+.mapp-chat-form { display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 16px; border: 1.5px solid var(--m-line); border-radius: 26px; background: var(--m-bg); box-shadow: 0 6px 18px -12px rgba(34, 18, 90, .5); }
+.mapp-chat-form:focus-within { border-color: var(--t-3, #B0127A); }
+.mapp-chat-form input { flex: 1; min-width: 0; min-height: 44px; border: 0; outline: 0; background: none; color: inherit; font: inherit; font-size: 1rem; }
+.mapp-chat-send { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--t-cta, var(--red)); color: #fff; cursor: pointer; }
+.mapp-chat-send:disabled { background: color-mix(in srgb, var(--m-fg) 12%, var(--m-bg)); color: color-mix(in srgb, var(--m-fg) 40%, var(--m-bg)); cursor: default; }
+.mapp-chat-foot { margin: 0; text-align: center; font-size: .7rem; }
+@media (prefers-reduced-motion: reduce) { .mapp-chat { scroll-behavior: auto; } .mapp-chat-wait { animation: none; } }
 /* Sin la ubicación, la lista del cliente pide darla: solo salen los baristas cerca (12 nov 2026) */
 .mapp-askloc { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: start; padding: 16px; margin: 4px 0 12px; border-radius: 20px; }
 .mapp-askloc > svg { width: 26px; height: 26px; color: var(--m-cta); margin-top: 2px; }

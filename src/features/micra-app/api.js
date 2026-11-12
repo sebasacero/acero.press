@@ -104,9 +104,16 @@ export const setBaristaPhone = (id, phone) => call('micra_barista_phone_set', { 
 
 // El panel del equipo (estudio, encuestas, cámara con filtros) es solo del dueño:
 // otro rol de admin_users entra a Micra como cualquier barista
+// Sin señal no se puede preguntar: vale lo último que la base confirmó para esta misma cuenta
+// (solo abre las pantallas; cada lectura la vuelve a verificar la base). Así Celestra sirve sin señal.
+export const OWNER_KEY = 'micra_owner_v1';
 export async function isAdmin(userId) {
-  const { data, error } = await supabase.from('admin_users').select('id, role').eq('auth_user_id', userId).maybeSingle();
-  return !error && data?.role === 'owner';
+  let res;
+  try { res = await supabase.from('admin_users').select('id, role').eq('auth_user_id', userId).maybeSingle(); } catch (e) { res = { error: e }; }
+  if (res.error) { try { return !!userId && localStorage.getItem(OWNER_KEY) === userId; } catch { return false; } }
+  const yes = res.data?.role === 'owner';
+  try { if (yes) localStorage.setItem(OWNER_KEY, userId); else localStorage.removeItem(OWNER_KEY); } catch { /* sin memoria */ }
+  return yes;
 }
 
 // En el celular instalado se entra por el navegador del sistema y se vuelve por enlace (native/)
