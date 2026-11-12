@@ -311,3 +311,23 @@ test('la lista del cliente va de a 12 y dice cuántos faltan', async () => {
   assert.deepEqual(listPage(null), { items: [], rest: 0 });
   assert.equal(listPage(list, 0).items.length, 12, 'nunca menos de una página');
 });
+
+test('nearBaristas: sin ubicación solo los favoritos; con ella, los de 1,5 km y los favoritos', async () => {
+  const { nearBaristas, sortBaristas, NEAR_M } = await import('./micraApp.js');
+  const me = { lat: 4.6485, lng: -74.0586 };
+  const list = [
+    { id: 'a', name: 'Cerca', lat: 4.6495, lng: -74.0586 }, // ~110 m
+    { id: 'b', name: 'Lejos', lat: 4.60, lng: -74.10 }, // ~7 km
+    { id: 'c', name: 'Fav lejos', lat: 4.58, lng: -74.15 },
+    { id: 'd', name: 'Sin punto' },
+  ];
+  const off = nearBaristas(sortBaristas(list, { favorites: ['c'] }));
+  assert.equal(off.needsLocation, true);
+  assert.deepEqual(off.items.map((b) => b.id), ['c']);
+  const on = nearBaristas(sortBaristas(list, { me, favorites: ['c'] }), { me });
+  assert.equal(on.needsLocation, false);
+  assert.deepEqual(on.items.map((b) => b.id).sort(), ['a', 'c']);
+  assert.equal(on.far, 2);
+  assert.equal(NEAR_M, 1500);
+  assert.deepEqual(nearBaristas(null, { me }).items, []);
+});

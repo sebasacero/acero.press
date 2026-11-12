@@ -20,7 +20,9 @@ test('app instalada: arranca en Micra y comparte enlaces del sitio', async ({ br
 
   await expect(page).toHaveURL(/\/micra$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('¿Quién pasa con café');
-  await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(3);
+  // Sin la ubicación no sale la lista de todos: se pide la ubicación para ver a los de cerca
+  await expect(page.getByTestId('ask-location')).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Baristas' })).toHaveCount(0);
   // Los enlaces al sitio van con su dirección (la Escuela, en el menú del café; la tienda ya es de la app)
   await page.getByTestId('brand-menu').click();
   await expect(page.getByTestId('drawer-escuela')).toHaveAttribute('href', 'https://www.aceropress.com/escuela');
@@ -41,7 +43,7 @@ test('app instalada: el barista ve su enlace con la dirección del sitio', async
 
   await expect(page).toHaveURL(/\/micra\/barista$/);
   // Mi ruta está en «Mi plata»; el enlace, solo en Mi perfil
-  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi plata/ }).click();
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi cuenta/ }).click();
   await expect(page.getByRole('link', { name: 'Medir mi recorrido (Mi ruta)' })).toHaveAttribute('href', 'https://www.aceropress.com/ruta');
   await expect(page.locator('.mapp-share')).toHaveCount(0);
   await page.getByRole('button', { name: 'Mi perfil' }).click();

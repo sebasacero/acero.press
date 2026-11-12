@@ -55,7 +55,7 @@ test('barista: abre su perfil desde arriba, ve su celular a medias y sus precios
   const prof = page.getByTestId('barista-profile');
   await expect(prof.getByRole('heading', { name: 'Marlene Rojas', level: 1 })).toBeVisible();
   await expect(page.getByTestId('profile-camino')).toContainText('Barista de calle');
-  for (const g of ['Tu negocio', 'Tu plata', 'Mi cuenta', 'Otros']) await expect(prof.getByRole('region', { name: g })).toBeVisible();
+  for (const g of ['Lo de hoy', 'Tu negocio', 'Mi cuenta']) await expect(prof.getByRole('region', { name: g })).toBeVisible();
   await expect(page.getByTestId('privacy-link')).toHaveAttribute('href', /\/privacidad$/);
 
   // Mis datos: el celular a medias, cómo entra y su enlace, en la hoja de abajo
@@ -235,7 +235,9 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
   await page.getByLabel('Buscar un barista').fill('Jairo');
   await page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
   await expect(page.getByText('Actuando como')).toContainText('Jairo');
-  await page.getByRole('button', { name: 'Mi perfil' }).click();
+  // El círculo del dueño abre «Ver Micra como»; su perfil está al final de la hoja
+  await page.getByTestId('me-button').click();
+  await page.getByTestId('mode-profile').click();
   await expect(page.getByTestId('barista-profile')).toContainText('Perfil del barista');
   await expect(page.getByTestId('signout')).toHaveCount(0);
   await page.getByRole('button', { name: 'Equipo › Mi perfil' }).click();

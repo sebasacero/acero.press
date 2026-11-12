@@ -11,7 +11,7 @@ const write = (id, list) => { try { localStorage.setItem(KEY, JSON.stringify({ .
 const kindOf = (id) => EXPENSE_KINDS.find((k) => k.id === id) ?? EXPENSE_KINDS.at(-1);
 const hourLabel = (h) => (h === 12 ? '12 m.' : h < 12 ? `${h} a. m.` : `${h - 12} p. m.`);
 
-export default function MiPlata({ day, board, sum, menu, bars, onShare, children }) {
+export default function MiPlata({ day, board, sum, menu, bars, onShare, children, name = null, sub = null, av = null }) {
   const [list, setList] = useState(() => read(day.id));
   const [kind, setKind] = useState(null);
   const [amount, setAmount] = useState('');
@@ -33,6 +33,13 @@ export default function MiPlata({ day, board, sum, menu, bars, onShare, children
   return (
     <div className="mapp-plata" data-testid="plata">
       <section className="mapp-plata-head" aria-label="Lo de hoy">
+        {/* En «Mi cuenta» (12 nov 2026: Mi plata y Mi perfil en una sola página) arriba va quién es */}
+        {name && (
+          <header className="mapp-plata-who">
+            {av && <span className="mapp-plata-av" aria-hidden="true">{av}</span>}
+            <div><h1>{name}</h1>{sub && <p>{sub}</p>}</div>
+          </header>
+        )}
         <p className="mapp-plata-kicker">Mi plata · hoy</p>
         <p className="mapp-plata-total" data-testid="plata-total">{money(L.vendido)}</p>
         <p className="mapp-plata-sub">{cupsLabel(board.cups)} · semana {money(board.weekMoney)}</p>
@@ -80,7 +87,12 @@ export default function MiPlata({ day, board, sum, menu, bars, onShare, children
         ) : <p className="mapp-muted">Anota lo que compras para el día y Micra te dice cuánto te ganaste.</p>}
       </section>
 
-      <section className="mapp-glass" aria-labelledby="plata-prod">
+      {children}
+
+      {/* Lo que se mira de vez en cuando va plegado: la página abre con lo de hoy */}
+      <details className="mapp-glass mapp-plata-more" data-testid="plata-stats">
+        <summary>Cómo va tu venta <small>qué vendes más, a qué hora y la semana</small></summary>
+      <section className="mapp-plata-sec" aria-labelledby="plata-prod">
         <p className="mapp-cota" id="plata-prod">Lo que más vendes hoy</p>
         {products.length === 0 ? <p className="mapp-muted">Cuando cuentes tu primera taza en Vender, aquí sale qué se vende más.</p> : (
           <ul className="mapp-plata-bars">
@@ -95,7 +107,7 @@ export default function MiPlata({ day, board, sum, menu, bars, onShare, children
         )}
       </section>
 
-      <section className="mapp-glass" aria-labelledby="plata-horas">
+      <section className="mapp-plata-sec" aria-labelledby="plata-horas">
         <p className="mapp-cota" id="plata-horas">A qué hora vendes{best !== null ? ` · mejor a las ${hourLabel(best)}` : ''}</p>
         <div className="mapp-plata-hours" aria-hidden="true">
           {hours.map((h) => <span key={h.hour} className={h.hour === best ? 'is-best' : ''}><i style={{ height: `${Math.max(3, h.h * 100)}%` }} /><small>{h.hour % 3 === 0 ? h.hour : ''}</small></span>)}
@@ -109,10 +121,9 @@ export default function MiPlata({ day, board, sum, menu, bars, onShare, children
             </span>
           ))}
         </div>
-        <button type="button" className="mapp-btn is-cta" onClick={onShare} disabled={board.cups === 0} data-testid="story-open">Compartir mi día</button>
       </section>
-
-      {children}
+      </details>
+      <button type="button" className="mapp-btn is-ghost mapp-plata-share" onClick={onShare} disabled={board.cups === 0} data-testid="story-open">Compartir mi día</button>
     </div>
   );
 }

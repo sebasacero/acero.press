@@ -92,42 +92,6 @@
 .mapp-brand-mark .mapp-termo-cap { animation: none; }
 .mapp-brand-word { font: 800 1.35rem/1 'Archivo', sans-serif; letter-spacing: -.03em; }
 .mapp-brand-word i { color: var(--m-cta); font-style: normal; }
-.mapp-modes {
-  margin-left: auto;
-  display: flex;
-  gap: 2px;
-  background: var(--m-glass);
-  border: 1px solid var(--m-line);
-  border-radius: 999px;
-  padding: 3px;
-}
-.mapp-modes button {
-  appearance: none;
-  border: 0;
-  background: none;
-  color: var(--m-soft);
-  font: 700 .82rem 'Archivo', sans-serif;
-  min-height: 38px;
-  min-width: 44px;
-  padding: 0 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background-color .2s ease, color .2s ease;
-}
-.mapp-modes button.on { background: var(--m-fg); color: var(--m-bg); box-shadow: 0 3px 8px -4px rgba(0, 0, 0, .45); }
-.mapp-toplink {
-  margin-left: auto;
-  appearance: none;
-  background: none;
-  border: 1px solid var(--m-line);
-  color: var(--m-fg);
-  border-radius: 999px;
-  min-height: 44px;
-  padding: 0 16px;
-  font: 600 .9rem 'Archivo', sans-serif;
-  cursor: pointer;
-}
-
 /* «Mi perfil»: el círculo lleno con las iniciales (o la silueta); con un aro
    rojo en su página y el punto verde mientras el barista está en la calle */
 .mapp-mebtn {
@@ -146,7 +110,6 @@
   padding: 0;
   box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 3.5px var(--m-line);
 }
-.mapp-modes + .mapp-mebtn, .mapp-toplink + .mapp-mebtn { margin-left: 0; }
 .mapp-brand + .mapp-mebtn { margin-left: auto; }
 .mapp-mebtn.on { box-shadow: 0 0 0 2px var(--m-bg), 0 0 0 4.5px var(--m-cta); }
 .mapp-mebtn-live { position: absolute; right: -2px; bottom: -2px; width: 14px; height: 14px; border-radius: 50%; background: #2BB673; border: 2.5px solid var(--m-bg); }
@@ -156,19 +119,26 @@
 .mapp.is-redtop .mapp-brand { color: #fff; }
 .mapp.is-redtop .mapp-brand-word i { color: #F5EFE4; }
 .mapp.is-redtop .mapp-brand-mark { box-shadow: 0 4px 12px -6px rgba(0, 0, 0, .5); }
-.mapp.is-redtop .mapp-modes { background: rgba(0, 0, 0, .2); border-color: transparent; }
-.mapp.is-redtop .mapp-modes button { color: rgba(255, 255, 255, .85); }
-.mapp.is-redtop .mapp-modes button.on { background: #fff; color: var(--m-cta); }
-.mapp.is-redtop .mapp-toplink { color: #fff; border-color: rgba(255, 255, 255, .5); }
 .mapp.is-redtop .mapp-mebtn { background: #fff; color: var(--m-cta); box-shadow: 0 0 0 2px var(--m-cta), 0 0 0 3.5px rgba(255, 255, 255, .45); }
 .mapp.is-redtop .mapp-mebtn-live { border-color: var(--m-cta); }
 
-/* Con las tres pestañas y el perfil, en un celular angosto queda solo el termo */
-@media (max-width: 420px) {
-  .mapp-top { gap: 8px; }
-  .mapp-top.has-3 .mapp-brand-word { display: none; }
-  .mapp-modes button { padding: 0 10px; }
-}
+/* El modo del dueño sobre su círculo (solo él cambia de modo, 12 nov 2026) */
+.mapp-mebtn-mode { position: absolute; left: -6px; bottom: -5px; min-width: 22px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--m-cta); color: #fff; border: 2px solid var(--m-bg); font: 800 .56rem/14px 'JetBrains Mono', monospace; letter-spacing: .04em; font-style: normal; }
+.mapp.is-redtop .mapp-mebtn-mode { background: #fff; color: var(--m-cta); border-color: var(--m-cta); }
+.mapp-modesheet .mapp-title { margin: 0; }
+.mapp-modesheet-sub { margin: 4px 0 14px; color: var(--m-soft); font-size: .9rem; }
+.mapp-modesheet-list { display: grid; gap: 8px; }
+.mapp-moderow { appearance: none; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 10px 12px; border-radius: 16px; border: 1.5px solid var(--m-line); background: var(--m-card, #fff); color: var(--m-fg); text-align: left; cursor: pointer; font: inherit; }
+.mapp-moderow.on { border-color: var(--m-fg); }
+.mapp-moderow.is-profile { border-style: dashed; margin-top: 4px; }
+.mapp-moderow-ic { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--m-glass); }
+.mapp-moderow.on .mapp-moderow-ic { background: var(--m-fg); color: var(--m-bg); }
+.mapp-moderow-ic svg { width: 22px; height: 22px; }
+.mapp-moderow-txt { display: grid; gap: 2px; min-width: 0; }
+.mapp-moderow-txt b { font: 800 1rem 'Archivo', sans-serif; }
+.mapp-moderow-txt small { color: var(--m-soft); font-size: .82rem; }
+.mapp-moderow-ok { margin-left: auto; flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--m-cta); color: #fff; font-size: .8rem; font-weight: 800; }
+@media (max-width: 420px) { .mapp-top { gap: 8px; } }
 @media (max-width: 350px) { .mapp-brand-word { display: none; } }
 
 .mapp-main {
@@ -1288,7 +1258,6 @@
 .mapp.is-client .mapp-top { border-bottom-color: transparent; }
 .mapp.is-client .mapp-brand-word, .mapp.is-barista .mapp-brand-word { font: 400 1.65rem/1 'Permanent Marker', cursive; letter-spacing: 0; }
 .mapp-topicon { flex: none; margin-left: auto; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: var(--m-fg); text-decoration: none; }
-.mapp-modes + .mapp-topicon { margin-left: 0; }
 .mapp-topicon svg { width: 27px; height: 27px; stroke-width: 1.9; }
 .mapp-topicon:active { background: color-mix(in srgb, var(--m-fg) 7%, transparent); }
 
@@ -1672,21 +1641,29 @@
 /* El menú del café (7 nov 2026): sale de la izquierda al tocar el logo de arriba */
 .mapp-drawerwrap { position: fixed; inset: 0; z-index: 70; display: flex; }
 .mapp-drawer-scrim { position: absolute; inset: 0; border: 0; background: rgba(13, 8, 32, .5); cursor: pointer; }
-.mapp-drawer { position: relative; width: min(86vw, 340px); height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--m-bg); border-radius: 0 24px 24px 0; padding: 0 14px calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); box-shadow: 24px 0 48px -24px rgba(13, 8, 32, .7); animation: mapp-drawer-in .26s cubic-bezier(.2, .7, .2, 1) both; }
-.mapp-drawer-head { display: flex; align-items: center; gap: 10px; margin: 0 -14px; padding: max(14px, var(--safe-area-inset-top, env(safe-area-inset-top))) 14px 16px; color: #fff; background: linear-gradient(180deg, var(--t-0, #0D0820), var(--t-1, #22125A) 60%, var(--t-2, #5A1E9E)); border-radius: 0 24px 0 0; }
-.mapp-drawer-head .mapp-brand-word { color: #fff; }
-.mapp-drawer-x { margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .08); color: #fff; font: 400 28px/1 'Archivo', sans-serif; cursor: pointer; }
-.mapp-drawer-kicker { margin: 16px 4px 0; font: 800 1.45rem/1.1 'Archivo', sans-serif; letter-spacing: -.02em; color: var(--m-fg); }
-.mapp-drawer-sec h2 { margin: 18px 4px 8px; font: 700 .75rem 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--t-3, #B0127A); }
-.mapp-drawer-sec ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.mapp-drawer-item { appearance: none; width: 100%; min-height: 60px; display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 16px; border: 1px solid var(--m-line); background: #fff; color: var(--m-fg); text-align: left; text-decoration: none; font: inherit; cursor: pointer; }
-.mapp-drawer-item.on { border-color: var(--t-4, #DE1B1B); background: #FBEDF0; }
-.mapp-drawer-item > svg { flex: none; width: 18px; height: 18px; margin-left: auto; transform: rotate(-90deg); opacity: .5; }
-.mapp-drawer-ic { flex: none; width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; background: var(--t-cta, linear-gradient(100deg, #B0127A, #DE1B1B 42%, #F2542D 80%, #FF8A3D)); }
-.mapp-drawer-ic svg { width: 22px; height: 22px; }
-.mapp-drawer-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.mapp-drawer-txt b { font-size: .98rem; font-weight: 700; }
-.mapp-drawer-txt small { font-size: .8rem; color: var(--m-soft, #5D6080); line-height: 1.3; }
+/* El menú del café como hoja de papel (12 nov 2026): sin tarjetas, una línea por entrada */
+.mapp-drawer { position: relative; width: min(86vw, 350px); height: 100%; display: flex; flex-direction: column; background: #F5F4EF; color: #1F1E1C; border-radius: 0 28px 28px 0; box-shadow: 24px 0 48px -24px rgba(13, 8, 32, .7); animation: mapp-drawer-in .26s cubic-bezier(.2, .7, .2, 1) both; overflow: hidden; }
+.mapp-drawer-head { flex: none; display: flex; align-items: center; gap: 10px; padding: max(18px, var(--safe-area-inset-top, env(safe-area-inset-top))) 18px 10px 22px; }
+.mapp-drawer-word { font: 800 1.7rem/1 'Archivo', sans-serif; letter-spacing: -.03em; }
+.mapp-drawer-word i { color: var(--t-4, #DE1B1B); font-style: normal; }
+.mapp-drawer-x { margin-left: auto; width: 48px; height: 48px; border-radius: 50%; border: 1px solid #DDDBD3; background: #FBFAF7; color: #1F1E1C; font: 300 30px/1 'Archivo', sans-serif; cursor: pointer; box-shadow: 0 6px 14px -10px rgba(0, 0, 0, .4); }
+.mapp-drawer-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 14px 110px; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 90px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 90px), transparent 100%); }
+.mapp-drawer-sec h2 { margin: 18px 10px 4px; font: 500 .95rem 'Archivo', sans-serif; color: #77756E; }
+.mapp-drawer-sec:first-child h2 { margin-top: 8px; }
+.mapp-drawer-sec ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.mapp-drawer-item { appearance: none; width: 100%; min-height: 52px; display: flex; align-items: center; gap: 16px; padding: 6px 10px; border-radius: 14px; border: 0; background: none; color: inherit; text-align: left; text-decoration: none; font: inherit; cursor: pointer; }
+.mapp-drawer-item.on { background: #E8E6DF; }
+.mapp-drawer-item:active { background: #ECEAE3; }
+.mapp-drawer-ic { flex: none; width: 28px; height: 28px; display: grid; place-items: center; }
+.mapp-drawer-ic svg { width: 26px; height: 26px; stroke-width: 1.7; }
+.mapp-drawer-txt { min-width: 0; }
+.mapp-drawer-txt b { font: 500 1.14rem/1.2 'Archivo', sans-serif; }
+.mapp-drawer-foot { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px calc(18px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); pointer-events: none; }
+.mapp-drawer-foot > * { pointer-events: auto; }
+.mapp-drawer-me { appearance: none; width: 54px; height: 54px; border-radius: 50%; border: 1px solid #DDDBD3; background: #FBFAF7; color: #1F1E1C; display: grid; place-items: center; font: 700 1rem 'Archivo', sans-serif; cursor: pointer; box-shadow: 0 10px 22px -12px rgba(0, 0, 0, .45); }
+.mapp-drawer-me svg { width: 24px; height: 24px; }
+.mapp-drawer-main { appearance: none; display: inline-flex; align-items: center; gap: 10px; min-height: 54px; padding: 0 22px; border-radius: 999px; border: 0; background: #1F1E1C; color: #fff; font: 600 1.05rem 'Archivo', sans-serif; cursor: pointer; box-shadow: 0 14px 26px -12px rgba(0, 0, 0, .6); }
+.mapp-drawer-main span { font-size: 1.2rem; line-height: 1; }
 @keyframes mapp-drawer-in { from { transform: translateX(-100%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .mapp-drawer { animation: none; } }
 
@@ -1733,3 +1710,10 @@
 .mapp-sgoal.is-compact { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 64px; }
 .mapp-sgoal.is-compact > span:last-child { display: grid; gap: 2px; min-width: 0; }
 .mapp-sgoal.is-compact small { color: var(--m-soft); font-size: .8rem; }
+
+/* Sin la ubicación, la lista del cliente pide darla: solo salen los baristas cerca (12 nov 2026) */
+.mapp-askloc { display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: start; padding: 16px; margin: 4px 0 12px; border-radius: 20px; }
+.mapp-askloc > svg { width: 26px; height: 26px; color: var(--m-cta); margin-top: 2px; }
+.mapp-askloc b { font: 800 1.05rem/1.2 'Archivo', sans-serif; }
+.mapp-askloc p { margin: 4px 0 0; color: var(--m-soft); font-size: .9rem; line-height: 1.4; }
+.mapp-askloc .mapp-btn { grid-column: 1 / -1; margin: 4px 0 0; }

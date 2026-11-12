@@ -887,3 +887,18 @@
 .mapp .mapp-medals{display:block}
 .mapp .mapp-medals ul{display:flex;flex-direction:row}
 .mapp .mapp-medals li{display:flex;flex-direction:row;align-items:center;text-align:left}
+
+/* «Mi cuenta» (12 nov 2026): Mi plata y Mi perfil en una sola página; arriba quién es, sobre la plata de hoy */
+.mapp-plata-who{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.mapp-plata-av{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.4);font:800 1.1rem 'Archivo',sans-serif}
+.mapp-plata-who h1{margin:0;font:800 1.45rem/1.1 'Archivo',sans-serif;letter-spacing:-.02em;overflow-wrap:anywhere}
+.mapp-plata-who p{margin:3px 0 0;font:600 .82rem 'Archivo',sans-serif;color:rgba(255,255,255,.78)}
+.mapp-profile .mapp-plata{margin-bottom:14px}
+.mapp-profile .mapp-plata .mapp-glass{margin-bottom:0}
+.mapp-plata-more summary{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;cursor:pointer;font:800 1.02rem 'Archivo',sans-serif;list-style:none;padding-right:28px;position:relative}
+.mapp-plata-more summary::-webkit-details-marker{display:none}
+.mapp-plata-more summary::after{content:'';position:absolute;right:6px;top:50%;width:9px;height:9px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+.mapp-plata-more[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.mapp-plata-more summary small{font:500 .82rem 'Archivo',sans-serif;color:var(--t-soft,#6E6787)}
+.mapp-plata-sec{margin-top:16px}
+.mapp-plata-share{width:100%}
