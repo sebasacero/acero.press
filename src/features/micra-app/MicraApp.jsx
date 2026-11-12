@@ -9,7 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
-import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconCompass, IconSend, IconBell, IconChevron } from './icons.jsx';
+import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconMountain, IconSend, IconBell, IconChevron } from './icons.jsx';
 import './micra-app.css';
 import './termico-app.css';
 import ThermalDefs from '../../shared/layout/ThermalDefs.jsx';
@@ -283,7 +283,7 @@ export default function MicraApp() {
   let body;
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
-  else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" /></Suspense>;
+  else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" cafe /></Suspense>;
   else if (route.view === 'reto') body = <Suspense fallback={<Cargando />}><Competencia go={go} audience="client" /></Suspense>;
   else if (route.view === 'origen') body = <Suspense fallback={<Cargando />}>{route.id ? <SellerPage id={route.id} go={go} /> : <OrigenDirectory go={go} />}</Suspense>;
   else if (route.view === 'tienda') body = <Suspense fallback={<Cargando />}><Tienda go={go} /></Suspense>;
@@ -390,9 +390,9 @@ export default function MicraApp() {
             <IconHome />
             <small className="mapp-tabs-l" aria-hidden="true">Inicio</small>
           </button>
-          <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/hoy')} aria-label="Hoy en el café" title="Hoy en el café">
-            <IconCompass />
-            <small className="mapp-tabs-l" aria-hidden="true">Hoy</small>
+          <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/cafe')} aria-label="Café" title="Café" data-testid="tab-cafe">
+            <IconMountain />
+            <small className="mapp-tabs-l" aria-hidden="true">Café</small>
           </button>
           {/* El centro es lo que el cliente vino a hacer (maqueta del 10 nov 2026): «Quiero un café».
               Publicar queda en el «＋ Publicar» de Hoy */}
