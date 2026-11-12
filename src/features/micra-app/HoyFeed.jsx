@@ -14,7 +14,7 @@ import { useAds, AdPost } from './Ads.jsx';
 import { withAds } from './ads.js';
 import { daysLeftLabel } from './competencia.js';
 import { IconTrophy } from './icons.jsx';
-import { OrigenStrip } from './Origen.jsx';
+import { CafeShelf } from './Origen.jsx';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -53,9 +53,9 @@ function Trend({ t }) {
 }
 
 /** La cabecera de Hoy, como la de Vender: el café hoy en grande y sus datos debajo. */
-function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
+function CoffeeHead({ head, title, today, admin, onEdit, onPublish, compact = false }) {
   return (
-    <section className="mapp-coffeehead" aria-label="El café hoy" data-testid="coffee-head">
+    <section className={`mapp-coffeehead ${compact ? 'is-compact' : ''}`} aria-label="El café hoy" data-testid="coffee-head">
       <div className="mapp-coffeehead-top">
         <div>
           <p className="mapp-coffeehead-kicker">{today}</p>
@@ -67,9 +67,9 @@ function CoffeeHead({ head, title, today, admin, onEdit, onPublish }) {
       <p className="mapp-coffeehead-sub">{head.big.label}</p>
       {/* Los datos en carrusel (pedido del usuario, 7 nov 2026): se pasan de lado y el siguiente se asoma */}
       {/* key: al llegar los precios se vuelve a montar al inicio (si no, el navegador se queda pegado al último dato) */}
-      <dl className="mapp-coffeehead-kpis is-carousel" key={head.kpis.length}>
+      {!compact && <dl className="mapp-coffeehead-kpis is-carousel" key={head.kpis.length}>
         {head.kpis.map((k) => <div key={k.id} data-testid={`coffee-${k.id}`}><dd>{k.value}<Trend t={k.trend} /></dd><dt>{k.label}</dt></div>)}
-      </dl>
+      </dl>}
       <p className="mapp-coffeehead-fine">
         {head.date ? `Precios del ${dayLabel(head.date)} · ` : ''}
         <a href={FNC_PRICE_URL} target="_blank" rel="noopener noreferrer">Precio del día en la FNC ›</a>
@@ -489,11 +489,11 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           </div>
         </header>
       ) : (
-        <CoffeeHead head={coffeeHead({ prices, baristas })} title={cafe ? 'Café' : client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} />
+        <CoffeeHead head={coffeeHead({ prices, baristas })} title={cafe ? 'Café' : client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} compact={cafe} />
       )}
       {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
           Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
-      {cafe && <OrigenStrip go={go} />}
+      {cafe && <CafeShelf go={go} />}
       {!embedded && !cafe && (
         <div className="mapp-hoytabs" role="tablist" aria-label="Sección de Hoy" data-testid="hoy-tabs">
           {HOY_TABS.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}
