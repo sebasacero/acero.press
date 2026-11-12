@@ -13,8 +13,8 @@ import { coffeeOrderText } from './feed.js';
 import { Cargando } from './Animado.jsx';
 import { useSaliTracking } from './useSaliTracking.js';
 import { km } from '../ruta/track.js';
-import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, methodsLabel, outPoint, FIXED_KEY, untilChoices } from './flow.js';
-import { ModePicker, SlideToGo, GoOutConsent, PayMethods, AddProductTile } from './BaristaFlow.jsx';
+import { menuWith, consentNeeds, recordsTrip, isMode, modeOf, outPoint, FIXED_KEY, untilChoices } from './flow.js';
+import { ModePicker, SlideToGo, GoOutConsent, AddProductTile } from './BaristaFlow.jsx';
 import { formatCoPhone } from './phone.js';
 import { firstSaleMoment, dayTripOf, storyFigure } from './daycard.js';
 import { seenHolds, rememberHolds, hasHoldMemory, newHolds, holdAlert, POLL_MS } from './alerts.js';
@@ -431,7 +431,7 @@ const TABS = [
   ['vender', 'Vender', IconCup, '/micra/barista'],
   ['hoy', 'Hoy', IconToday, '/micra/barista/hoy'],
   ['aprende', 'Aprende', IconCap, '/micra/barista/aprende'],
-  ['cuenta', 'Mi plata', IconWallet, '/micra/barista/cuenta'],
+  ['cuenta', 'Mi cuenta', IconWallet, '/micra/barista/cuenta'],
 ];
 
 /** La barra del barista: sus cuatro pestañas y, al centro, la cámara para la foto de la venta.
@@ -495,7 +495,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const trip = useSaliTracking({ enabled: !asId });
   const [asking, setAsking] = useState(false);
   const [rewards, setRewards] = useState({}); // { holdId: tintos gratis por canjear }
-  const [showPay, setShowPay] = useState(false);
   // Lo de 20261031130000_micra_barista_flow.sql: productos propios, medios de pago, cómo sale y si es público
   const [extras, setExtras] = useState(null);
   const [mode, setMode] = useState(readMode);
@@ -518,7 +517,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [quick, setQuick] = useState(false); // la hoja «+1 Venta» del centro de la barra
   const [shooting, setShooting] = useState(false); // la cámara de la barra: foto de la venta
   const [busy, setBusy] = useState(null);
-  const [showPrices, setShowPrices] = useState(false);
   const [goalPick, setGoalPick] = useState(null); // la meta que escogió en esta sesión
   const [toast, setToast] = useState(null);
   const [party, setParty] = useState(false);
@@ -856,7 +854,9 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   );
 
   let body;
-  if (tab === 'perfil') {
+  // «Mi cuenta»: Mi plata y Mi perfil en una sola página (pedido del usuario, 12 nov 2026);
+  // /micra/barista/perfil y /micra/barista/cuenta abren la misma
+  if (tab === 'perfil' || tab === 'cuenta') {
     body = (
       <Suspense fallback={<Cargando fig="caminando" />}>
         <BaristaProfile
@@ -864,7 +864,27 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           streak={streak} goal={goal} board={board}
           renderPrices={({ onSaved }) => <Prices day={day} asId={asId} onSaved={onSaved} />}
           extras={extras} menu={menu} onExtras={loadExtras}
+          renderPlata={(who) => (
+            <MiPlata day={day} board={board} sum={sum} menu={menu} bars={bars} onShare={() => setStory(true)} {...who}>
+        <section className="mapp-glass" aria-labelledby="mapp-fiados">
+          <p className="mapp-cota" id="mapp-fiados">Te deben · {money(sum.owed)}</p>
+          {day.fiados.length === 0 && <p className="mapp-muted">Nadie te debe. Para anotar un fiado, toca «Fiado» en Vender.</p>}
+          <ul className="mapp-holds">
+            {day.fiados.map((f) => (
+              <li key={f.name}>
+                <div><b>{f.name}</b><span>{cupsLabel(f.cups)} · {money(f.total)}</span></div>
+                <span className="mapp-hold-act">
+                  <a className="mapp-link" href={`https://wa.me/?text=${encodeURIComponent(fiadoMessage(f, day.name))}`} target="_blank" rel="noopener noreferrer">Cobrar</a>
+                  <button type="button" className="mapp-btn is-small" onClick={() => paid(f.name)} disabled={busy === `f-${f.name}`}>Pagó</button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+            </MiPlata>
+          )}
         />
+        {!asId && <p className="mapp-fine"><a className="mapp-link" href={platform.siteUrl('/ruta')}>Medir mi recorrido (Mi ruta)</a></p>}
       </Suspense>
     );
   } else if (tab === 'reto') {
@@ -884,36 +904,6 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             canShareDay={board.cups > 0} onShareDay={() => setStory(true)}
           />
         </Suspense>
-      </>
-    );
-  } else if (tab === 'cuenta') {
-    body = (
-      <>
-        <MiPlata day={day} board={board} sum={sum} menu={menu} bars={bars} onShare={() => setStory(true)}>
-        <section className="mapp-glass" aria-labelledby="mapp-fiados">
-          <p className="mapp-cota" id="mapp-fiados">Te deben · {money(sum.owed)}</p>
-          {day.fiados.length === 0 && <p className="mapp-muted">Nadie te debe. Para anotar un fiado, toca «Fiado» en Vender.</p>}
-          <ul className="mapp-holds">
-            {day.fiados.map((f) => (
-              <li key={f.name}>
-                <div><b>{f.name}</b><span>{cupsLabel(f.cups)} · {money(f.total)}</span></div>
-                <span className="mapp-hold-act">
-                  <a className="mapp-link" href={`https://wa.me/?text=${encodeURIComponent(fiadoMessage(f, day.name))}`} target="_blank" rel="noopener noreferrer">Cobrar</a>
-                  <button type="button" className="mapp-btn is-small" onClick={() => paid(f.name)} disabled={busy === `f-${f.name}`}>Pagó</button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-        </MiPlata>
-
-        {showPrices
-          ? <Prices day={day} asId={asId} onSaved={() => { setShowPrices(false); load(); }} />
-          : <button type="button" className="mapp-link" onClick={() => setShowPrices(true)}>Cambiar mis precios</button>}
-        {showPay
-          ? <section className="mapp-glass"><p className="mapp-cota">Cómo te pagan</p><PayMethods methods={extras?.payments} asId={asId} onSaved={() => { setShowPay(false); loadExtras(); }} onCancel={() => setShowPay(false)} /></section>
-          : <button type="button" className="mapp-link" onClick={() => setShowPay(true)} data-testid="pay-open">Cómo te pagan{extras?.payments?.length ? ` · ${methodsLabel(extras.payments)}` : ''}</button>}
-        {!asId && <a className="mapp-link" href={platform.siteUrl('/ruta')}>Medir mi recorrido (Mi ruta)</a>}
       </>
     );
   } else {
@@ -1072,7 +1062,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </section>
         </div>
       )}
-      <BaristaTabs tab={tab} go={go} waiting={waiting.length} onQuick={() => setQuick(true)} />
+      <BaristaTabs tab={tab === 'perfil' ? 'cuenta' : tab} go={go} waiting={waiting.length} onQuick={() => setQuick(true)} />
     </div>
   );
 }

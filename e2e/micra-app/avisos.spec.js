@@ -116,7 +116,8 @@ test('cliente: cuando sale a vender uno de sus baristas (★), el globito avisa 
 test('desliza para recargar: arrastrar desde arriba muestra el termo y vuelve a leer', async ({ browser }) => {
   const { page, api, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
-  await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem').first()).toBeVisible();
+  // Sin la ubicación no hay lista: la tarjeta pide darla
+  await expect(page.getByTestId('ask-location')).toBeVisible();
   const before = api.all('/rpc/micra_baristas').length;
   // Un dedo que baja 140 px desde arriba
   await page.evaluate(async () => {

@@ -35,6 +35,8 @@ export function withAds(items, ads, { first = 3, every = 5 } = {}) {
       next += every;
     }
   });
+  // Un muro corto (menos de `first`) igual lleva el primer anuncio vendido, al final
+  if (i === 0 && (ads ?? []).length) out.push({ ...ads[0], id: `ad-${ads[0].id}`, adId: ads[0].id, kind: 'patrocinado' });
   return out;
 }
 

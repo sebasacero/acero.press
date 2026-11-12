@@ -45,7 +45,7 @@ function OHead({ kicker, title, pill, cold = false, back, go, testid }) {
   );
 }
 
-function SellerRow({ s, go }) {
+export function SellerRow({ s, go }) {
   return (
     <li>
       <button type="button" className="mapp-orow" onClick={() => go(`/micra/origen/${s.id}`)} data-testid={`seller-${s.id}`}>
@@ -58,6 +58,26 @@ function SellerRow({ s, go }) {
         <span className="mapp-orow-go" aria-hidden="true">›</span>
       </button>
     </li>
+  );
+}
+
+/** Marcas y fincas dentro de la pestaña Café (12 nov 2026, pedido del usuario): las primeras
+ *  de cada clase ahí mismo, «Ver todas» abre /micra/origen y el caficultor tiene su camino. */
+export function OrigenStrip({ go, max = 4 }) {
+  const origen = useOrigen();
+  const list = origen ? sellersOf(origen).slice(0, max) : [];
+  const more = origen ? Math.max(0, sellersOf(origen).length - list.length) : 0;
+  return (
+    <section className="mapp-glass mapp-ogroup mapp-ostrip" aria-labelledby="cafe-origen-h" data-testid="cafe-origen-strip">
+      <div className="mapp-ostrip-head">
+        <h2 id="cafe-origen-h" className="mapp-kicker">Marcas y fincas</h2>
+        <button type="button" className="mapp-link" onClick={() => go('/micra/origen')} data-testid="cafe-origen">{more > 0 ? `Ver todas (${more + list.length}) ›` : 'Ver todas ›'}</button>
+      </div>
+      {!origen && <p className="mapp-fine">Cargando…</p>}
+      {origen && list.length > 0 && <ul className="mapp-olist">{list.map((s) => <SellerRow key={s.id} s={s} go={go} />)}</ul>}
+      {origen && list.length === 0 && <p className="mapp-fine" data-testid="cafe-origen-empty">Todavía no hay marcas ni fincas en Micra. Las primeras salen aquí cuando firmen.</p>}
+      <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/fincas')} data-testid="cafe-to-finca">Soy caficultor: quiero vender mi café</button>
+    </section>
   );
 }
 

@@ -9,8 +9,10 @@ const MARLENE = SEED.baristas[0].id;
 const WILSON = SEED.baristas[2].id;
 
 /** who: 'visitor' | 'barista' (enlazado, sin equipo) | 'team' (equipo, sin ficha propia) */
-async function open(browser, { who = 'visitor', seed = SEED, missing = false } = {}) {
-  const ctx = await browser.newContext(PHONE);
+// El cliente solo ve los baristas cerca: por defecto el celular ya dio la ubicación, en Chapinero
+const CHAPINERO = { latitude: 4.6435, longitude: -74.0645 };
+async function open(browser, { who = 'visitor', seed = SEED, missing = false, near = true } = {}) {
+  const ctx = await browser.newContext(near ? { ...PHONE, permissions: [...(PHONE.permissions ?? []), 'geolocation'], geolocation: CHAPINERO } : PHONE);
   const page = await ctx.newPage();
   page.setDefaultTimeout(8000);
   const errors = watchErrors(page);
@@ -138,7 +140,7 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await page.getByLabel('Nombre de quien te debe').fill('Don Luis taxi');
   await page.getByRole('button', { name: 'Anotar fiado' }).click();
   // Quién le debe está en «Mi plata»
-  await tabs.getByRole('button', { name: /Mi plata/ }).click();
+  await tabs.getByRole('button', { name: /Mi cuenta/ }).click();
   const luis = page.getByRole('listitem').filter({ hasText: 'Don Luis taxi' });
   await expect(luis).toContainText('$2.000');
   await expect(luis.getByRole('link', { name: 'Cobrar' })).toHaveAttribute('href', /wa\.me.*Don%20Luis%20taxi/);
@@ -198,7 +200,14 @@ test('barista nuevo: entra con Google y enlaza su cuenta con el código del enla
 test('equipo: ve el día de todos, genera el código de quien falta y actúa como un barista', async ({ browser }) => {
   const { page, api, errors } = await open(browser, { who: 'team' });
   await page.goto('/micra/equipo', { waitUntil: 'load' });
-  await expect(page.getByRole('tablist', { name: 'Ver Micra como' }).getByRole('tab')).toHaveText(['Cliente', 'Barista', 'Equipo']);
+  // Sin barra de modos: el círculo del dueño lleva el modo y abre «Ver Micra como»
+  await expect(page.getByTestId('me-mode')).toHaveText('EQ');
+  await page.getByTestId('me-button').click();
+  const modes = page.getByRole('dialog', { name: 'Ver Micra como' });
+  await expect(modes.getByRole('button', { pressed: true })).toContainText('Equipo');
+  await expect(modes.locator('.mapp-moderow')).toHaveText([/Cliente/, /Barista/, /Equipo/, /Ir a mi perfil/]);
+  await page.keyboard.press('Escape');
+  await expect(modes).toHaveCount(0);
   await expect(page.getByTestId('owner-cups')).toHaveText('4');
   // Sin lista de nombres: se busca
   await expect(page.getByRole('list', { name: 'Baristas encontrados' })).toHaveCount(0);
@@ -422,7 +431,7 @@ test('al volver de Google, el equipo cae en su panel y el barista en su día', a
   await team.page.addInitScript(() => { localStorage.setItem('micra_login_pending', String(Date.now())); });
   await team.page.goto('/micra/barista', { waitUntil: 'load' });
   await expect(team.page).toHaveURL(/\/micra\/equipo$/);
-  await expect(team.page.getByRole('tab', { name: 'Equipo' })).toHaveAttribute('aria-selected', 'true');
+  await expect(team.page.getByTestId('me-mode')).toHaveText('EQ');
   expect(team.errors).toEqual([]);
 
   const barista = await open(browser, { who: 'barista' });
@@ -529,20 +538,20 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   await page.goto('/micra', { waitUntil: 'load' });
   // Arriba: Hoy y luego los baristas; quien está en la calle lleva «AHORA»
   const stories = page.getByTestId('stories');
-  await expect(stories.getByRole('button').first()).toHaveAccessibleName('Hoy en el café');
+  await expect(stories.getByRole('button').first()).toHaveAccessibleName('Café');
   await expect(stories.getByRole('button', { name: /en la calle ahora/ }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Escríbenos por WhatsApp' })).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+/);
   // Debajo de los baristas sigue el muro de Hoy, como el feed de Instagram (un solo h1 en la página)
   const feed = page.getByTestId('home-feed');
-  await expect(feed.getByRole('heading', { level: 2, name: 'Hoy en el café' })).toBeVisible();
-  await expect(feed.getByTestId('price-card')).toContainText('$1.300');
-  // El muro del inicio va corto: lo demás se abre con «Ver todo lo de hoy»
-  await page.getByTestId('feed-more').click();
-  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await expect(feed.getByRole('heading', { level: 2, name: 'En la calle hoy' })).toBeVisible();
+  // Lo del café (precio, noticias, recetas) se fue a la pestaña Café
+  await expect(feed.getByTestId('price-card')).toHaveCount(0);
+  await expect(feed).not.toContainText('World of Coffee');
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana
   await expect(page.locator('.mapp')).toHaveClass(/is-redtop/);
-  await expect(page.getByTestId('home-loc')).toContainText('Bogotá');
+  // Con el permiso ya dado, la ubicación se lee sola y la lista es de quien está cerca
+  await expect(page.getByTestId('home-loc')).toContainText('Estás cerca de');
   await expect(page.getByTestId('top-bell')).toBeVisible();
   // Buscar una bebida la filtra; buscar un nombre muestra solo a ese barista
   await page.getByTestId('home-search').fill('perico');
@@ -570,34 +579,31 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   expect(errors).toEqual([]);
 });
 
-test('cliente: Hoy es el muro del café, sin logros ni ideas de foto; publicar le escribe al equipo', async ({ browser }) => {
+test('cliente: la pestaña Café (la montaña) junta lo del café; el inicio se queda con la calle', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
-  await page.getByRole('navigation', { name: 'Micra' }).getByRole('button', { name: /Hoy/ }).click();
-  await expect(page).toHaveURL(/\/micra\/hoy$/);
-  await expect(page.getByRole('heading', { name: 'Hoy en el café' })).toBeVisible();
-  // La cabecera como la de Vender: sin precio de la FNC, el tinto en la calle en grande
+  // En el inicio no van las noticias ni las recetas: eso es de Café
+  await expect(page.getByTestId('home-feed')).not.toContainText('World of Coffee');
+  await page.getByTestId('tab-cafe').click();
+  await expect(page).toHaveURL(/\/micra\/cafe$/);
+  await expect(page.getByRole('heading', { name: 'Café', exact: true })).toBeVisible();
   await expect(page.getByTestId('coffee-big')).toHaveText('$1.300');
-  await expect(page.getByTestId('coffee-live')).toContainText(/baristas? en la calle/);
-  await expect(page.getByTestId('price-card')).toHaveCount(0);
+  await expect(page.locator('[data-testid="medals"], [data-testid="feed-idea"], [data-testid="hoy-tabs"]')).toHaveCount(0);
   const feed = page.getByTestId('feed');
-  // Hoy en tres pestañas: las noticias van en filas y un toque abre la entera
-  await expect(page.getByTestId('hoy-tabs').getByRole('tab')).toHaveText(['Ahora', 'Noticias', 'Recetas']);
-  await expect(page.locator('[data-testid="medals"], [data-testid="feed-idea"]')).toHaveCount(0);
-  await page.getByRole('tab', { name: 'Noticias' }).click();
   await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
-  await feed.getByRole('button', { name: /Federación de Cafeteros/ }).first().click();
-  await expect(page.getByTestId('feed-cafe').first()).toContainText('Federación Nacional de Cafeteros');
-  // El video lleva a la Escuela del sitio, no a Aprende del barista
-  await feed.getByRole('button', { name: /Una AeroPress en un minuto/ }).click();
-  await expect(feed.getByRole('link', { name: 'Aprender en la Escuela ›' })).toHaveAttribute('href', /\/escuela$/);
-  await page.getByRole('tab', { name: 'Recetas' }).click();
   await expect(feed).toContainText('La receta oficial de AeroPress');
-  // Un puesto abre su tarjeta para apartar
-  await page.getByRole('tab', { name: 'Ahora' }).click();
-  await feed.getByRole('button', { name: 'Ver en el mapa ›' }).first().click();
-  await expect(page).toHaveURL(/\/micra\/b\//);
-  await page.goto('/micra/hoy', { waitUntil: 'load' });
+  await expect(feed).not.toContainText('Ver en el mapa');
+  await page.getByTestId('feed-bubbles').getByRole('tab', { name: 'Recetas' }).click();
+  await expect(feed).not.toContainText('World of Coffee');
+  await expect(feed).toContainText('La receta oficial de AeroPress');
+  // Marcas y fincas van dentro de Café (12 nov 2026): sin datos, el aviso y el camino del caficultor
+  const strip = page.getByTestId('cafe-origen-strip');
+  await expect(strip).toContainText('Marcas y fincas');
+  await expect(strip.getByTestId('cafe-origen-empty')).toContainText('Todavía no hay');
+  await expect(strip.getByTestId('cafe-to-finca')).toBeVisible();
+  await page.getByTestId('cafe-origen').click();
+  await expect(page).toHaveURL(/\/micra\/origen$/);
+  await page.goto('/micra/cafe', { waitUntil: 'load' });
   // Publicar: receta, café o barista de su cuadra, por WhatsApp al equipo (sin cámara)
   await page.getByRole('button', { name: '＋ Publicar' }).click();
   const sheet = page.getByTestId('publish');
@@ -742,7 +748,7 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
   await page.keyboard.press('Escape');
 
   // Mi plata ya no tiene «Tu enlace»
-  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi plata/ }).click();
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi cuenta/ }).click();
   await expect(page.getByText('Tu enlace')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -808,7 +814,7 @@ test('barista caminando: la primera taza celebra la racha; al volver no se cierr
   await expect(page.getByTestId('toast')).toContainText('Tus ventas de hoy siguen aquí');
   await expect(page.locator('.mapp-party')).toHaveCount(0);
   await expect(page.getByTestId('micra-count-tinto')).toHaveText('2');
-  await nav.getByRole('button', { name: /Mi plata/ }).click();
+  await nav.getByRole('button', { name: /Mi cuenta/ }).click();
   await page.getByTestId('story-open').click();
   const story = page.getByTestId('story');
   await expect(story).toHaveAttribute('data-variant', 'calle');
@@ -898,9 +904,41 @@ test('barista: la meta arriba, las monedas del +1 y la foto de la venta con su l
   await sheet.getByRole('button', { name: 'Listo' }).click();
   await expect(sheet).toHaveCount(0);
 
-  // El cambio de modo quedó en Mi perfil
+  // Un barista no cambia de modo: ni arriba ni en Mi perfil (eso es solo del dueño)
+  await expect(page.getByTestId('me-mode')).toHaveCount(0);
   await page.getByTestId('me-button').click();
-  await expect(page.getByTestId('tile-mode-client')).toBeVisible();
+  await expect(page).toHaveURL(/\/micra\/barista\/perfil$/);
+  await expect(page.getByTestId('tile-mode-client')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('cliente: solo ve a los baristas a 15 cuadras o menos; a uno lejano lo encuentra si lo busca por su nombre', async ({ browser }) => {
+  const seed = structuredClone(SEED);
+  seed.baristas.push({ ...seed.baristas[2], id: 'lejos-bosa', name: 'Rosa', lat: 4.61, lng: -74.19, mine: false });
+  const { page, errors } = await open(browser, { seed });
+  await page.goto('/micra', { waitUntil: 'load' });
+  const rows = page.getByRole('list', { name: 'Baristas' }).getByRole('listitem');
+  await expect(rows).toHaveCount(3);
+  await expect(rows.filter({ hasText: 'Rosa' })).toHaveCount(0);
+  await expect(page.getByTestId('stories')).not.toContainText('Rosa');
+  await page.getByTestId('home-search').fill('rosa');
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('Rosa');
+  expect(errors).toEqual([]);
+});
+
+test('cliente: sin la ubicación no sale la lista de todos, solo la tarjeta para darla', async ({ browser }) => {
+  const { page, errors } = await open(browser, { near: false });
+  await page.goto('/micra', { waitUntil: 'load' });
+  await expect(page.getByTestId('ask-location')).toContainText('15 cuadras o menos');
+  await expect(page.getByRole('list', { name: 'Baristas' })).toHaveCount(0);
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation(CHAPINERO);
+  // El arranque tapa la pantalla un momento: el toque espera a que se vaya
+  await expect(page.getByTestId('micra-splash')).toHaveCount(0, { timeout: 15000 });
+  await page.getByTestId('ask-location-go').click({ timeout: 15000 });
+  await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(3);
+  await expect(page.getByTestId('ask-location')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

@@ -14,6 +14,7 @@ import { useAds, AdPost } from './Ads.jsx';
 import { withAds } from './ads.js';
 import { daysLeftLabel } from './competencia.js';
 import { IconTrophy } from './icons.jsx';
+import { OrigenStrip } from './Origen.jsx';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -398,10 +399,13 @@ function CuratedForm({ current, onSaved, onCancel }) {
  */
 // El dibujo de cada globito del muro
 // Cuántas publicaciones muestra el muro del inicio del cliente antes de «Ver todo»
-const HOME_FEED = 3;
+const HOME_FEED = 6;
+// El cliente (12 nov 2026): lo de la calle en el inicio, lo del café en la pestaña Café
+const COFFEE = new Set(['precios', 'cafe', 'noticias', 'recetas', 'videos']);
+const CAFE_CHIPS = [['todo', 'Todo'], ['noticias', 'Noticias'], ['cafe', 'Café de Colombia'], ['recetas', 'Recetas'], ['videos', 'Videos']];
 const CHIP_ICON = { todo: '☕', publicaciones: '📸', logros: '🔥', publicar: '✨', cafe: '🌱', precios: '💲', puestos: '📍', recetas: '📝', videos: '▶' };
 
-export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, list = null, ads = null, challenge }) {
+export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, cafe = false, list = null, ads = null, challenge }) {
   const [all, setAll] = useState(false); // el muro corto del inicio, abierto
   const client = audience === 'client';
   const [fetched, setBaristas] = useState([]);
@@ -458,10 +462,11 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   }, [items, me, trip, mode, dayKey]);
   // Los anuncios «Patrocinado» van entre las publicaciones, solo en «Todo»
   const { feed: adFeed } = useAds(client ? 'client' : 'barista', ads);
-  const counts = chipCounts(withDay);
-  const listed = embedded ? withDay : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
+  const scoped = embedded ? withDay.filter((i) => !COFFEE.has(i.kind)) : cafe ? withDay.filter((i) => COFFEE.has(i.kind) && i.kind !== 'precios') : withDay;
+  const counts = chipCounts(scoped);
+  const listed = embedded || cafe ? scoped : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
   // En el inicio el muro sigue con sus globitos; Hoy entero va en Ahora / Noticias / Recetas
-  const shown = embedded
+  const shown = cafe ? filterFeed(listed, chip) : embedded
     ? (chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip))
     : tab === 'ahora' ? withAds(tabFeed(listed, 'ahora'), adFeed) : tabFeed(listed, tab);
   const medals = embedded ? [] : medalsOf(withDay);
@@ -480,21 +485,22 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
         <header className="mapp-feed-head">
           <div>
             <p className="mapp-kicker">{today}</p>
-            <h2 className="mapp-title is-small">Hoy en el café</h2>
+            <h2 className="mapp-title is-small">En la calle hoy</h2>
           </div>
         </header>
       ) : (
-        <CoffeeHead head={coffeeHead({ prices, baristas })} title={client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} />
+        <CoffeeHead head={coffeeHead({ prices, baristas })} title={cafe ? 'Café' : client ? 'Hoy en el café' : 'Hoy en la calle'} today={today} admin={admin} onEdit={() => setEditing(true)} onPublish={() => setPublishing(true)} />
       )}
       {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
           Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
-      {!embedded && (
+      {cafe && <OrigenStrip go={go} />}
+      {!embedded && !cafe && (
         <div className="mapp-hoytabs" role="tablist" aria-label="Sección de Hoy" data-testid="hoy-tabs">
           {HOY_TABS.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}
         </div>
       )}
-      <ul className="mapp-hists is-feed" role={embedded ? 'tablist' : undefined} aria-label={embedded ? 'Qué ver' : 'En la calle ahora'} data-testid="feed-bubbles" style={!embedded && tab !== 'ahora' ? { display: 'none' } : undefined}>
-        {embedded && CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
+      <ul className="mapp-hists is-feed" role={embedded || cafe ? 'tablist' : undefined} aria-label={embedded || cafe ? 'Qué ver' : 'En la calle ahora'} data-testid="feed-bubbles" style={!embedded && !cafe && tab !== 'ahora' ? { display: 'none' } : undefined}>
+        {(embedded || cafe) && (cafe ? CAFE_CHIPS : CHIPS).filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
           <li key={id} role="presentation">
             <button type="button" role="tab" aria-selected={chip === id} aria-label={label} className={`mapp-hist is-topic ${chip === id ? 'on' : ''}`} onClick={() => setChip(id)}>
               <span className="mapp-hist-ring"><span className="mapp-hist-av" aria-hidden="true">{CHIP_ICON[id] ?? '☕'}</span></span>
@@ -502,7 +508,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
             </button>
           </li>
         ))}
-        {!embedded && baristas.filter((b) => b.status === 'live' && b.id !== selfId).slice(0, 12).map((b) => {
+        {!embedded && !cafe && baristas.filter((b) => b.status === 'live' && b.id !== selfId).slice(0, 12).map((b) => {
           const first = String(b.name ?? '').split(' ')[0];
           return (
             <li key={b.id} role="presentation">
@@ -517,7 +523,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           );
         })}
       </ul>
-      {admin && !curating && (embedded ? chip === 'cafe' : tab === 'noticias') && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
+      {admin && !curating && (embedded || cafe ? chip === 'cafe' : tab === 'noticias') && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
       {editing && <PriceForm prices={prices} cfg={cfg} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
       {canPost && mine.length > 0 && (
@@ -535,7 +541,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           {mine.some((m) => m.status === 'pending') && <p className="mapp-fine">El equipo revisa lo que envías antes de que salga en Hoy.</p>}
         </section>
       )}
-      {tab === 'ahora' && medals.length > 0 && (
+      {!cafe && tab === 'ahora' && medals.length > 0 && (
         <section className="mapp-medals" aria-label="Tus logros" data-testid="medals">
           <p className="mapp-cota">Tus logros</p>
           <ul>
@@ -548,7 +554,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
             : canShareDay ? <button type="button" className="mapp-link" onClick={onShareDay}>Compartir mi día ›</button> : null}
         </section>
       )}
-      {!embedded && tab === 'noticias' ? (
+      {!embedded && !cafe && tab === 'noticias' ? (
         // Las noticias en filas de una línea: caben cuatro donde antes una; un toque abre la entera
         <ul className="mapp-news" data-testid="feed">
           {visible.length === 0 && <li className="mapp-muted">Hoy no hay noticias nuevas.</li>}

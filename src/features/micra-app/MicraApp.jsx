@@ -9,7 +9,7 @@ import OwnerView from './OwnerView.jsx';
 import Splash from './Splash.jsx';
 import Termo from './Termo.jsx';
 import PullRefresh from './PullRefresh.jsx';
-import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconCompass, IconSend, IconBell, IconChevron } from './icons.jsx';
+import { IconCup, IconToday, IconClipboard, IconCamera, IconUser, IconPin, IconBars, IconHome, IconMountain, IconSend, IconBell, IconChevron } from './icons.jsx';
 import './micra-app.css';
 import './termico-app.css';
 import ThermalDefs from '../../shared/layout/ThermalDefs.jsx';
@@ -151,16 +151,47 @@ function TopGoal({ board, onClick }) {
   );
 }
 
-function ModeSwitch({ modes, mode, onChange }) {
-  if (modes.length < 2) return null;
-  const label = { client: 'Cliente', barista: 'Barista', owner: 'Equipo' };
+// El cambio de modo es solo del dueño (pedido del usuario, 12 nov 2026: «solo para mí, a los demás
+// no les debe aparecer»): sin barra arriba; su círculo de Mi perfil lleva el modo y abre esta hoja.
+const MODES = [
+  { id: 'client', label: 'Cliente', sub: 'Como ve Micra quien busca café', badge: 'CL', Icon: IconCup },
+  { id: 'barista', label: 'Barista', sub: 'Vender, Hoy, Aprende y Mi plata', badge: 'BA', Icon: IconTermoLine },
+  { id: 'owner', label: 'Equipo', sub: 'El día de todos, el estudio y el mapa', badge: 'EQ', Icon: IconClipboard },
+];
+
+function IconTermoLine() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="8" y="2.5" width="8" height="4" rx="1" /><rect x="6.5" y="6.5" width="11" height="15" rx="3" /></svg>;
+}
+
+function ModeSheet({ mode, onPick, onProfile, onClose }) {
+  useEffect(() => {
+    const esc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [onClose]);
   return (
-    <div className="mapp-modes" role="tablist" aria-label="Ver Micra como">
-      {modes.map((m) => (
-        <button key={m} type="button" role="tab" aria-selected={mode === m} className={mode === m ? 'on' : ''} onClick={() => onChange(m)}>
-          {label[m]}
-        </button>
-      ))}
+    <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Ver Micra como" data-testid="mode-sheet">
+      <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" tabIndex={-1} onClick={onClose} />
+      <section className="mapp-sheet mapp-modesheet">
+        <i className="mapp-sheet-handle" aria-hidden="true" />
+        <h2 className="mapp-title is-small">Ver Micra como</h2>
+        <p className="mapp-modesheet-sub">Solo lo ves tú. Micra recuerda el modo la próxima vez.</p>
+        <div className="mapp-modesheet-list">
+          {MODES.map(({ id, label, sub, Icon }) => (
+            <button key={id} type="button" className={`mapp-moderow${mode === id ? ' on' : ''}`} aria-pressed={mode === id} onClick={() => onPick(id)} data-testid={`mode-${id}`}>
+              <span className="mapp-moderow-ic"><Icon /></span>
+              <span className="mapp-moderow-txt"><b>{label}</b><small>{sub}</small></span>
+              {mode === id && <span className="mapp-moderow-ok" aria-hidden="true">✓</span>}
+            </button>
+          ))}
+          {onProfile && (
+            <button type="button" className="mapp-moderow is-profile" onClick={onProfile} data-testid="mode-profile">
+              <span className="mapp-moderow-ic"><IconUser /></span>
+              <span className="mapp-moderow-txt"><b>Ir a mi perfil</b><small>Cuenta, permisos y salir</small></span>
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -195,7 +226,9 @@ export default function MicraApp() {
     return () => { window.removeEventListener('micra:pill', bump); clearInterval(id); };
   }, []);
 
-  const modes = ['client', ...(who.barista || who.admin ? ['barista'] : []), ...(who.admin ? ['owner'] : [])];
+  // Solo el dueño cambia de modo; un barista vive en el suyo y el cliente no ve nada de esto
+  const canSwitch = !!who.admin;
+  const [modeSheet, setModeSheet] = useState(false);
   const teamView = route.view === 'owner' || route.view === 'study' || route.view === 'camera' || route.view === 'ficha';
   // /micra/video: la cámara con filtros en modo barista, solo para el equipo
   const videoView = route.view === 'video';
@@ -234,6 +267,7 @@ export default function MicraApp() {
   const wantFromBar = () => { if (route.view !== 'home') go('/micra'); requestWant(); };
 
   const switchMode = (m) => {
+    setModeSheet(false);
     try { localStorage.setItem(MODE_KEY, m); } catch { /* sin memoria */ }
     go(m === 'owner' ? '/micra/equipo' : m === 'barista' ? '/micra/barista' : '/micra');
   };
@@ -250,7 +284,7 @@ export default function MicraApp() {
   let body;
   if (route.view === 'barista-card') body = <BaristaPage id={route.id} go={go} night={night} />;
   else if (route.view === 'holds') body = <MyHolds go={go} />;
-  else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" /></Suspense>;
+  else if (route.view === 'feed') body = <Suspense fallback={<Cargando />}><HoyFeed go={go} audience="client" cafe /></Suspense>;
   else if (route.view === 'reto') body = <Suspense fallback={<Cargando />}><Competencia go={go} audience="client" /></Suspense>;
   else if (route.view === 'origen') body = <Suspense fallback={<Cargando />}>{route.id ? <SellerPage id={route.id} go={go} /> : <OrigenDirectory go={go} />}</Suspense>;
   else if (route.view === 'tienda') body = <Suspense fallback={<Cargando />}><Tienda go={go} /></Suspense>;
@@ -287,7 +321,7 @@ export default function MicraApp() {
   const clientTabs = viewMode === 'client' || joinTabs;
   // «Mi perfil», arriba a la derecha: las iniciales del barista, o la silueta (cliente, equipo, actuando como)
   const acting = who.admin && actAs;
-  const meTo = viewMode === 'client' ? null
+  const meTo = viewMode === 'client' ? (canSwitch ? '/micra/equipo/perfil' : null)
     : viewMode === 'barista' && !who.loading && (who.barista || acting) ? '/micra/barista/perfil'
       : viewMode === 'owner' && who.admin ? '/micra/equipo/perfil' : null;
   const meOn = route.view === 'me' || route.tab === 'perfil' || route.tab === 'qr';
@@ -312,31 +346,35 @@ export default function MicraApp() {
   return (
     <div className={`mapp ${night ? 'is-night' : 'is-day'} is-${viewMode}${teamTabs || joinTabs ? ' has-tabs' : ''}${red ? ' is-redtop' : ''}${route.view === 'study' && route.tab === 'mapa' ? ' is-wide' : ''}`}>
       <ThermalDefs />
-      <header className={`mapp-top${modes.length > 2 ? ' has-3' : ''}`} data-testid="topbar">
+      <header className="mapp-top" data-testid="topbar">
         {/* El termo del icono en su baldosa crema y la palabra: abre el menú del café (el inicio está en la barra de abajo) */}
         <button type="button" className="mapp-brand" onClick={() => setDrawer(true)} aria-label="Abrir el menú del café" aria-haspopup="dialog" aria-expanded={drawer} data-testid="brand-menu">
           <span className="mapp-brand-mark"><Termo /></span>
           <span className="mapp-brand-word">micra<i>.</i></span>
         </button>
-        {viewMode === 'barista' && route.view === 'barista' && board
-          ? <TopGoal board={board} onClick={() => go('/micra/barista')} />
-          : <ModeSwitch modes={modes} mode={viewMode} onChange={switchMode} />}
+        {viewMode === 'barista' && route.view === 'barista' && board && <TopGoal board={board} onClick={() => go('/micra/barista')} />}
         {viewMode === 'client' && (
           <button type="button" className="mapp-topicon is-bell" onClick={() => go('/micra/apartados')} aria-label={holdOn ? 'Mis apartados: tienes uno en curso' : 'Mis apartados'} title="Mis apartados" data-testid="top-bell">
             <IconBell />{holdOn && <i className="mapp-topicon-dot" aria-hidden="true" />}
           </button>
         )}
         {viewMode === 'client' && <TeamChat />}
-        {modes.length < 2 && viewMode !== 'client' && (
-          <button type="button" className="mapp-toplink" onClick={() => go('/micra')}>Busco café</button>
-        )}
         {meTo && (
-          <button type="button" className={`mapp-mebtn ${meOn ? 'on' : ''}`} onClick={() => go(meTo)} aria-label="Mi perfil" aria-current={meOn ? 'page' : undefined} data-testid="me-button">
+          <button type="button" className={`mapp-mebtn ${meOn ? 'on' : ''}${canSwitch ? ' has-mode' : ''}`}
+            onClick={() => (canSwitch ? setModeSheet(true) : go(meTo))}
+            aria-label={canSwitch ? `Ver Micra como: ${MODES.find((m) => m.id === viewMode).label}` : 'Mi perfil'}
+            aria-haspopup={canSwitch ? 'dialog' : undefined}
+            aria-current={meOn ? 'page' : undefined} data-testid="me-button">
             {meInitials ? <span>{meInitials}</span> : <IconUser />}
             {live && viewMode === 'barista' && <i className="mapp-mebtn-live" aria-hidden="true" />}
+            {canSwitch && <i className="mapp-mebtn-mode" aria-hidden="true" data-testid="me-mode">{MODES.find((m) => m.id === viewMode).badge}</i>}
           </button>
         )}
       </header>
+      {modeSheet && canSwitch && (
+        <ModeSheet mode={viewMode} onPick={switchMode} onClose={() => setModeSheet(false)}
+          onProfile={() => { setModeSheet(false); go(meTo); }} />
+      )}
       <PullRefresh onRefresh={() => setRefreshKey((k) => k + 1)} disabled={videoView || route.view === 'camera' || route.view === 'ficha' || route.view === 'study'} />
       <main className="mapp-main" key={route.view === 'barista' ? 'barista' : refreshKey}>{body}</main>
       {clientTabs && pill && !(pill.kind !== 'want' && route.view === 'holds') && (
@@ -353,9 +391,9 @@ export default function MicraApp() {
             <IconHome />
             <small className="mapp-tabs-l" aria-hidden="true">Inicio</small>
           </button>
-          <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/hoy')} aria-label="Hoy en el café" title="Hoy en el café">
-            <IconCompass />
-            <small className="mapp-tabs-l" aria-hidden="true">Hoy</small>
+          <button type="button" className={route.view === 'feed' ? 'on' : ''} aria-current={route.view === 'feed' ? 'page' : undefined} onClick={() => go('/micra/cafe')} aria-label="Café" title="Café" data-testid="tab-cafe">
+            <IconMountain />
+            <small className="mapp-tabs-l" aria-hidden="true">Café</small>
           </button>
           {/* El centro es lo que el cliente vino a hacer (maqueta del 10 nov 2026): «Quiero un café».
               Publicar queda en el «＋ Publicar» de Hoy */}
@@ -408,7 +446,7 @@ export default function MicraApp() {
       )}
       {drawer && (
         <Suspense fallback={null}>
-          <CafeDrawer mode={viewMode === 'barista' && (who.barista || acting) ? 'barista' : 'client'} go={go} onClose={closeDrawer} onAcero={() => setAcero(true)} pathname={window.location.pathname} />
+          <CafeDrawer mode={viewMode === 'barista' && (who.barista || acting) ? 'barista' : 'client'} go={go} onClose={closeDrawer} onAcero={() => setAcero(true)} pathname={window.location.pathname} me={viewMode === 'barista' ? meInitials : (clientName ? initials(clientName) : null)} />
         </Suspense>
       )}
       {acero && <Suspense fallback={null}><AceroAd onClose={() => setAcero(false)} /></Suspense>}

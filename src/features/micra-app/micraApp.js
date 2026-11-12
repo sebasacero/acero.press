@@ -188,6 +188,20 @@ export function sortBaristas(list, { me = null, now = new Date(), favorites = []
       || String(a.name).localeCompare(String(b.name), 'es'));
 }
 
+// Al cliente solo le salen los baristas cerca (pedido del usuario, 12 nov 2026: «no deberían
+// aparecer todos los baristas en lista, solo los que estén cerca»): a 1,5 km o menos (unas 15
+// cuadras, lo que se camina por un tinto). Sus favoritos salen siempre, estén donde estén.
+// Sin la ubicación no hay lista, solo sus favoritos y el botón para darla.
+export const NEAR_M = 1500;
+
+/** Los baristas que la lista del cliente puede mostrar (ya ordenados por `sortBaristas`). */
+export function nearBaristas(sorted, { me = null, radius = NEAR_M } = {}) {
+  const list = sorted ?? [];
+  if (!me) return { items: list.filter((b) => b.favorite), needsLocation: true, far: 0 };
+  const items = list.filter((b) => b.favorite || (b.distance != null && b.distance <= radius));
+  return { items, needsLocation: false, far: list.length - items.length };
+}
+
 // Con muchos baristas la lista del cliente se pinta de a 12 (los de arriba ya vienen
 // ordenados: favoritos, en la calle, más cerca) y las historias muestran 20: con 150
 // baristas el inicio medía 92 pantallas y un celular lento se trababa 2 s cada minuto
@@ -278,7 +292,8 @@ export function parseRoute(pathname) {
   const b = p.match(/^\/micra\/b\/([0-9a-f-]{8,40})$/i);
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
-  if (p === '/micra/hoy') return { view: 'feed' };
+  // El café (12 nov 2026): la pestaña de la montaña; /micra/hoy queda para los enlaces viejos
+  if (p === '/micra/cafe' || p === '/micra/hoy') return { view: 'feed' };
   // El café de origen: marcas y fincas, su perfil, la tienda con la góndola y la finca del caficultor
   if (p === '/micra/origen') return { view: 'origen' };
   const o = p.match(/^\/micra\/origen\/([a-z0-9-]{1,40})$/);
