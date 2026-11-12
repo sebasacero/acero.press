@@ -235,7 +235,9 @@ test('equipo: cierra su sesión desde Equipo › Mi perfil; «Actuar como» sigu
   await page.getByLabel('Buscar un barista').fill('Jairo');
   await page.getByRole('list', { name: 'Baristas encontrados' }).getByRole('listitem').filter({ hasText: 'Jairo' }).getByRole('button', { name: 'Actuar como' }).click();
   await expect(page.getByText('Actuando como')).toContainText('Jairo');
-  await page.getByRole('button', { name: 'Mi perfil' }).click();
+  // El círculo del dueño abre «Ver Micra como»; su perfil está al final de la hoja
+  await page.getByTestId('me-button').click();
+  await page.getByTestId('mode-profile').click();
   await expect(page.getByTestId('barista-profile')).toContainText('Perfil del barista');
   await expect(page.getByTestId('signout')).toHaveCount(0);
   await page.getByRole('button', { name: 'Equipo › Mi perfil' }).click();

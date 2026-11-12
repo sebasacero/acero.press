@@ -330,8 +330,8 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
 
       {/* Escuela, Competencia y ACERO.press pasaron al menú del café (el logo de arriba, 7 nov 2026) */}
       <Group title="Otros">
-        {/* «Cliente / Barista» ya no va arriba (ahí va la meta del día): se cambia desde aquí */}
-        <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />
+        {/* Cambiar de modo es solo del dueño: un barista no ve la app como cliente desde aquí */}
+        {admin && <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />}
         {admin && <Tile icon={IconClipboard} label="Equipo" onClick={() => switchTo('owner', go)} testid="tile-mode-owner" />}
       </Group>
 

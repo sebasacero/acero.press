@@ -118,6 +118,8 @@ test('barista: una zona con una sola señal no sale; con otra señal en la misma
 test('cliente: «Cerca de mí» manda una sola señal con la celda, sin su punto ni su nombre; otra solo después de 15 min', async ({ browser }) => {
   const { page, errors, seeks } = await open(browser, { gps: true });
   await page.addInitScript(() => { localStorage.setItem('micra_name_v1', JSON.stringify('Sebas · 302')); });
+  // Primera vez: el navegador todavía no ha dado el permiso (si ya lo dio, la ubicación se lee sola y sin señal)
+  await page.addInitScript(() => { navigator.permissions.query = () => Promise.resolve({ state: 'prompt' }); });
   await page.goto('/micra', { waitUntil: 'load' });
 
   // Antes de pedir la ubicación, la línea que dice qué se comparte

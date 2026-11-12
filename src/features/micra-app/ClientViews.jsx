@@ -4,7 +4,7 @@ import {
   money, windowLabel, distanceLabel, STATUS_TEXT, initials, baristaPath, hourLabel, MAX_CUPS, holdStage, HOLD_STAGES, greeting, DRINK_CHOICES, drinkCounts,
   searchBaristas, drinkFromQuery, nearZone,
   recordBaristaHistory, myBaristas,
-  listPage, STORIES_MAX,
+  listPage, STORIES_MAX, nearBaristas, NEAR_M,
 } from './micraApp.js';
 import * as api from './api.js';
 import { StampsCard, PayBarista } from './Loyalty.jsx';
@@ -129,6 +129,14 @@ function useMe() {
     setAsking(false);
     return p;
   };
+  // Si ya dio el permiso antes, la ubicación se lee sola al abrir: la lista es de quien está cerca
+  useEffect(() => {
+    let alive = true;
+    navigator.permissions?.query?.({ name: 'geolocation' })
+      .then((st) => { if (alive && st?.state === 'granted') ask(); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return { me, ask, asking };
 }
 
@@ -327,18 +335,22 @@ export function ClientHome({ go }) {
   const askNear = async () => { const p = await ask(); if (p) seek(p, drink); };
   const pickDrink = (id) => { setDrink(id); if (me) seek(me, id); };
   const sorted = useMemo(() => sortBaristas(list ?? [], { me, favorites: favs }), [list, me, favs]);
-  const counts = drinkCounts(sorted);
+  // Solo los de cerca (y sus favoritos); buscar un nombre sí busca en todos
+  const near = useMemo(() => nearBaristas(sorted, { me }), [sorted, me]);
+  const counts = drinkCounts(near.items);
   // El buscador de arriba: una bebida escrita es su filtro; lo demás busca nombre, punto o localidad
   const [q, setQ] = useState('');
   const searching = q.trim().length > 0;
   const qDrink = drinkFromQuery(q);
-  const shown = searchBaristas(pickBaristas(sorted, { drink: qDrink ?? drink, now: nowOnly }), qDrink ? '' : q);
+  const base = searching && !qDrink ? sorted : near.items;
+  const shown = searchBaristas(pickBaristas(base, { drink: qDrink ?? drink, now: nowOnly }), qDrink ? '' : q);
+  const askFirst = near.needsLocation && !(searching && !qDrink);
   // De a 12; cambiar el filtro o la búsqueda vuelve a la primera página
   const [pages, setPages] = useState(1);
   useEffect(() => { setPages(1); }, [q, drink, nowOnly]);
   const page = listPage(shown, pages);
   const zone = nearZone(sorted, me);
-  const live = sorted.filter((b) => b.status === 'live').length;
+  const live = near.items.filter((b) => b.status === 'live').length;
   const open = (id) => go(baristaPath(id));
   // Si ya apartó hoy, arriba va cómo va eso, no la bienvenida
   const [hold, setHold] = useState(null);
@@ -409,7 +421,7 @@ export function ClientHome({ go }) {
       {/* «Quiero un café» justo bajo el radar; el botón del centro de la barra hace lo mismo */}
       {!searching && <WantCoffee me={me} ask={ask} drink={drink} />}
       {/* Y como una red social: las historias de los baristas (al buscar, solo los resultados) */}
-      {!searching && <Stories baristas={sorted} go={go} ads={ads.story} onAd={setAdStory} reto={reto} />}
+      {!searching && <Stories baristas={near.items} go={go} ads={ads.story} onAd={setAdStory} reto={reto} />}
       {adStory && <AdStoryView ad={adStory} onClose={() => setAdStory(null)} />}
       {searching && <p className="mapp-feedline" role="status" data-testid="search-count"><b>{shown.length === 1 ? '1 barista' : `${shown.length} baristas`}</b> para «{q.trim()}»</p>}
       {searching ? null : hold && holdBarista ? (
@@ -432,7 +444,7 @@ export function ClientHome({ go }) {
             <button key={d.id} type="button" className={drink === d.id ? 'on' : ''} aria-pressed={drink === d.id} onClick={() => pickDrink(d.id)} data-testid={`drink-${d.id}`}>
               <span className="mapp-drink-ico" aria-hidden="true">{d.icon}</span>
               <b>{d.label}</b>
-              {list && <small>{counts[d.id] === 1 ? '1 barista' : `${counts[d.id]} baristas`}</small>}
+              {list && !near.needsLocation && <small>{counts[d.id] === 1 ? '1 barista' : `${counts[d.id]} baristas`}</small>}
             </button>
           ))}
         </div>
@@ -453,6 +465,18 @@ export function ClientHome({ go }) {
       {error && (
         <p className="mapp-error" role="alert">No se pudo cargar la lista. <button type="button" className="mapp-link" onClick={reload}>Reintentar</button></p>
       )}
+      {list && !error && askFirst && (
+        <div className="mapp-glass mapp-askloc" data-testid="ask-location">
+          <IconPin />
+          <div>
+            <b>{shown.length ? 'Y los que pasan cerca de ti' : '¿Quién pasa con café cerca de ti?'}</b>
+            <p>Con tu ubicación te mostramos los baristas a {Math.round(NEAR_M / 100)} cuadras o menos. Tu punto no se guarda.</p>
+          </div>
+          <button type="button" className="mapp-btn is-cta" onClick={askNear} disabled={asking} data-testid="ask-location-go">
+            {asking ? 'Buscando…' : 'Ver quién está cerca'}
+          </button>
+        </div>
+      )}
       {list && shown.length > 0 && (
         <ul className="mapp-list is-rows" aria-label="Baristas">
           {page.items.map((b, i) => <BaristaRow key={b.id} b={b} onOpen={open} i={i} />)}
@@ -463,15 +487,15 @@ export function ClientHome({ go }) {
           Ver más baristas ({page.rest})
         </button>
       )}
-      {list && !error && shown.length === 0 && (
+      {list && !error && shown.length === 0 && !askFirst && (
         <div className="mapp-empty">
           <Figure name="entrega" className="is-empty" />
-          <b>{missing ? 'Micra abre muy pronto.' : sorted.length ? 'Nadie con ese filtro ahora.' : 'Todavía no hay baristas en Micra cerca de ti.'}</b>
+          <b>{missing ? 'Micra abre muy pronto.' : near.items.length ? 'Nadie con ese filtro ahora.' : `Todavía no hay baristas a ${Math.round(NEAR_M / 100)} cuadras de ti.`}</b>
           <p>Estamos sumando a quienes ya venden café en la calle en Chapinero, Kennedy y Bosa. Si tienes un barista de confianza, invítalo.</p>
           <a className="mapp-btn is-ghost" href={`https://wa.me/?text=${encodeURIComponent(inviteText())}`} target="_blank" rel="noopener noreferrer">Invitar a mi barista</a>
         </div>
       )}
-      {list && !error && shown.length === 0 && !missing && (
+      {list && !error && shown.length === 0 && !missing && !askFirst && (
         // Sin nadie cerca, el café se lleva a casa: la tienda de ACERO.press
         <a className="mapp-glass mapp-takehome" href={platform.siteUrl('/#beans')} data-testid="take-home">
           <span aria-hidden="true">☕</span>
@@ -493,7 +517,7 @@ export function ClientHome({ go }) {
       </section>}
 
       {/* Como Instagram: debajo de todo sigue el muro (los puestos de los baristas, el precio, el café de Colombia, recetas y videos) */}
-      {!searching && <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? sorted : null} ads={ads.rows} challenge={reto} /></Suspense>}
+      {!searching && <Suspense fallback={null}><HoyFeed go={go} audience="client" embedded list={list ? near.items : null} ads={ads.rows} challenge={reto} /></Suspense>}
     </div>
   );
 }
