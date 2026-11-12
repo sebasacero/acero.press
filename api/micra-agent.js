@@ -47,7 +47,24 @@ const runRow = (kind, out) => ({
   tools: out.tools ?? [],
 });
 
+// La app Micra instalada llama desde su propio origen (iOS: capacitor://localhost,
+// Android: https://localhost), como en api/_acero/app.py. Va con el token en la
+// cabecera, sin cookies. Sin esto el navegador del celular corta en la consulta
+// previa (OPTIONS) y la tarjeta solo dice «Load failed».
+const APP_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost']);
+function cors(req, res) {
+  const origin = req.headers.origin;
+  if (!APP_ORIGINS.has(origin)) return;
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Max-Age', '86400');
+}
+
 export default async function handler(req, res) {
+  cors(req, res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
