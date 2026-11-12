@@ -24,11 +24,17 @@ const store = () => { try { return window.localStorage; } catch { return null; }
 
 async function post(body) {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(apiUrl('/api/micra-agent'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-    body: JSON.stringify(body),
-  });
+  let res;
+  try {
+    res = await fetch(apiUrl('/api/micra-agent'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    // Sin señal o el sitio no respondió: el navegador solo dice «Load failed»
+    throw new Error('No se pudo hablar con Celestra. Revisa la señal e intenta de nuevo.');
+  }
   const out = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error(out.error || 'No respondió. Intenta de nuevo.'), { estado: out.estado });
   return out;
