@@ -403,7 +403,7 @@ test('el logo abre el menú del café: lo del café sale de la izquierda y Mi pe
   const drawer = page.getByRole('dialog', { name: 'El café en Micra' });
   await expect(drawer).toBeVisible();
   await expect(logo).toHaveAttribute('aria-expanded', 'true');
-  for (const name of ['Tienda', 'Marcas y fincas', 'Hoy en el café', 'Competencia', 'Escuela', 'ACERO.press', 'Sé barista', 'Soy caficultor']) {
+  for (const name of ['Tienda', 'Marcas y fincas', 'Café', 'Competencia', 'Escuela', 'ACERO.press', 'Sé barista', 'Soy caficultor']) {
     await expect(drawer.getByText(name, { exact: true })).toBeVisible();
   }
   await expect(drawer).not.toContainText('Equipo');

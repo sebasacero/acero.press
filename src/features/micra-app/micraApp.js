@@ -292,7 +292,8 @@ export function parseRoute(pathname) {
   const b = p.match(/^\/micra\/b\/([0-9a-f-]{8,40})$/i);
   if (b) return { view: 'barista-card', id: b[1].toLowerCase() };
   if (p === '/micra/apartados') return { view: 'holds' };
-  if (p === '/micra/hoy') return { view: 'feed' };
+  // El café (12 nov 2026): la pestaña de la montaña; /micra/hoy queda para los enlaces viejos
+  if (p === '/micra/cafe' || p === '/micra/hoy') return { view: 'feed' };
   // El café de origen: marcas y fincas, su perfil, la tienda con la góndola y la finca del caficultor
   if (p === '/micra/origen') return { view: 'origen' };
   const o = p.match(/^\/micra\/origen\/([a-z0-9-]{1,40})$/);
