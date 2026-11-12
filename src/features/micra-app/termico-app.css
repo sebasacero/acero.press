@@ -930,3 +930,12 @@
 .mapp-origen-embhead{padding:0 2px}
 .mapp-origen-embhead .mapp-kicker{margin:0 0 2px}
 .mapp-origen-embhead .mapp-title{margin:0}
+/* Café como restaurantes (12 nov 2026): cada finca o marca con su nombre y sus cafés en fila */
+.mapp-oshelves{display:flex;flex-direction:column;gap:14px}
+.mapp-oshelf{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid rgba(20,16,40,.08)}
+.mapp-oshelf-head{display:flex;align-items:center;gap:12px;min-height:52px;width:100%;padding:0;background:none;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.mapp-oshelf-head .mapp-orow-txt b{font-size:17px}
+button.mapp-hcoffee.mapp-olot{width:100%;height:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.mapp-olot-art{display:grid;place-items:center;width:100%;aspect-ratio:1.6;border-radius:12px;font-size:30px;background:linear-gradient(135deg,#F5F1E8,#EADFCB)}
+.mapp-olot small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mapp-hcoffee-price i{font-style:normal;opacity:.6;font-size:.85em}

@@ -3,7 +3,7 @@ import { supabase } from '../../shared/lib/supabaseClient.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { money, sortBaristas } from './micraApp.js';
-import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText } from './origen.js';
+import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText, sellerShelves, lotCard } from './origen.js';
 import { fetchCoffeeVarieties } from '../../shared/lib/catalog.js';
 
 // El café de origen para el cliente (7 nov 2026, pedido del usuario): el directorio de marcas y
@@ -11,16 +11,15 @@ import { fetchCoffeeVarieties } from '../../shared/lib/catalog.js';
 // (/micra/tienda), como la de Insumos. Lo puro en origen.js; los pedidos van por WhatsApp.
 
 /** app_config `micra_origen`, leído una vez por pantalla. */
-export function useOrigen(enabled = true) {
+export function useOrigen() {
   const [origen, setOrigen] = useState(null);
   useEffect(() => {
-    if (!enabled) return undefined;
     let alive = true;
     supabase.from('app_config').select('value').eq('key', ORIGEN_KEY).maybeSingle()
       .then(({ data }) => alive && setOrigen(readOrigen(data?.value)))
       .catch(() => alive && setOrigen(readOrigen(null)));
     return () => { alive = false; };
-  }, [enabled]);
+  }, []);
   return origen;
 }
 
@@ -90,30 +89,81 @@ function HouseCoffees({ cards, team }) {
   );
 }
 
-/** Lo principal de la pestaña Café: la ventana de Fincas y marcas y, debajo, el café que se vende. */
+/** Una finca o marca como un restaurante en la lista: su nombre arriba y sus cafés en fila. */
+function SellerShelf({ s, go }) {
+  return (
+    <section className="mapp-oshelf" aria-labelledby={`os-${s.id}`} data-testid={`shelf-${s.id}`}>
+      <button type="button" className="mapp-oshelf-head" onClick={() => go(`/micra/origen/${s.id}`)}>
+        <SellerMark s={s} />
+        <span className="mapp-orow-txt">
+          <b id={`os-${s.id}`}>{s.name}{s.verified && <i className="mapp-oseal" aria-label="verificada">✓</i>}</b>
+          <small>{[s.kind === 'finca' ? 'Finca' : 'Marca', s.city, s.altitude ? `${s.altitude.toLocaleString('es-CO')} m` : null].filter(Boolean).join(' · ')}</small>
+        </span>
+        <span className="mapp-orow-go" aria-hidden="true">›</span>
+      </button>
+      <ul className="mapp-hcoffee-row">
+        {s.lots.map((l) => {
+          const c = lotCard(l);
+          return (
+            <li key={c.id}>
+              <button type="button" className="mapp-hcoffee mapp-olot" onClick={() => go(`/micra/origen/${s.id}`)} data-testid={`lot-${s.id}-${c.id}`}>
+                <span className="mapp-olot-art" aria-hidden="true">{s.kind === 'finca' ? '🫘' : '☕'}</span>
+                <b>{c.name}</b>
+                <small>{[c.line, c.notes].filter(Boolean).join(' · ')}</small>
+                {c.price && <span className="mapp-hcoffee-price">{money(c.price)} <i>{c.unit}</i></span>}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/** La pestaña Café (12 nov 2026, pedido del usuario): primero las bolsas de café y luego cada
+ *  finca o marca con sus cafés, una tras otra, como los restaurantes en una app de domicilios. */
 export function CafeShelf({ go }) {
   const origen = useOrigen();
   const [cards, setCards] = useState(null);
   const [team, setTeam] = useState('573152125327');
+  const [filter, setFilter] = useState('todas');
   useEffect(() => {
     let alive = true;
     fetchCoffeeVarieties().then((list) => alive && setCards(houseCoffeeCards(list))).catch(() => alive && setCards([]));
     api.teamWhatsApp().then((t) => alive && t && setTeam(t)).catch(() => {});
     return () => { alive = false; };
   }, []);
-  // Lo principal (pedido del usuario, 12 nov 2026): la ventana de Fincas y marcas entera, primero
+  const shelves = origen ? sellerShelves(origen, filter) : [];
+  const ask = `https://wa.me/${team}?text=${encodeURIComponent('Hola, equipo de Micra. Tengo una marca o una finca de café y quiero venderlo con ustedes.')}`;
   return (
     <div className="mapp-cafeshelf" data-testid="cafe-shelf">
-      <OrigenDirectory go={go} embedded origen={origen} />
       <HouseCoffees cards={cards} team={team} />
+      <section className="mapp-oshelves" aria-labelledby="cafe-origen-h" data-testid="cafe-origen-dir">
+        <header className="mapp-origen-embhead">
+          <p className="mapp-kicker">Quién hace el café que tomas</p>
+          <h2 id="cafe-origen-h" className="mapp-title is-small">Fincas y marcas</h2>
+        </header>
+        <div className="mapp-chips is-scroll mapp-origen-chips" role="tablist" aria-label="Filtrar">
+          {[['todas', 'Todas'], ['fincas', 'Fincas'], ['marcas', 'Marcas']].map(([id, label]) => (
+            <button key={id} type="button" role="tab" aria-selected={filter === id} className={filter === id ? 'on' : ''} onClick={() => setFilter(id)}>{label}</button>
+          ))}
+          <button type="button" className="mapp-origen-shop" onClick={() => go('/micra/tienda')} data-testid="to-shop">🛍 Tienda</button>
+        </div>
+        {!origen && <p className="mapp-fine">Cargando…</p>}
+        {shelves.map((s) => <SellerShelf key={s.id} s={s} go={go} />)}
+        {origen && shelves.length === 0 && (
+          <p className="mapp-glass mapp-ogroup mapp-fine" data-testid="origen-empty">Todavía no hay {filter === 'marcas' ? 'marcas con acuerdo' : filter === 'fincas' ? 'fincas verificadas' : 'fincas ni marcas'} en Micra. Las primeras salen aquí cuando firmen.</p>
+        )}
+        <a className="mapp-btn is-ghost" href={ask} target="_blank" rel="noopener noreferrer" data-testid="origen-ask">¿Tienes una finca o una marca? Escríbenos</a>
+        <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/fincas')} data-testid="to-finca">Soy caficultor: quiero vender mi café</button>
+      </section>
     </div>
   );
 }
 
 /** /micra/origen: quién hace el café. Marcas con acuerdo y fincas verificadas. */
-export function OrigenDirectory({ go, embedded = false, origen: given }) {
-  const loaded = useOrigen(!embedded);
-  const origen = embedded ? given : loaded;
+export function OrigenDirectory({ go }) {
+  const origen = useOrigen();
   const [filter, setFilter] = useState('todas');
   const [team, setTeam] = useState(null);
   useEffect(() => { api.teamWhatsApp().then(setTeam).catch(() => setTeam('573152125327')); }, []);
@@ -122,13 +172,8 @@ export function OrigenDirectory({ go, embedded = false, origen: given }) {
   const fincas = sellersOf(origen, 'fincas');
   const ask = `https://wa.me/${team}?text=${encodeURIComponent('Hola, equipo de Micra. Tengo una marca o una finca de café y quiero venderlo con ustedes.')}`;
   return (
-    <div className={embedded ? 'mapp-origen is-embedded' : 'mapp-client mapp-origen'} data-testid={embedded ? 'cafe-origen-dir' : 'origen'}>
-      {embedded ? (
-        <header className="mapp-origen-embhead">
-          <p className="mapp-kicker">Quién hace el café que tomas</p>
-          <h2 className="mapp-title is-small">Fincas y marcas</h2>
-        </header>
-      ) : <OHead kicker="Quién hace el café que tomas" title="Marcas y fincas" pill="Café de Colombia" back={{ to: '/micra', label: 'Inicio' }} go={go} testid="origen-head" />}
+    <div className="mapp-client mapp-origen" data-testid="origen">
+      <OHead kicker="Quién hace el café que tomas" title="Marcas y fincas" pill="Café de Colombia" back={{ to: '/micra', label: 'Inicio' }} go={go} testid="origen-head" />
       <div className="mapp-chips is-scroll mapp-origen-chips" role="tablist" aria-label="Filtrar">
         {[['todas', 'Todas'], ['marcas', 'Marcas'], ['fincas', 'Fincas']].map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={filter === id} className={filter === id ? 'on' : ''} onClick={() => setFilter(id)}>{label}</button>
