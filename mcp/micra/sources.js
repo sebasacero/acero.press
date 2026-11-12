@@ -1,7 +1,7 @@
 // De dónde lee el servidor MCP. Dos fuentes con la misma forma:
 //   remoteSource: producción, con la sesión de quien pregunta (el owner). La
 //     base y la API de Acero vuelven a verificar el rol: el MCP no salta RLS.
-//   fileSource: un JSON con las cuatro respuestas, para pruebas y demos sin red.
+//   fileSource: un JSON con las mismas respuestas, para pruebas y demos sin red.
 
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -35,16 +35,22 @@ export function remoteSource({ apiBase, supabaseUrl, anonKey, token, fetchImpl =
     liveMap: (minutes) => rpc('micra_live_map', { p_minutes: minutes }),
     ownerDay: () => rpc('micra_owner_day'),
     pulse: () => fetchImpl(`${api}/api/v1/pulse`).then((r) => asJson(r, 'pulso')),
+    holdRatings: () => rpc('micra_hold_ratings'),
+    holdTimes: (days) => rpc('micra_hold_times', { p_days: days }),
+    fincas: () => rpc('micra_finca_presencia_list'),
   };
 }
 
-/** @param {{ piloto?: any, liveMap?: any, ownerDay?: any, pulse?: any }} data */
+/** @param {{ piloto?: any, liveMap?: any, ownerDay?: any, pulse?: any, holdRatings?: any, holdTimes?: any, fincas?: any }} data */
 export function memorySource(data) {
   const pick = (k) => async () => {
     if (data?.[k] == null) throw new Error(`Sin datos de «${k}» en el archivo.`);
     return structuredClone(data[k]);
   };
-  return { piloto: pick('piloto'), liveMap: pick('liveMap'), ownerDay: pick('ownerDay'), pulse: pick('pulse') };
+  return {
+    piloto: pick('piloto'), liveMap: pick('liveMap'), ownerDay: pick('ownerDay'), pulse: pick('pulse'),
+    holdRatings: pick('holdRatings'), holdTimes: pick('holdTimes'), fincas: pick('fincas'),
+  };
 }
 
 export async function fileSource(path) {

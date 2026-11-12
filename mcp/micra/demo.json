@@ -453,5 +453,89 @@
       "trm": "ok",
       "clima": "ok"
     }
-  }
+  },
+  "holdRatings": [
+    {
+      "id": "t1",
+      "name": "Marlene Gómez",
+      "n": 7,
+      "avg": 4.6,
+      "paid_n": 5,
+      "paid_cup": 3500,
+      "listed_cup": 3500
+    },
+    {
+      "id": "t2",
+      "name": "Wilson Pérez",
+      "n": 3,
+      "avg": 3.7,
+      "paid_n": 2,
+      "paid_cup": 3000,
+      "listed_cup": 3500
+    }
+  ],
+  "holdTimes": {
+    "days": 7,
+    "n": 14,
+    "served": 10,
+    "missed": 2,
+    "cancelled": 2,
+    "waiting": 0,
+    "seen_n": 12,
+    "seen_p50": 2.5,
+    "seen_p90": 11.0,
+    "served_n": 10,
+    "served_p50": 18.0,
+    "served_p90": 41.0,
+    "reasons": {
+      "tarde": 1,
+      "no_llego": 1,
+      "cambie": 0,
+      "otro": 0
+    }
+  },
+  "fincas": [
+    {
+      "departamento": "Huila",
+      "nivel": 0,
+      "canales": [
+        "whatsapp"
+      ],
+      "venta": "cooperativa",
+      "interes": "si",
+      "muestra": true
+    },
+    {
+      "departamento": "Huila",
+      "nivel": 2,
+      "canales": [
+        "instagram"
+      ],
+      "venta": "exportador",
+      "interes": "si",
+      "muestra": true
+    },
+    {
+      "departamento": "Cauca",
+      "nivel": 1,
+      "canales": [
+        "whatsapp",
+        "facebook"
+      ],
+      "venta": "cooperativa",
+      "interes": "tal_vez",
+      "muestra": true
+    },
+    {
+      "departamento": "Antioquia",
+      "nivel": 3,
+      "canales": [
+        "web",
+        "instagram"
+      ],
+      "venta": "exportador",
+      "interes": "no",
+      "muestra": false
+    }
+  ]
 }

@@ -1,19 +1,27 @@
-// «Jefe de turno» de Micra (función serverless de Vercel, solo el owner).
+// Celestra (antes «Jefe de turno»): la inteligencia de Micra, solo para el dueño.
 //
-// El equipo pregunta desde Equipo › Hoy («¿cómo vamos hoy?», «¿dónde buscan
-// café?»). Claude responde usando las herramientas del servidor MCP de Micra
-// (mcp/micra/), conectado en memoria y con la sesión de quien pregunta: la base
-// vuelve a verificar el rol en cada lectura. No hay herramientas que escriban.
+// Dos pedidos desde Equipo › Hoy:
+//   { question, history }   una pregunta («¿cómo vamos hoy?», «¿dónde buscan café?»)
+//   { action: 'parte' }     el parte del día: resumen y 3 propuestas, una vez al día
+// Claude responde con las herramientas del servidor MCP de Micra (mcp/micra/),
+// conectado en memoria y con la sesión de quien pregunta: la base vuelve a
+// verificar el rol en cada lectura. No hay herramientas que escriban en Micra;
+// lo único que se escribe es la propia memoria de Celestra (celestra_guardar).
+//
+// Tope: US$50 al mes (TOPE_USD). Cada corrida se anota con lo que costó en
+// celestra_runs (20261111200000_celestra.sql). Sin esa migración Celestra
+// responde igual, pero no guarda el parte ni puede contar el tope: lo dice.
 //
 // CONFIGURACIÓN (Vercel → Environment Variables): ANTHROPIC_API_KEY,
 // VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (las mismas de growth-agent.js).
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { askAgent, connectMicra } from '../mcp/micra/agent.js';
+import { askAgent, connectMicra, writeParte } from '../mcp/micra/agent.js';
 import { remoteSource } from '../mcp/micra/sources.js';
+import { TOPE_USD, cleanDecisions, overBudget } from '../mcp/micra/celestra.js';
 
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 120 };
 
 // Tope por usuario en la instancia: cada pregunta cuesta (ver «Deuda conocida» 4)
 const RATE = { windowMs: 10 * 60_000, max: 30 };
@@ -25,6 +33,19 @@ function limited(key) {
   hits.set(key, recent);
   return recent.length > RATE.max;
 }
+
+const bogotaDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+
+const runRow = (kind, out) => ({
+  kind,
+  model: out.model,
+  input_tokens: out.usage?.input_tokens ?? 0,
+  output_tokens: out.usage?.output_tokens ?? 0,
+  cache_read_tokens: out.usage?.cache_read_input_tokens ?? 0,
+  cache_write_tokens: out.usage?.cache_creation_input_tokens ?? 0,
+  cost_usd: out.cost ?? 0,
+  tools: out.tools ?? [],
+});
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -43,19 +64,42 @@ export default async function handler(req, res) {
   const { data: userData } = await sb.auth.getUser(jwt);
   const user = userData?.user;
   const { data: adminRow } = user ? await sb.from('admin_users').select('role').eq('auth_user_id', user.id).maybeSingle() : { data: null };
-  if (adminRow?.role !== 'owner') return res.status(403).json({ error: 'El Jefe de turno es solo para el dueño.' });
+  if (adminRow?.role !== 'owner') return res.status(403).json({ error: 'Celestra es solo para el dueño.' });
+
+  // La memoria y el gasto del mes. Sin la migración: null y se sigue sin guardar.
+  const { data: estado, error: estadoError } = await sb.rpc('celestra_estado');
+  const saved = !estadoError && estado != null;
+  const isParte = req.body?.action === 'parte';
+
+  // El parte de hoy ya escrito no se vuelve a pagar
+  if (isParte && saved && estado.parte) return res.status(200).json({ estado, saved: true });
+  if (saved && overBudget(Number(estado.gastado_mes))) {
+    return res.status(429).json({ error: `Celestra llegó al tope de US$${TOPE_USD} de este mes. Vuelve el 1.º del mes que viene.`, estado });
+  }
   if (limited(user.id)) return res.status(429).json({ error: 'Muchas preguntas seguidas: espera unos minutos.' });
 
   const proto = req.headers['x-forwarded-proto'] || 'https';
   const apiBase = `${proto}://${req.headers['x-forwarded-host'] || req.headers.host}`;
   const { client: mcp, close } = await connectMicra(remoteSource({ apiBase, supabaseUrl, anonKey, token: jwt }));
   try {
-    const out = await askAgent({ anthropic: new Anthropic(), mcp, question: req.body?.question, history: req.body?.history });
-    return res.status(200).json(out);
+    const anthropic = new Anthropic();
+    const out = isParte
+      ? await writeParte({ anthropic, mcp, today: bogotaDay(), decisions: saved ? estado.decisiones : cleanDecisions(req.body?.decisions) })
+      : await askAgent({ anthropic, mcp, question: req.body?.question, history: req.body?.history });
+
+    let after = null;
+    if (saved) {
+      const row = runRow(isParte ? 'parte' : 'pregunta', out);
+      const { data, error } = await sb.rpc('celestra_guardar', { p: isParte ? { ...row, parte: out.parte } : row });
+      if (error) console.error('celestra_guardar', error.message);
+      else after = data;
+    }
+    const base = { tools: out.tools, model: out.model, cost: out.cost, saved: after != null, estado: after };
+    return res.status(200).json(isParte ? { ...base, parte: out.parte } : { ...base, answer: out.answer });
   } catch (err) {
-    console.error('micra-agent', err);
+    console.error('celestra', err);
     const status = err.status && err.status < 500 ? err.status : 502;
-    return res.status(status).json({ error: status === 400 ? err.message : 'El Jefe de turno no pudo responder. Intenta de nuevo.' });
+    return res.status(status).json({ error: status === 400 ? err.message : 'Celestra no pudo responder. Intenta de nuevo.' });
   } finally {
     await close();
   }

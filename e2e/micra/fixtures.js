@@ -335,6 +335,23 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, { lat: r.lat, lng: r.lng, at: r.at });
     }
 
+    // Celestra (20261111200000_celestra.sql): sin M.celestra, la migración no está aplicada
+    const celfn = p.match(/\/rpc\/(celestra_estado|celestra_decidir|celestra_guardar)$/)?.[1];
+    if (celfn) {
+      const C = micra.celestra;
+      const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
+      if (!C) return fail(404, 'PGRST202', `Could not find the function public.${celfn} in the schema cache`);
+      if (!micra.admin) return fail(403, '42501', 'Celestra es solo para el dueño.');
+      C.decisiones ??= [];
+      if (celfn === 'celestra_decidir') {
+        const x = C.parte?.propuestas?.find((q) => q.id === data.p_id);
+        if (!x) return fail(404, 'P0002', 'No existe esa propuesta.');
+        Object.assign(x, { estado: data.p_estado, nota: data.p_nota ?? null });
+        C.decisiones = [{ dia: C.hoy, titulo: x.titulo, estado: x.estado, nota: x.nota }, ...C.decisiones.filter((d) => d.titulo !== x.titulo)];
+      }
+      return json(200, { hoy: C.hoy, gastado_mes: C.gastado_mes ?? 0, corridas_mes: C.corridas_mes ?? 0, parte: C.parte ?? null, decisiones: C.decisiones });
+    }
+
     // La insignia del termo: video sirviendo un tinto que verifica el equipo (20261111090000_micra_badges.sql)
     const bfn = p.match(/\/rpc\/(micra_badge_request|micra_badges_mine|micra_badges_pending|micra_badge_review)$/)?.[1];
     if (bfn) {
