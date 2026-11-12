@@ -115,7 +115,7 @@ test('la finca: qué falta en cada paso, la vista previa y el mensaje al equipo'
 });
 
 test('café de la casa: una tarjeta de 250 g por café, sin el sobre ni los que no tienen precio', async () => {
-  const { houseCoffeeCards, houseOrderText, shelfFincasFirst } = await import('./origen.js');
+  const { houseCoffeeCards, houseOrderText } = await import('./origen.js');
   const cards = houseCoffeeCards([
     { id: 'aji', name: 'Bourbon Aji', variety: 'Bourbon Aji', image: '/image/aji.png', sizes: ['18G', '250G', '500G', '1KG'], prices: { '18G': 3000, '250G': 25000, '500G': 50000, '1KG': 68000 } },
     { id: 'solo-kilo', name: 'Kilo', sizes: ['18G', '1KG'], prices: { '18G': 3000, '1KG': 60000 } },
@@ -125,7 +125,4 @@ test('café de la casa: una tarjeta de 250 g por café, sin el sobre ni los que 
   assert.deepEqual([cards[0].size, cards[0].price, cards[0].sizeText, cards[0].variety, cards[0].sizes], ['250G', 25000, '250 g', null, '250 g · 500 g · 1 kg']);
   assert.equal(cards[1].size, '1KG');
   assert.match(houseOrderText(cards[0]), /Bourbon Aji en bolsa de 250 g/);
-  assert.equal(shelfFincasFirst({ sellers: [] }), false);
-  assert.equal(shelfFincasFirst({ sellers: [{ id: 'x', kind: 'finca' }] }), true);
-  assert.equal(shelfFincasFirst(null), false);
 });

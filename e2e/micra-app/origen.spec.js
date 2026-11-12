@@ -47,10 +47,12 @@ test('cliente: Marcas y fincas lista lo de app_config, filtra y abre el perfil d
 test('cliente: la pestaña Café lista las marcas y fincas de app_config y abre una', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
-  const strip = page.getByTestId('cafe-origen-strip');
-  await expect(strip.locator('.mapp-orow')).toHaveCount(Math.min(4, DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length));
-  await expect(strip.getByTestId('cafe-origen-empty')).toHaveCount(0);
-  await strip.locator('.mapp-orow').first().click();
+  const dir = page.getByTestId('cafe-origen-dir');
+  await expect(dir.locator('.mapp-orow')).toHaveCount(DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length);
+  await expect(dir.getByTestId('origen-empty')).toHaveCount(0);
+  await dir.getByRole('tab', { name: 'Fincas' }).click();
+  await expect(dir.locator('.mapp-orow')).toHaveCount(DEMO_ORIGEN.fincas.length);
+  await dir.locator('.mapp-orow').first().click();
   await expect(page).toHaveURL(/\/micra\/origen\/[a-z0-9-]+$/);
   expect(errors).toEqual([]);
 });
