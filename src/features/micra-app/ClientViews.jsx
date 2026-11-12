@@ -141,8 +141,10 @@ function useMe() {
 }
 
 function Avatar({ b, big = false }) {
-  return b.photo_url
-    ? <img className={`mapp-av ${big ? 'is-big' : ''}`} src={b.photo_url} alt="" />
+  // Una foto que no carga (enlace vencido o borrado) no deja el «?» del celular: van las iniciales
+  const [broken, setBroken] = useState(false);
+  return b.photo_url && !broken
+    ? <img className={`mapp-av ${big ? 'is-big' : ''}`} src={b.photo_url} alt="" onError={() => setBroken(true)} />
     : <span className={`mapp-av ${big ? 'is-big' : ''} ${b.n && !big ? `is-${b.status}` : ''}`} aria-hidden="true">{b.n && !big ? b.n : initials(b.name)}</span>;
 }
 
