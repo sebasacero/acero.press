@@ -596,6 +596,11 @@ test('cliente: la pestaña Café (la montaña) junta lo del café; el inicio se 
   await page.getByTestId('feed-bubbles').getByRole('tab', { name: 'Recetas' }).click();
   await expect(feed).not.toContainText('World of Coffee');
   await expect(feed).toContainText('La receta oficial de AeroPress');
+  // Marcas y fincas van dentro de Café (12 nov 2026): sin datos, el aviso y el camino del caficultor
+  const strip = page.getByTestId('cafe-origen-strip');
+  await expect(strip).toContainText('Marcas y fincas');
+  await expect(strip.getByTestId('cafe-origen-empty')).toContainText('Todavía no hay');
+  await expect(strip.getByTestId('cafe-to-finca')).toBeVisible();
   await page.getByTestId('cafe-origen').click();
   await expect(page).toHaveURL(/\/micra\/origen$/);
   await page.goto('/micra/cafe', { waitUntil: 'load' });

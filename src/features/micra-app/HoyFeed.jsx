@@ -14,6 +14,7 @@ import { useAds, AdPost } from './Ads.jsx';
 import { withAds } from './ads.js';
 import { daysLeftLabel } from './competencia.js';
 import { IconTrophy } from './icons.jsx';
+import { OrigenStrip } from './Origen.jsx';
 
 // Hoy: el muro del barismo. Arriba el precio del café, después sus logros
 // (racha, meta, lecciones: como Duolingo), dos ideas para publicar (como las
@@ -492,9 +493,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
       )}
       {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
           Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
-      {cafe && (
-        <button type="button" className="mapp-btn is-ghost" onClick={() => go('/micra/origen')} data-testid="cafe-origen">Café de origen: marcas y fincas ›</button>
-      )}
+      {cafe && <OrigenStrip go={go} />}
       {!embedded && !cafe && (
         <div className="mapp-hoytabs" role="tablist" aria-label="Sección de Hoy" data-testid="hoy-tabs">
           {HOY_TABS.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}
