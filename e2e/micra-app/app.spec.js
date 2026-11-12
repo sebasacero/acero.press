@@ -140,7 +140,7 @@ test('barista: entra a su día, entrega un apartado, cuenta +1, fía, deshace y 
   await page.getByLabel('Nombre de quien te debe').fill('Don Luis taxi');
   await page.getByRole('button', { name: 'Anotar fiado' }).click();
   // Quién le debe está en «Mi plata»
-  await tabs.getByRole('button', { name: /Mi plata/ }).click();
+  await tabs.getByRole('button', { name: /Mi cuenta/ }).click();
   const luis = page.getByRole('listitem').filter({ hasText: 'Don Luis taxi' });
   await expect(luis).toContainText('$2.000');
   await expect(luis.getByRole('link', { name: 'Cobrar' })).toHaveAttribute('href', /wa\.me.*Don%20Luis%20taxi/);
@@ -752,7 +752,7 @@ test('barista: sale aunque no estaba en el mapa (escoge cómo sale y acepta en l
   await page.keyboard.press('Escape');
 
   // Mi plata ya no tiene «Tu enlace»
-  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi plata/ }).click();
+  await page.getByRole('navigation', { name: 'Barista' }).getByRole('button', { name: /Mi cuenta/ }).click();
   await expect(page.getByText('Tu enlace')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
@@ -818,7 +818,7 @@ test('barista caminando: la primera taza celebra la racha; al volver no se cierr
   await expect(page.getByTestId('toast')).toContainText('Tus ventas de hoy siguen aquí');
   await expect(page.locator('.mapp-party')).toHaveCount(0);
   await expect(page.getByTestId('micra-count-tinto')).toHaveText('2');
-  await nav.getByRole('button', { name: /Mi plata/ }).click();
+  await nav.getByRole('button', { name: /Mi cuenta/ }).click();
   await page.getByTestId('story-open').click();
   const story = page.getByTestId('story');
   await expect(story).toHaveAttribute('data-variant', 'calle');
@@ -938,7 +938,9 @@ test('cliente: sin la ubicación no sale la lista de todos, solo la tarjeta para
   await expect(page.getByRole('list', { name: 'Baristas' })).toHaveCount(0);
   await page.context().grantPermissions(['geolocation']);
   await page.context().setGeolocation(CHAPINERO);
-  await page.getByTestId('ask-location-go').click();
+  // El arranque tapa la pantalla un momento: el toque espera a que se vaya
+  await expect(page.getByTestId('micra-splash')).toHaveCount(0, { timeout: 15000 });
+  await page.getByTestId('ask-location-go').click({ timeout: 15000 });
   await expect(page.getByRole('list', { name: 'Baristas' }).getByRole('listitem')).toHaveCount(3);
   await expect(page.getByTestId('ask-location')).toHaveCount(0);
   expect(errors).toEqual([]);

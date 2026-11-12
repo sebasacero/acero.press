@@ -185,7 +185,7 @@ function switchTo(mode, go) {
   go(mode === 'owner' ? '/micra/equipo' : '/micra');
 }
 
-export function BaristaProfile({ admin = false, day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras }) {
+export function BaristaProfile({ admin = false, day, asId = null, trip, live, pending, flush, onReload, renderPrices, go, streak, goal, board, extras = null, menu: fullMenu = null, onExtras, renderPlata = null }) {
   const own = !asId;
   const user = useUser();
   const [profile, setProfile] = useState(null);
@@ -293,10 +293,25 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
 
   return (
     <div className="mapp-profile" data-testid="barista-profile">
-      <Hello
-        av={initials(day.name)} name={day.name}
-        sub={asId ? `Perfil del barista${where ? ` · ${where}` : ''}` : `¡Hola!${where ? ` · ${where}` : ''}`}
-      />
+      {/* «Mi cuenta» (pedido del usuario, 12 nov 2026: «mezcla Mi plata y perfil en una sola mejor organizada»):
+          arriba quién es y la plata de hoy, luego su negocio, lo que aprende y su cuenta */}
+      {renderPlata
+        ? renderPlata({ av: initials(day.name), name: day.name, sub: asId ? `Perfil del barista${where ? ` · ${where}` : ''}` : `¡Hola!${where ? ` · ${where}` : ''}` })
+        : <Hello
+          av={initials(day.name)} name={day.name}
+          sub={asId ? `Perfil del barista${where ? ` · ${where}` : ''}` : `¡Hola!${where ? ` · ${where}` : ''}`}
+        />}
+
+      <Group title="Tu negocio">
+        <Tile icon={IconTag} label="Lo que vendo" onClick={() => setSheet('precios')} testid="tile-precios" />
+        <Tile icon={IconCard} label="Cómo me pagan" onClick={() => setSheet('pagos')} testid="tile-pagos" />
+        <Tile icon={IconBean} label={preparaCon ? `Preparo con ${preparaCon.seller}` : 'Mi café'} dot={!preparaCon} onClick={() => setInsumos({ cat: 'cafe', cart: null })} testid="tile-prepara" />
+        <Tile icon={IconQr} label="Mi QR" onClick={() => go('/micra/barista/qr')} testid="profile-qr" />
+        <Tile icon={IconShare} label="Compartir enlace" onClick={share} />
+        <Tile icon={IconEye} label="Ver como cliente" onClick={() => go(baristaPath(day.id))} />
+      </Group>
+
+      <InsumosSection onOpen={(cat, cart = null) => setInsumos({ cat, cart })} />
 
       <Featured
         testid="profile-camino" mark={LEVELS[0].id}
@@ -304,21 +319,6 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
         text={`🔥 ${streak.count > 0 ? streakLabel(streak) : 'Empieza tu racha hoy'} · ${path.done} de ${path.total} lecciones${granos ? ` · ☕ ${granos}` : ''}`}
         action="Aprender" onAction={() => go('/micra/barista/aprende')}
       />
-
-      <Group title="Tu negocio">
-        <Tile icon={IconQr} label="Mi QR" onClick={() => go('/micra/barista/qr')} testid="profile-qr" />
-        <Tile icon={IconShare} label="Compartir enlace" onClick={share} />
-        <Tile icon={IconEye} label="Ver como cliente" onClick={() => go(baristaPath(day.id))} />
-        <Tile icon={IconBean} label={preparaCon ? `Preparo con ${preparaCon.seller}` : 'Mi café'} dot={!preparaCon} onClick={() => setInsumos({ cat: 'cafe', cart: null })} testid="tile-prepara" />
-      </Group>
-
-      <InsumosSection onOpen={(cat, cart = null) => setInsumos({ cat, cart })} />
-
-      <Group title="Tu plata">
-        <Tile icon={IconWallet} label="Mi plata" onClick={() => go('/micra/barista/cuenta')} />
-        <Tile icon={IconTag} label="Lo que vendo" onClick={() => setSheet('precios')} testid="tile-precios" />
-        <Tile icon={IconCard} label="Cómo me pagan" onClick={() => setSheet('pagos')} testid="tile-pagos" />
-      </Group>
 
       <Group title="Mi cuenta">
         <Tile icon={IconUser} label="Mis datos" onClick={() => setSheet('datos')} testid="tile-datos" />
@@ -329,11 +329,11 @@ export function BaristaProfile({ admin = false, day, asId = null, trip, live, pe
       </Group>
 
       {/* Escuela, Competencia y ACERO.press pasaron al menú del café (el logo de arriba, 7 nov 2026) */}
-      <Group title="Otros">
-        {/* Cambiar de modo es solo del dueño: un barista no ve la app como cliente desde aquí */}
+      {/* Cambiar de modo es solo del dueño: un barista no ve la app como cliente desde aquí */}
+      {admin && <Group title="Otros">
         {admin && <Tile icon={IconHome} label="Modo cliente" onClick={() => switchTo('client', go)} testid="tile-mode-client" />}
         {admin && <Tile icon={IconClipboard} label="Equipo" onClick={() => switchTo('owner', go)} testid="tile-mode-owner" />}
-      </Group>
+      </Group>}
 
       {error && <p className="mapp-error" role="alert">{error}</p>}
 

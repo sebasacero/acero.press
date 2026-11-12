@@ -443,7 +443,7 @@ export default function MicraApp() {
       )}
       {drawer && (
         <Suspense fallback={null}>
-          <CafeDrawer mode={viewMode === 'barista' && (who.barista || acting) ? 'barista' : 'client'} go={go} onClose={closeDrawer} onAcero={() => setAcero(true)} pathname={window.location.pathname} />
+          <CafeDrawer mode={viewMode === 'barista' && (who.barista || acting) ? 'barista' : 'client'} go={go} onClose={closeDrawer} onAcero={() => setAcero(true)} pathname={window.location.pathname} me={viewMode === 'barista' ? meInitials : (clientName ? initials(clientName) : null)} />
         </Suspense>
       )}
       {acero && <Suspense fallback={null}><AceroAd onClose={() => setAcero(false)} /></Suspense>}
