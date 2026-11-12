@@ -44,16 +44,22 @@ test('cliente: Marcas y fincas lista lo de app_config, filtra y abre el perfil d
   expect(errors).toEqual([]);
 });
 
-test('cliente: la pestaña Café lista las marcas y fincas de app_config y abre una', async ({ browser }) => {
+test('cliente: la pestaña Café pone cada finca o marca con su nombre y sus cafés debajo, como restaurantes', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
   const dir = page.getByTestId('cafe-origen-dir');
-  await expect(dir.locator('.mapp-orow')).toHaveCount(DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length);
+  await expect(dir.locator('.mapp-oshelf')).toHaveCount(DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length);
   await expect(dir.getByTestId('origen-empty')).toHaveCount(0);
+  // Primero la finca, con sus dos cafés en fila
+  const finca = dir.locator('.mapp-oshelf').first();
+  await expect(finca.locator('.mapp-oshelf-head')).toContainText('Finca La Esperanza');
+  await expect(finca.locator('.mapp-olot')).toHaveCount(2);
+  await expect(finca).toContainText('$16.000');
+  await dir.getByRole('tab', { name: 'Marcas' }).click();
+  await expect(dir.locator('.mapp-oshelf')).toHaveCount(DEMO_ORIGEN.marcas.length);
   await dir.getByRole('tab', { name: 'Fincas' }).click();
-  await expect(dir.locator('.mapp-orow')).toHaveCount(DEMO_ORIGEN.fincas.length);
-  await dir.locator('.mapp-orow').first().click();
-  await expect(page).toHaveURL(/\/micra\/origen\/[a-z0-9-]+$/);
+  await dir.locator('.mapp-olot').first().click();
+  await expect(page).toHaveURL(/\/micra\/origen\/la-esperanza$/);
   expect(errors).toEqual([]);
 });
 

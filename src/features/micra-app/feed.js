@@ -12,6 +12,7 @@ export const CHIPS = [
   ['publicaciones', 'De los baristas'],
   ['logros', 'Logros'],
   ['publicar', 'Para publicar'],
+  ['noticias', 'Noticias'],
   ['cafe', 'Café de Colombia'],
   ['precios', 'Precios'],
   ['puestos', 'Puestos'],

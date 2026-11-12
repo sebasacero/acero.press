@@ -243,3 +243,21 @@ export function houseCoffeeCards(coffees = []) {
 export function houseOrderText(card) {
   return `Hola, equipo de ACERO.press. Quiero pedir el café ${card.name} en bolsa de ${card.sizeText}. ¿Me cuentan cómo me llega? (Desde Micra)`;
 }
+
+/** Café como un listado de restaurantes (12 nov 2026, pedido del usuario): cada finca o marca
+ *  con su nombre y debajo sus cafés en fila; primero las fincas. */
+export function sellerShelves(origen, filter = 'todas') {
+  const all = sellersOf(origen, filter);
+  return [...all.filter((s) => s.kind === 'finca'), ...all.filter((s) => s.kind !== 'finca')];
+}
+
+/** La tarjeta de un café de una finca o marca: la bolsa más pequeña, o el kilo si no vende bolsas. */
+export function lotCard(lot) {
+  const bag = [...(lot?.bags ?? [])].sort((a, b) => a.g - b.g)[0];
+  const price = bag ? bag.price : lot?.kilo ?? null;
+  return {
+    id: lot.id, name: lot.name,
+    line: [lot.process, lot.variety && !lot.name.includes(lot.variety) ? lot.variety : null].filter(Boolean).join(' · '),
+    notes: lot.notes || null, price, unit: bag ? `${bag.g} g` : 'kilo',
+  };
+}

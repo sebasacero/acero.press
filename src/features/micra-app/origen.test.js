@@ -126,3 +126,16 @@ test('café de la casa: una tarjeta de 250 g por café, sin el sobre ni los que 
   assert.equal(cards[1].size, '1KG');
   assert.match(houseOrderText(cards[0]), /Bourbon Aji en bolsa de 250 g/);
 });
+
+test('Café como restaurantes: fincas primero, cada café con su bolsa más pequeña o el kilo', async () => {
+  const { sellerShelves, lotCard } = await import('./origen.js');
+  const origen = readOrigen(DEMO_ORIGEN);
+  const all = sellerShelves(origen);
+  assert.equal(all[0].kind, 'finca');
+  assert.equal(all.length, DEMO_ORIGEN.marcas.length + DEMO_ORIGEN.fincas.length);
+  assert.ok(sellerShelves(origen, 'marcas').every((x) => x.kind === 'marca'));
+  assert.deepEqual(sellerShelves({ sellers: [] }), []);
+  const c = lotCard(all[0].lots[0]);
+  assert.deepEqual([c.price, c.unit, c.line, c.notes], [16000, '250 g', 'Lavado', 'Panela, naranja, cuerpo medio']);
+  assert.deepEqual([lotCard({ id: 'k', name: 'Kilo', kilo: 50000, bags: [] }).unit, lotCard({ id: 'k', name: 'Kilo', kilo: 50000, bags: [] }).price], ['kilo', 50000]);
+});

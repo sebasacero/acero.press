@@ -400,10 +400,7 @@ function CuratedForm({ current, onSaved, onCancel }) {
 // El dibujo de cada globito del muro
 // Cuántas publicaciones muestra el muro del inicio del cliente antes de «Ver todo»
 const HOME_FEED = 6;
-// El cliente (12 nov 2026): lo de la calle en el inicio, lo del café en la pestaña Café
-const COFFEE = new Set(['precios', 'cafe', 'noticias', 'recetas', 'videos']);
-const CAFE_CHIPS = [['todo', 'Todo'], ['noticias', 'Noticias'], ['cafe', 'Café de Colombia'], ['recetas', 'Recetas'], ['videos', 'Videos']];
-const CHIP_ICON = { todo: '☕', publicaciones: '📸', logros: '🔥', publicar: '✨', cafe: '🌱', precios: '💲', puestos: '📍', recetas: '📝', videos: '▶' };
+const CHIP_ICON = { todo: '☕', noticias: '📰', publicaciones: '📸', logros: '🔥', publicar: '✨', cafe: '🌱', precios: '💲', puestos: '📍', recetas: '📝', videos: '▶' };
 
 export default function HoyFeed({ go, selfId = null, asId = null, admin = false, me = null, mode = null, trip = null, canShareDay = false, onShareDay, audience = 'barista', embedded = false, cafe = false, list = null, ads = null, challenge }) {
   const [all, setAll] = useState(false); // el muro corto del inicio, abierto
@@ -462,14 +459,16 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
   }, [items, me, trip, mode, dayKey]);
   // Los anuncios «Patrocinado» van entre las publicaciones, solo en «Todo»
   const { feed: adFeed } = useAds(client ? 'client' : 'barista', ads);
-  const scoped = embedded ? withDay.filter((i) => !COFFEE.has(i.kind)) : cafe ? withDay.filter((i) => COFFEE.has(i.kind) && i.kind !== 'precios') : withDay;
+  // Las publicaciones del café (noticias, recetas, videos) van en el muro del inicio; Café queda
+  // para las bolsas y las fincas (12 nov 2026, pedido del usuario)
+  const scoped = embedded ? withDay.filter((i) => i.kind !== 'precios') : withDay;
   const counts = chipCounts(scoped);
   const listed = embedded || cafe ? scoped : withDay.filter((i) => i.kind !== 'precios' || chip === 'precios');
   // En el inicio el muro sigue con sus globitos; Hoy entero va en Ahora / Noticias / Recetas
   const shown = cafe ? filterFeed(listed, chip) : embedded
     ? (chip === 'todo' ? withAds(listed, adFeed) : filterFeed(listed, chip))
     : tab === 'ahora' ? withAds(tabFeed(listed, 'ahora'), adFeed) : tabFeed(listed, tab);
-  const medals = embedded ? [] : medalsOf(withDay);
+  const medals = embedded || cafe ? [] : medalsOf(withDay);
   const today = new Date().toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'short' });
   // En el inicio del cliente el muro va corto (10 nov 2026): pesaba tres cuartas partes de la
   // pantalla y tapaba lo que vino a hacer. Lo primero queda a la vista; lo demás, con un toque.
@@ -493,14 +492,16 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
       )}
       {/* Los globitos de los estados (6 nov 2026): en vez de botones, burbujas como las historias.
           Primero lo que hay en el muro (filtra) y luego los baristas en la calle (abren su página) */}
+      {editing && <PriceForm prices={prices} cfg={cfg} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
       {cafe && <CafeShelf go={go} />}
-      {!embedded && !cafe && (
+      {!cafe && (<>
+      {!embedded && (
         <div className="mapp-hoytabs" role="tablist" aria-label="Sección de Hoy" data-testid="hoy-tabs">
           {HOY_TABS.map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>)}
         </div>
       )}
-      <ul className="mapp-hists is-feed" role={embedded || cafe ? 'tablist' : undefined} aria-label={embedded || cafe ? 'Qué ver' : 'En la calle ahora'} data-testid="feed-bubbles" style={!embedded && !cafe && tab !== 'ahora' ? { display: 'none' } : undefined}>
-        {(embedded || cafe) && (cafe ? CAFE_CHIPS : CHIPS).filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
+      <ul className="mapp-hists is-feed" role={embedded ? 'tablist' : undefined} aria-label={embedded ? 'Qué ver' : 'En la calle ahora'} data-testid="feed-bubbles" style={!embedded && tab !== 'ahora' ? { display: 'none' } : undefined}>
+        {embedded && CHIPS.filter(([id]) => id === 'todo' || counts[id] > 0).map(([id, label]) => (
           <li key={id} role="presentation">
             <button type="button" role="tab" aria-selected={chip === id} aria-label={label} className={`mapp-hist is-topic ${chip === id ? 'on' : ''}`} onClick={() => setChip(id)}>
               <span className="mapp-hist-ring"><span className="mapp-hist-av" aria-hidden="true">{CHIP_ICON[id] ?? '☕'}</span></span>
@@ -508,7 +509,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
             </button>
           </li>
         ))}
-        {!embedded && !cafe && baristas.filter((b) => b.status === 'live' && b.id !== selfId).slice(0, 12).map((b) => {
+        {!embedded && baristas.filter((b) => b.status === 'live' && b.id !== selfId).slice(0, 12).map((b) => {
           const first = String(b.name ?? '').split(' ')[0];
           return (
             <li key={b.id} role="presentation">
@@ -523,9 +524,8 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           );
         })}
       </ul>
-      {admin && !curating && (embedded || cafe ? chip === 'cafe' : tab === 'noticias') && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
+      {admin && !curating && (embedded ? chip === 'cafe' : tab === 'noticias') && <button type="button" className="mapp-link" onClick={() => setCurating(true)} data-testid="curated-open">＋ Agregar publicación de la FNC, una marca o una finca</button>}
       {curating && <CuratedForm current={readCurated(cfg.micra_muro).map(({ id, kind, ...x }) => x)} onSaved={() => { setCurating(false); loadPrices(); }} onCancel={() => setCurating(false)} />}
-      {editing && <PriceForm prices={prices} cfg={cfg} onSaved={() => { setEditing(false); loadPrices(); }} onCancel={() => setEditing(false)} />}
       {canPost && mine.length > 0 && (
         <section className="mapp-glass mapp-mine" aria-label="Tus publicaciones" data-testid="my-posts">
           <p className="mapp-cota">Tus publicaciones</p>
@@ -541,7 +541,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
           {mine.some((m) => m.status === 'pending') && <p className="mapp-fine">El equipo revisa lo que envías antes de que salga en Hoy.</p>}
         </section>
       )}
-      {!cafe && tab === 'ahora' && medals.length > 0 && (
+      {tab === 'ahora' && medals.length > 0 && (
         <section className="mapp-medals" aria-label="Tus logros" data-testid="medals">
           <p className="mapp-cota">Tus logros</p>
           <ul>
@@ -554,7 +554,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
             : canShareDay ? <button type="button" className="mapp-link" onClick={onShareDay}>Compartir mi día ›</button> : null}
         </section>
       )}
-      {!embedded && !cafe && tab === 'noticias' ? (
+      {!embedded && tab === 'noticias' ? (
         // Las noticias en filas de una línea: caben cuatro donde antes una; un toque abre la entera
         <ul className="mapp-news" data-testid="feed">
           {visible.length === 0 && <li className="mapp-muted">Hoy no hay noticias nuevas.</li>}
@@ -578,6 +578,7 @@ export default function HoyFeed({ go, selfId = null, asId = null, admin = false,
             : <Post key={item.id} item={item} go={go} onShareDay={onShareDay} canShareDay={canShareDay} me={me} selfId={selfId} client={client} onPhoto={canPost ? () => setComposing(true) : null} />))}
       </div>
       )}
+      </>)}
       {short && hidden > 0 && (
         <button type="button" className="mapp-btn is-ghost mapp-feed-more" onClick={() => setAll(true)} data-testid="feed-more">
           Ver todo lo de hoy · {hidden} más

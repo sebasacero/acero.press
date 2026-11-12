@@ -544,9 +544,13 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   // Debajo de los baristas sigue el muro de Hoy, como el feed de Instagram (un solo h1 en la página)
   const feed = page.getByTestId('home-feed');
   await expect(feed.getByRole('heading', { level: 2, name: 'En la calle hoy' })).toBeVisible();
-  // Lo del café (precio, noticias, recetas) se fue a la pestaña Café
+  // El precio va en Café; las noticias y recetas del café salen aquí, en el muro (12 nov 2026)
   await expect(feed.getByTestId('price-card')).toHaveCount(0);
-  await expect(feed).not.toContainText('World of Coffee');
+  await feed.getByTestId('feed-bubbles').getByRole('tab', { name: 'Noticias' }).click();
+  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
+  await feed.getByTestId('feed-bubbles').getByRole('tab', { name: 'Recetas' }).click();
+  await expect(feed).toContainText('La receta oficial de AeroPress');
+  await feed.getByTestId('feed-bubbles').getByRole('tab', { name: 'Todo' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   // Arriba, como las apps de domicilios: en rojo, dónde estás, el buscador y la campana
   await expect(page.locator('.mapp')).toHaveClass(/is-redtop/);
@@ -579,33 +583,25 @@ test('cliente como Instagram: historias de los baristas arriba, mensajes al equi
   expect(errors).toEqual([]);
 });
 
-test('cliente: la pestaña Café (la montaña) junta lo del café; el inicio se queda con la calle', async ({ browser }) => {
+test('cliente: la pestaña Café (la montaña) es primero las bolsas y luego cada finca con sus cafés, sin publicaciones', async ({ browser }) => {
   const { page, errors } = await open(browser);
   await page.goto('/micra', { waitUntil: 'load' });
-  // En el inicio no van las noticias ni las recetas: eso es de Café
-  await expect(page.getByTestId('home-feed')).not.toContainText('World of Coffee');
   await page.getByTestId('tab-cafe').click();
   await expect(page).toHaveURL(/\/micra\/cafe$/);
   await expect(page.getByRole('heading', { name: 'Café', exact: true })).toBeVisible();
   await expect(page.getByTestId('coffee-big')).toHaveText('$1.300');
-  await expect(page.locator('[data-testid="medals"], [data-testid="feed-idea"], [data-testid="hoy-tabs"]')).toHaveCount(0);
-  const feed = page.getByTestId('feed');
-  await expect(feed).toContainText('World of Coffee llega a Bogotá en 2027');
-  await expect(feed).toContainText('La receta oficial de AeroPress');
-  await expect(feed).not.toContainText('Ver en el mapa');
-  await page.getByTestId('feed-bubbles').getByRole('tab', { name: 'Recetas' }).click();
-  await expect(feed).not.toContainText('World of Coffee');
-  await expect(feed).toContainText('La receta oficial de AeroPress');
-  // Lo principal de Café (12 nov 2026): la ventana de Fincas y marcas entera, primero, y el café que vendemos
-  const dir = page.getByTestId('cafe-origen-dir');
-  await expect(dir).toContainText('Fincas y marcas');
-  await expect(dir.getByTestId('origen-empty')).toContainText('Todavía no hay');
-  await expect(dir.getByTestId('to-finca')).toBeVisible();
+  // Sin publicaciones (12 nov 2026): las noticias, recetas y videos van en el inicio
+  await expect(page.locator('[data-testid="feed"], [data-testid="feed-bubbles"], [data-testid="medals"], [data-testid="hoy-tabs"]')).toHaveCount(0);
+  await expect(page.getByTestId('cafe-shelf')).not.toContainText('World of Coffee');
+  await expect(page.locator('.mapp-coffeehead-kpis')).toHaveCount(0);
+  // Primero las bolsas de café; luego las fincas y marcas
   const house = page.getByTestId('cafe-house');
+  const dir = page.getByTestId('cafe-origen-dir');
   await expect(house.locator('.mapp-hcoffee').first()).toBeVisible();
   await expect(house.getByRole('link', { name: 'Pedir' }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*bolsa/);
-  expect(await dir.evaluate((d, h) => !!(d.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING), await house.elementHandle())).toBe(true);
-  await expect(page.locator('.mapp-coffeehead-kpis')).toHaveCount(0);
+  expect(await house.evaluate((h, d) => !!(h.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING), await dir.elementHandle())).toBe(true);
+  await expect(dir).toContainText('Fincas y marcas');
+  await expect(dir.getByTestId('origen-empty')).toContainText('Todavía no hay');
   await dir.getByTestId('to-shop').click();
   await expect(page).toHaveURL(/\/micra\/tienda$/);
   await page.goto('/micra/cafe', { waitUntil: 'load' });
