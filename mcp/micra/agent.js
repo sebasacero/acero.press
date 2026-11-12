@@ -11,7 +11,7 @@ import { mcpTools } from '@anthropic-ai/sdk/helpers/beta/mcp';
 import { createMicraServer } from './server.js';
 import { addUsage, costUsd, parseParte, partePrompt } from './celestra.js';
 
-export const MODEL = 'claude-opus-5-5';
+export const MODEL = 'claude-fable-5-2';
 export const MAX_QUESTION = 600;
 const MAX_ITERATIONS = 6;
 

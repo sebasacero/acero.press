@@ -26,7 +26,7 @@ precio del tinto?», con datos reales y sin poder cambiar nada.
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| **API de Claude** | `mcp/micra/agent.js`, `api/micra-agent.js` | `client.beta.messages.toolRunner` con `claude-opus-5-5`, pensamiento adaptativo y respaldo del servidor si el modelo se niega. El SDK corre el ciclo pedir → usar herramienta → seguir. |
+| **API de Claude** | `mcp/micra/agent.js`, `api/micra-agent.js` | `client.beta.messages.toolRunner` con `claude-fable-5-2` (Fable 5.2; preguntas con esfuerzo `medium`, el parte con `high`), pensamiento adaptativo y respaldo del servidor si el modelo se niega. El SDK corre el ciclo pedir → usar herramienta → seguir. |
 | **MCP** | `mcp/micra/server.js`, `tools.js`, `sources.js`, `stdio.js` | Servidor MCP propio con 7 herramientas de solo lectura. El agente lo usa como **cliente MCP** (transporte en memoria, convertido con `mcpTools` del SDK de Anthropic); Claude Code lo usa por **stdio**. Es el mismo servidor. |
 | **Claude Code** | `CLAUDE.md`, `.mcp.json`, `.claude/skills/`, `.claude/hooks/` | El repo ya trae el servidor MCP conectado, dos skills (`informe-estudio`, `herramienta-mcp`) y un hook que corre las pruebas del módulo que se edita. |
 
