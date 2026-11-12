@@ -17,7 +17,7 @@ import recipes from '../src/features/recipes/data/recipes.js';
 import { PRODUCT_FIELDS, shapeProducts } from '../src/shared/lib/productShape.js';
 import { resolvePairings } from '../src/shared/lib/pairing.js';
 
-const MODEL = 'claude-opus-5-5';
+const MODEL = 'claude-haiku-5-5';
 const MAX_TURNS = 12; // mensajes del historial que se envían
 const MAX_CHARS = 600; // por mensaje del cliente
 const RATE = { windowMs: 10 * 60_000, max: 20 }; // por IP
@@ -158,11 +158,10 @@ export default async function handler(req, res) {
       `<recetas_wac>\n${JSON.stringify(RECIPES)}\n</recetas_wac>`;
 
     const client = new Anthropic();
-    const response = await client.beta.messages.create({
+    // Haiku: público y por cada mensaje, tiene que ser casi gratis y rápido (no tiene respaldo del servidor)
+    const response = await client.messages.create({
       model: MODEL,
       max_tokens: 4000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
       thinking: { type: 'adaptive' },
       output_config: {
         effort: 'low',

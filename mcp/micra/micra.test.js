@@ -130,7 +130,7 @@ test('askAgent: le pasa al Tool Runner las herramientas MCP y anota cuáles usó
           const tool = params.tools.find((t) => t.name === 'dia_del_equipo');
           const out = await tool.run({});
           const data = JSON.parse(Array.isArray(out) ? out[0].text : out);
-          return { model: 'claude-opus-5-5', stop_reason: 'end_turn', content: [{ type: 'text', text: `Hoy van ${data.totales.tazas} tazas.` }] };
+          return { model: 'claude-sonnet-5-5', stop_reason: 'end_turn', content: [{ type: 'text', text: `Hoy van ${data.totales.tazas} tazas.` }] };
         },
       },
     },
@@ -139,7 +139,8 @@ test('askAgent: le pasa al Tool Runner las herramientas MCP y anota cuáles usó
     const r = await askAgent({ anthropic, mcp: client, question: '  ¿Cómo vamos hoy?  ', history: [{ role: 'assistant', content: 'hola' }] });
     assert.equal(r.answer, 'Hoy van 23 tazas.');
     assert.deepEqual(r.tools, ['dia_del_equipo']);
-    assert.equal(seen.model, 'claude-opus-5-5');
+    assert.equal(seen.model, 'claude-sonnet-5-5');
+    assert.equal(seen.output_config.effort, 'medium');
     assert.equal(seen.tools.length, 7);
     assert.deepEqual(seen.messages, [{ role: 'user', content: '¿Cómo vamos hoy?' }]);
     await assert.rejects(askAgent({ anthropic, mcp: client, question: '   ' }), /Escribe una pregunta/);
@@ -223,6 +224,8 @@ test('writeParte: Celestra lee, suma el uso de cada vuelta del Tool Runner y dev
     assert.deepEqual(r.tools, ['encuestas_pendientes']);
     assert.deepEqual(r.usage, { input_tokens: 3000, output_tokens: 500, cache_read_input_tokens: 1000, cache_creation_input_tokens: 0 });
     assert.equal(r.cost, 0.0222);
+    assert.equal(seen.model, 'claude-opus-5-5');
+    assert.equal(seen.output_config.effort, 'high');
     assert.equal(seen.output_config.effort, 'high');
     assert.match(seen.messages[0].content, /2026-11-11/);
     assert.match(seen.messages[0].content, /descartada: Ir a Kennedy \(nota del dueño: lejos\)/);
