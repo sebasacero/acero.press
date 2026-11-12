@@ -908,3 +908,19 @@
 .mapp-ostrip-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .mapp-ostrip-head .mapp-kicker{margin:0}
 .mapp-ostrip .mapp-origen-finca{margin-top:8px}
+
+/* Café: fincas y el café que se vende primero; el precio del día, compacto (12 nov 2026) */
+.mapp-coffeehead.is-compact{padding-bottom:16px}
+.mapp-coffeehead.is-compact .mapp-coffeehead-big{font-size:32px;line-height:1.1;margin-top:6px}
+.mapp-coffeehead.is-compact .mapp-coffeehead-sub{margin-bottom:6px}
+.mapp-cafeshelf{display:grid;gap:12px;margin:0 0 12px}
+.mapp-cafeshelf .mapp-ostrip{margin:0}
+.mapp-hcoffees .mapp-ostrip-head{padding:0 2px}
+.mapp-hcoffee-row{list-style:none;margin:0;padding:2px 2px 8px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(156px,44%);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.mapp-hcoffee{scroll-snap-align:start;display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid rgba(20,16,40,.08);border-radius:18px;padding:10px;box-shadow:0 6px 18px rgba(20,16,40,.06)}
+.mapp-hcoffee img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;background:#F5F1E8}
+.mapp-hcoffee b{font-size:15px;line-height:1.2;margin-top:4px}
+.mapp-hcoffee small{font:500 11px/1.3 'JetBrains Mono',monospace;color:#6B6880;min-height:2.6em}
+.mapp-hcoffee-price{font:700 16px/1.2 'Archivo',sans-serif}
+.mapp-hcoffee-price i{font:500 11px 'JetBrains Mono',monospace;font-style:normal;color:#6B6880}
+.mapp-hcoffee .mapp-btn{margin-top:4px;justify-content:center;text-decoration:none}

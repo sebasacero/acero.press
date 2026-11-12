@@ -221,3 +221,28 @@ export const DEMO_ORIGEN = {
     ] },
   ],
 };
+
+// La pestaña Café (12 nov 2026, pedido del usuario: «aquí deberían verse principalmente la
+// sección de las fincas y el café que venden»): las fincas y marcas con acuerdo y los cafés
+// que vende ACERO.press (la tabla products, los mismos de la tienda de la web).
+const SIZE_LABEL = { '18G': '18 g', '250G': '250 g', '500G': '500 g', '1KG': '1 kg' };
+export const sizeLabel = (s) => SIZE_LABEL[s] ?? String(s ?? '').toLowerCase();
+
+/** Una tarjeta por café de la casa: la bolsa de 250 g (o la primera que no sea el sobre de 18 g). */
+export function houseCoffeeCards(coffees = []) {
+  return (coffees ?? []).map((c) => {
+    const sizes = (c.sizes ?? []).filter((z) => c.prices?.[z] > 0);
+    const size = sizes.includes('250G') ? '250G' : sizes.find((z) => z !== '18G') ?? sizes[0];
+    if (!c.name || !size) return null;
+    const from = sizes.filter((z) => z !== '18G').map(sizeLabel).join(' · ');
+    return { id: c.id, name: c.name, variety: c.variety && c.variety !== c.name ? c.variety : null, region: c.region ?? null, image: c.image ?? null, size, sizeText: sizeLabel(size), price: c.prices[size], sizes: from };
+  }).filter(Boolean);
+}
+
+/** Con fincas o marcas cargadas van primero; si no, los cafés de la casa y luego el aviso de las fincas. */
+export const shelfFincasFirst = (origen) => sellersOf(origen).length > 0;
+
+/** El mensaje de WhatsApp para pedir un café de la casa desde Micra. */
+export function houseOrderText(card) {
+  return `Hola, equipo de ACERO.press. Quiero pedir el café ${card.name} en bolsa de ${card.sizeText}. ¿Me cuentan cómo me llega? (Desde Micra)`;
+}

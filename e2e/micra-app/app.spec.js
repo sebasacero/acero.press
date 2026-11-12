@@ -597,8 +597,13 @@ test('cliente: la pestaña Café (la montaña) junta lo del café; el inicio se 
   await expect(feed).not.toContainText('World of Coffee');
   await expect(feed).toContainText('La receta oficial de AeroPress');
   // Marcas y fincas van dentro de Café (12 nov 2026): sin datos, el aviso y el camino del caficultor
+  // Lo principal de Café (12 nov 2026): el café que se vende (la tabla products) y las fincas
+  const house = page.getByTestId('cafe-house');
+  await expect(house.locator('.mapp-hcoffee').first()).toBeVisible();
+  await expect(house.getByRole('link', { name: 'Pedir' }).first()).toHaveAttribute('href', /^https:\/\/wa\.me\/\d+\?text=.*bolsa/);
+  await expect(page.locator('[data-testid="coffee-kpis"], .mapp-coffeehead-kpis')).toHaveCount(0);
   const strip = page.getByTestId('cafe-origen-strip');
-  await expect(strip).toContainText('Marcas y fincas');
+  await expect(strip).toContainText('Fincas y marcas');
   await expect(strip.getByTestId('cafe-origen-empty')).toContainText('Todavía no hay');
   await expect(strip.getByTestId('cafe-to-finca')).toBeVisible();
   await page.getByTestId('cafe-origen').click();

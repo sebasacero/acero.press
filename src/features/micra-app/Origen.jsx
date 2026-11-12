@@ -3,7 +3,8 @@ import { supabase } from '../../shared/lib/supabaseClient.js';
 import * as api from './api.js';
 import platform from './platform.js';
 import { money, sortBaristas } from './micraApp.js';
-import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY } from './origen.js';
+import { ORIGEN_KEY, KINDS, readOrigen, sellersOf, sellerById, monogram, cupsPerKilo, shopItems, filterShop, shopItemById, SHOP_CATEGORIES, bumpCart, cartLines, cartCount, cartTotal, shopText, DELIVERY, houseCoffeeCards, houseOrderText, shelfFincasFirst } from './origen.js';
+import { fetchCoffeeVarieties } from '../../shared/lib/catalog.js';
 
 // El café de origen para el cliente (7 nov 2026, pedido del usuario): el directorio de marcas y
 // fincas (/micra/origen), el perfil de cada una (/micra/origen/<id>) y la tienda con la góndola
@@ -61,24 +62,67 @@ export function SellerRow({ s, go }) {
   );
 }
 
-/** Marcas y fincas dentro de la pestaña Café (12 nov 2026, pedido del usuario): las primeras
- *  de cada clase ahí mismo, «Ver todas» abre /micra/origen y el caficultor tiene su camino. */
-export function OrigenStrip({ go, max = 4 }) {
-  const origen = useOrigen();
+/** Marcas y fincas dentro de la pestaña Café: las primeras de cada clase ahí mismo,
+ *  «Ver todas» abre /micra/origen y el caficultor tiene su camino. */
+export function OrigenStrip({ go, origen, max = 4 }) {
   const list = origen ? sellersOf(origen).slice(0, max) : [];
-  const more = origen ? Math.max(0, sellersOf(origen).length - list.length) : 0;
+  const total = origen ? sellersOf(origen).length : 0;
   return (
     <section className="mapp-glass mapp-ogroup mapp-ostrip" aria-labelledby="cafe-origen-h" data-testid="cafe-origen-strip">
       <div className="mapp-ostrip-head">
-        <h2 id="cafe-origen-h" className="mapp-kicker">Marcas y fincas</h2>
-        <button type="button" className="mapp-link" onClick={() => go('/micra/origen')} data-testid="cafe-origen">{more > 0 ? `Ver todas (${more + list.length}) ›` : 'Ver todas ›'}</button>
+        <h2 id="cafe-origen-h" className="mapp-kicker">Fincas y marcas</h2>
+        <button type="button" className="mapp-link" onClick={() => go('/micra/origen')} data-testid="cafe-origen">{total > list.length ? `Ver todas (${total}) ›` : 'Ver todas ›'}</button>
       </div>
       {!origen && <p className="mapp-fine">Cargando…</p>}
       {origen && list.length > 0 && <ul className="mapp-olist">{list.map((s) => <SellerRow key={s.id} s={s} go={go} />)}</ul>}
-      {origen && list.length === 0 && <p className="mapp-fine" data-testid="cafe-origen-empty">Todavía no hay marcas ni fincas en Micra. Las primeras salen aquí cuando firmen.</p>}
+      {origen && list.length === 0 && <p className="mapp-fine" data-testid="cafe-origen-empty">Todavía no hay fincas ni marcas en Micra. Las primeras salen aquí cuando firmen.</p>}
       <button type="button" className="mapp-link mapp-origen-finca" onClick={() => go('/micra/fincas')} data-testid="cafe-to-finca">Soy caficultor: quiero vender mi café</button>
     </section>
   );
+}
+
+/** Los cafés que vende ACERO.press (los mismos de la tienda de la web), en fila. */
+function HouseCoffees({ cards, team }) {
+  if (cards && cards.length === 0) return null;
+  return (
+    <section className="mapp-hcoffees" aria-labelledby="cafe-casa-h" data-testid="cafe-house">
+      <div className="mapp-ostrip-head">
+        <h2 id="cafe-casa-h" className="mapp-kicker">El café que vendemos</h2>
+        <span className="mapp-fine">ACERO.press</span>
+      </div>
+      {!cards && <p className="mapp-fine">Cargando…</p>}
+      {cards && (
+        <ul className="mapp-hcoffee-row">
+          {cards.map((c) => (
+            <li key={c.id} className="mapp-hcoffee" data-testid={`house-${c.id}`}>
+              {c.image && <img src={platform.siteUrl(c.image)} alt="" loading="lazy" width="160" height="160" />}
+              <b>{c.name}</b>
+              <small>{[c.variety, c.region, c.sizes].filter(Boolean).join(' · ')}</small>
+              <span className="mapp-hcoffee-price">{money(c.price)} <i>{c.sizeText}</i></span>
+              <a className="mapp-btn is-small" href={`https://wa.me/${team}?text=${encodeURIComponent(houseOrderText(c))}`} target="_blank" rel="noopener noreferrer">Pedir</a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** Lo principal de la pestaña Café: fincas y marcas, y el café que se vende. Con fincas
+ *  cargadas van primero; mientras no haya, primero los cafés de la casa. */
+export function CafeShelf({ go }) {
+  const origen = useOrigen();
+  const [cards, setCards] = useState(null);
+  const [team, setTeam] = useState('573152125327');
+  useEffect(() => {
+    let alive = true;
+    fetchCoffeeVarieties().then((list) => alive && setCards(houseCoffeeCards(list))).catch(() => alive && setCards([]));
+    api.teamWhatsApp().then((t) => alive && t && setTeam(t)).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const fincas = <OrigenStrip go={go} origen={origen} />;
+  const house = <HouseCoffees cards={cards} team={team} />;
+  return <div className="mapp-cafeshelf" data-testid="cafe-shelf">{shelfFincasFirst(origen) ? <>{fincas}{house}</> : <>{house}{fincas}</>}</div>;
 }
 
 /** /micra/origen: quién hace el café. Marcas con acuerdo y fincas verificadas. */
