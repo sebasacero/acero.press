@@ -1765,3 +1765,31 @@
 @keyframes mapp-orb-fade { from { opacity: 0; } }
 @keyframes mapp-orb-rise { from { opacity: 0; transform: translateY(40px) scale(.96); } }
 @media (prefers-reduced-motion: reduce) { .mapp-orb, .mapp-orb-scrim, .mapp-orb-sheet { animation: none; transition: none; } }
+
+/* Celestra como un chat (12 nov 2026): la conversación se desliza, la caja de escribir queda abajo */
+.mapp-orb-sheet { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.mapp-celestra.is-chat { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; padding: 14px 14px 10px; border-radius: 26px; }
+.mapp-celestra.is-chat .mapp-celestra-head { gap: 10px; }
+.mapp-celestra.is-chat .mapp-celestra-head > div:first-of-type { flex: 1; min-width: 0; }
+.mapp-celestra.is-chat .mapp-celestra-name { font-size: 1.05rem; }
+.mapp-celestra.is-chat .mapp-celestra-head .mapp-fine { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mapp-celestra.is-chat .mapp-celestra-modo { flex: none; margin: 0; }
+.mapp-celestra.is-chat .mapp-celestra-modo button { min-height: 44px; padding: 0 12px; font-size: .78rem; }
+.mapp-chat { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 14px; padding: 2px 2px 6px; scroll-behavior: smooth; }
+.mapp-chat > * { flex: none; }
+.mapp-chat-msg { display: grid; gap: 10px; }
+.mapp-chat-text { margin: 0; font-size: 1rem; line-height: 1.5; }
+.mapp-chat .mapp-jefe-turn { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; }
+.mapp-chat .mapp-jefe-q { align-self: flex-end; max-width: 86%; padding: 10px 14px; border-radius: 20px 20px 6px 20px; background: color-mix(in srgb, var(--m-fg) 8%, var(--m-bg)); font-weight: 600; }
+.mapp-chat-wait { margin: 0; color: var(--t-3, #B0127A); font-weight: 700; animation: mapp-chat-pulse 1.2s ease-in-out infinite; }
+@keyframes mapp-chat-pulse { 50% { opacity: .45; } }
+.mapp-chat-chips { flex: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; overflow-x: auto; overflow-y: hidden; margin: 0 -14px; padding: 0 14px 2px; scrollbar-width: none; }
+.mapp-chat-chips::-webkit-scrollbar { display: none; }
+.mapp-chat-chips button { flex: none; height: 44px; white-space: nowrap; }
+.mapp-chat-form { display: flex; align-items: center; gap: 6px; padding: 5px 5px 5px 16px; border: 1.5px solid var(--m-line); border-radius: 26px; background: var(--m-bg); box-shadow: 0 6px 18px -12px rgba(34, 18, 90, .5); }
+.mapp-chat-form:focus-within { border-color: var(--t-3, #B0127A); }
+.mapp-chat-form input { flex: 1; min-width: 0; min-height: 44px; border: 0; outline: 0; background: none; color: inherit; font: inherit; font-size: 1rem; }
+.mapp-chat-send { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--t-cta, var(--red)); color: #fff; cursor: pointer; }
+.mapp-chat-send:disabled { background: color-mix(in srgb, var(--m-fg) 12%, var(--m-bg)); color: color-mix(in srgb, var(--m-fg) 40%, var(--m-bg)); cursor: default; }
+.mapp-chat-foot { margin: 0; text-align: center; font-size: .7rem; }
+@media (prefers-reduced-motion: reduce) { .mapp-chat { scroll-behavior: auto; } .mapp-chat-wait { animation: none; } }

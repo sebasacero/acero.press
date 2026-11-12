@@ -1,14 +1,15 @@
-// Celestra en Equipo › Hoy (antes «Jefe de turno»): la inteligencia de Micra,
-// solo para el dueño. Arriba el parte del día con 3 propuestas que el dueño
-// aprueba, marca como hechas o descarta (eso es su memoria); abajo, preguntas
-// sueltas. Responde /api/micra-agent con las herramientas del servidor MCP de
+// Celestra (antes «Jefe de turno»): la inteligencia de Micra, solo para el dueño.
+// Es una conversación (12 nov 2026, pedido del usuario: «como un chat»): lo primero que
+// dice es el parte del día con 3 propuestas que el dueño aprueba, marca como hechas o
+// descarta (eso es su memoria); debajo van sus preguntas y las respuestas, y la caja de
+// escribir queda fija abajo. Responde /api/micra-agent con las herramientas del servidor MCP de
 // Micra (mcp/micra/). Lee; lo único que guarda es su propia memoria.
 // Sin 20261111200000_celestra.sql el parte y lo decidido quedan en este celular.
 // Dos modos (12 nov 2026, pedido del usuario): «Algoritmo» escribe el parte en el celular con
 // reglas (mcp/micra/algoritmo.js), gratis y sin la IA; sin señal usa la última lectura guardada.
 // «Con IA» llama a /api/micra-agent; si no responde, escribe el algoritmo y lo dice.
 // Y el juego (celestraJuego.js): puntos por decidir y hacer, nivel, racha y el camino a la meta.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { apiUrl } from '../../shared/lib/apiBase.js';
 import { TOPE_USD } from '../../../mcp/micra/celestra.js';
@@ -241,7 +242,7 @@ export default function Celestra() {
         const b = lect ?? await lecturasDeHoy(store());
         if (!lect) setLect(b);
         const r = responder(q, b.l);
-        if (!r) throw new Error('Esa pregunta necesita la IA: el algoritmo responde las cuatro de arriba. Cambia a «Con IA».');
+        if (!r) throw new Error('Esa pregunta necesita la IA: el algoritmo responde las cuatro sugeridas. Cambia a «Con IA».');
         setTurns((t) => [...t, { q, answer: r.answer, tools: r.tools }].slice(-4));
         setQuestion('');
         return;
@@ -259,87 +260,97 @@ export default function Celestra() {
     }
   }
 
+  // Como un chat: al llegar una respuesta, la conversación baja hasta ella
+  const chat = useRef(null);
+  useEffect(() => {
+    const el = chat.current;
+    if (el && (turns.length > 0 || asking)) el.scrollTop = el.scrollHeight;
+  }, [turns.length, asking]);
+
   return (
-    <section className="mapp-glass mapp-jefe mapp-celestra" aria-label="Celestra" data-testid="owner-agent">
+    <section className="mapp-glass mapp-jefe mapp-celestra is-chat" aria-label="Celestra" data-testid="owner-agent">
       <header className="mapp-celestra-head">
-        <CelestraStar />
+        <CelestraStar size={36} />
         <div>
           <p className="mapp-celestra-name">Celestra</p>
           <p className="mapp-fine">Lee Micra, te propone. Tú decides.</p>
         </div>
+        <div className="mapp-celestra-modo" role="group" aria-label="Cómo escribe Celestra">
+          <button type="button" className={modo === 'algoritmo' ? 'on' : ''} aria-pressed={modo === 'algoritmo'} onClick={() => pickModo('algoritmo')} data-testid="celestra-modo-algoritmo">Algoritmo</button>
+          <button type="button" className={modo === 'ia' ? 'on' : ''} aria-pressed={modo === 'ia'} onClick={() => pickModo('ia')} data-testid="celestra-modo-ia">Con IA</button>
+        </div>
       </header>
 
-      <div className="mapp-celestra-juego" data-testid="celestra-juego">
-        <div className="mapp-celestra-nivel">
-          <p><b>Nivel {j.nivel.n} · {j.nivel.nombre}</b>{gano > 0 && <span className="mapp-celestra-gano" role="status"> +{gano} puntos</span>}</p>
-          <p className="mapp-fine">{j.xp} puntos{j.nivel.siguiente ? ` · faltan ${j.nivel.faltan} para ${j.nivel.siguiente}` : ''}{j.racha > 0 ? ` · racha de ${j.racha} ${j.racha === 1 ? 'día' : 'días'}` : ''}</p>
+      <div className="mapp-chat" ref={chat} data-testid="celestra-chat">
+        <div className="mapp-celestra-juego" data-testid="celestra-juego">
+          <div className="mapp-celestra-nivel">
+            <p><b>Nivel {j.nivel.n} · {j.nivel.nombre}</b>{gano > 0 && <span className="mapp-celestra-gano" role="status"> +{gano} puntos</span>}</p>
+            <p className="mapp-fine">{j.xp} puntos{j.nivel.siguiente ? ` · faltan ${j.nivel.faltan} para ${j.nivel.siguiente}` : ''}{j.racha > 0 ? ` · racha de ${j.racha} ${j.racha === 1 ? 'día' : 'días'}` : ''}</p>
+          </div>
+          <div className="mapp-celestra-bar" role="progressbar" aria-label="Avance del nivel" aria-valuemin={0} aria-valuemax={100} aria-valuenow={j.nivel.pct}><i style={{ width: `${j.nivel.pct}%` }} /></div>
+          {tramos.length > 0 && (
+            <details className="mapp-celestra-camino" data-testid="celestra-camino">
+              <summary>Camino al {META}{pctCamino != null ? ` · ${pctCamino} %` : ''}</summary>
+              <ul>
+                {tramos.map((t) => (
+                  <li key={t.id} className={t.valor == null ? 'is-off' : ''}>
+                    <span>{t.nombre}</span>
+                    <div className="mapp-celestra-bar"><i style={{ width: `${t.pct}%` }} /></div>
+                    <small>{t.texto}</small>
+                  </li>
+                ))}
+              </ul>
+              <p className="mapp-fine">Cada tramo sale de un dato real de Micra. Las metas son un primer listón.</p>
+            </details>
+          )}
         </div>
-        <div className="mapp-celestra-bar" role="progressbar" aria-label="Avance del nivel" aria-valuemin={0} aria-valuemax={100} aria-valuenow={j.nivel.pct}><i style={{ width: `${j.nivel.pct}%` }} /></div>
-        {tramos.length > 0 && (
-          <details className="mapp-celestra-camino" data-testid="celestra-camino">
-            <summary>Camino al {META}{pctCamino != null ? ` · ${pctCamino} %` : ''}</summary>
-            <ul>
-              {tramos.map((t) => (
-                <li key={t.id} className={t.valor == null ? 'is-off' : ''}>
-                  <span>{t.nombre}</span>
-                  <div className="mapp-celestra-bar"><i style={{ width: `${t.pct}%` }} /></div>
-                  <small>{t.texto}</small>
-                </li>
-              ))}
-            </ul>
-            <p className="mapp-fine">Cada tramo sale de un dato real de Micra. Las metas son un primer listón.</p>
-          </details>
-        )}
-      </div>
 
-      <div className="mapp-celestra-modo" role="group" aria-label="Cómo escribe Celestra">
-        <button type="button" className={modo === 'algoritmo' ? 'on' : ''} aria-pressed={modo === 'algoritmo'} onClick={() => pickModo('algoritmo')} data-testid="celestra-modo-algoritmo">Algoritmo</button>
-        <button type="button" className={modo === 'ia' ? 'on' : ''} aria-pressed={modo === 'ia'} onClick={() => pickModo('ia')} data-testid="celestra-modo-ia">Con IA</button>
-      </div>
-
-      <div className="mapp-celestra-parte" data-testid="celestra-parte">
-        <p className="mapp-cota">Parte de hoy</p>
-        {!estado && <p className="mapp-fine">Cargando…</p>}
-        {estado && !parte && (
-          <>
-            <p className="mapp-fine">Celestra lee el día, el estudio, los apartados y el mercado, y te deja 3 propuestas.</p>
-            <button type="button" className="mapp-btn is-cta" disabled={writing} onClick={writeParte} data-testid="celestra-write">
-              {writing ? 'Celestra está leyendo Micra…' : 'Escribir el parte de hoy'}
-            </button>
-          </>
-        )}
-        {parte && (
-          <>
-            <p className="mapp-celestra-resumen">{parte.resumen}</p>
-            <ol className="mapp-celestra-props">
-              {(parte.propuestas ?? []).map((p) => <Propuesta key={p.id} p={p} busy={deciding} onDecide={decide} />)}
-            </ol>
-          </>
-        )}
-      </div>
-
-      {turns.map((t, i) => (
-        <div key={i} className="mapp-jefe-turn" data-testid="agent-turn">
-          <p className="mapp-jefe-q">{t.q}</p>
-          <p className="mapp-jefe-a">{t.answer}</p>
-          {t.tools.length > 0 && <p className="mapp-fine">Leyó: {t.tools.map((x) => TOOL_LABEL[x] ?? x).join(', ')}</p>}
+        {/* Lo primero que dice Celestra: el parte de hoy */}
+        <div className="mapp-chat-msg mapp-celestra-parte" data-testid="celestra-parte">
+          <p className="mapp-cota">Parte de hoy</p>
+          {!estado && <p className="mapp-fine">Cargando…</p>}
+          {estado && !parte && (
+            <>
+              <p className="mapp-chat-text">Hola. Leo el día, el estudio, los apartados y el mercado, y te dejo 3 propuestas.</p>
+              <button type="button" className="mapp-btn is-cta" disabled={writing} onClick={writeParte} data-testid="celestra-write">
+                {writing ? 'Celestra está leyendo Micra…' : 'Escribir el parte de hoy'}
+              </button>
+            </>
+          )}
+          {parte && (
+            <>
+              <p className="mapp-celestra-resumen mapp-chat-text">{parte.resumen}</p>
+              <ol className="mapp-celestra-props">
+                {(parte.propuestas ?? []).map((p) => <Propuesta key={p.id} p={p} busy={deciding} onDecide={decide} />)}
+              </ol>
+            </>
+          )}
+          {aviso && <p className="mapp-fine" role="status" data-testid="celestra-aviso">{aviso}</p>}
         </div>
-      ))}
+
+        {turns.map((t, i) => (
+          <div key={i} className="mapp-jefe-turn" data-testid="agent-turn">
+            <p className="mapp-jefe-q">{t.q}</p>
+            <p className="mapp-jefe-a mapp-chat-text">{t.answer}</p>
+            {t.tools.length > 0 && <p className="mapp-fine">Leyó: {t.tools.map((x) => TOOL_LABEL[x] ?? x).join(', ')}</p>}
+          </div>
+        ))}
+        {asking && <p className="mapp-chat-wait" role="status">Celestra está pensando…</p>}
+        {error && <p className="mapp-error" role="alert">{error}</p>}
+      </div>
+
       {turns.length === 0 && (
-        <div className="mapp-chips is-wrap">
+        <div className="mapp-chips mapp-chat-chips">
           {SUGGESTIONS.map((s) => <button key={s} type="button" disabled={asking} onClick={() => ask(s)}>{s}</button>)}
         </div>
       )}
-      <form className="mapp-jefe-form" onSubmit={(e) => { e.preventDefault(); ask(); }}>
-        <label className="mapp-field">
-          <span>Pregúntale a Celestra</span>
-          <input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={600} placeholder="¿Quién no ha salido hoy?" data-testid="agent-input" />
-        </label>
-        <button type="submit" className="mapp-btn is-small is-cta" disabled={asking || !question.trim()}>{asking ? 'Pensando…' : 'Preguntar'}</button>
+      <form className="mapp-jefe-form mapp-chat-form" onSubmit={(e) => { e.preventDefault(); ask(); }}>
+        <input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={600} placeholder="Pregúntale a Celestra" aria-label="Pregúntale a Celestra" data-testid="agent-input" />
+        <button type="submit" className="mapp-chat-send" disabled={asking || !question.trim()} aria-label="Preguntar" title="Preguntar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+        </button>
       </form>
-      {error && <p className="mapp-error" role="alert">{error}</p>}
-      {aviso && <p className="mapp-fine" role="status" data-testid="celestra-aviso">{aviso}</p>}
-      <p className="mapp-fine" data-testid="celestra-gasto">
+      <p className="mapp-fine mapp-chat-foot" data-testid="celestra-gasto">
         {local
           ? 'El parte y tus decisiones se guardan solo en este celular; suben a la base cuando vuelva la señal.'
           : `Este mes: ${usd(estado?.gastado_mes)} de ${usd(TOPE_USD)}${over ? ' · llegó al tope: sigue el algoritmo' : ''}. Solo lee: no cambia nada en Micra.`}
