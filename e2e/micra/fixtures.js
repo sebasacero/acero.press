@@ -336,7 +336,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
     }
 
     // Celestra (20261111200000_celestra.sql): sin M.celestra, la migración no está aplicada
-    const celfn = p.match(/\/rpc\/(celestra_estado|celestra_decidir|celestra_guardar)$/)?.[1];
+    const celfn = p.match(/\/rpc\/(celestra_estado|celestra_decidir|celestra_guardar|celestra_juego)$/)?.[1];
     if (celfn) {
       const C = micra.celestra;
       const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
@@ -348,6 +348,23 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         if (!x) return fail(404, 'P0002', 'No existe esa propuesta.');
         Object.assign(x, { estado: data.p_estado, nota: data.p_nota ?? null });
         C.decisiones = [{ dia: C.hoy, titulo: x.titulo, estado: x.estado, nota: x.nota }, ...C.decisiones.filter((d) => d.titulo !== x.titulo)];
+      }
+      // El parte que escribe el algoritmo en el celular: el primero del día se queda
+      if (celfn === 'celestra_guardar' && data?.p?.kind === 'parte' && data.p.parte && !C.parte) {
+        C.parte = { day: C.hoy, resumen: data.p.parte.resumen, propuestas: data.p.parte.propuestas.slice(0, 3).map((x, i) => ({ oficio: x.oficio, titulo: x.titulo, por_que: x.por_que, accion: x.accion ?? null, id: `p${i + 1}`, pos: i + 1, estado: 'pendiente', nota: null })) };
+        (C.runs ??= []).push({ kind: 'parte', model: data.p.model, cost_usd: data.p.cost_usd });
+      }
+      if (celfn === 'celestra_juego') {
+        if (C.sinJuego) return fail(404, 'PGRST202', 'Could not find the function public.celestra_juego in the schema cache');
+        const props = C.parte?.propuestas ?? [];
+        const h = C.historia ?? { partes: 0, decididas: 0, hechas: 0, plenos: 0, dias: [] };
+        return json(200, {
+          partes: h.partes + (C.parte ? 1 : 0),
+          decididas: h.decididas + props.filter((x) => x.estado !== 'pendiente').length,
+          hechas: h.hechas + props.filter((x) => x.estado === 'hecha').length,
+          plenos: h.plenos + (props.length && props.every((x) => x.estado !== 'pendiente') ? 1 : 0),
+          dias: [...(C.parte ? [C.hoy] : []), ...h.dias],
+        });
       }
       return json(200, { hoy: C.hoy, gastado_mes: C.gastado_mes ?? 0, corridas_mes: C.corridas_mes ?? 0, parte: C.parte ?? null, decisiones: C.decisiones });
     }

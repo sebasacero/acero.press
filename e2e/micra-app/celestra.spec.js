@@ -15,9 +15,11 @@ const PARTE = {
   ],
 };
 
-async function setup(browser, celestra) {
+async function setup(browser, celestra, modo = 'ia') {
   const ctx = await browser.newContext(PHONE);
   const page = await ctx.newPage();
+  // Las pruebas de la IA la escogen; el modo de arranque es el algoritmo
+  if (modo === 'ia') await page.addInitScript(() => { try { window.localStorage.setItem('micra_celestra_modo', 'ia'); } catch { /* sin almacenamiento */ } });
   page.setDefaultTimeout(8000);
   const errors = watchErrors(page);
   const api = await mockBackend(page);
@@ -108,8 +110,9 @@ test('preguntas: ve la respuesta, qué leyó, sigue la conversación y el tope f
   await cel.getByTestId('agent-input').fill('hola');
   await cel.getByRole('button', { name: 'Preguntar' }).click();
   await expect(cel.getByRole('alert')).toContainText('llegó al tope de US$50');
-  await expect(cel.getByTestId('celestra-gasto')).toContainText('llegó al tope');
-  await expect(cel.getByTestId('celestra-write')).toBeDisabled();
+  // Con el tope, Celestra no se apaga: sigue el algoritmo, que no gasta
+  await expect(cel.getByTestId('celestra-gasto')).toContainText('llegó al tope: sigue el algoritmo');
+  await expect(cel.getByTestId('celestra-write')).toBeEnabled();
   expect(errors).toEqual([]);
 });
 
@@ -142,4 +145,82 @@ test('sin la migración: el parte y lo decidido quedan en el celular y lo dice',
   await page.getByTestId('owner-agent').getByRole('button', { name: 'Preguntar' }).click();
   await expect(page.getByTestId('owner-agent').getByRole('alert')).toHaveText('Celestra es solo para el dueño.');
   expect(errors).toEqual([]);
+});
+
+test('algoritmo: escribe el parte sin la IA, lo guarda sin costo, responde las preguntas y suma puntos', async ({ browser }) => {
+  const { page, api, errors } = await setup(browser, { hoy: '2026-11-11', gastado_mes: 0 }, 'algoritmo');
+  let iaCalls = 0;
+  await page.route('**/api/micra-agent', (route) => { iaCalls += 1; return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }); });
+
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  const cel = page.getByTestId('owner-agent');
+  await expect(cel.getByTestId('celestra-modo-algoritmo')).toHaveAttribute('aria-pressed', 'true');
+  await expect(cel.getByTestId('celestra-juego')).toContainText('Nivel 1 · Semilla');
+  await expect(cel.getByTestId('celestra-juego')).toContainText('0 puntos');
+
+  await cel.getByTestId('celestra-write').click();
+  await expect(cel.getByTestId('celestra-prop')).toHaveCount(3);
+  await expect(cel.getByTestId('celestra-parte')).toContainText('Escrito por el algoritmo, sin IA.');
+  expect(api.micra.celestra.runs).toEqual([{ kind: 'parte', model: 'algoritmo', cost_usd: 0 }]);
+  await expect(cel.getByTestId('celestra-juego')).toContainText('10 puntos');
+  await expect(cel.getByTestId('celestra-gasto')).toContainText('El algoritmo no gasta.');
+
+  // Hacer vale más que decidir
+  await cel.getByTestId('celestra-prop').nth(0).getByRole('button', { name: 'Ya la hice' }).click();
+  await expect(cel.getByTestId('celestra-juego')).toContainText('+35 puntos');
+  await expect(cel.getByTestId('celestra-juego')).toContainText('45 puntos');
+  await expect(cel.getByTestId('celestra-juego')).toContainText('racha de 1 día');
+
+  // El camino a la meta, con datos reales y lo que aún no se mide
+  await cel.getByTestId('celestra-camino').locator('summary').click();
+  await expect(cel.getByTestId('celestra-camino')).toContainText('Camino al World of Coffee');
+  await expect(cel.getByTestId('celestra-camino')).toContainText('Conecta Instagram para medirlo');
+
+  // Las preguntas de la tarjeta las responde con lo leído; las demás piden la IA
+  await cel.getByRole('button', { name: '¿Cómo vamos hoy?' }).click();
+  await expect(cel.getByTestId('agent-turn')).toContainText('Hoy van');
+  await cel.getByTestId('agent-input').fill('¿Qué opinas del clima?');
+  await cel.getByRole('button', { name: 'Preguntar' }).click();
+  await expect(cel.getByRole('alert')).toContainText('necesita la IA');
+  expect(iaCalls).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test('sin señal: el parte sale de la última lectura, queda en el celular y sube al volver', async ({ browser }) => {
+  const { page, api } = await setup(browser, { hoy: '2026-11-11', gastado_mes: 0 }, 'algoritmo');
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  // La primera visita deja la lectura guardada
+  await expect.poll(() => page.evaluate(() => !!window.localStorage.getItem('micra_celestra_lecturas_v1'))).toBe(true);
+
+  const cut = (route) => route.abort();
+  await page.route('**/rest/v1/**', cut);
+  await page.route('**/api/v1/**', cut);
+  await page.reload({ waitUntil: 'load' });
+  const cel = page.getByTestId('owner-agent');
+  await expect(cel.getByTestId('celestra-gasto')).toContainText('solo en este celular');
+  await cel.getByTestId('celestra-write').click();
+  await expect(cel.getByTestId('celestra-prop')).toHaveCount(3);
+  await expect(cel.getByTestId('celestra-parte')).toContainText('última lectura guardada');
+  await cel.getByTestId('celestra-prop').nth(1).getByRole('button', { name: 'Aprobar' }).click();
+  await expect(cel.getByTestId('celestra-prop').nth(1)).toContainText('Aprobada');
+  expect(api.micra.celestra.parte ?? null).toBeNull();
+
+  // Vuelve la señal: el parte y lo decidido suben a la base
+  await page.unroute('**/rest/v1/**', cut);
+  await page.unroute('**/api/v1/**', cut);
+  await page.reload({ waitUntil: 'load' });
+  await expect(page.getByTestId('celestra-prop')).toHaveCount(3);
+  await expect(page.getByTestId('celestra-gasto')).toContainText('Este mes');
+  expect(api.micra.celestra.parte.propuestas.map((x) => x.estado)).toEqual(['pendiente', 'aprobada', 'pendiente']);
+});
+
+test('con IA y sin respuesta: escribe el algoritmo y lo dice', async ({ browser }) => {
+  const { page } = await setup(browser, { hoy: '2026-11-11', gastado_mes: 0 });
+  await page.route('**/api/micra-agent', (route) => route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Falta ANTHROPIC_API_KEY en Vercel.' }) }));
+  await page.goto('/micra/equipo', { waitUntil: 'load' });
+  const cel = page.getByTestId('owner-agent');
+  await cel.getByTestId('celestra-write').click();
+  await expect(cel.getByTestId('celestra-prop')).toHaveCount(3);
+  await expect(cel.getByTestId('celestra-aviso')).toContainText('Falta ANTHROPIC_API_KEY en Vercel.');
+  await expect(cel.getByTestId('celestra-aviso')).toContainText('Lo escribió el algoritmo.');
 });

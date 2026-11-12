@@ -80,7 +80,13 @@ export default function OwnerView({ onActAs, go }) {
     platform.openExternal(`https://wa.me/?text=${encodeURIComponent(`Hola, ${b.name.split(' ')[0]}. Este es tu enlace para entrar a Micra: ${url} (tu código es ${code}, vence en 7 días).`)}`);
   };
 
-  if (error && !data) return <p className="mapp-error" role="alert">{error}</p>;
+  // Sin señal el día no carga, pero Celestra sí: su algoritmo trabaja con la última lectura guardada
+  if (error && !data) return (
+    <div className="mapp-owner">
+      <p className="mapp-error" role="alert">{error}</p>
+      <Suspense fallback={null}><Celestra /></Suspense>
+    </div>
+  );
   if (!data) return <Cargando fig="ruana">Cargando el día…</Cargando>;
 
   const list = data.baristas;

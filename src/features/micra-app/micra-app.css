@@ -1669,6 +1669,22 @@
 .mapp-celestra-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 4px; }
 .mapp-celestra-acts .mapp-btn.is-ghost { margin-top: 0; }
 .mapp-celestra-acts .mapp-field { flex: 1 1 100%; }
+/* El juego de Celestra: nivel, racha y el camino a la meta */
+.mapp-celestra-juego { display: grid; gap: 6px; }
+.mapp-celestra-nivel p { margin: 0; }
+.mapp-celestra-gano { font: 700 .8rem/1 'JetBrains Mono', monospace; color: var(--t-cta, #DE1B1B); }
+.mapp-celestra-bar { height: 8px; border-radius: 99px; background: var(--m-line, rgba(0, 0, 0, .1)); overflow: hidden; }
+.mapp-celestra-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--t-3, #B0127A), var(--t-4, #DE1B1B), var(--t-6, #FFC23C)); }
+@media (prefers-reduced-motion: no-preference) { .mapp-celestra-bar i { transition: width .6s cubic-bezier(.2, .7, .2, 1); } }
+.mapp-celestra-camino summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.mapp-celestra-camino ul { margin: 0 0 6px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.mapp-celestra-camino li { display: grid; grid-template-columns: 5.5rem 1fr; gap: 2px 10px; align-items: center; }
+.mapp-celestra-camino li span { font: 600 .72rem/1.2 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+.mapp-celestra-camino li small { grid-column: 2; opacity: .75; }
+.mapp-celestra-camino li.is-off { opacity: .6; }
+.mapp-celestra-modo { display: flex; gap: 6px; }
+.mapp-celestra-modo button { flex: 1; min-height: 44px; border-radius: 99px; border: 1px solid var(--m-line, rgba(0, 0, 0, .12)); background: transparent; color: inherit; font: inherit; font-weight: 700; }
+.mapp-celestra-modo button.on { background: var(--m-fg, #14102A); color: var(--m-bg, #fff); border-color: var(--m-fg, #14102A); }
 /* El menú del café (7 nov 2026): sale de la izquierda al tocar el logo de arriba */
 .mapp-drawerwrap { position: fixed; inset: 0; z-index: 70; display: flex; }
 .mapp-drawer-scrim { position: absolute; inset: 0; border: 0; background: rgba(13, 8, 32, .5); cursor: pointer; }

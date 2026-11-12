@@ -4,11 +4,21 @@
 // sueltas. Responde /api/micra-agent con las herramientas del servidor MCP de
 // Micra (mcp/micra/). Lee; lo único que guarda es su propia memoria.
 // Sin 20261111200000_celestra.sql el parte y lo decidido quedan en este celular.
-import { useEffect, useState } from 'react';
+// Dos modos (12 nov 2026, pedido del usuario): «Algoritmo» escribe el parte en el celular con
+// reglas (mcp/micra/algoritmo.js), gratis y sin la IA; sin señal usa la última lectura guardada.
+// «Con IA» llama a /api/micra-agent; si no responde, escribe el algoritmo y lo dice.
+// Y el juego (celestraJuego.js): puntos por decidir y hacer, nivel, racha y el camino a la meta.
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../shared/lib/supabaseClient.js';
 import { apiUrl } from '../../shared/lib/apiBase.js';
 import { TOPE_USD } from '../../../mcp/micra/celestra.js';
 import { decideLocal, localEstado, saveLocalParte } from './celestraLocal.js';
+import { parteAlgoritmo, responder } from '../../../mcp/micra/algoritmo.js';
+import { lecturasDeHoy } from './celestraSource.js';
+import { META, avance, camino, ganado, juego, statsFromEstado } from './celestraJuego.js';
+
+const MODO_KEY = 'micra_celestra_modo';
+const readModo = () => { try { return window.localStorage.getItem(MODO_KEY) === 'ia' ? 'ia' : 'algoritmo'; } catch { return 'algoritmo'; } };
 
 const SUGGESTIONS = ['¿Cómo vamos hoy?', '¿Dónde voy a encuestar?', '¿Cómo les va a los apartados?', '¿Cómo está el precio del café?'];
 const TOOL_LABEL = {
@@ -107,30 +117,93 @@ export default function Celestra() {
   const [turns, setTurns] = useState([]); // { q, answer, tools }
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
+  const [aviso, setAviso] = useState('');
+  const [modo, setModo] = useState(readModo);
+  const [lect, setLect] = useState(null); // { l, redes, tienda, cached }: lo que lee el algoritmo
+  const [historia, setHistoria] = useState(null); // celestra_juego(), o null si no está en la base
+  const [gano, setGano] = useState(0);
+
+  const loadHistoria = useCallback(() => {
+    supabase.rpc('celestra_juego').then(({ data, error: e }) => setHistoria(!e && data ? data : null), () => setHistoria(null));
+  }, []);
 
   useEffect(() => {
     let alive = true;
-    supabase.rpc('celestra_estado').then(({ data, error: e }) => {
+    (async () => {
+      let next;
+      try {
+        const { data, error: e } = await supabase.rpc('celestra_estado');
+        next = !e && data ? data : null;
+      } catch { next = null; }
+      const mine = localEstado(store(), today);
+      // Lo escrito sin señal sube a la base al volver: el parte y, por posición, lo decidido
+      if (next && !next.parte && mine.parte) {
+        try {
+          const { data, error: e } = await supabase.rpc('celestra_guardar', { p: { kind: 'parte', model: 'algoritmo', cost_usd: 0, tools: [], parte: mine.parte } });
+          if (!e && data?.parte) {
+            next = data;
+            for (const lp of mine.parte.propuestas.filter((x) => x.estado !== 'pendiente')) {
+              const id = next.parte.propuestas.find((x) => x.pos === lp.pos)?.id;
+              if (!id) continue;
+              const r = await supabase.rpc('celestra_decidir', { p_id: id, p_estado: lp.estado, p_nota: lp.nota });
+              if (!r.error && r.data) next = r.data;
+            }
+          }
+        } catch { /* sigue con lo de la base */ }
+      }
       if (!alive) return;
-      setEstado(!e && data ? data : localEstado(store(), today));
-    }, () => alive && setEstado(localEstado(store(), today)));
+      setEstado(next ?? mine);
+      if (next) loadHistoria();
+    })();
+    lecturasDeHoy(store()).then((b) => alive && setLect(b), () => {});
     return () => { alive = false; };
-  }, [today]);
+  }, [today, loadHistoria]);
 
   const local = estado?.local === true;
   const parte = estado?.parte ?? null;
   const over = !local && Number(estado?.gastado_mes ?? 0) >= TOPE_USD;
+  const conIa = modo === 'ia' && !over;
+  const j = juego(historia ?? statsFromEstado(estado ?? {}), today);
+  const tramos = lect ? camino(lect.l, lect) : [];
+  const pctCamino = avance(tramos);
+
+  function pickModo(m) {
+    setModo(m);
+    try { window.localStorage.setItem(MODO_KEY, m); } catch { /* sin espacio: vale por esta vez */ }
+  }
+
+  // El parte del algoritmo: se arma aquí y se guarda en la base (costo 0) o, sin ella, en el celular
+  async function writeAlgoritmo() {
+    const b = await lecturasDeHoy(store());
+    setLect(b);
+    const p = parteAlgoritmo(b.l, { today, decisions: estado?.decisiones ?? [], redes: b.redes, tienda: b.tienda, cached: b.cached });
+    if (!local) {
+      try {
+        const { data, error: e } = await supabase.rpc('celestra_guardar', { p: { kind: 'parte', model: 'algoritmo', cost_usd: 0, tools: [], parte: { resumen: p.resumen, propuestas: p.propuestas } } });
+        if (!e && data?.parte) { setEstado(data); loadHistoria(); return; }
+      } catch { /* sin señal: queda en el celular */ }
+    }
+    setEstado(saveLocalParte(store(), today, p));
+  }
 
   async function writeParte() {
     if (writing) return;
     setWriting(true);
     setError('');
+    setAviso('');
     try {
-      const out = await post({ action: 'parte', decisions: local ? estado.decisiones : undefined });
-      if (out.estado) setEstado(out.estado);
-      else if (out.parte) setEstado(saveLocalParte(store(), today, out.parte));
+      if (!conIa) await writeAlgoritmo();
+      else {
+        try {
+          const out = await post({ action: 'parte', decisions: local ? estado.decisiones : undefined });
+          if (out.estado) { setEstado(out.estado); loadHistoria(); } else if (out.parte) setEstado(saveLocalParte(store(), today, out.parte));
+        } catch (err) {
+          if (err.estado) setEstado(err.estado);
+          await writeAlgoritmo();
+          setAviso(`La IA no respondió (${err.message}) Lo escribió el algoritmo.`);
+        }
+      }
     } catch (err) {
-      if (err.estado) setEstado(err.estado);
       setError(err.message);
     } finally {
       setWriting(false);
@@ -141,12 +214,16 @@ export default function Celestra() {
     setDeciding(true);
     setError('');
     try {
+      const pendientes = (parte?.propuestas ?? []).filter((x) => x.estado === 'pendiente');
+      const sumar = ganado(next, { ultima: pendientes.length === 1 && pendientes[0].id === p.id }) - (p.estado === 'aprobada' ? ganado('aprobada') : 0);
       if (local) setEstado(decideLocal(store(), today, p.id, next, nota.trim() || null));
       else {
         const { data, error: e } = await supabase.rpc('celestra_decidir', { p_id: p.id, p_estado: next, p_nota: nota.trim() || null });
         if (e) throw new Error('No se guardó tu decisión. Intenta de nuevo.');
         setEstado(data);
+        loadHistoria();
       }
+      setGano(sumar);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -160,6 +237,15 @@ export default function Celestra() {
     setAsking(true);
     setError('');
     try {
+      if (!conIa) {
+        const b = lect ?? await lecturasDeHoy(store());
+        if (!lect) setLect(b);
+        const r = responder(q, b.l);
+        if (!r) throw new Error('Esa pregunta necesita la IA: el algoritmo responde las cuatro de arriba. Cambia a «Con IA».');
+        setTurns((t) => [...t, { q, answer: r.answer, tools: r.tools }].slice(-4));
+        setQuestion('');
+        return;
+      }
       const history = turns.flatMap((t) => [{ role: 'user', content: t.q }, { role: 'assistant', content: t.answer }]);
       const out = await post({ question: q, history });
       if (out.estado) setEstado(out.estado);
@@ -183,13 +269,41 @@ export default function Celestra() {
         </div>
       </header>
 
+      <div className="mapp-celestra-juego" data-testid="celestra-juego">
+        <div className="mapp-celestra-nivel">
+          <p><b>Nivel {j.nivel.n} · {j.nivel.nombre}</b>{gano > 0 && <span className="mapp-celestra-gano" role="status"> +{gano} puntos</span>}</p>
+          <p className="mapp-fine">{j.xp} puntos{j.nivel.siguiente ? ` · faltan ${j.nivel.faltan} para ${j.nivel.siguiente}` : ''}{j.racha > 0 ? ` · racha de ${j.racha} ${j.racha === 1 ? 'día' : 'días'}` : ''}</p>
+        </div>
+        <div className="mapp-celestra-bar" role="progressbar" aria-label="Avance del nivel" aria-valuemin={0} aria-valuemax={100} aria-valuenow={j.nivel.pct}><i style={{ width: `${j.nivel.pct}%` }} /></div>
+        {tramos.length > 0 && (
+          <details className="mapp-celestra-camino" data-testid="celestra-camino">
+            <summary>Camino al {META}{pctCamino != null ? ` · ${pctCamino} %` : ''}</summary>
+            <ul>
+              {tramos.map((t) => (
+                <li key={t.id} className={t.valor == null ? 'is-off' : ''}>
+                  <span>{t.nombre}</span>
+                  <div className="mapp-celestra-bar"><i style={{ width: `${t.pct}%` }} /></div>
+                  <small>{t.texto}</small>
+                </li>
+              ))}
+            </ul>
+            <p className="mapp-fine">Cada tramo sale de un dato real de Micra. Las metas son un primer listón.</p>
+          </details>
+        )}
+      </div>
+
+      <div className="mapp-celestra-modo" role="group" aria-label="Cómo escribe Celestra">
+        <button type="button" className={modo === 'algoritmo' ? 'on' : ''} aria-pressed={modo === 'algoritmo'} onClick={() => pickModo('algoritmo')} data-testid="celestra-modo-algoritmo">Algoritmo</button>
+        <button type="button" className={modo === 'ia' ? 'on' : ''} aria-pressed={modo === 'ia'} onClick={() => pickModo('ia')} data-testid="celestra-modo-ia">Con IA</button>
+      </div>
+
       <div className="mapp-celestra-parte" data-testid="celestra-parte">
         <p className="mapp-cota">Parte de hoy</p>
         {!estado && <p className="mapp-fine">Cargando…</p>}
         {estado && !parte && (
           <>
             <p className="mapp-fine">Celestra lee el día, el estudio, los apartados y el mercado, y te deja 3 propuestas.</p>
-            <button type="button" className="mapp-btn is-cta" disabled={writing || over} onClick={writeParte} data-testid="celestra-write">
+            <button type="button" className="mapp-btn is-cta" disabled={writing} onClick={writeParte} data-testid="celestra-write">
               {writing ? 'Celestra está leyendo Micra…' : 'Escribir el parte de hoy'}
             </button>
           </>
@@ -213,7 +327,7 @@ export default function Celestra() {
       ))}
       {turns.length === 0 && (
         <div className="mapp-chips is-wrap">
-          {SUGGESTIONS.map((s) => <button key={s} type="button" disabled={asking || over} onClick={() => ask(s)}>{s}</button>)}
+          {SUGGESTIONS.map((s) => <button key={s} type="button" disabled={asking} onClick={() => ask(s)}>{s}</button>)}
         </div>
       )}
       <form className="mapp-jefe-form" onSubmit={(e) => { e.preventDefault(); ask(); }}>
@@ -221,13 +335,15 @@ export default function Celestra() {
           <span>Pregúntale a Celestra</span>
           <input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={600} placeholder="¿Quién no ha salido hoy?" data-testid="agent-input" />
         </label>
-        <button type="submit" className="mapp-btn is-small is-cta" disabled={asking || over || !question.trim()}>{asking ? 'Pensando…' : 'Preguntar'}</button>
+        <button type="submit" className="mapp-btn is-small is-cta" disabled={asking || !question.trim()}>{asking ? 'Pensando…' : 'Preguntar'}</button>
       </form>
       {error && <p className="mapp-error" role="alert">{error}</p>}
+      {aviso && <p className="mapp-fine" role="status" data-testid="celestra-aviso">{aviso}</p>}
       <p className="mapp-fine" data-testid="celestra-gasto">
         {local
-          ? 'El parte y tus decisiones se guardan solo en este celular hasta aplicar la memoria de Celestra en la base; el tope del mes aún no se cuenta.'
-          : `Este mes: ${usd(estado?.gastado_mes)} de ${usd(TOPE_USD)}${over ? ' · llegó al tope' : ''}. Solo lee: no cambia nada en Micra.`}
+          ? 'El parte y tus decisiones se guardan solo en este celular; suben a la base cuando vuelva la señal.'
+          : `Este mes: ${usd(estado?.gastado_mes)} de ${usd(TOPE_USD)}${over ? ' · llegó al tope: sigue el algoritmo' : ''}. Solo lee: no cambia nada en Micra.`}
+        {!conIa && ' El algoritmo no gasta.'}{lect?.cached && ' Sin señal: usa la última lectura guardada.'}
       </p>
     </section>
   );

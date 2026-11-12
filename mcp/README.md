@@ -57,6 +57,19 @@ precio del tinto?», con datos reales y sin poder cambiar nada.
   para el rol owner. Sin aplicarla, Celestra funciona pero guarda el parte y lo
   decidido solo en el celular (`celestraLocal.js`) y no puede contar el tope.
 
+### El algoritmo (sin IA) y el juego
+
+- `mcp/micra/algoritmo.js` (puro, con `algoritmo.test.js`): escribe el parte sin
+  modelo. `leer()` corre las herramientas, `candidatas()` arma propuestas por
+  reglas con su meta (ventas, visitas en redes, descargas, experiencias, datos)
+  y su peso, `elegir()` escoge 3 sin repetir meta y con la memoria del dueño, y
+  `responder()` contesta las cuatro preguntas de la tarjeta. Corre en el
+  celular (`src/features/micra-app/celestraSource.js`), no gasta y, sin señal,
+  usa la última lectura guardada.
+- `src/features/micra-app/celestraJuego.js`: puntos, niveles (de Semilla a
+  World of Coffee), racha y el camino a la meta con datos reales.
+  `celestra_juego()` (`20261112090000_celestra_juego.sql`) da la historia.
+
 Seguridad: el agente lee con la sesión de quien pregunta, así que la base
 vuelve a verificar el rol en cada llamada (el MCP no salta RLS). La función
 `api/micra-agent.js` verifica que sea el owner antes de gastar una llamada al

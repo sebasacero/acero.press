@@ -20,6 +20,8 @@ export const ROUTE_KEY = 'micra_ruta_v1';
 export const SESSION_KEYS = [
   'micra_goal_v1', 'micra_party_v1', 'micra_mode_v1', 'micra_login_pending',
   'micra_ruta_codigo', 'micra_handoff_v1', 'micra_prefs_v1',
+  // Del dueño: que lo era (para entrar sin señal) y la última lectura de Celestra
+  'micra_owner_v1', 'micra_celestra_lecturas_v1',
 ];
 
 /**
