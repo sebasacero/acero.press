@@ -63,6 +63,43 @@ test('computador: el mapa en vivo, las mejoras y lo que cambia mientras se mira'
   await page.context().close();
 });
 
+test('computador: turnos de hoy, horas en la calle, franjas sin nadie y «terminó su turno» en vivo', async ({ browser }) => {
+  const { page, errors, api } = await openPage(browser, { context: DESK });
+  await page.addInitScript(() => { window.__ctlPollMs = 400; });
+  api.micra.baristas = [
+    { id: 'b1', name: 'Marlene', localidad: 'Chapinero', referencia: 'Cl. 57', lat: 4.643, lng: -74.064, prices: { tinto: 1500 }, takes_holds: true },
+    { id: 'b2', name: 'Jairo', localidad: 'Suba', referencia: 'Portal Suba', lat: 4.745, lng: -74.094, prices: { tinto: 1300 }, takes_holds: true, live_until: '2099-01-01T00:00:00Z' },
+  ];
+  // Horas relativas: el simulador las vuelve ISO al servirlas
+  api.micra.shifts = [
+    { id: 1, tintero_id: 'b1', name: 'Marlene', started_at: 'now-240m', planned_until: 'now-0m', ended_at: 'now-30m', end_kind: 'turno', mode: 'fijo', cups: 18 },
+    { id: 2, tintero_id: 'b2', name: 'Jairo', started_at: 'now-90m', planned_until: 'now+150m', ended_at: null, end_kind: null, mode: 'caminando', cups: 4 },
+  ];
+  await page.goto('/micra/', { waitUntil: 'load' });
+  const shifts = page.getByTestId('ctl-shifts');
+  await expect(shifts.getByTestId('ctl-shifts-today')).toContainText('Jairo en la calle desde');
+  await expect(shifts.getByTestId('ctl-shifts-today')).toContainText('hace 1 h 30 min · 4 tazas · caminando');
+  await expect(shifts.getByTestId('ctl-shifts-today')).toContainText('Marlene terminó su turno');
+  await expect(shifts.getByTestId('ctl-shifts-hours')).toContainText('Marlene · 3 h 30 min');
+  await expect(shifts.getByTestId('ctl-avail')).toHaveAttribute('aria-label', /Sin nadie:/);
+
+  // Jairo toca «Terminar turno»: el panel lo dice sin recargar
+  api.micra.baristas[1].live_until = null;
+  api.micra.shifts[1] = { ...api.micra.shifts[1], ended_at: 'now-0m', end_kind: 'turno' };
+  await expect(page.getByTestId('ctl-events')).toContainText('Jairo terminó su turno');
+  await expect(page.getByTestId('ctl-events')).toContainText('en la calle · 4 tazas');
+  expect(errors.filter((e) => !/Failed to fetch|WebGL|maplibre/i.test(e))).toEqual([]);
+  await page.context().close();
+});
+
+test('computador sin la migración de turnos: el panel sigue y lo dice', async ({ browser }) => {
+  const { page, api } = await openPage(browser, { context: DESK });
+  api.micra.shiftsMissing = true;
+  await page.goto('/micra/', { waitUntil: 'load' });
+  await expect(page.getByTestId('ctl-shifts')).toContainText('cuando se aplique su migración');
+  await page.context().close();
+});
+
 test('computador sin cuenta del equipo: mapa público y avisos cerrados', async ({ browser }) => {
   const { page, api } = await openPage(browser, { context: DESK });
   api.micra.admin = false;
