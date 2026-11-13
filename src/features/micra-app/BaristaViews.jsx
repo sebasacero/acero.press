@@ -58,6 +58,7 @@ const PhoneLogin = lazy(() => import('./PhoneLogin.jsx'));
 const BaristaProfile = lazy(() => import('./Perfil.jsx').then((m) => ({ default: m.BaristaProfile })));
 // El QR «Pídeme por Micra» (con su librería), solo al abrirlo
 const QrPage = lazy(() => import('./QrPage.jsx'));
+const Pedido = lazy(() => import('./Pedido.jsx'));
 const TeamWhatsApp = lazy(() => import('./PhoneLogin.jsx').then((m) => ({ default: m.TeamWhatsApp })));
 
 const QUEUE_KEY = 'micra_sales_queue_v1';
@@ -499,6 +500,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [pop, setPop] = useState(null); // las monedas del último +1
   const [untilId, setUntilId] = useState('d'); // «Hasta las»: 4 horas si no escoge
   const [quick, setQuick] = useState(false); // la hoja «+1 Venta» del centro de la barra
+  const [pedido, setPedido] = useState(false); // la calculadora de un pedido de grupo
   const [shooting, setShooting] = useState(false); // la cámara de la barra: foto de la venta
   const [busy, setBusy] = useState(null);
   const [goalPick, setGoalPick] = useState(null); // la meta que escogió en esta sesión
@@ -805,6 +807,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
         <dl className="mapp-sellhead-kpis">
           <div><dd><button type="button" className="mapp-sellhead-kpi" onClick={toWaiting} data-testid="kpi-wait" aria-label={`${sum.waitingCups} te esperan: ver quién`}>{sum.waitingCups} <span aria-hidden="true">↓</span></button></dd><dt>te esperan</dt></div>
           <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>
+          <div><dd><button type="button" className="mapp-sellhead-kpi is-pedido" onClick={() => setPedido(true)} data-testid="open-pedido" aria-label="Pedido de grupo: calcular cuánto cobrar">Pedido <span aria-hidden="true">↑</span></button></dd><dt>¿cuánto cobro?</dt></div>
         </dl>
         <div className="mapp-sellhead-time">
           <span className="mapp-sellhead-bar" role="progressbar" aria-valuenow={Math.round(prog.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Tu salida"><i style={{ width: `${prog.pct * 100}%` }} /></span>
@@ -1044,11 +1047,17 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             <p className="mapp-sync" role="status">{pending ? `${pending} sin subir: se suben solas cuando haya señal` : 'Todo guardado'}{last && <> · <button type="button" className="mapp-link" onClick={undo} disabled={busy === 'undo'}>Deshacer el último</button></>}</p>
             <p className="mapp-fine">La hoja se queda abierta para la siguiente taza.</p>
             <span className="mapp-row-btns">
+              <button type="button" className="mapp-btn is-ghost is-small" onClick={() => { setQuick(false); setPedido(true); }} data-testid="quick-pedido">Pedido de grupo</button>
               <button type="button" className="mapp-btn is-ghost is-small" onClick={() => { setQuick(false); setShooting(true); }} data-testid="tab-camera"><IconCamera /> Foto de la venta</button>
               <button type="button" className="mapp-btn is-small" onClick={() => setQuick(false)}>Listo</button>
             </span>
           </section>
         </div>
+      )}
+      {pedido && (
+        <Suspense fallback={null}>
+          <Pedido menu={menu} termos={board ? termosOf(board.cups, termSet.termos, termSet.per) : null} onClose={() => setPedido(false)} />
+        </Suspense>
       )}
       <BaristaTabs tab={tab === 'perfil' ? 'cuenta' : tab} go={go} waiting={waiting.length} onQuick={() => setQuick(true)} />
     </div>
