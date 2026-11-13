@@ -256,7 +256,7 @@ El cron guarda cada día la carga de la FNC, el contrato C de Nueva York y la TR
 (con la fecha que publicó cada fuente) y pone el precio en Hoy de la app Micra.
 Si el equipo guardó a mano un precio con fecha más nueva, no lo pisa.
 
-1. Aplicar la migración `supabase/migrations/20261108230000_coffee_market_daily.sql`.
+1. Aplicar la migración `supabase/migrations/20261113180000_coffee_market_daily.sql`.
 2. En Vercel, **Environment Variables**: `CRON_SECRET` (una cadena larga al azar; Vercel
    la manda sola en cada corrida) y, si no estaban, `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`.
 3. Volver a desplegar. En **Settings → Cron Jobs** se ve la corrida y se puede lanzar a mano.
