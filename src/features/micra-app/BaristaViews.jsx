@@ -1,4 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { TermoNow, TermosRow, useTermos } from './Termos.jsx';
+import { termosOf } from './termos.js';
 import {
   PRODUCTS, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
   baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota, joinStats,
@@ -240,24 +242,6 @@ function Digits({ value, label }) {
     <div className="mapp-digits" aria-label={`${label}: ${value}`}>
       {String(value).split('').map((c, i) => <span key={i} className={/\d/.test(c) ? '' : 'is-sep'}>{c}</span>)}
     </div>
-  );
-}
-
-/** La taza de la meta: se llena a medida que vende (pct 0–1). */
-function GoalCup({ pct }) {
-  const top = 22 + (1 - pct) * 78; // el nivel del café: de 100 (vacía) a 22 (llena)
-  return (
-    <svg className="mapp-goalcup" viewBox="0 0 110 118" aria-hidden="true">
-      <defs><clipPath id="mapp-cup-in"><path d="M10 22h72v44a34 34 0 0 1-34 34h-4a34 34 0 0 1-34-34z" /></clipPath></defs>
-      <g clipPath="url(#mapp-cup-in)">
-        <rect x="0" y="0" width="100" height="120" className="is-empty" />
-        <path className="is-coffee" d={`M0 ${top} q12 -6 24 0 t24 0 t24 0 t24 0 V120 H0z`} />
-      </g>
-      <path d="M10 22h72v44a34 34 0 0 1-34 34h-4a34 34 0 0 1-34-34z" className="is-line" />
-      <path d="M82 34h8a14 14 0 0 1 0 28h-8" className="is-line" />
-      <path d="M34 4c-4 6 4 8 0 14M50 2c-4 6 4 8 0 14" className="is-steam" />
-      <path d="M2 108h96" className="is-line" />
-    </svg>
   );
 }
 
@@ -602,6 +586,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const allPrices = { ...(day?.prices ?? {}), ...Object.fromEntries(ownProducts.map((x) => [x.id, x.price])) };
   const board = day ? scoreboard(day, queued, allPrices) : null;
   const goal = day ? goalOf(day.week, goalPick ?? readGoal(day.id)) : 0;
+  // Cuántos termos lleva y cuántos tintos saca de cada uno (solo en este celular)
+  const [termSet, setTermSet] = useTermos();
   // La meta del día sube a la barra de arriba (donde estaba «Cliente / Barista»)
   const boardCups = board?.cups ?? null;
   useEffect(() => { onBoard?.(boardCups === null ? null : { cups: boardCups, goal }); }, [boardCups, goal, onBoard]);
@@ -795,7 +781,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const reto = dayChallenge(day.holds);
   const toWaiting = () => document.getElementById('mapp-wait')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // En la calle: la taza que se llena hacia la meta, arriba de todo
+  // En la calle: el termo que está sirviendo y la meta, arriba de todo
+  const termos = termosOf(board.cups, termSet.termos, termSet.per);
   const left = Math.max(0, goal - board.cups);
   const step5 = Math.floor(board.cups / 5) * 5;
   const outCard = live && (
@@ -808,12 +795,13 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           <span className="mapp-sellhead-until">Hasta las {time(day.live_until)}</span>
         </div>
         <h1 className="mapp-sellhead-hello">{greeting()}, {first}.</h1>
-        <GoalCup pct={fillOf(board.cups, goal)} />
+        <TermoNow t={termos} />
         <div className="mapp-sellhead-copy">
           <p className="mapp-sellhead-n" aria-label={`${board.cups} de ${goal} tazas`}>{board.cups}<small>/{goal}</small></p>
           <p className="mapp-sellhead-sub">{board.cups === 1 ? 'taza' : 'tazas'} · {money(board.total)} hoy</p>
           <p className="mapp-sellhead-cota">{left > 0 ? `${left} más y cumples tu meta` : '¡Meta cumplida! Lo demás es ganancia'}</p>
         </div>
+        <TermosRow cups={board.cups} setting={termSet} onSetting={setTermSet} />
         <dl className="mapp-sellhead-kpis">
           <div><dd><button type="button" className="mapp-sellhead-kpi" onClick={toWaiting} data-testid="kpi-wait" aria-label={`${sum.waitingCups} te esperan: ver quién`}>{sum.waitingCups} <span aria-hidden="true">↓</span></button></dd><dt>te esperan</dt></div>
           <div><dd>{money(sum.owed)}</dd><dt>te deben</dt></div>

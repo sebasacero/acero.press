@@ -102,10 +102,6 @@
 .mapp .mapp-bcard .mapp-fig.is-card{background:radial-gradient(60% 70% at 50% 55%, #2A1466, var(--t-0));width:100%;justify-self:stretch;display:flex;justify-content:center;border-radius:12px}
 .mapp .mapp-ig-media > *{background:radial-gradient(60% 65% at 50% 50%, #2A1466, var(--t-0)) !important}
 .mapp .mapp-ig-media *{border-color:rgba(255,194,60,.25) !important}
-.mapp .mapp-goalcup .is-coffee{fill:url(#t-heat) !important}
-.mapp .mapp-goalcup .is-empty{fill:rgba(13,8,32,.55) !important}
-.mapp .mapp-goalcup .is-line{stroke:#fff !important}
-.mapp .mapp-goalcup .is-steam{stroke:var(--t-6) !important}
 /* de noche la barra del momento también va oscura: su letra vuelve a clara */
 .mapp.is-night .mapp-sellbar b{color:#fff !important}
 .mapp.is-night .mapp-sellbar > span:nth-child(2), .mapp.is-night .mapp-sellbar small{color:rgba(255,255,255,.78) !important}
@@ -690,7 +686,7 @@
 @media (prefers-reduced-motion:no-preference){.mapp-slide:not(.is-busy):not(.is-dragging) .mapp-slide-thumb span{animation:mapp-nudge 1.6s ease-in-out infinite}}
 @keyframes mapp-nudge{50%{transform:translateX(4px)}}
 
-.mapp .mapp-sellhead{grid-template-areas:'top top' 'hello hello' 'cup copy' 'trail trail' 'count count' 'reto reto' 'kpis kpis' 'time time' 'trip trip'}
+.mapp .mapp-sellhead{grid-template-areas:'top top' 'hello hello' 'cup copy' 'termos termos' 'trail trail' 'count count' 'reto reto' 'kpis kpis' 'time time' 'trip trip'}
 .mapp-trail{grid-area:trail;min-width:0}
 .mapp-trail-line{position:relative;display:block;height:26px;margin:0 13px}
 .mapp-trail-line::before,.mapp-trail-line>i{content:"";position:absolute;left:-13px;top:11px;height:5px;border-radius:4px}

@@ -639,9 +639,6 @@
 .mapp-board-sub .is-down { color: #D98A00; font-weight: 700; }
 
 /* Sellos y pago directo (Loyalty.jsx) */
-.mapp-stamps-row { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; list-style: none; margin: 8px 0; padding: 0; }
-.mapp-stamps-row li { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; border: 1.5px dashed var(--m-line, rgba(255,255,255,.25)); font-size: 14px; filter: grayscale(1); opacity: .35; }
-.mapp-stamps-row li.on { border-style: solid; border-color: var(--red, #DE1B1B); filter: none; opacity: 1; }
 .mapp-stamps-free { margin: 4px 0 0; font-weight: 700; color: var(--red, #DE1B1B); }
 .mapp-pay-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 0; font-family: 'JetBrains Mono', monospace; }
 .mapp-reward { display: block; margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--red, #DE1B1B); }
@@ -710,11 +707,6 @@
 /* Vender: la taza que se llena */
 .mapp-sellhead { display: grid; grid-template-columns: 104px 1fr; align-items: end; gap: 12px; margin: -18px -16px 0; padding: 16px 20px 22px; border-radius: 0 0 30px 30px; background: var(--m-cta); color: #fff; box-shadow: 0 14px 30px -14px rgba(222, 27, 27, .7); }
 .mapp-sellhead > .mapp-btn { grid-column: 1 / -1; margin: 4px 0 0; }
-.mapp-goalcup { width: 104px; height: 112px; }
-.mapp-goalcup .is-empty { fill: rgba(255, 255, 255, .14); }
-.mapp-goalcup .is-coffee { fill: #fff; transition: d .6s cubic-bezier(.2, .7, .2, 1); }
-.mapp-goalcup .is-line { fill: none; stroke: #fff; stroke-width: 3.2; stroke-linecap: round; }
-.mapp-goalcup .is-steam { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; opacity: .8; animation: mapp-steam 2.4s ease-in-out infinite; }
 @keyframes mapp-steam { 50% { transform: translateY(-3px); opacity: .4; } }
 .mapp-sellhead-n { margin: 0; font: 900 4rem/.9 'Archivo', sans-serif; letter-spacing: -.04em; }
 .mapp-sellhead-n small { font-size: 1.5rem; opacity: .75; }
@@ -850,16 +842,11 @@
 .mapp-stamps .mapp-cota { color: rgba(255, 255, 255, .7); display: flex; justify-content: space-between; gap: 8px; }
 .mapp-stamps .mapp-cota b { color: #fff; font-family: 'Archivo', sans-serif; letter-spacing: 0; text-transform: none; }
 .mapp-stamps .mapp-muted { color: rgba(255, 255, 255, .8); }
-.mapp-stamps-row li { border: 0; filter: none; opacity: 1; border-radius: 0; }
-.mapp-stamps-row li svg { width: 100%; height: auto; fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: 1.5; }
-.mapp-stamps-row li.on svg { stroke: #fff; }
-.mapp-stamps-row li.on svg path:first-child { fill: var(--red, #DE1B1B); }
-.mapp-stamps-row li.is-gift:not(.on) svg { stroke: #fff; stroke-dasharray: 3 2; }
 .mapp-stamps-free { color: #fff; }
 
 @media (prefers-reduced-motion: reduce) {
   .mapp-streak, .mapp-toast, .mapp-party, .mapp-storywrap, .mapp-lesson { animation: none; }
-  .mapp-goalcup .is-steam, .mapp-path li.is-now .mapp-stop { animation: none; }
+  .mapp-path li.is-now .mapp-stop { animation: none; }
 }
 
 /* ── Vender como inicio: la racha en una fila y el café que se pide ── */
@@ -1031,7 +1018,6 @@
 .mapp-sellhead { grid-template-columns: 116px 1fr; grid-template-areas: 'top top' 'cup copy' 'kpis kpis' 'trip trip'; align-items: center; column-gap: 14px; row-gap: 10px; margin: -18px -16px 0; padding: 16px 20px 44px; border-radius: 0 0 32px 32px; }
 .mapp-sellhead-top { grid-area: top; display: flex; align-items: center; gap: 10px; margin: 0; font: 500 .78rem 'JetBrains Mono', monospace; }
 .mapp-sellhead .mapp-now-live { background: rgba(0, 0, 0, .28); font: 600 .7rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; }
-.mapp-sellhead .mapp-goalcup { grid-area: cup; width: 116px; height: 124px; }
 .mapp-sellhead-copy { grid-area: copy; min-width: 0; }
 .mapp-sellhead-n { font: 900 4.6rem/.85 'Archivo', sans-serif; }
 .mapp-sellhead-n small { font-size: 1.7rem; font-weight: 800; opacity: .7; margin-left: 2px; }
@@ -1065,7 +1051,7 @@
 .mapp-sellhead-top > span { white-space: nowrap; }
 .mapp-sellhead-top > span:last-child { font-size: .72rem; opacity: .95; }
 .mapp-sellhead .mapp-now-live { font-size: .64rem; letter-spacing: .06em; }
-@media (max-width: 360px) { .mapp-sellhead { grid-template-columns: 92px 1fr; } .mapp-sellhead .mapp-goalcup { width: 92px; height: 100px; } .mapp-sellhead-n { font-size: 3.6rem; } }
+@media (max-width: 360px) { .mapp-sellhead { grid-template-columns: 92px 1fr; } .mapp-sellhead .mapp-tlevel.is-now { width: 64px; height: 122px; } .mapp-sellhead-n { font-size: 3.6rem; } }
 .mapp-outmodes button .mapp-anim.is-mode { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; background: #F7F3E8; box-shadow: none; }
 .mapp-sellhead { grid-template-areas: 'top top' 'hello hello' 'cup copy' 'kpis kpis' 'time time' 'trip trip'; }
 .mapp-sellhead-hello { grid-area: hello; margin: 0; font: 700 1rem 'Archivo', sans-serif; opacity: .92; }
@@ -1776,3 +1762,31 @@
 .mapp-askloc b { font: 800 1.05rem/1.2 'Archivo', sans-serif; }
 .mapp-askloc p { margin: 4px 0 0; color: var(--m-soft); font-size: .9rem; line-height: 1.4; }
 .mapp-askloc .mapp-btn { grid-column: 1 / -1; margin: 4px 0 0; }
+
+/* El termo como medidor (13 nov 2026): los termos del día en Vender y el termo de sellos */
+.mapp-tlevel { display: block; overflow: visible; }
+.mapp-tlevel .is-cap { fill: rgba(255, 255, 255, .85); }
+.mapp-tlevel .is-bg { fill: rgba(13, 8, 32, .45); }
+.mapp-tlevel .is-coffee { fill: url(#t-heat); transition: y .6s cubic-bezier(.2, .7, .2, 1), height .6s cubic-bezier(.2, .7, .2, 1); }
+.mapp-tlevel .is-line { fill: none; stroke: #fff; stroke-width: 2.4; }
+.mapp-tlevel .is-mark { stroke: rgba(255, 255, 255, .55); stroke-width: 1.2; stroke-linecap: round; }
+.mapp-tlevel.is-empty .is-line, .mapp-tlevel.is-empty .is-cap { opacity: .45; }
+.mapp-sellhead .mapp-tlevel.is-now { grid-area: cup; justify-self: center; width: 70px; height: 134px; }
+.mapp-termos { grid-area: termos; min-width: 0; }
+.mapp-termos-row { appearance: none; width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 0; border-radius: 14px; background: rgba(255, 255, 255, .16); color: #fff; font: 600 .9rem 'Archivo', sans-serif; text-align: left; cursor: pointer; }
+.mapp-termos-minis { display: flex; align-items: flex-end; gap: 4px; flex: none; }
+.mapp-termos-minis .mapp-tlevel { width: 14px; height: 27px; }
+.mapp-termos-minis .mapp-tlevel.is-cur { width: 18px; height: 34px; }
+.mapp-termos-line { flex: 1; min-width: 0; }
+.mapp-termos-edit { font: 600 .72rem 'JetBrains Mono', monospace; opacity: .85; text-decoration: underline; text-underline-offset: 3px; }
+.mapp-termos-set { display: grid; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 14px; background: rgba(0, 0, 0, .22); }
+.mapp-termos-set small { font-size: .74rem; opacity: .85; }
+.mapp-tstep { display: grid; grid-template-columns: 1fr 44px 36px 44px; align-items: center; gap: 6px; font-size: .9rem; }
+.mapp-tstep b { text-align: center; font: 700 1.05rem 'JetBrains Mono', monospace; }
+.mapp-tstep button { appearance: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .2); color: #fff; font: 700 1.3rem 'Archivo', sans-serif; cursor: pointer; }
+.mapp-tstep button:disabled { opacity: .4; }
+.mapp-stamps-termo { display: flex; align-items: center; gap: 14px; margin: 10px 0 6px; }
+.mapp-stamps-termo .mapp-tlevel { width: 46px; height: 88px; flex: none; }
+.mapp-stamps-termo p { margin: 0; font-size: .92rem; color: rgba(255, 255, 255, .85); }
+.mapp-stamps-termo b { display: block; font: 800 1.3rem 'Archivo', sans-serif; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .mapp-tlevel .is-coffee { transition: none; } }
