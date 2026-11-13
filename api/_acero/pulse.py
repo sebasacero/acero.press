@@ -138,7 +138,7 @@ def parse_fnc_text(text: str) -> dict:
             break
     if not value:
         raise ValueError("no se pudo leer el precio interno")
-    ny = re.search(r"(?:bolsa de (?:ny|nueva york|new york)|contrato c(?: de)? nueva york)\D{0,60}?(\d{2,3}[.,]\d{1,2})\b", text, re.I)
+    ny = re.search(r"(?:bolsa de (?:ny|nueva york|new york)|contrato c(?: de)? nueva york)\D{0,60}?(\d{2,3}(?:[.,]\d{1,2})?)\b", text, re.I)
     trm = re.search(r"tasa de cambio\D{0,40}?(\d{1,2}[.,]\d{3}(?:[.,]\d{1,2})?)\b", text, re.I)
     return {
         "value": value,

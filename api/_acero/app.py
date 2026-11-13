@@ -10,11 +10,14 @@ from __future__ import annotations
 
 from urllib.parse import parse_qsl, urlencode
 
+import os
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .bi.routes import router as bi_router
+from .collect import authorized, collect
 from .pulse import Pulse, read_pulse
 
 PREFIX = "/api/v1"
@@ -88,3 +91,15 @@ async def pulse(response: Response) -> Pulse:
     complete = all([data.market.fnc, data.market.ny, data.market.trm, data.bogota])
     response.headers["Cache-Control"] = f"public, s-maxage={3600 if complete else 600}, stale-while-revalidate=86400"
     return data
+
+
+@app.get(f"{PREFIX}/collect", include_in_schema=False)
+async def collect_daily(request: Request) -> JSONResponse:
+    """Cron diario de Vercel: guarda la serie del mercado y el precio de Hoy en Micra.
+
+    Solo con `Authorization: Bearer <CRON_SECRET>` (Vercel la pone sola). Reintentarlo
+    es seguro: cada cifra es una fila por día publicado.
+    """
+    if not authorized(request.headers.get("authorization"), os.environ.get("CRON_SECRET", "").strip()):
+        return JSONResponse(status_code=401, content={"detail": "Solo el cron."}, headers={"Cache-Control": "no-store"})
+    return JSONResponse(content=await collect(), headers={"Cache-Control": "no-store"})

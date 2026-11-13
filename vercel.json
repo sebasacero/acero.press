@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/v1/collect",
+      "schedule": "0 17 * * *"
+    }
+  ],
   "functions": {
     "api/v1.py": {
       "maxDuration": 20,

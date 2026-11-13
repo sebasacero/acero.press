@@ -182,6 +182,7 @@ SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
+CRON_SECRET
 VITE_WOMPI_PUBLIC_KEY
 VITE_WOMPI_ENV
 WOMPI_PRIVATE_KEY
@@ -242,11 +243,26 @@ proyecto tiene una API en **FastAPI** (Python) para datos e integraciones:
 | `GET /api/v1/bi/brief?kind=daily\|weekly` | **Algoritmo Micra** (solo owner): tablero por nivel (norte, red, negocio, redes, mercado), acciones en orden, plan de contenido y el texto listo para WhatsApp. |
 | `GET/POST /api/v1/bi/tinteros` · `PATCH /api/v1/bi/tinteros/{id}` | Red de tinteros: registrar, cambiar etapa o línea base. |
 | `PUT /api/v1/bi/tinteros/{id}/days/{día}` | Registrar (o corregir) el día de un tintero: tazas, precio, ingreso neto, horas. |
+| `GET /api/v1/collect` | Cron diario (12:00 de Bogotá, `crons` en `vercel.json`): guarda el pulso en `coffee_market_daily` y llena el precio de Hoy en Micra (`app_config` `micra_precio_*`). Solo con `CRON_SECRET`. |
 
 Las rutas de `/bi` usan la sesión del panel (`Authorization: Bearer <token>`)
 y las reglas RLS de Supabase: solo la cuenta owner las ve. El algoritmo vive en
 `api/_acero/bi/` (`metrics.py` = indicadores, `rules.py` = reglas → acciones,
 `brief.py` = resumen y contenido). En el Panel: **Negocio → Algoritmo**.
+
+### 9.1 Recolección diaria del mercado del café
+
+El cron guarda cada día la carga de la FNC, el contrato C de Nueva York y la TRM
+(con la fecha que publicó cada fuente) y pone el precio en Hoy de la app Micra.
+Si el equipo guardó a mano un precio con fecha más nueva, no lo pisa.
+
+1. Aplicar la migración `supabase/migrations/20261113180000_coffee_market_daily.sql`.
+2. En Vercel, **Environment Variables**: `CRON_SECRET` (una cadena larga al azar; Vercel
+   la manda sola en cada corrida) y, si no estaban, `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`.
+3. Volver a desplegar. En **Settings → Cron Jobs** se ve la corrida y se puede lanzar a mano.
+4. Cada corrida queda en `coffee_collect_log` (qué fuente respondió y cuántas cifras guardó).
+
+Pruebas: `npm run test:api` (necesita `pip install -r requirements.txt`).
 
 El pulso no necesita llaves. En local:
 
