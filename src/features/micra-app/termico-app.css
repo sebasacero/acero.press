@@ -985,3 +985,14 @@ button.mapp-hcoffee.mapp-olot{width:100%;height:100%;text-align:left;font:inheri
 .mapp-pedido-notes p.is-short{border-left:4px solid var(--t-4)}
 .mapp .mapp-sellhead-kpi.is-pedido{font:800 1rem Archivo,sans-serif;color:#fff}
 @media (prefers-reduced-motion:reduce){.mapp .mapp-pedido-rows button:active{transform:none}}
+
+/* «Terminar turno» (13 nov 2026): al pie de la cabecera, claro pero sin
+   competir con los +1; la hoja avisa lo que queda abierto y luego cierra el día. */
+.mapp .mapp-sellhead-end{grid-column:1/-1;justify-self:stretch;min-height:48px;margin-top:4px;border-radius:999px;border:1.5px solid rgba(255,255,255,.7);background:rgba(13,8,32,.35);color:#fff;font:700 .95rem Archivo,sans-serif;cursor:pointer}
+.mapp .mapp-sellhead-end:active:not(:disabled){transform:scale(.98)}
+.mapp-endshift-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.mapp-endshift-kpis div{background:#f4f3f7;border-radius:14px;padding:10px 12px;min-width:0}
+.mapp-endshift-kpis dt{font:500 .72rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-endshift-kpis dd{margin:0;font:800 1.15rem 'JetBrains Mono',monospace;color:var(--m-ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mapp-endshift-warn{margin:0 0 8px;padding:8px 12px;border-radius:12px;background:#f4f3f7;border-left:4px solid var(--t-4);font-size:.88rem;color:var(--m-ink)}
+@media (prefers-reduced-motion:reduce){.mapp .mapp-sellhead-end:active{transform:none}}

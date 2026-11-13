@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { TermoNow, TermosRow, useTermos } from './Termos.jsx';
 import { termosOf } from './termos.js';
+import { shiftWarnings, shiftClose } from './turno.js';
 import {
   PRODUCTS, daySummary, weekBars, weekdayLetter, money, itemsLabel, cupsLabel, greeting, fiadoMessage,
   baristaPath, newRef, recentFiados, outProgress, scoreboard, initials, bogota, joinStats,
@@ -501,6 +502,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const [untilId, setUntilId] = useState('d'); // «Hasta las»: 4 horas si no escoge
   const [quick, setQuick] = useState(false); // la hoja «+1 Venta» del centro de la barra
   const [pedido, setPedido] = useState(false); // la calculadora de un pedido de grupo
+  const [ending, setEnding] = useState(null); // «Terminar turno»: 'ask' antes, 'done' el cierre
   const [shooting, setShooting] = useState(false); // la cámara de la barra: foto de la venta
   const [busy, setBusy] = useState(null);
   const [goalPick, setGoalPick] = useState(null); // la meta que escogió en esta sesión
@@ -676,7 +678,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
   const nowBog = bogota();
   const untils = untilChoices(nowBog.hour, nowBog.minute);
   const outMinutes = (untils.find((u) => u.id === untilId) ?? untils[0]).minutes;
-  const out = async (on, { asked = false } = {}) => {
+  const out = async (on, { asked = false, end = false } = {}) => {
     if (on && !mode) { setError('Escoge primero cómo sales hoy: puesto fijo, sombrilla o caminando.'); return; }
     if (on && needs.ask && !asked) { setAsking(true); return; }
     setAsking(false);
@@ -692,7 +694,8 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();
       // Volver no cierra nada: las ventas son del día, salga como salga
-      if (!on) setToast(board.cups > 0 ? 'Saliste del mapa. Tus ventas de hoy siguen aquí.' : 'Saliste del mapa.');
+      if (end) setEnding('done');
+      else if (!on) setToast(board.cups > 0 ? 'Saliste del mapa. Tus ventas de hoy siguen aquí.' : 'Saliste del mapa.');
     } catch (e) { setError(e.message); }
     setBusy(null);
   };
@@ -833,6 +836,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
             📍 Grabando tu ruta · {km(trip.view.distance)} · {trip.view.stops === 1 ? '1 parada' : `${trip.view.stops} paradas`}{trip.gps === 'denied' ? ' · sin permiso de ubicación' : trip.gps === 'silent' ? ' · el GPS no responde' : ''}
           </p>
         )}
+        <button type="button" className="mapp-sellhead-end" onClick={() => setEnding('ask')} disabled={busy === 'out'} data-testid="end-shift">Terminar turno</button>
       </section>
       {board.cups > 0 && (
         <p className="mapp-sellbar" data-testid="sellbar">
@@ -1054,6 +1058,51 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
           </section>
         </div>
       )}
+      {ending === 'ask' && (
+        <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Terminar turno" data-testid="end-ask">
+          <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" onClick={() => setEnding(null)} />
+          <section className="mapp-sheet mapp-endshift">
+            <i className="mapp-sheet-handle" aria-hidden="true" />
+            <p className="mapp-cota">Terminar turno</p>
+            <h2 className="mapp-title is-small">¿Ya te vas de la calle?</h2>
+            <dl className="mapp-endshift-kpis">
+              <div><dt>Tazas</dt><dd>{board.cups}</dd></div>
+              <div><dt>Hoy</dt><dd>{money(board.total)}</dd></div>
+              <div><dt>Te deben</dt><dd>{money(sum.owed)}</dd></div>
+            </dl>
+            {shiftWarnings({ waiting: sum.waitingCups, pending }).map((w) => <p key={w} className="mapp-endshift-warn">{w}</p>)}
+            <p className="mapp-fine">Sales del mapa y se cierra tu recorrido. Tus ventas de hoy no se borran.</p>
+            <span className="mapp-row-btns">
+              <button type="button" className="mapp-btn is-ghost is-small" onClick={() => setEnding(null)}>Seguir vendiendo</button>
+              <button type="button" className="mapp-btn is-small" onClick={() => out(false, { end: true })} disabled={busy === 'out'} data-testid="end-confirm">{busy === 'out' ? 'Cerrando…' : 'Terminar turno'}</button>
+            </span>
+          </section>
+        </div>
+      )}
+      {ending === 'done' && (() => {
+        const c = shiftClose({ cups: board.cups, goal, streak: streak.count });
+        return (
+          <div className="mapp-sheetwrap" role="dialog" aria-modal="true" aria-label="Turno cerrado" data-testid="end-done">
+            <button type="button" className="mapp-sheet-scrim" aria-label="Cerrar" onClick={() => setEnding(null)} />
+            <section className="mapp-sheet mapp-endshift">
+              <i className="mapp-sheet-handle" aria-hidden="true" />
+              <p className="mapp-cota">Fin del turno · {time(new Date().toISOString())}</p>
+              <h2 className="mapp-title is-small">{c.title}</h2>
+              <p>{c.line}{c.racha ? ` ${c.racha}` : ''}</p>
+              <dl className="mapp-endshift-kpis">
+                <div><dt>Tazas</dt><dd>{board.cups}</dd></div>
+                <div><dt>Vendiste</dt><dd>{money(board.total)}</dd></div>
+                <div><dt>Te deben</dt><dd>{money(sum.owed)}</dd></div>
+              </dl>
+              {dayTrip.distance > 0 && <p className="mapp-fine">Caminaste {km(dayTrip.distance)} con {dayTrip.stops === 1 ? '1 parada' : `${dayTrip.stops} paradas`}.</p>}
+              <span className="mapp-row-btns">
+                {board.cups > 0 && <button type="button" className="mapp-btn is-ghost is-small" onClick={() => { setEnding(null); setStory(true); }} data-testid="end-share">Compartir mi día</button>}
+                <button type="button" className="mapp-btn is-small" onClick={() => setEnding(null)}>Listo</button>
+              </span>
+            </section>
+          </div>
+        );
+      })()}
       {pedido && (
         <Suspense fallback={null}>
           <Pedido menu={menu} termos={board ? termosOf(board.cups, termSet.termos, termSet.per) : null} onClose={() => setPedido(false)} />
