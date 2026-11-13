@@ -3,6 +3,7 @@ import { supabase } from '../../../shared/lib/supabaseClient.js';
 import { ago } from '../lib/controlPanel.js';
 import { briefing, diffEvents, insights, pushLog, snapshot } from '../lib/panelInsights.js';
 import { zonesGeoJSON } from '../../micra-app/liveMap.js';
+import { normalizeShifts, todayShifts, hoursByBarista, availability, gaps, labelEnds, dur, kindLabel } from '../lib/shifts.js';
 
 // El centro de control avanzado (pedido del usuario, 10 nov 2026: «con mapa y… notificaciones en
 // tiempo real de posibles mejoras y tendencias»). Solo en el panel ancho de /micra en computador.
@@ -34,7 +35,7 @@ function speak(text) {
 }
 
 export default function ControlRoom({ state, places, at, p, hud = false, picked = null }) {
-  const [extra, setExtra] = useState({ live: null, ratings: null, times: null });
+  const [extra, setExtra] = useState({ live: null, ratings: null, times: null, shifts: null });
   const [log, setLog] = useState([]);
   const snap = useRef(null);
   const latest = useRef({ state, places });
@@ -47,12 +48,16 @@ export default function ControlRoom({ state, places, at, p, hud = false, picked 
       const live = st.owner ? await rpc('micra_live_map', {}) : null;
       const ratings = st.owner ? await rpc('micra_hold_ratings') : null;
       const times = st.owner ? await rpc('micra_hold_times', { p_days: 7 }) : null;
+      // Turnos (20261113210000_micra_shifts.sql): quién entra y sale y cuándo hay alguien en la calle
+      const board = st.owner ? await rpc('micra_shifts_board', { p_days: 7 }) : null;
       if (!alive) return;
-      setExtra({ live, ratings, times });
+      const shifts = board ? normalizeShifts(board.shifts) : null;
+      setExtra({ live, ratings, times, shifts });
       // Solo se comparan dos lecturas iguales (del dueño y con o sin mapa las dos): la primera
       // llega antes de saber quién mira y todo parecería nuevo
       const now = { ...snapshot({ state: st, live }), like: `${st.owner}|${!!live}` };
-      const events = st.owner && snap.current?.like === now.like ? diffEvents(snap.current, now, { places: [...(live?.baristas ?? []), ...pl] }) : [];
+      const raw = st.owner && snap.current?.like === now.like ? diffEvents(snap.current, now, { places: [...(live?.baristas ?? []), ...pl] }) : [];
+      const events = labelEnds(raw, shifts);
       snap.current = now;
       if (events.length) setLog((l) => pushLog(l, events));
     })();
@@ -106,6 +111,7 @@ export default function ControlRoom({ state, places, at, p, hud = false, picked 
                 </li>
               ))}
             </ul>
+            <Shifts shifts={extra.shifts} />
             <h2>{p.feed.title}</h2>
             <ul className="pg-ctl-notes" data-testid="ctl-insights">
               {notes.length === 0 && <li className="pg-ctl-empty">{p.feed.empty}</li>}
@@ -126,5 +132,57 @@ export default function ControlRoom({ state, places, at, p, hud = false, picked 
         </footer>
       )}
     </>
+  );
+}
+
+// Turnos y disponibilidad (13 nov 2026, pedido del usuario: «analizar quién entra y sale, la
+// disponibilidad y demás»): los de hoy, las horas en la calle de 7 días y las franjas sin nadie.
+const clock = (ms) => new Date(ms).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' });
+const MODE = { fijo: 'puesto fijo', sombrilla: 'sombrilla', caminando: 'caminando' };
+const cupsTxt = (n) => `${n} ${n === 1 ? 'taza' : 'tazas'}`;
+
+function Shifts({ shifts }) {
+  const now = Date.now();
+  const today = useMemo(() => (shifts ? todayShifts(shifts, now).slice(0, 8) : []), [shifts]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hours = useMemo(() => (shifts ? hoursByBarista(shifts).slice(0, 5) : []), [shifts]);
+  const avail = useMemo(() => (shifts ? availability(shifts, { now, days: 7 }) : []), [shifts]); // eslint-disable-line react-hooks/exhaustive-deps
+  const holes = useMemo(() => gaps(avail), [avail]);
+  return (
+    <section className="pg-ctl-shifts" aria-label="Turnos" data-testid="ctl-shifts">
+      <h2>Turnos y disponibilidad</h2>
+      {shifts == null ? <p className="pg-ctl-empty">Los turnos se ven cuando se aplique su migración en la base.</p> : (
+        <>
+          <h3>Hoy</h3>
+          <ul className="pg-ctl-notes" data-testid="ctl-shifts-today">
+            {today.length === 0 && <li className="pg-ctl-empty">Nadie ha salido hoy.</li>}
+            {today.map((x) => (
+              <li key={x.id} className={x.open ? 'is-open' : `is-${x.kind}`}>
+                <b>{x.name} {x.open ? `en la calle desde ${clock(x.start)}` : kindLabel(x.kind)}</b>
+                <span>{x.open ? `hace ${dur(x.ms)}` : `${clock(x.start)}–${clock(x.end)} · ${dur(x.ms)}`} · {cupsTxt(x.cups)}{x.mode ? ` · ${MODE[x.mode] ?? x.mode}` : ''}</span>
+              </li>
+            ))}
+          </ul>
+          <h3>Cuándo hay alguien en la calle · 7 días</h3>
+          <div className="pg-ctl-hours" role="img" aria-label={holes.length ? `Sin nadie: ${holes.map((h) => h.label).join(', ')}` : 'Todas las franjas con alguien'} data-testid="ctl-avail">
+            {avail.map((a) => (
+              <i key={a.hour} style={{ '--share': a.share }} title={`${a.hour}:00 · ${a.daysCovered} de 7 días · ${a.avg.toFixed(1).replace('.', ',')} baristas en promedio`}>
+                <small>{a.hour % 3 === 0 ? (a.hour < 12 ? `${a.hour}a` : a.hour === 12 ? '12m' : `${a.hour - 12}p`) : ''}</small>
+              </i>
+            ))}
+          </div>
+          <p className="pg-ctl-fine2">{holes.length ? <>Sin nadie: <b>{holes.map((h) => h.label).join(' · ')}</b></> : 'Todas las franjas tuvieron a alguien.'}</p>
+          <h3>Horas en la calle · 7 días</h3>
+          <ul className="pg-ctl-notes" data-testid="ctl-shifts-hours">
+            {hours.length === 0 && <li className="pg-ctl-empty">Todavía no hay turnos.</li>}
+            {hours.map((h) => (
+              <li key={h.id}>
+                <b>{h.name} · {dur(h.ms)}</b>
+                <span>{h.days} {h.days === 1 ? 'día' : 'días'} · {h.shifts} {h.shifts === 1 ? 'turno' : 'turnos'}{h.cups ? ` · ${h.perHour.toFixed(1).replace('.', ',')} tazas por hora` : ''}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
   );
 }

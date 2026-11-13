@@ -166,10 +166,15 @@ export function BaristaJoin({ session, onLinked, team = false, preview = false, 
         {/* Lo primero después del título: entrar es lo que vino a hacer */}
         <Suspense fallback={<Cargando />}><PhoneLogin preview={preview} /></Suspense>
         {!preview && (
-          // El camino de antes (Google + código de seis letras) sigue para quien ya lo tiene
+          // Google queda a la vista como la otra forma de entrar (pedido del usuario, 13 nov 2026:
+          // «deja la opción de login con Google también»); con él se enlaza el código de seis letras
           <div className="mapp-join-alt">
-            <p className="mapp-fine">¿Te dieron un código de seis letras?</p>
-            <button type="button" className="mapp-link" onClick={() => api.signIn('/micra/barista')}>Entrar con Google</button>
+            <p className="mapp-join-or"><span>o</span></p>
+            <button type="button" className="mapp-btn is-ghost mapp-google" onClick={() => api.signIn('/micra/barista')} data-testid="google-login">
+              <svg viewBox="0 0 48 48" aria-hidden="true" width="20" height="20"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.8-.4-4.1H24v7.7h12.1c-.2 2-1.6 5-4.6 7l7.1 5.5c4.2-3.9 6.5-9.6 6.5-16.1z"/><path fill="#34A853" d="M24 46c6.1 0 11.1-2 14.7-5.4l-7.1-5.5c-1.9 1.3-4.4 2.2-7.6 2.2-5.9 0-10.8-3.9-12.6-9.2l-7.3 5.7C7.7 41 15.3 46 24 46z"/><path fill="#FBBC05" d="M11.4 28.1c-.5-1.4-.7-2.8-.7-4.1s.3-2.8.7-4.1l-7.3-5.7C2.7 17.1 2 20.5 2 24s.7 6.9 2.1 9.8l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c4.1 0 6.9 1.8 8.5 3.3l6.2-6.1C35.1 4.6 30.1 2 24 2 15.3 2 7.7 7 4.1 14.2l7.3 5.7c1.8-5.3 6.7-9.2 12.6-9.2z"/></svg>
+              Entrar con Google
+            </button>
+            <p className="mapp-fine">Con Google también entras si te dieron un código de seis letras.</p>
           </div>
         )}
       </section>
@@ -689,7 +694,7 @@ export function BaristaHome({ asId = null, onPickAs, admin = false, go, night = 
       // Antes de cerrar el recorrido se guarda lo de hoy para «Mi día en la calle»
       const before = !on ? { ...dayTripOf(trip.view, readDayTrip(), bogota().day), day: bogota().day } : null;
       if (before && before.path.length > 1) writeDayTrip(before);
-      await api.goOut(on ? outMinutes : 0, pos, asId);
+      await api.goOut(on ? outMinutes : 0, pos, asId, end ? 'turno' : null);
       if (on && recordsTrip(mode) && trip.ready && trip.consented && !trip.recording) await trip.start();
       if (!on && (trip.recording || trip.pendingEnd)) await trip.finish();
       await load();

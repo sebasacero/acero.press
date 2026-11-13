@@ -67,7 +67,13 @@ const as = (id) => (id ? { p_tintero_id: id } : {});
 // La primera vez que el barista ve un apartado (para medir cuánto tarda en verlo)
 export const markHoldsSeen = (ids) => call('micra_holds_seen', { p_ids: ids });
 export const baristaDay = (asId) => call('micra_barista_day', as(asId));
-export const goOut = (minutes, pos, asId) => call('micra_barista_out', { p_minutes: minutes, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null, ...as(asId) });
+// «Terminar turno» manda p_end = 'turno' (20261113210000_micra_shifts.sql); sin esa migración,
+// la misma salida sin el parámetro
+export const goOut = (minutes, pos, asId, end = null) => {
+  const args = { p_minutes: minutes, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null, ...as(asId) };
+  if (!end) return call('micra_barista_out', args);
+  return call('micra_barista_out', { ...args, p_end: end }).catch((e) => (e.missing ? call('micra_barista_out', args) : Promise.reject(e)));
+};
 export const setPrices = (p, asId) => call('micra_barista_prices', { p_tinto: p.tinto ?? null, p_perico: p.perico ?? null, p_aromatica: p.aromatica ?? null, ...as(asId) });
 export const sell = (ref, product, qty, fiado, asId) => call('micra_barista_sale', { p_client_ref: ref, p_product: product, p_qty: qty, p_fiado_name: fiado || null, ...as(asId) });
 export const undoSale = (id, asId) => call('micra_barista_undo', { p_sale_id: id, ...as(asId) });

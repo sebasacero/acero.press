@@ -448,7 +448,7 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       return json(200, { id: r.id, status: r.status, media_path: r.media_path });
     }
 
-    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|hold_rate|hold_ratings|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps|seek|live_map|finca_presencia_add|finca_presencia_list))$/)?.[1];
+    const mfn = p.match(/\/rpc\/(micra_(?:baristas|hold|my_holds|hold_cancel|hold_rate|hold_ratings|barista_\w+|hold_close|fiado_paid|owner_day|my_stamps|seek|live_map|finca_presencia_add|finca_presencia_list|shifts_board))$/)?.[1];
     if (mfn) {
       const M = micra;
       const fail = (status, code, message) => json(status, { code, message, details: null, hint: null });
@@ -494,6 +494,11 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
       }
       if (mfn === 'micra_my_stamps') return M.stamps ? json(200, M.stamps) : fail(404, 'PGRST202', 'Could not find the function micra_my_stamps');
       if (mfn === 'micra_hold_cancel') { const h = M.holds.find((x) => x.id === data.p_hold_id && x.client_ref === data.p_client_ref && x.status === 'waiting'); if (h) { h.status = 'cancelled'; h.cancel_reason = ['tarde', 'no_llego', 'cambie', 'otro'].includes(data.p_reason) ? data.p_reason : null; } return json(200, !!h); }
+      if (mfn === 'micra_shifts_board') {
+        if (!M.admin) return fail(403, '42501', 'Solo el equipo ve los turnos.');
+        if (M.shiftsMissing) return fail(404, 'PGRST202', 'Could not find the function micra_shifts_board');
+        return json(200, { days: data.p_days ?? 7, now: new Date().toISOString(), shifts: relTimes(M.shifts ?? []) });
+      }
       // Tiempos del apartado (20261110180000_micra_hold_times.sql); M.holdTimes: el resumen ya hecho
       if (mfn === 'micra_hold_times') {
         if (!M.admin) return fail(403, '42501', 'Solo el equipo.');
@@ -622,7 +627,19 @@ export async function mockBackend(page, { coffee = TWO_COFFEES, inventory, atomi
         if (mfn === 'micra_barista_payments_set') { b.payments = data.p_methods; return json(200, data.p_methods); }
         if (mfn === 'micra_barista_mode') { b.out_mode = data.p_mode; return json(200, data.p_mode); }
       }
-      if (mfn === 'micra_barista_out') { b.live_until = data.p_minutes > 0 ? new Date(Date.now() + data.p_minutes * 60000).toISOString() : null; return json(200, { live_until: b.live_until }); }
+      if (mfn === 'micra_barista_out') {
+        // Turnos (20261113210000_micra_shifts.sql); M.shiftsMissing simula la base sin la migración
+        if (M.shiftsMissing && 'p_end' in data) return fail(404, 'PGRST202', 'Could not find the function micra_barista_out');
+        b.live_until = data.p_minutes > 0 ? new Date(Date.now() + data.p_minutes * 60000).toISOString() : null;
+        M.shifts ??= [];
+        const open = M.shifts.find((x) => x.tintero_id === b.id && !x.ended_at);
+        if (b.live_until) {
+          if (open) open.planned_until = b.live_until;
+          else M.shifts.push({ id: M.shifts.length + 1, tintero_id: b.id, name: (b.name || 'Barista').split(' ')[0], started_at: new Date().toISOString(), planned_until: b.live_until, ended_at: null, end_kind: null, mode: b.out_mode ?? null, cups: 0 });
+        } else if (open) { open.ended_at = new Date().toISOString(); open.end_kind = data.p_end === 'turno' ? 'turno' : 'volver'; }
+        M.calls_out = [...(M.calls_out ?? []), data];
+        return json(200, { live_until: b.live_until });
+      }
       if (mfn === 'micra_barista_prices') { b.prices = Object.fromEntries([['tinto', data.p_tinto], ['perico', data.p_perico], ['aromatica', data.p_aromatica]].filter(([, v]) => v != null)); return json(200, b.prices); }
       if (mfn === 'micra_barista_sale') {
         const old = M.sales.find((s) => s.ref === data.p_client_ref);
