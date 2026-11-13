@@ -956,3 +956,32 @@ button.mapp-hcoffee.mapp-olot{width:100%;height:100%;text-align:left;font:inheri
 .mapp-ofarm-art{display:grid;place-items:center;aspect-ratio:1.3;border-radius:12px;font-size:30px;background:linear-gradient(135deg,#EAF6EF,#D4EBDD);margin-bottom:4px}
 .mapp-ofarm.is-sample{border-style:dashed;box-shadow:none;background:#FCFAF6}
 .mapp-oshelf{scroll-margin-top:80px}
+
+/* «Pedido»: la calculadora de un pedido de grupo (13 nov 2026). El visor es el
+   termo por dentro: oscuro, con la cifra caliente. */
+.mapp-pedido{max-height:92vh;overflow-y:auto}
+.mapp-pedido-screen{display:grid;gap:2px;margin:6px 0 14px;padding:14px 16px;border-radius:20px;background:linear-gradient(160deg,#13103a,#2a1260);color:#fff;text-align:right}
+.mapp-pedido-screen small{font:500 .74rem 'JetBrains Mono',monospace;opacity:.8}
+.mapp-pedido-screen b{font:800 clamp(2.4rem,11vw,3.2rem)/1.05 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;background:linear-gradient(90deg,var(--t-5),var(--t-6),var(--t-7));-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapp-pedido-rows{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.mapp-pedido-rows li{display:grid;grid-template-columns:minmax(0,1fr) 44px 36px 44px 48px;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-radius:16px;border:1px solid rgba(20,22,27,.1);background:#fff}
+.mapp-pedido-rows li.is-on{border-color:var(--t-4)}
+.mapp-pedido-rows li>span{display:grid;min-width:0}
+.mapp-pedido-rows li>span b{font:700 .95rem Archivo,sans-serif;color:var(--m-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapp-pedido-rows li>span small{font:500 .72rem 'JetBrains Mono',monospace;color:var(--m-soft)}
+.mapp-pedido-rows output{text-align:center;font:800 1.1rem 'JetBrains Mono',monospace;color:var(--m-ink);font-variant-numeric:tabular-nums}
+.mapp .mapp-pedido-rows button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(20,22,27,.14);background:#fff;font:700 1.2rem Archivo,sans-serif;color:var(--m-ink);cursor:pointer;padding:0}
+.mapp .mapp-pedido-rows button.is-plus{background:var(--t-cta);color:#fff;border:0}
+.mapp .mapp-pedido-rows button.is-five{width:48px;border-radius:14px;font:700 .85rem 'JetBrains Mono',monospace}
+.mapp .mapp-pedido-rows button:disabled{opacity:.35;cursor:default}
+.mapp .mapp-pedido-rows button:active:not(:disabled){transform:scale(.94)}
+.mapp-pedido-disc{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px}
+.mapp-pedido-disc span{font:600 .85rem Archivo,sans-serif;color:var(--m-soft);margin-right:4px}
+.mapp .mapp-pedido-disc button{min-height:44px;min-width:52px;padding:0 12px;border-radius:999px;border:1px solid rgba(20,22,27,.14);background:#fff;font:600 .85rem 'JetBrains Mono',monospace;color:var(--m-ink);cursor:pointer}
+.mapp .mapp-pedido-disc button[aria-pressed="true"]{background:var(--m-ink);color:#fff;border-color:var(--m-ink)}
+.mapp-pedido-notes{display:grid;gap:6px;margin:0 0 12px}
+.mapp-pedido-notes p{margin:0;font-size:.86rem;padding:8px 12px;border-radius:12px;background:#f4f3f7;color:var(--m-ink)}
+.mapp-pedido-notes p.is-ok{border-left:4px solid #1f8a4c}
+.mapp-pedido-notes p.is-short{border-left:4px solid var(--t-4)}
+.mapp .mapp-sellhead-kpi.is-pedido{font:800 1rem Archivo,sans-serif;color:#fff}
+@media (prefers-reduced-motion:reduce){.mapp .mapp-pedido-rows button:active{transform:none}}
