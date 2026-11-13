@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import * as api from './api.js';
 import platform from './platform.js';
+import { TermoLevel } from './Termos.jsx';
+import { stampTermo } from './termos.js';
 
 // La tarjeta de sellos del cliente y el pago directo al barista (Nequi,
 // Daviplata). Si la base aún no tiene sus funciones, no se muestran.
@@ -12,19 +14,18 @@ export function StampsCard() {
   // Sin datos de sellos (o con una respuesta rara) no se muestra la tarjeta
   if (!s || !Number.isFinite(s.toward)) return null;
   const per = s.per ?? 10;
+  const st = stampTermo(s.toward, per);
   return (
     <section className="mapp-glass mapp-stamps" aria-label="Tus sellos" data-testid="stamps">
-      <p className="mapp-cota">Tu tarjeta · {per} tazas = 1 tinto gratis<b>{s.toward} de {per}</b></p>
-      <ol className="mapp-stamps-row" aria-label={`${s.toward} de ${per} sellos`}>
-        {Array.from({ length: per }, (_, i) => (
-          <li key={i} className={`${i < s.toward ? 'on' : ''} ${i === per - 1 ? 'is-gift' : ''}`} aria-hidden="true">
-            <svg viewBox="0 0 24 26"><path d="M3 6h15v9a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7z" /><path d="M18 9h2a3 3 0 0 1 0 6h-2" /></svg>
-          </li>
-        ))}
-      </ol>
+      <p className="mapp-cota">Tu termo de sellos · {per} tazas = 1 tinto gratis</p>
+      {/* Los sellos llenan un termo (pedido del usuario, 13 nov 2026): lleno, el tinto gratis */}
+      <div className="mapp-stamps-termo">
+        <span role="img" aria-label={`${s.toward} de ${per} sellos`}><TermoLevel level={st.level} marks={per} /></span>
+        <p><b>{st.full ? 'Termo lleno' : `${s.toward} de ${per}`}</b>{st.full ? ' Tu próximo tinto lo invita Micra.' : ` Te ${st.left === 1 ? 'falta 1' : `faltan ${st.left}`}: cada tinto entregado lo llena un poco.`}</p>
+      </div>
       {s.available > 0
         ? <p className="mapp-stamps-free" role="status">🎁 Tienes {s.available === 1 ? 'un tinto gratis' : `${s.available} tintos gratis`}: díselo a tu barista al recibir.</p>
-        : <p className="mapp-muted">{s.cups === 0 ? 'Aparta y recoge tus tintos: cada taza entregada suma un sello.' : `Te faltan ${per - s.toward} para tu tinto gratis.`}</p>}
+        : s.cups === 0 && <p className="mapp-muted">Aparta y recoge tus tintos: cada taza entregada suma un sello.</p>}
     </section>
   );
 }
